@@ -1,0 +1,191 @@
+﻿:root {
+    --borderRad: 5px;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    margin: 0px;
+}
+audio {
+    display: none;
+}
+#content {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-image: url(./AS_assets/DS_sand.png);
+    /*background-image: url(./AS_assets/sandy.jpg);*/
+    background-repeat: round;
+}
+.wepBoxContainer {
+    display: flex;
+    justify-content: flex-start;
+}
+.hud {
+    width: 100%;
+    border-radius: var(--borderRad);
+    position: absolute;
+    height: 80px;
+    display: flex;
+    justify-content: space-between;
+}
+.score {
+    background-color: rgba(224, 255, 255, 0.5);
+    border-radius: var(--borderRad);
+    width: 100px;
+    height: 80px;
+    padding: 8px;
+    /*    border: 3px solid red;
+*/
+}
+.wepBox {
+    border-radius: var(--borderRad);
+    height: 80%;
+    width: 100px;
+    background-color: rgba(224,255,255, 0.5);
+    display: flex;
+    justify-content: flex-start;
+    align-items: end;
+
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+    .wepBox.selected {
+        background-color: #3ca3ff7a;
+    }
+        .wepBox.selected .instBox {
+            background-color: lightgray;
+            opacity: 0.8;
+        }
+.instBox {
+    border-radius: 2px;
+    height: 20px;
+    width: 20px;
+    background-color: rgba(173,216,230, 0.6);
+}
+
+.cursor1 {
+    cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
+}
+.cursor2 {
+    cursor: url(./AS_assets/cursors/crosshair.cur), crosshair;
+}
+.cursor3 {
+    cursor: url(./AS_assets/cursors/target.cur), crosshair;
+}
+.cursor4 {
+    cursor: url(./AS_assets/cursors/bazooka.cur), crosshair;
+}
+
+.target {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    z-index: 5;
+/*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
+}
+
+    .target img {
+        position: absolute;
+        max-width: 100%;
+        max-height: 100%;
+        user-select: none;
+    }
+.lightDamaged {
+    width: 100%;
+    padding-bottom: 35px;
+    padding-left: 20px;
+    z-index: 4;
+}
+.badDamaged {
+    width: 60%;
+    padding-bottom: 22px;
+}
+.destroyed {
+    width: 100%;
+    padding-bottom: 22px;
+}
+.preFire {
+    border: 2px dashed black;
+    border-style: dashed;
+    animation: rotate 40s linear infinite;
+}
+.nukeIndicator {
+    background-image: url(./AS_assets/rad.svg);
+    background-repeat: no-repeat;
+    background-position:center;
+}
+.firing {
+    /*    background-color: lightblue;*/
+    background-color: rgba(173, 216, 230, 0.5);
+}
+.explosion {
+    visibility: hidden;
+    position: absolute;
+    user-select: none;
+
+}
+.wepNum {
+    position: fixed;
+    top: 0;
+    padding-left: 6px;
+    font-weight: 800;
+}
+.blastRadius {
+    opacity: 0.5;
+    position: fixed;
+    border-radius: 50%;
+    /*    pointer-events: none;
+*/ /*overflow: hidden;*/
+}
+
+    .blastRadius .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 1000ms linear;
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+.flipbackward {
+    transition: transform 0.6s linear;
+    transform: rotate(-200deg);
+}
+.flipforward {
+    transition: transform 0.6s linear;
+    transform: rotate(160deg);
+}
+@keyframes moveWithArc {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+
+    50% {
+        transform: translateY(-50px) translateX(100px) rotate(-90deg);
+        
+    }
+    100% {
+        transform: translateY(0) translateX(200px) rotate(-180deg);
+    }
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
