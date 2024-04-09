@@ -18,7 +18,7 @@ class Target {
     damageEl;
     contentEl;
     speed;
-    picSource = ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4.png'];
+    picSource = [/*'jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4.png',*/ 'jeep_Grey_armour_1.png'];
     destroyedSource = assetsFolder + 'fire_3.gif';
     damagedSource = assetsFolder + 'smoke_3.gif';
     badDamagedSource = assetsFolder + 'fire_1.gif';
@@ -94,8 +94,6 @@ class Target {
             this.picEl.classList.add('flip' + direc);
             CollisionDetection.throw(elem, direc);
         }
-    }
-    moveAtAngle() {
     }
     action() {
         if (this.status == Status.active) {

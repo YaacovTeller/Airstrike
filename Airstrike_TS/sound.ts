@@ -55,10 +55,17 @@ var pgia: Sound;
 var strike: Sound;
 var redAlert: Sound;
 var bigExpl: Sound;
+var explosions: Array<Sound> = [];
+var strikes: Array<Sound> = [];
+var bigExplosions: Array<Sound> = [];
 
 function loadSound() {
-    strike = new Sound(soundFolder + "strike.mp3");
-    bigExpl = new Sound(soundFolder + "bigExpl.mp3");
+    strikes.push(
+         new Sound(soundFolder + "strike.mp3"),
+    )
+    bigExplosions.push(
+        new Sound(soundFolder + "bigExpl.mp3"),
+    )
     redAlert = new Sound(soundFolder + "redAlert7.mp3");
     pgia = new Sound(soundFolder + "pgia.mp3");
     gunSounds.push(
@@ -93,5 +100,10 @@ function loadSound() {
     )
     nukeSounds.push(
         new Sound(soundFolder + "redAlert7.mp3")
+    )
+    explosions.push(
+        new Sound(soundFolder + "expl_dull.mp3"),
+        new Sound(soundFolder + "expl_dull2.mp3"),
+
     )
 }

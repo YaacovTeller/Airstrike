@@ -53,9 +53,12 @@ var pgia;
 var strike;
 var redAlert;
 var bigExpl;
+var explosions = [];
+var strikes = [];
+var bigExplosions = [];
 function loadSound() {
-    strike = new Sound(soundFolder + "strike.mp3");
-    bigExpl = new Sound(soundFolder + "bigExpl.mp3");
+    strikes.push(new Sound(soundFolder + "strike.mp3"));
+    bigExplosions.push(new Sound(soundFolder + "bigExpl.mp3"));
     redAlert = new Sound(soundFolder + "redAlert7.mp3");
     pgia = new Sound(soundFolder + "pgia.mp3");
     gunSounds.push(new Sound(soundFolder + "gun_1.mp3"), new Sound(soundFolder + "gun_2.mp3"), new Sound(soundFolder + "gun_3.mp3"), new Sound(soundFolder + "gun_5.mp3"), new Sound(soundFolder + "gun_6.mp3"), new Sound(soundFolder + "gun_7.mp3"), new Sound(soundFolder + "gun_8.mp3"));
@@ -63,5 +66,6 @@ function loadSound() {
     howitzerSounds.push(new Sound(soundFolder + "yoRE_1.mp3"), new Sound(soundFolder + "yoRE_2.mp3"), new Sound(soundFolder + "yoRE_3.mp3"));
     airstrikeSounds.push(new Sound(soundFolder + "shager_1.mp3"), new Sound(soundFolder + "shager_2.mp3"), new Sound(soundFolder + "shager_3.mp3"), new Sound(soundFolder + "shager_4.mp3"), new Sound(soundFolder + "shager_5.mp3"));
     nukeSounds.push(new Sound(soundFolder + "redAlert7.mp3"));
+    explosions.push(new Sound(soundFolder + "expl_dull.mp3"), new Sound(soundFolder + "expl_dull2.mp3"));
 }
 //# sourceMappingURL=sound.js.map

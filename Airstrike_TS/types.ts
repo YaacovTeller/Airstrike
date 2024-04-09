@@ -1,4 +1,5 @@
 ﻿const assetsFolder: string = "./AS_assets/";
+
 enum direction {
     forward = "forward",
     backward = "backward"
@@ -20,6 +21,13 @@ enum weaponNames {
     airstrike = "airstrike",
     nuke = "nuke",
 }
+type explosionInfo = {
+    imageSource: string,
+    length: number,
+    sound: Array<Sound>,
+    soundDelay?: number
+}
+
 type weaponInstance = {
     ready: boolean;
     blastRadElement: HTMLElement;
@@ -29,78 +37,83 @@ type weaponInfo = {
     name: string,
     blastRadius: number,
     speed: number,
-    blastPower: number,
     cooldown: number,
     cursor: string,
-    explosionSource: string,
-    explosionLength: number,
+    explosionInfo: explosionInfo,
     imageSource: string,
     sound: Array<Sound>,
-    instances: Array<weaponInstance>,
 }
 
 const sniperInfo: weaponInfo = {
     name: weaponNames.gun,
     blastRadius: 6,
     speed: 0,
-    blastPower: 0,
     cursor: "cursor1",
-    explosionSource: assetsFolder + 'fire_1.gif',
+    explosionInfo: {
+        imageSource: assetsFolder + 'fire_1.gif',
+        sound: [],
+        length: 1000
+    },
     imageSource: assetsFolder + 'gun.svg',
-    explosionLength: 1000,
     sound: gunSounds,
     cooldown: 0,
-    instances: [],
 }
 const mortarInfo: weaponInfo = {
     name: weaponNames.mortar,
     blastRadius: 50,
     speed: 2000,
-    blastPower: 5,
     cursor: "cursor2",
-    explosionSource: assetsFolder + 'expl.gif',
+    explosionInfo: {
+        imageSource: assetsFolder + 'expl.gif',
+        sound: [],
+        length: 1000
+    },
     imageSource: assetsFolder + 'mortar.svg',
-    explosionLength: 1000,
     sound: mortarSounds,
     cooldown: 1,
-    instances: [],
 }
 const howitzerInfo: weaponInfo = {
     name: weaponNames.howitzer,
     blastRadius: 70,
     speed: 3000,
-    blastPower: 5,
     cursor: "cursor3",
-    explosionSource: assetsFolder + 'expl.gif',
+    explosionInfo: {
+        imageSource: assetsFolder + 'expl.gif',
+        sound: explosions,
+        soundDelay: 3000,
+        length: 1000
+    },
     imageSource: assetsFolder + 'tank.svg',
-    explosionLength: 1000,
     sound: howitzerSounds,
     cooldown: 2,
-    instances: [],
 }
 const airstrikeInfo: weaponInfo = {
     name: weaponNames.airstrike,
     blastRadius: 100,
     speed: 4000,
-    blastPower: 10,
     cursor: "cursor4",
-    explosionSource: assetsFolder + 'expl.gif',
+    explosionInfo: {
+        imageSource: assetsFolder + 'expl.gif',
+        sound: strikes,
+        soundDelay: 2500,
+        length: 1000
+    },
     imageSource: assetsFolder + 'jet.svg',
-    explosionLength: 1000,
     sound: airstrikeSounds,
     cooldown: 4,
-    instances: [],
 }
 const nukeInfo: weaponInfo = {
     name: weaponNames.nuke,
     blastRadius: 400,
     speed: 6000,
-    blastPower: 10,
     cursor: "cursor4",
-    explosionSource: assetsFolder + 'mushroom_1.gif',
+    explosionInfo: {
+        imageSource: assetsFolder + 'mushroom_1.gif',
+        sound: bigExplosions,
+        soundDelay: 6500,
+        length: 2500
+    },
     imageSource: assetsFolder + 'bomb.svg',
-    explosionLength: 2500,
     sound: nukeSounds,
     cooldown: 15,
-    instances: [],
 }

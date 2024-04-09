@@ -2,26 +2,22 @@ class WeaponType {
     name;
     blastRadius;
     speed;
-    blastPower;
     cursor;
     sound;
     cooldown;
-    instances = [];
-    activeInstance;
-    explosionSource;
-    explosionLength;
     imageSource;
+    explosionInfo;
+    activeInstance;
+    instances = [];
     constructor(info) {
         this.name = info.name;
         this.blastRadius = info.blastRadius;
-        this.blastPower = info.blastPower;
         this.speed = info.speed;
         this.cursor = info.cursor;
         this.sound = info.sound;
         this.cooldown = info.cooldown;
-        this.explosionSource = info.explosionSource;
+        this.explosionInfo = info.explosionInfo;
         this.imageSource = info.imageSource;
-        this.explosionLength = info.explosionLength;
         this.pushNewWeaponInstance();
     }
     switchTo() {
@@ -38,7 +34,7 @@ class WeaponType {
         let explosion = document.createElement('img');
         explosion.classList.add('explosion');
         var timestamp = new Date().getTime();
-        explosion.src = this.explosionSource + '?' + timestamp;
+        explosion.src = this.explosionInfo.imageSource + '?' + timestamp;
         addToContentEl(explosion);
         if (this.name == weaponNames.nuke) {
         }
@@ -87,7 +83,7 @@ class WeaponType {
         explosion.style.visibility = 'visible';
         setTimeout(() => {
             explosion.style.visibility = 'hidden';
-        }, this.explosionLength);
+        }, this.explosionInfo.length);
         for (let target of targets) {
             let collisionInfo = CollisionDetection.checkPos(inst.blastRadElement, target.getTargetEl());
             if (collisionInfo) {
@@ -126,12 +122,6 @@ class WeaponType {
                     direc = direction.backward;
                     console.log("DIREC: " + direction.backward);
                 }
-                //    if (angle > 330 && angle < 30) {
-                //    direc = direction.forward
-                //}
-                //else if (angle > 150 && angle < 210) {
-                //    direc = direction.backward
-                //}
                 if (target.damage != Damage.destroyed) {
                     target.hit(severity, direc);
                     this.bonusHitSound();
@@ -144,11 +134,8 @@ class WeaponType {
         if (bool) {
             this.rippleEffect(inst);
             RandomSoundGen.playNotSoRandomSound(this.sound);
-            if (this.name == weaponNames.airstrike) {
-                setTimeout(() => strike.play(), 2500);
-            }
-            if (this.name == weaponNames.nuke) {
-                setTimeout(() => bigExpl.play(), 6500);
+            if (this.explosionInfo.sound.length) {
+                setTimeout(() => RandomSoundGen.playNotSoRandomSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
             }
         }
         inst.ready = !bool;
