@@ -18,7 +18,7 @@ class Target {
 
 
     private speed: number;
-    private picSource: Array<string> = [/*'jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4.png',*/ 'jeep_Grey_armour_1.png'];
+    private picSource: Array<string> = ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4.png', 'jeep_Grey_armour_1.png'];
     private destroyedSource: string = assetsFolder + 'fire_3.gif';
     private damagedSource: string = assetsFolder + 'smoke_3.gif';
     private badDamagedSource: string = assetsFolder + 'fire_1.gif';
