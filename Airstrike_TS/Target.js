@@ -12,33 +12,53 @@ var Damage;
     Damage[Damage["heavyDamaged"] = 3] = "heavyDamaged";
     Damage[Damage["destroyed"] = 4] = "destroyed";
 })(Damage || (Damage = {}));
+var Armour;
+(function (Armour) {
+    Armour[Armour["none"] = 0] = "none";
+    Armour[Armour["moderate"] = 1] = "moderate";
+    Armour[Armour["heavy"] = 2] = "heavy";
+})(Armour || (Armour = {}));
+const regTarget = {
+    maxSpeed: 8,
+    minSpeed: 4,
+    armour: Armour.none,
+    picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4_cres.png']
+};
+const heavyTarget = {
+    maxSpeed: 4,
+    minSpeed: 1,
+    armour: Armour.moderate,
+    picSources: ['jeep_Grey_armour_1.png']
+};
 class Target {
     targetEl;
     picEl;
     damageEl;
     contentEl;
     speed;
-    picSource = ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4.png', 'jeep_Grey_armour_1.png'];
+    armour;
+    /*    private picSource: Array<string>;*/
     destroyedSource = assetsFolder + 'fire_3.gif';
     damagedSource = assetsFolder + 'smoke_3.gif';
     badDamagedSource = assetsFolder + 'fire_1.gif';
     startPosition;
     status = Status.active;
     damage = Damage.undamaged;
-    constructor(contentEl) {
-        this.speed = RandomNumberGen.randomNumBetween(1, 8);
-        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
+    constructor(contentEl, info) {
         this.targetEl = document.createElement("div");
         this.picEl = document.createElement("img");
-        this.picEl.src = assetsFolder + this.picSource[RandomNumberGen.randomNumBetween(0, this.picSource.length - 1)];
         this.damageEl = document.createElement("img");
         this.targetEl.classList.add('target');
         this.targetEl.appendChild(this.picEl);
         this.targetEl.appendChild(this.damageEl);
+        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
         this.targetEl.style.top = window.innerHeight * this.startPosition / 100 + 'px';
         this.targetEl.style.left = 0 + 'px';
         this.contentEl = contentEl;
         contentEl.appendChild(this.targetEl);
+        this.picEl.src = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
+        this.speed = RandomNumberGen.randomNumBetween(info.minSpeed, info.maxSpeed);
+        this.armour = info.armour;
     }
     move() {
         let x = parseInt(this.targetEl.style.left);

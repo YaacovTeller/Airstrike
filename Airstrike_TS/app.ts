@@ -77,7 +77,14 @@
     }
 
     public newTarget() {
-        let newTarget = new Target(this.contentEl);
+        let newTarget: Target;
+        let rand = RandomNumberGen.randomNumBetween(1, 6);
+        if (rand === 6) {
+            newTarget = new Target(this.contentEl, heavyTarget);
+        }
+        else {
+            newTarget = new Target(this.contentEl, regTarget);
+        }
         this.targets.push(newTarget)
     }
 

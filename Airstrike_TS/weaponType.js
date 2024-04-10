@@ -111,6 +111,8 @@ class WeaponType {
                     }
                 }
                 //   console.log("SEV: "+strikeSeverity[severity]);
+                if (target.armour == Armour.moderate && severity < strikeSeverity.heavy)
+                    return;
                 severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
                 console.log("ANGLE: " + collisionInfo.angle);
                 let angle = collisionInfo.angle;

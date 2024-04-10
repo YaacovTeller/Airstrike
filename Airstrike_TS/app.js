@@ -70,7 +70,14 @@ class TargetHandler {
         this.contentEl.classList.add(this.weapon.cursor);
     }
     newTarget() {
-        let newTarget = new Target(this.contentEl);
+        let newTarget;
+        let rand = RandomNumberGen.randomNumBetween(1, 6);
+        if (rand === 6) {
+            newTarget = new Target(this.contentEl, heavyTarget);
+        }
+        else {
+            newTarget = new Target(this.contentEl, regTarget);
+        }
         this.targets.push(newTarget);
     }
     addNuke() {
