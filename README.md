@@ -1,5 +1,6 @@
 Stop any and every vehicle from crossing.\
 There are a few sorts of vehicles, and none of them should be there.\
+The armoured-looking trucks need a fairly direct strike, bullets wont work.\
 Change weapons with number keys, or by clicking the weapon icons.
 
 1. gun
