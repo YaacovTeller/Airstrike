@@ -15,11 +15,11 @@ type position = {
     Y
 }
 enum weaponNames {
-    gun = "gun",
-    mortar = "mortar",
-    howitzer = "howitzer",
-    airstrike = "airstrike",
-    nuke = "nuke",
+    gun,
+    mortar,
+    howitzer,
+    airstrike,
+    nuke
 }
 type explosionInfo = {
     imageSource: string,
@@ -34,7 +34,7 @@ type weaponInstance = {
     explosion: HTMLElement;
 }
 type weaponInfo = {
-    name: string,
+    name: weaponNames,
     blastRadius: number,
     speed: number,
     cooldown: number,

@@ -13,11 +13,11 @@ var strikeSeverity;
 })(strikeSeverity || (strikeSeverity = {}));
 var weaponNames;
 (function (weaponNames) {
-    weaponNames["gun"] = "gun";
-    weaponNames["mortar"] = "mortar";
-    weaponNames["howitzer"] = "howitzer";
-    weaponNames["airstrike"] = "airstrike";
-    weaponNames["nuke"] = "nuke";
+    weaponNames[weaponNames["gun"] = 0] = "gun";
+    weaponNames[weaponNames["mortar"] = 1] = "mortar";
+    weaponNames[weaponNames["howitzer"] = 2] = "howitzer";
+    weaponNames[weaponNames["airstrike"] = 3] = "airstrike";
+    weaponNames[weaponNames["nuke"] = 4] = "nuke";
 })(weaponNames || (weaponNames = {}));
 const sniperInfo = {
     name: weaponNames.gun,

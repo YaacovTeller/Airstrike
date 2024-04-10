@@ -41,7 +41,7 @@ class HudHandler {
             num.innerText = (parseInt(x) + 1).toString();
             wepBox.appendChild(num);
             wepBox.classList.add("wepBox");
-            wepBox.dataset.name = wep.name;
+            wepBox.dataset.name = wep.name.toString();
             wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
             wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
             wepBoxContainer.appendChild(wepBox);
@@ -66,10 +66,10 @@ class HudHandler {
         "Escaped: " + this.killStats.escaped + '\r' +
         "Total: " + this.killStats.total
     }
-    public selectBox(wepName: string) {
+    public selectBox(wepName: weaponNames) {
         let weps: HTMLCollectionOf<Element> = this.hud.getElementsByClassName('wepBox');
         for (let x of weps) {
-            if (x.getAttribute('data-name') == wepName) {
+            if (x.getAttribute('data-name') == wepName.toString()) {
                 x.classList.add("selected")
                 this.selectedWep = x;
             }

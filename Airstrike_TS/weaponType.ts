@@ -1,6 +1,6 @@
 ﻿
 class WeaponType {
-    public name: string;
+    public name: weaponNames;
     public blastRadius: number;
     public speed: number;
     public cursor: string;
@@ -119,13 +119,13 @@ class WeaponType {
                         case (fraction > 0.9):
                             severity = strikeSeverity.light;
                             break;
-                        case (fraction <= 0.9 && fraction >= 0.5):
+                        case (fraction <= 0.9 && fraction >= 0.6):
                             severity = strikeSeverity.medium;
                             break;
-                        case (fraction < 0.5 && fraction >= 0.2):
+                        case (fraction < 0.6 && fraction >= 0.3):
                             severity = strikeSeverity.heavy;
                             break;
-                        case (fraction < 0.2):
+                        case (fraction < 0.3):
                             severity = strikeSeverity.catastrophic;
                             break;
                         default:
@@ -133,7 +133,12 @@ class WeaponType {
                     }
                 }
                 //   console.log("SEV: "+strikeSeverity[severity]);
-                if (target.armour == Armour.moderate && severity < strikeSeverity.heavy) return;
+                if (target.armour == Armour.moderate) {
+                    if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
+                        this.name < weaponNames.nuke && severity == strikeSeverity.light) {
+                        return
+                    }
+                }
                 severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
 
                 console.log("ANGLE: " + collisionInfo.angle);
