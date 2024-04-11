@@ -52,7 +52,6 @@ var howitzerSounds: Array<Sound> = [];
 var airstrikeSounds: Array<Sound> = [];
 var nukeSounds: Array<Sound> = [];
 var pgia: Sound;
-var strike: Sound;
 var redAlert: Sound;
 var bigExpl: Sound;
 var explosions: Array<Sound> = [];
@@ -61,7 +60,9 @@ var bigExplosions: Array<Sound> = [];
 
 function loadSound() {
     strikes.push(
-         new Sound(soundFolder + "strike.mp3"),
+         new Sound(soundFolder + "strike_1.mp3"),
+         new Sound(soundFolder + "strike_2.mp3"),
+         new Sound(soundFolder + "strike_3.mp3"),
     )
     bigExplosions.push(
         new Sound(soundFolder + "bigExpl.mp3"),
