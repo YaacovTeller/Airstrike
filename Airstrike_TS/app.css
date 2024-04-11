@@ -37,8 +37,9 @@ audio {
     width: 100px;
     height: fit-content;
         padding: 8px;
-    /*    border: 3px solid red;
-*/
+}
+.red {
+    color: red;
 }
 .wepBox {
     border-radius: var(--borderRad);

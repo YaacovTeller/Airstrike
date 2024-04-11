@@ -53,10 +53,10 @@ class HudHandler {
     drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
-        this.drawScoreSpans(killStatsOptions.disabled, this.scoreBox);
-        this.drawScoreSpans(killStatsOptions.destroyed, this.scoreBox);
-        this.drawScoreSpans(killStatsOptions.escaped, this.scoreBox);
-        this.drawScoreSpans(killStatsOptions.total, this.scoreBox);
+        const optionsArray = Object.values(killStatsOptions);
+        for (let option of optionsArray) {
+            this.drawScoreSpans(option, this.scoreBox);
+        }
         this.hud.appendChild(this.scoreBox);
         this.updateScore();
     }
@@ -69,18 +69,21 @@ class HudHandler {
     }
     updateScoreSpans(title) {
         let span = document.getElementById(title);
-        span.innerText = title + ": " + this.killStats[title.toLowerCase()];
+        let num = this.killStats[title.toLowerCase()];
+        span.innerText = title + ": " + num;
+        if (title === killStatsOptions.escaped) {
+            if (num > 0) {
+                span.classList.add('red');
+            }
+            else
+                span.classList.remove('red');
+        }
     }
     updateScore() {
-        this.updateScoreSpans(killStatsOptions.disabled);
-        this.updateScoreSpans(killStatsOptions.destroyed);
-        this.updateScoreSpans(killStatsOptions.escaped);
-        this.updateScoreSpans(killStatsOptions.total);
-        //this.scoreBox.innerText =
-        //    "Disabled: " + this.killStats.disabled + '\r' +
-        //"Destroyed: " + this.killStats.destroyed + '\r' +
-        //"Escaped: " + this.killStats.escaped + '\r' +
-        //"Total: " + this.killStats.total
+        const optionsArray = Object.values(killStatsOptions);
+        for (let option of optionsArray) {
+            this.updateScoreSpans(option);
+        }
     }
     selectBox(wepName) {
         let weps = this.hud.getElementsByClassName('wepBox');
