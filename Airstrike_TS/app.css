@@ -34,7 +34,8 @@ audio {
 .score {
     background-color: rgba(224, 255, 255, 0.5);
     border-radius: var(--borderRad);
-    width: 100px;
+    min-width: 100px;
+    width: fit-content;
     height: fit-content;
         padding: 8px;
 }
