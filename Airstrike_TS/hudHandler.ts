@@ -4,6 +4,12 @@
     destroyed: number;
     escaped: number;
 }
+enum killStatsOptions {
+    total = 'Total',
+    disabled = 'Disabled',
+    destroyed = 'Destroyed',
+    escaped = 'Escaped'
+}
 
 class HudHandler {
     private hud: HTMLElement
@@ -56,15 +62,36 @@ class HudHandler {
     public drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
+        this.drawScoreSpans(killStatsOptions.disabled, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.destroyed, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.escaped, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.total, this.scoreBox);
+
         this.hud.appendChild(this.scoreBox);
         this.updateScore();
     }
+    private drawScoreSpans(title, scoreBox: HTMLElement) {
+        let span = document.createElement('span');
+        span.id = title;
+        scoreBox.appendChild(span);
+        let br = document.createElement('br');
+        scoreBox.appendChild(br);
+    }
+    private updateScoreSpans(title) {
+        let span = document.getElementById(title);
+        span.innerText = title + ": " + this.killStats[title.toLowerCase()]
+    }
     public updateScore() {
-        this.scoreBox.innerText =
-            "Disabled: " + this.killStats.disabled + '\r' +
-        "Destroyed: " + this.killStats.destroyed + '\r' +
-        "Escaped: " + this.killStats.escaped + '\r' +
-        "Total: " + this.killStats.total
+        this.updateScoreSpans(killStatsOptions.disabled);
+        this.updateScoreSpans(killStatsOptions.destroyed);
+        this.updateScoreSpans(killStatsOptions.escaped);
+        this.updateScoreSpans(killStatsOptions.total);
+
+        //this.scoreBox.innerText =
+        //    "Disabled: " + this.killStats.disabled + '\r' +
+        //"Destroyed: " + this.killStats.destroyed + '\r' +
+        //"Escaped: " + this.killStats.escaped + '\r' +
+        //"Total: " + this.killStats.total
     }
     public selectBox(wepName: weaponNames) {
         let weps: HTMLCollectionOf<Element> = this.hud.getElementsByClassName('wepBox');

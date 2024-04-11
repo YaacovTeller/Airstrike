@@ -1,3 +1,10 @@
+var killStatsOptions;
+(function (killStatsOptions) {
+    killStatsOptions["total"] = "Total";
+    killStatsOptions["disabled"] = "Disabled";
+    killStatsOptions["destroyed"] = "Destroyed";
+    killStatsOptions["escaped"] = "Escaped";
+})(killStatsOptions || (killStatsOptions = {}));
 class HudHandler {
     hud;
     selectedWep;
@@ -46,15 +53,34 @@ class HudHandler {
     drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
+        this.drawScoreSpans(killStatsOptions.disabled, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.destroyed, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.escaped, this.scoreBox);
+        this.drawScoreSpans(killStatsOptions.total, this.scoreBox);
         this.hud.appendChild(this.scoreBox);
         this.updateScore();
     }
+    drawScoreSpans(title, scoreBox) {
+        let span = document.createElement('span');
+        span.id = title;
+        scoreBox.appendChild(span);
+        let br = document.createElement('br');
+        scoreBox.appendChild(br);
+    }
+    updateScoreSpans(title) {
+        let span = document.getElementById(title);
+        span.innerText = title + ": " + this.killStats[title.toLowerCase()];
+    }
     updateScore() {
-        this.scoreBox.innerText =
-            "Disabled: " + this.killStats.disabled + '\r' +
-                "Destroyed: " + this.killStats.destroyed + '\r' +
-                "Escaped: " + this.killStats.escaped + '\r' +
-                "Total: " + this.killStats.total;
+        this.updateScoreSpans(killStatsOptions.disabled);
+        this.updateScoreSpans(killStatsOptions.destroyed);
+        this.updateScoreSpans(killStatsOptions.escaped);
+        this.updateScoreSpans(killStatsOptions.total);
+        //this.scoreBox.innerText =
+        //    "Disabled: " + this.killStats.disabled + '\r' +
+        //"Destroyed: " + this.killStats.destroyed + '\r' +
+        //"Escaped: " + this.killStats.escaped + '\r' +
+        //"Total: " + this.killStats.total
     }
     selectBox(wepName) {
         let weps = this.hud.getElementsByClassName('wepBox');
