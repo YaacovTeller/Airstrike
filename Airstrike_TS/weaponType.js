@@ -114,7 +114,7 @@ class WeaponType {
                 if (target.armour == Armour.moderate) {
                     if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
                         this.name < weaponNames.nuke && severity == strikeSeverity.light) {
-                        return;
+                        continue;
                     }
                 }
                 severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
