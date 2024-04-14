@@ -117,9 +117,15 @@ class WeaponType {
                         continue;
                     }
                 }
-                severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
-                console.log("ANGLE: " + collisionInfo.angle);
+                if (target.armour == Armour.heavy) {
+                    if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
+                        this.name < weaponNames.nuke && severity == strikeSeverity.medium) {
+                        continue;
+                    }
+                }
                 let angle = collisionInfo.angle;
+                severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
+                //       console.log("ANGLE: " + angle);
                 let direc;
                 if (angle > 300 && angle < 360 || angle > 0 && angle < 60) {
                     direc = direction.forward;
@@ -129,7 +135,7 @@ class WeaponType {
                     console.log("DIREC: " + direction.backward);
                 }
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, direc);
+                    target.hit(severity, direc); // Main hit function
                     this.bonusHitSound();
                 }
             }

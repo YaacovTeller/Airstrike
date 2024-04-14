@@ -25,13 +25,19 @@ const regTarget: targetInfo = {
     maxSpeed: 8,
     minSpeed: 4,
     armour : Armour.none,
-    picSources : ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep_grey.png', 'jeep4_cres.png']
+    picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
+}
+const modTarget: targetInfo = {
+    maxSpeed: 6,
+    minSpeed: 4,
+    armour: Armour.moderate,
+    picSources: ['jeep_grey.png']
 }
 const heavyTarget: targetInfo = {
     maxSpeed: 4,
     minSpeed: 1,
-    armour: Armour.moderate,
-    picSources: ['jeep_Grey_armour_1.png']
+    armour: Armour.heavy,
+    picSources: ['jeep_grey_armour.png']
 }
 class Target {
     private targetEl: HTMLElement;
@@ -91,30 +97,33 @@ class Target {
         if (sev == strikeSeverity.light) {
             this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
             this.damage = Damage.damaged;
+
             this.damageEl.src = this.damagedSource;
             this.damageEl.classList.add('lightDamaged');
-            // MOVE
         }
         if (sev == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
+            
             this.damageEl.src = this.badDamagedSource;
             this.damageEl.classList.add('badDamaged');
             this.damageEl.classList.remove('lightDamaged');
+
             this.flip(this.targetEl, direc);
         }
         if (sev == strikeSeverity.heavy) {
             this.damage = Damage.heavyDamaged;
+
             this.damageEl.src = this.badDamagedSource;
             this.damageEl.classList.add('badDamaged');
             this.damageEl.classList.remove('lightDamaged');
+
             this.flip(this.targetEl, direc);
         }
         if (sev == strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
-            this.picEl.src = this.destroyedSource;
-         //   this.picEl.classList.add('destroyed');
-            this.picEl.className = 'destroyed';
 
+            this.picEl.src = this.destroyedSource;
+            this.picEl.className = 'destroyed';
             this.damageEl.style.visibility = "hidden";
         }
     }

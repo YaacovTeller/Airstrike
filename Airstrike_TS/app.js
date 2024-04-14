@@ -71,12 +71,17 @@ class TargetHandler {
     }
     newTarget() {
         let newTarget;
-        let rand = RandomNumberGen.randomNumBetween(1, 6);
-        if (rand === 6) {
-            newTarget = new Target(this.contentEl, heavyTarget);
-        }
-        else {
-            newTarget = new Target(this.contentEl, regTarget);
+        let rand = RandomNumberGen.randomNumBetween(1, 8);
+        switch (true) {
+            case (rand == 8):
+                newTarget = new Target(this.contentEl, heavyTarget);
+                break;
+            case (rand >= 6):
+                newTarget = new Target(this.contentEl, modTarget);
+                break;
+            default:
+                newTarget = new Target(this.contentEl, regTarget);
+                break;
         }
         this.targets.push(newTarget);
     }
