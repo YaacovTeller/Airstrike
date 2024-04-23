@@ -60,6 +60,8 @@ class WeaponType {
             console.log("hit NULL inst");
             return;
         }
+        game.shotCount++;
+        game.updateShotCounter();
         let inst = this.activeInstance;
         let blastRadiusEl = inst.blastRadElement;
         this.prepFire(true, inst);

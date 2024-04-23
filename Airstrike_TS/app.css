@@ -1,5 +1,6 @@
 ﻿:root {
     --borderRad: 5px;
+    --crashTimeout: 600ms;
 }
 
 body {
@@ -30,6 +31,7 @@ audio {
     height: 80px;
     display: flex;
     justify-content: space-between;
+    z-index: 10;
 }
 .score {
     background-color: rgba(224, 255, 255, 0.5);
@@ -156,14 +158,14 @@ audio {
         background-color: rgba(255, 255, 255, 0.7);
     }
 .flipbackward {
-    transition: transform 0.6s linear;
+    transition: transform var(--crashTimeout) linear;
     transform: rotate(-200deg);
 }
 .flipforward {
-    transition: transform 0.6s linear;
+    transition: transform var(--crashTimeout) linear;
     transform: rotate(160deg);
 }
-@keyframes moveWithArc {
+/*@keyframes moveWithArc {
     0% {
         transform: translateY(0) translateX(0);
     }
@@ -175,7 +177,7 @@ audio {
     100% {
         transform: translateY(0) translateX(200px) rotate(-180deg);
     }
-}
+}*/
 
 @keyframes ripple {
     to {

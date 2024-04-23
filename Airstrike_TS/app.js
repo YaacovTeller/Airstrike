@@ -1,7 +1,8 @@
-class TargetHandler {
+class GameHandler {
     targets = [];
     contentEl;
     hud = new HudHandler();
+    shotCount = 0;
     targetTimer;
     gameTimer;
     weapon;
@@ -13,6 +14,9 @@ class TargetHandler {
         this.hud.drawHUD();
         this.changeWeapon(mortar);
         this.weapon.switchBlastIndicatorStyle(false, null);
+    }
+    updateShotCounter() {
+        this.hud.updateScore(this.shotCount);
     }
     fireFunc() {
         this.weapon.fireFunc(this.targets);
@@ -165,7 +169,14 @@ window.onload = () => {
     allWeaponTypes = [sniper, mortar, howitzer, airstrike];
     mortar.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();
-    game = new TargetHandler(contentEl);
+    //mortar.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
+    //howitzer.pushNewWeaponInstance();
+    //howitzer.pushNewWeaponInstance();
+    //howitzer.pushNewWeaponInstance();
+    game = new GameHandler(contentEl);
     loadSound();
     game.start();
 };

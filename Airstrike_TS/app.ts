@@ -1,7 +1,8 @@
-﻿class TargetHandler {
+﻿class GameHandler {
     private targets: Array<Target> = [];
     private contentEl: HTMLElement;
     private hud = new HudHandler();
+    public shotCount: number = 0;
 
     private targetTimer: number;
     private gameTimer: number;
@@ -17,6 +18,9 @@
 
         this.changeWeapon(mortar);
         this.weapon.switchBlastIndicatorStyle(false, null);
+    }
+    public updateShotCounter() {
+        this.hud.updateScore(this.shotCount)
     }
 
     private fireFunc() {
@@ -164,8 +168,8 @@ var airstrike: WeaponType;
 var nuke: WeaponType;
 var allWeaponTypes: Array<WeaponType>
 
-var game: TargetHandler
-window.onload = () => {
+var game: GameHandler;
+    window.onload = () => {
     const contentEl: HTMLElement = document.getElementById("content")!;
     sniper = new WeaponType(sniperInfo);
     mortar = new WeaponType(mortarInfo);
@@ -175,7 +179,18 @@ window.onload = () => {
 
     mortar.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();
-    game = new TargetHandler(contentEl);
+
+    //mortar.pushNewWeaponInstance();
+
+    //airstrike.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
+
+    //howitzer.pushNewWeaponInstance();
+    //howitzer.pushNewWeaponInstance();
+    //howitzer.pushNewWeaponInstance();
+
+    game = new GameHandler(contentEl);
 
     loadSound();
     game.start();

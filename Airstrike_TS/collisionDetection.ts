@@ -84,9 +84,9 @@ class CollisionDetection {
         var currentTop = parseInt(elem.style.top) || 0;
 
        // let randomLeftRight = RandomNumberGen.randomNumBetween(0, 1)
-        let height = 20 //RandomNumberGen.randomNumBetween(20, 80)
-        let distance = 30 //RandomNumberGen.randomNumBetween(20, 80)
-        const maxProgress = 1000;
+        let distance = RandomNumberGen.randomNumBetween(10, 40) //20
+        let height = 50 - distance //RandomNumberGen.randomNumBetween(20, 80) //30
+        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100)//1000;
 
         var start = null;
         function step(timestamp) {
@@ -94,7 +94,7 @@ class CollisionDetection {
                 start = timestamp;
             var progress = timestamp - start;
             var x, y;
-            if (progress < 600) {
+            if (progress < crashTimeout) {
 
                 var a = progress / 200;
                 if (direc == direction.forward) {

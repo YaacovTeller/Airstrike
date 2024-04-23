@@ -67,8 +67,12 @@ class HudHandler {
         for (let option of optionsArray) {
             this.drawScoreSpans(option, this.scoreBox);
         }
+        let span = document.createElement('span');
+        span.id = "scoreCounter"
+        this.scoreBox.appendChild(span);
 
         this.hud.appendChild(this.scoreBox);
+
         this.updateScore();
     }
     private drawScoreSpans(title, scoreBox: HTMLElement) {
@@ -89,7 +93,12 @@ class HudHandler {
             else span.classList.remove('red');
         }
     }
-    public updateScore() {
+    public updateScore(shots?) {
+        if (shots) {
+            let span = document.getElementById('scoreCounter')
+            span.innerText = "Shots: " + shots
+        }
+
         const optionsArray = Object.values(killStatsOptions);
         for (let option of optionsArray) {
             this.updateScoreSpans(option);

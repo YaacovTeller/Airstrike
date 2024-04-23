@@ -57,8 +57,16 @@ var bigExpl: Sound;
 var explosions: Array<Sound> = [];
 var strikes: Array<Sound> = [];
 var bigExplosions: Array<Sound> = [];
+var crashes: Array<Sound> = [];
 
 function loadSound() {
+    crashes.push(
+        new Sound(soundFolder + "crash_1.mp3"),
+        new Sound(soundFolder + "crash_2.mp3"),
+        new Sound(soundFolder + "crash_3.mp3"),
+        new Sound(soundFolder + "crash_4.mp3"),
+        new Sound(soundFolder + "crash_5.mp3"),
+    )
     strikes.push(
          new Sound(soundFolder + "strike_1.mp3"),
          new Sound(soundFolder + "strike_2.mp3"),

@@ -1,3 +1,4 @@
+const crashTimeout = 600;
 var Status;
 (function (Status) {
     Status[Status["active"] = 0] = "active";
@@ -19,19 +20,24 @@ var Armour;
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
 const regTarget = {
+    //maxSpeed: 3, //KIDS
+    //minSpeed: 2,
     maxSpeed: 8,
     minSpeed: 4,
     armour: Armour.none,
     picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
 };
 const modTarget = {
+    //maxSpeed: 1, //KIDS
+    //minSpeed: 1,
     maxSpeed: 6,
     minSpeed: 4,
     armour: Armour.moderate,
     picSources: ['jeep_grey.png']
 };
 const heavyTarget = {
-    maxSpeed: 4,
+    maxSpeed: 3,
+    //maxSpeed: 1, //KIDS
     minSpeed: 1,
     armour: Armour.heavy,
     picSources: ['jeep_grey_armour.png']
@@ -117,6 +123,7 @@ class Target {
             this.picEl.classList.remove('flipbackward');
             this.picEl.classList.add('flip' + direc);
             CollisionDetection.throw(elem, direc);
+            setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
         }
     }
     action() {
