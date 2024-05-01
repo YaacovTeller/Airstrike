@@ -86,16 +86,16 @@
 
     public newTarget() {
         let newTarget: Target;
-        let rand = RandomNumberGen.randomNumBetween(1, 12);
+        let rand = RandomNumberGen.randomNumBetween(1, 21);
 
         switch (true) {
-            case (rand >= 6):
+            case (rand >= 18):
                 newTarget = new TunnelTarget(regTunnelTarget);
                 break;
-            case (rand >= 10):
+            case (rand >= 16):
                 newTarget = new VehicleTarget(heavyTarget);
                 break;
-            case (rand >= 8):
+            case (rand >= 12):
                 newTarget = new VehicleTarget(modTarget);
                 break;
             default:
