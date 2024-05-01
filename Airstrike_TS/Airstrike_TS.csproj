@@ -78,7 +78,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="AS_assets\bazooka.cur" />
     <Content Include="AS_assets\jeep.png" />
     <Content Include="index.html" />
     <Content Include="Web.config" />

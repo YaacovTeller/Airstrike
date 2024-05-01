@@ -2,6 +2,12 @@
     --borderRad: 5px;
     --crashTimeout: 600ms;
 }
+img {
+    visibility: hidden;
+}
+img[src] {
+    visibility: visible;
+}
 
 body {
     font-family: 'Segoe UI', sans-serif;
@@ -64,6 +70,12 @@ audio {
             background-color: lightgray;
             opacity: 0.8;
         }
+            .wepBox.selected .instBox.instSelected {
+                background-color: forestgreen;
+            }
+            .wepBox.selected .instBox.instUnavailable {
+                background-color: indianred;
+            }
 .instBox {
     border-radius: 2px;
     height: 20px;
@@ -71,9 +83,9 @@ audio {
     background-color: rgba(173,216,230, 0.6);
 }
 
-.cursor1 {
-    cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
-}
+    .cursor1 {
+        cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
+    }
 .cursor2 {
     cursor: url(./AS_assets/cursors/crosshair.cur), crosshair;
 }
@@ -83,25 +95,42 @@ audio {
 .cursor4 {
     cursor: url(./AS_assets/cursors/bazooka.cur), crosshair;
 }
-
+.trail {
+    position: absolute;
+    height: inherit;
+    width: inherit;
+    display:flex;
+    justify-content:space-between;
+}
+.flexCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.flexEnd {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    
+}
 .target {
     position: absolute;
     width: 40px;
     height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     user-select: none;
     z-index: 5;
 /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
-
-    .target img {
+    .target > img {
         position: absolute;
         max-width: 100%;
         max-height: 100%;
         user-select: none;
     }
+.tunnelHead {
+    background-color: rgb(195,170,100);
+    filter: blur(15px);
+}
 .lightDamaged {
     width: 100%;
     padding-bottom: 35px;
@@ -131,10 +160,8 @@ audio {
     background-color: rgba(173, 216, 230, 0.5);
 }
 .explosion {
-    visibility: hidden;
     position: absolute;
     user-select: none;
-
 }
 .wepNum {
     position: fixed;

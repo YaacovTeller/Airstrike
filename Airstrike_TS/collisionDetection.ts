@@ -5,8 +5,20 @@
     radius: number
 }
 class CollisionDetection {
+    public static checkCollisionFromPosition(mousePos: position, targetEl: HTMLElement): boolean {
+        //let trgtPos: position = this.getXYfromPoint(targetEl);
+        let targetRect = targetEl.getBoundingClientRect();
+        if (mousePos.X >= targetRect.left &&
+            mousePos.X <= targetRect.left + targetRect.width &&
+            mousePos.Y >= targetRect.top &&
+            mousePos.Y <= targetRect.top + targetRect.height) {
 
-    public static checkPos(blastRadiusEl: HTMLElement, targetEl: HTMLElement) {
+            return true
+        }
+        else return false
+    }
+
+    public static checkCollisionFromElement(blastRadiusEl: HTMLElement, targetEl: HTMLElement): vectorMoveObj {
         let blastPos: position = this.getXYfromPoint(blastRadiusEl);
         let trgtPos: position = this.getXYfromPoint(targetEl);
         let radius = parseInt(blastRadiusEl.style.width) / 2;
@@ -27,7 +39,7 @@ class CollisionDetection {
             return obj;
         }
         else
-            return false;
+            return null;
     }
     public static getXYfromPoint(elem: HTMLElement): position {
         let rect = elem.getBoundingClientRect();
@@ -68,7 +80,7 @@ class CollisionDetection {
                 start = timestamp;
             var progress = timestamp - start;
 
-            var mult = (500 / radius) - 3;
+            var mult = (500 / radius) - 3; // MESSY?
 //            console.log("radius: " + radius + " - mult: " + mult)
             elem.style.left = (currentLeft + progress / mult * deltaX) + "px";
             elem.style.top = (currentTop + progress / mult * deltaY) + "px";
@@ -79,11 +91,10 @@ class CollisionDetection {
         }
         requestAnimationFrame(step);
     }
-    static throw(elem: HTMLElement, direc: direction) {
+    static throw(elem: HTMLElement, direc: direction) { // Handles the arc travelled NOT rotation, see CSS
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
 
-       // let randomLeftRight = RandomNumberGen.randomNumBetween(0, 1)
         let distance = RandomNumberGen.randomNumBetween(10, 40) //20
         let height = 50 - distance //RandomNumberGen.randomNumBetween(20, 80) //30
         const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100)//1000;

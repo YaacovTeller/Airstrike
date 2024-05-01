@@ -1,32 +1,130 @@
-﻿
-class WeaponType {
+﻿class WeaponType {
     public name: weaponNames;
-    public blastRadius: number;
-    public speed: number;
     public cursor: string;
     public sound: Array<Sound>;
-    public cooldown: number;
-
     public imageSource: string;
-    private explosionInfo: explosionInfo;
+    public speed: number;
+    public cooldown: number;
 
     public activeInstance: weaponInstance;
     public instances: Array<weaponInstance> = [];
 
     constructor(info: weaponInfo) {
         this.name = info.name;
-        this.blastRadius = info.blastRadius;
-        this.speed = info.speed;
         this.cursor = info.cursor;
         this.sound = info.sound;
-        this.cooldown = info.cooldown;
-        this.explosionInfo = info.explosionInfo;
         this.imageSource = info.imageSource;
-
-        this.pushNewWeaponInstance();
+        this.speed = info.speed;
+        this.cooldown = info.cooldown;
     }
     public switchTo() {
         this.activeInstance = this.getAvailableInstance();
+    }
+
+    public getAvailableInstance() {
+        let current = this.activeInstance;
+        let nextReady: weaponInstance = null;
+        for (let i in this.instances) {
+            if (game) {
+                game.hud.deselectInst(parseInt(i)) //MESSY?
+            }
+            if (this.instances[i].ready === true) {
+                if (nextReady == null) {
+                    nextReady = this.instances[i];
+                    if (game) {
+                        game.hud.selectInst(parseInt(i)); //MESSY?
+                    }
+                }
+                
+            }
+        }
+     //   let nextReady = this.instances.find(inst => inst.ready == true) || null;
+        if (nextReady != null) {
+            nextReady.blastRadElement.style.visibility = "visible";
+        }
+        //    nextReady === current ? console.log("SAME!") : console.log("DIFF!")
+        return nextReady;
+    }
+
+    public pushNewWeaponInstance() {
+        let el = document.createElement('div');
+        let inst: weaponInstance = {
+            ready: true,
+            blastRadElement: el,
+        };
+        this.instances.push(inst);
+    }
+
+    public fireFunc(targets: Array<Target>) {
+
+    }
+
+    protected determineSeverity(fraction?: number) {
+        let severity: strikeSeverity;
+                if (this.name === weaponNames.charge) {
+            severity = strikeSeverity.catastrophic;
+        }
+        return severity
+    }
+}
+class ChargeWeaponType extends WeaponType {
+    constructor(info: weaponInfo) {
+        super(info);
+
+        this.pushNewWeaponInstance();
+    }
+    private setHudSelect(inst) {
+        this.activeInstance = this.getAvailableInstance();
+        game.hud.unavailInst(this.instances.indexOf(inst));
+        inst.ready = false;
+
+        setTimeout(() => {
+            inst.ready = true;
+            game.hud.availInst(this.instances.indexOf(inst)); //MESSY?
+            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
+        }, this.cooldown);
+    }
+    public fireFunc(targets: Array<Target>) {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
+            console.log("hit NULL inst");
+            return;
+        }
+
+        let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
+        this.activeInstance = this.getAvailableInstance();
+        
+        let collided: boolean
+        let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
+            return element.constructor.name === TunnelTarget.name;
+        });
+        for (let tunnel of tunnels) {
+            if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
+                game.shotCount++
+                game.updateShotCounter();
+                this.setHudSelect(inst);
+                RandomSoundGen.playNotSoRandomSound(beeps);
+                RandomSoundGen.playNotSoRandomSound(ticks);
+                setTimeout(() => {
+                    let severity = this.determineSeverity();
+                    tunnel.hit(severity);
+                    RandomSoundGen.playNotSoRandomSound(multiExplosions);
+                }, this.speed)
+            };
+        }
+    }
+}
+class ExplosiveWeaponType extends WeaponType {
+    public blastRadius: number;
+
+    private explosionInfo: explosionInfo;
+
+    constructor(info: ExplosiveWeaponInfo) {
+        super(info);
+
+        this.blastRadius = info.blastRadius;
+        this.explosionInfo = info.explosionInfo;
+
+        this.pushNewWeaponInstance();
     }
 
     public pushNewWeaponInstance() {
@@ -41,42 +139,26 @@ class WeaponType {
 
         let explosion = document.createElement('img');
         explosion.classList.add('explosion');
+        ContentElHandler.addToContentEl(explosion);
 
-        var timestamp = new Date().getTime();
-        explosion.src = this.explosionInfo.imageSource + '?' + timestamp;
-        addToContentEl(explosion);
-
-        if (this.name == weaponNames.nuke) {
-        }
-
-        let inst: weaponInstance = {
+        let inst: ExplosiveWeaponInstance = {
             ready: true,
             blastRadElement: el,
             explosion
         };
         this.instances.push(inst);
-        addToContentEl(el);
-    }
-    public getAvailableInstance() {
-        let current = this.activeInstance;
-        let nextReady = this.instances.find(inst => inst.ready == true) || null;
-        if (nextReady != null) {
-
-            nextReady.blastRadElement.style.visibility = "visible";
-        }
-        //    nextReady === current ? console.log("SAME!") : console.log("DIFF!")
-        return nextReady;
+        ContentElHandler.addToContentEl(el);
     }
 
     public fireFunc(targets: Array<Target>) {
-        if (this.activeInstance == null) {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
             console.log("hit NULL inst");
             return;
         }
         game.shotCount++
         game.updateShotCounter();
 
-        let inst = this.activeInstance;
+        let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
         let blastRadiusEl = inst.blastRadElement;
 
         this.prepFire(true, inst);
@@ -91,88 +173,108 @@ class WeaponType {
         explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
 
         this.activeInstance = this.getAvailableInstance();
+        game.hud.unavailInst(this.instances.indexOf(inst));
 
         setTimeout(() => {
             this.explosion_targetCheck(targets, inst);
             this.prepFire(false, inst);
-            inst.ready = true;
-            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
         }, this.speed);
+        setTimeout(() => {
+            inst.ready = true;
+            game.hud.availInst(this.instances.indexOf(inst)); //MESSY?
+            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
+        }, this.cooldown);
     }
-    private explosion_targetCheck(targets: Array<Target>, inst: weaponInstance) {
+
+    private explosion_targetCheck(targets: Array<Target>, inst: ExplosiveWeaponInstance) {
 
         let explosion = inst.explosion;
-        explosion.style.visibility = 'visible';
-
-        setTimeout(() => {
-            explosion.style.visibility = 'hidden';
-        }, this.explosionInfo.length);
+        explosion.src = this.explosionInfo.imageSource + loadNewImage();
 
         for (let target of targets) {
-            let collisionInfo = CollisionDetection.checkPos(inst.blastRadElement, target.getTargetEl());
+            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromElement(inst.blastRadElement, target.getTargetEl());
             if (collisionInfo) {
                 let fraction = collisionInfo.dist / collisionInfo.radius;
-                let severity: strikeSeverity;
-                if (this.name === weaponNames.gun) {
-                    severity = strikeSeverity.light;
-                }
-                else {
-                    switch (true) {
-                        case (fraction > 0.9):
-                            severity = strikeSeverity.light;
-                            break;
-                        case (fraction <= 0.9 && fraction >= 0.6):
-                            severity = strikeSeverity.medium;
-                            break;
-                        case (fraction < 0.6 && fraction >= 0.3):
-                            severity = strikeSeverity.heavy;
-                            break;
-                        case (fraction < 0.3):
-                            severity = strikeSeverity.catastrophic;
-                            break;
-                        default:
-                            severity = strikeSeverity.light;
-                    }
-                }
-                //   console.log("SEV: "+strikeSeverity[severity]);
-                if (target.armour == Armour.moderate) {
-                    if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
-                        this.name < weaponNames.nuke && severity == strikeSeverity.light) {
-                        continue
-                    }
-                }
-                if (target.armour == Armour.heavy) {
-                    if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
-                        this.name < weaponNames.nuke && severity == strikeSeverity.medium) {
-                        continue
-                    }
-                }
-                let angle = collisionInfo.angle;
-                severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
-         //       console.log("ANGLE: " + angle);
+                let severity: strikeSeverity = this.determineSeverity(fraction);          
+                //   console.log("SEVERITY: "+strikeSeverity[severity]);
 
-                let direc: direction;
-                if (angle > 300 && angle < 360 || angle > 0 && angle < 60) {
-                    direc = direction.forward;
+                this.determineExceptionsForArmour(target, severity);
+                if (target.movesAtBlast) {
+                    severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
                 }
-                else if (angle > 150 && angle < 210) {
-                    direc = direction.backward;
-                    console.log("DIREC: " + direction.backward);
-                }
+
+                let direc: direction = this.determineDirectionForFlip(collisionInfo);
 
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, direc); // Main hit function
+                    target.hit(severity, direc); // TARGET - Main hit function
                     this.bonusHitSound();
                 }
             }
         }
     }
-    private prepFire(bool: boolean, inst: weaponInstance) {
+    private determineExceptionsForArmour(target: Target, severity: strikeSeverity) {
+        let exception: boolean = false;
+        if (target.armour == Armour.moderate) {
+            if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
+                this.name < weaponNames.nuke && severity == strikeSeverity.light) {
+                exception = true;
+            }
+        }
+        if (target.armour >= Armour.heavy) {
+            if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
+                this.name < weaponNames.nuke && severity == strikeSeverity.medium) {
+                exception = true;
+            }
+        }
+        return exception
+    }
+    private determineDirectionForFlip(collisionInfo: vectorMoveObj) {
+        let angle = collisionInfo.angle;
+        //       console.log("ANGLE: " + angle);
+
+        let direc: direction;
+        if (angle > 300 && angle < 360 || angle > 0 && angle < 60) {
+            direc = direction.forward;
+        }
+        else if (angle > 150 && angle < 210) {
+            direc = direction.backward;
+            console.log("DIREC: " + direction.backward);
+        }
+        return direc
+    }
+    protected determineSeverity(fraction: number) {
+        let severity: strikeSeverity;
+        if (this.name === weaponNames.gun) {
+            severity = strikeSeverity.light;
+        }
+        else {
+            switch (true) {
+                case (fraction > 0.9):
+                    severity = strikeSeverity.light;
+                    break;
+                case (fraction <= 0.9 && fraction >= 0.6):
+                    severity = strikeSeverity.medium;
+                    break;
+                case (fraction < 0.6 && fraction >= 0.3):
+                    severity = strikeSeverity.heavy;
+                    break;
+                case (fraction < 0.3):
+                    severity = strikeSeverity.catastrophic;
+                    break;
+                default:
+                    severity = strikeSeverity.light;
+            }
+        }
+        return severity
+    }
+    private prepFire(bool: boolean, inst: ExplosiveWeaponInstance) {
         this.switchBlastIndicatorStyle(bool, inst);
         if (bool) {
             this.rippleEffect(inst);
             RandomSoundGen.playNotSoRandomSound(this.sound);
-
+            //if (this.activeInstance != inst) {
+            //    inst.blastRadElement.style.visibility = 'hidden';
+            //}
             if (this.explosionInfo.sound.length) {
                 setTimeout(() => RandomSoundGen.playNotSoRandomSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
             }
@@ -180,7 +282,7 @@ class WeaponType {
         inst.ready = !bool;
     }
 
-    public switchBlastIndicatorStyle(bool: boolean, inst: weaponInstance) {
+    public switchBlastIndicatorStyle(bool: boolean, inst: ExplosiveWeaponInstance) {
         if (inst == null)
             return;
         let blastRadiusEl = inst.blastRadElement;
@@ -194,7 +296,7 @@ class WeaponType {
         }
     }
 
-    private rippleEffect(inst: weaponInstance) {
+    private rippleEffect(inst: ExplosiveWeaponInstance) {
         let blastRadiusEl = inst.blastRadElement;
         const circle = document.createElement("span");
         const diameter = blastRadiusEl.clientWidth;

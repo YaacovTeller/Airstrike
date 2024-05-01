@@ -1,4 +1,5 @@
 ﻿const assetsFolder: string = "./AS_assets/";
+const classicExplosion: string = 'expl1.gif';
 
 enum direction {
     forward = "forward",
@@ -19,7 +20,8 @@ enum weaponNames {
     mortar,
     howitzer,
     airstrike,
-    nuke
+    nuke,
+    charge
 }
 type explosionInfo = {
     imageSource: string,
@@ -27,27 +29,30 @@ type explosionInfo = {
     sound: Array<Sound>,
     soundDelay?: number
 }
-
 type weaponInstance = {
     ready: boolean;
     blastRadElement: HTMLElement;
-    explosion: HTMLElement;
+}
+type ExplosiveWeaponInstance = weaponInstance & {
+    explosion: HTMLImageElement;
 }
 type weaponInfo = {
     name: weaponNames,
-    blastRadius: number,
-    speed: number,
-    cooldown: number,
-    cursor: string,
-    explosionInfo: explosionInfo,
-    imageSource: string,
     sound: Array<Sound>,
+    imageSource: string,
+    cursor: string,
+    speed: number,
+    cooldown: number
+}
+type ExplosiveWeaponInfo = weaponInfo & {
+    blastRadius: number,
+    explosionInfo: explosionInfo,
 }
 
-const sniperInfo: weaponInfo = {
+
+const sniperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.gun,
     blastRadius: 6,
-    speed: 0,
     cursor: "cursor1",
     explosionInfo: {
         imageSource: assetsFolder + 'fire_1.gif',
@@ -56,56 +61,56 @@ const sniperInfo: weaponInfo = {
     },
     imageSource: assetsFolder + 'gun.svg',
     sound: gunSounds,
-    cooldown: 0,
+    speed: 0,
+    cooldown: 500,
 }
-const mortarInfo: weaponInfo = {
+const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
     blastRadius: 50,
-    speed: 2000,
     cursor: "cursor2",
     explosionInfo: {
-        imageSource: assetsFolder + 'expl.gif',
+        imageSource: assetsFolder + classicExplosion,
         sound: [],
         length: 1000
     },
     imageSource: assetsFolder + 'mortar.svg',
     sound: mortarSounds,
-    cooldown: 1,
+    speed: 2000,
+    cooldown: 2000,
 }
-const howitzerInfo: weaponInfo = {
+const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.howitzer,
     blastRadius: 70,
-    speed: 3000,
     cursor: "cursor3",
     explosionInfo: {
-        imageSource: assetsFolder + 'expl.gif',
+        imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         soundDelay: 3000,
         length: 1000
     },
     imageSource: assetsFolder + 'tank.svg',
     sound: howitzerSounds,
-    cooldown: 2,
+    speed: 3000,
+    cooldown: 5000,
 }
-const airstrikeInfo: weaponInfo = {
+const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
     blastRadius: 100,
-    speed: 4000,
     cursor: "cursor4",
     explosionInfo: {
-        imageSource: assetsFolder + 'expl.gif',
+        imageSource: assetsFolder + classicExplosion,
         sound: strikes,
         soundDelay: 2500,
         length: 1000
     },
     imageSource: assetsFolder + 'jet.svg',
     sound: airstrikeSounds,
-    cooldown: 4,
+    speed: 4000,
+    cooldown: 8000,
 }
-const nukeInfo: weaponInfo = {
+const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
     blastRadius: 400,
-    speed: 6000,
     cursor: "cursor4",
     explosionInfo: {
         imageSource: assetsFolder + 'mushroom_1.gif',
@@ -115,5 +120,14 @@ const nukeInfo: weaponInfo = {
     },
     imageSource: assetsFolder + 'bomb.svg',
     sound: nukeSounds,
-    cooldown: 15,
+    speed: 6000,
+    cooldown: 15000,
+}
+const chargeInfo: weaponInfo = {
+    name: weaponNames.charge,
+    cursor: "cursor4",
+    imageSource: assetsFolder + 'dynamite.svg',
+    sound: gunSounds,
+    speed: 3000,
+    cooldown: 8000
 }

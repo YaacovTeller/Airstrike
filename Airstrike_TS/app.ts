@@ -1,7 +1,7 @@
 ﻿class GameHandler {
     private targets: Array<Target> = [];
     private contentEl: HTMLElement;
-    private hud = new HudHandler();
+    public hud = new HudHandler(); //MESSY?
     public shotCount: number = 0;
 
     private targetTimer: number;
@@ -17,7 +17,10 @@
         this.hud.drawHUD();
 
         this.changeWeapon(mortar);
-        this.weapon.switchBlastIndicatorStyle(false, null);
+        if (this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
+            let w = this.weapon as ExplosiveWeaponType
+            w.switchBlastIndicatorStyle(false, null);
+        }
     }
     public updateShotCounter() {
         this.hud.updateScore(this.shotCount)
@@ -53,10 +56,12 @@
     public changeWeapon(wep: WeaponType) {
         if (!allWeaponTypes.includes(wep)) return
         this.weapon = wep;
+        this.hud.selectBox(wep.name);
         this.weapon.switchTo();
         let inst = this.weapon.getAvailableInstance()
-        if (inst) {
-            this.weapon.switchBlastIndicatorStyle(false, inst);
+        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
+            let w = this.weapon as ExplosiveWeaponType
+            w.switchBlastIndicatorStyle(false, inst as ExplosiveWeaponInstance);
         }
         this.switchCursor();
         this.updateCursorPosition();
@@ -70,7 +75,6 @@
                 }
             }
         })
-        this.hud.selectBox(wep.name);
     }
 
     private switchCursor() { // broken?
@@ -82,17 +86,20 @@
 
     public newTarget() {
         let newTarget: Target;
-        let rand = RandomNumberGen.randomNumBetween(1, 8);
+        let rand = RandomNumberGen.randomNumBetween(1, 12);
 
         switch (true) {
-            case (rand == 8):
-                newTarget = new Target(this.contentEl, heavyTarget);
-                break;
             case (rand >= 6):
-                newTarget = new Target(this.contentEl, modTarget);
+                newTarget = new TunnelTarget(regTunnelTarget);
+                break;
+            case (rand >= 10):
+                newTarget = new VehicleTarget(heavyTarget);
+                break;
+            case (rand >= 8):
+                newTarget = new VehicleTarget(modTarget);
                 break;
             default:
-                newTarget = new Target(this.contentEl, regTarget);
+                newTarget = new VehicleTarget(regTarget);
                 break;
         }
         this.targets.push(newTarget)
@@ -101,7 +108,7 @@
     private addNuke() {
         if (allWeaponTypes.includes(nuke)) return
 
-        nuke = new WeaponType(nukeInfo);
+        nuke = new ExplosiveWeaponType(nukeInfo);
         allWeaponTypes.push(nuke)
         this.hud.drawHUD();
     }
@@ -140,9 +147,17 @@
     }
 }
 
-function addToContentEl(elem: HTMLElement) {
-    let contentEl: HTMLElement = document.getElementById("content")!;
-    contentEl.appendChild(elem);
+function loadNewImage() {
+    return '?' + new Date().getTime();
+}
+class ContentElHandler {
+    static addToContentEl(elem: HTMLElement) {
+        let contentEl: HTMLElement = document.getElementById("content")!;
+        contentEl.appendChild(elem);
+    }
+    static contentElWidth() {
+        return document.getElementById("content").clientWidth;
+    }
 }
 
 class MouseHandler {
@@ -161,34 +176,40 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
-var sniper: WeaponType;
-var mortar: WeaponType;
-var howitzer: WeaponType;
-var airstrike: WeaponType;
-var nuke: WeaponType;
+var charge: ChargeWeaponType;
+var sniper: ExplosiveWeaponType;
+var mortar: ExplosiveWeaponType;
+var howitzer: ExplosiveWeaponType;
+var airstrike: ExplosiveWeaponType;
+var nuke: ExplosiveWeaponType;
 var allWeaponTypes: Array<WeaponType>
 
 var game: GameHandler;
     window.onload = () => {
     const contentEl: HTMLElement = document.getElementById("content")!;
-    sniper = new WeaponType(sniperInfo);
-    mortar = new WeaponType(mortarInfo);
-    howitzer = new WeaponType(howitzerInfo);
-    airstrike = new WeaponType(airstrikeInfo);
-    allWeaponTypes = [sniper, mortar, howitzer, airstrike];
+        charge = new ChargeWeaponType(chargeInfo);
+        sniper = new ExplosiveWeaponType(sniperInfo);
+        mortar = new ExplosiveWeaponType(mortarInfo);
+        howitzer = new ExplosiveWeaponType(howitzerInfo);
+        airstrike = new ExplosiveWeaponType(airstrikeInfo);
+    allWeaponTypes = [sniper, mortar, howitzer, airstrike, charge];
+
+        //charge.pushNewWeaponInstance();
+        //charge.pushNewWeaponInstance();
+
 
     mortar.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();
 
-    //mortar.pushNewWeaponInstance();
+    mortar.pushNewWeaponInstance();
 
-    //airstrike.pushNewWeaponInstance();
-    //airstrike.pushNewWeaponInstance();
-    //airstrike.pushNewWeaponInstance();
+    airstrike.pushNewWeaponInstance();
+    airstrike.pushNewWeaponInstance();
+    airstrike.pushNewWeaponInstance();
 
-    //howitzer.pushNewWeaponInstance();
-    //howitzer.pushNewWeaponInstance();
-    //howitzer.pushNewWeaponInstance();
+    howitzer.pushNewWeaponInstance();
+    howitzer.pushNewWeaponInstance();
+    howitzer.pushNewWeaponInstance();
 
     game = new GameHandler(contentEl);
 

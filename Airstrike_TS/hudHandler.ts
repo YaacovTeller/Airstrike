@@ -33,7 +33,7 @@ class HudHandler {
         let el = document.createElement('div')
         el.classList.add("hud")
         el.id = 'hud';
-        addToContentEl(el)
+        ContentElHandler.addToContentEl(el)
         this.hud = el;
         let wepBoxContainer = document.createElement('div');
         wepBoxContainer.classList.add('wepBoxContainer');
@@ -114,10 +114,21 @@ class HudHandler {
             else x.classList.remove("selected");
         }
     }
-    public selectInst() {
-        let insts = this.selectedWep.getElementsByClassName('instBox');
-        for (let x of insts) {
 
-        }
+    public selectInst(num: number) {
+        let insts = this.selectedWep.getElementsByClassName('instBox');
+        insts[num].classList.add("instSelected")
+    }
+    public deselectInst(num: number) {
+        let insts = this.selectedWep.getElementsByClassName('instBox');
+        insts[num].classList.remove("instSelected")
+    }
+    public unavailInst(num: number) {
+        let insts = this.selectedWep.getElementsByClassName('instBox');
+        insts[num].classList.add("instUnavailable")
+    }
+    public availInst(num: number) {
+        let insts = this.selectedWep.getElementsByClassName('instBox');
+        insts[num].classList.remove("instUnavailable")
     }
 }
