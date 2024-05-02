@@ -18,7 +18,6 @@ var Armour;
     Armour[Armour["none"] = 0] = "none";
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
-    //underground
 })(Armour || (Armour = {}));
 const regTarget = {
     //maxSpeed: 3, //KIDS
@@ -44,7 +43,7 @@ const heavyTarget = {
     picSources: ['jeep_grey_armour.png']
 };
 const regTunnelTarget = {
-    maxSpeed: 4,
+    maxSpeed: 2,
     minSpeed: 1,
     armour: Armour.moderate,
     picSources: ['trans.png']

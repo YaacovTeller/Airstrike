@@ -15,7 +15,6 @@ enum Armour {
     none,
     moderate,
     heavy,
-    //underground
 }
 type targetInfo = {
     maxSpeed: number,
@@ -47,7 +46,7 @@ const heavyTarget: targetInfo = {
     picSources: ['jeep_grey_armour.png']
 }
 const regTunnelTarget: targetInfo = {
-    maxSpeed: 4,
+    maxSpeed: 2,
     minSpeed: 1,
     armour: Armour.moderate,
     picSources: ['trans.png']
