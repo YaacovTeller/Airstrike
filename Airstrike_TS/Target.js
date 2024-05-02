@@ -190,6 +190,7 @@ class VehicleTarget extends Target {
         this.damageEl.src = this.badDamagedSource;
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
+        RandomNumberGen.randomNumBetween(1, 8) == 8 ? aluak.play() : "";
         CollisionDetection.throw(this.targetEl, direc); // ARC
         this.flip(direc); // ROTATION
     }

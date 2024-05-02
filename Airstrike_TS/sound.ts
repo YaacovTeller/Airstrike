@@ -9,6 +9,7 @@
         this.sound.setAttribute("preload", "auto");
         this.sound.setAttribute("controls", "none");
         document.body.appendChild(this.sound);
+
     }
 
     public setVolume(vol: number) {
@@ -46,15 +47,15 @@ class RandomSoundGen {
 }
     const soundFolder: string = "./AS_assets/sound/"
 
+var pgia: Sound;
+var bleep_neg: Sound;
+var aluak: Sound;
+
 var gunSounds: Array<Sound> = [];
 var mortarSounds: Array<Sound> = [];
 var howitzerSounds: Array<Sound> = [];
 var airstrikeSounds: Array<Sound> = [];
 var nukeSounds: Array<Sound> = [];
-var pgia: Sound;
-var tick: Sound;
-var redAlert: Sound;
-var bigExpl: Sound;
 var explosions: Array<Sound> = [];
 var strikes: Array<Sound> = [];
 var bigExplosions: Array<Sound> = [];
@@ -62,13 +63,23 @@ var multiExplosions: Array<Sound> = [];
 var crashes: Array<Sound> = [];
 var beeps: Array<Sound> = [];
 var ticks: Array<Sound> = [];
+var ambience: Array<Sound> = [];
+
 
 function loadSound() {
+    aluak = new Sound(soundFolder + "aluAk.mp3");
     pgia = new Sound(soundFolder + "pgia.mp3");
+    bleep_neg = new Sound(soundFolder + "target_lost.mp3");
     ticks.push(
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3")
+    )
+    ambience.push(
+        new Sound(soundFolder + "ambient_1_q.mp3"),
+        new Sound(soundFolder + "ambient_2_q.mp3"),
+        new Sound(soundFolder + "ambient_4_q.mp3"),
+        new Sound(soundFolder + "ambient_5_q.mp3")
         )
     beeps.push(
         new Sound(soundFolder + "beep_tiny.mp3"),
@@ -115,9 +126,13 @@ function loadSound() {
         new Sound(soundFolder + "mortar_5.mp3")
     )
     howitzerSounds.push(
-        new Sound(soundFolder + "yoRE_1.mp3"),
-        new Sound(soundFolder + "yoRE_2.mp3"),
-        new Sound(soundFolder + "yoRE_3.mp3"),
+        //new Sound(soundFolder + "yoRE_1.mp3"),
+        //new Sound(soundFolder + "yoRE_2.mp3"),
+        //new Sound(soundFolder + "yoRE_3.mp3"),
+        new Sound(soundFolder + "tank_fire.mp3"),
+        new Sound(soundFolder + "yoRE_Eish.mp3"),
+        new Sound(soundFolder + "tank_fire.mp3"),
+        new Sound(soundFolder + "tank_fire.mp3"),
         // new Sound(soundFolder + "yoRE_4.mp3"),
         // new Sound(soundFolder + "yoRE_5.mp3")
     )

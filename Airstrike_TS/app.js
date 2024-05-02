@@ -9,6 +9,9 @@ class GameHandler {
     weapon;
     constructor(element) {
         this.contentEl = element;
+        document.getElementById("startbutton").addEventListener("click", (event) => {
+            this.start();
+        });
         this.contentEl.addEventListener("click", (event) => this.fireFunc());
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
@@ -16,6 +19,12 @@ class GameHandler {
         //    let w = this.weapon as ExplosiveWeaponType
         //    w.switchBlastIndicatorStyle(false, null);
         //}
+    }
+    toggleModal() {
+        var overlay = document.getElementById("overlay");
+        var modal = document.getElementById("modal");
+        overlay.style.display = overlay.style.display === "block" ? "none" : "block";
+        modal.style.display = modal.style.display === "block" ? "none" : "block";
     }
     updateShotCounter() {
         this.hud.updateScore(this.shotCount);
@@ -128,6 +137,11 @@ class GameHandler {
         this.hud.updateScore();
     }
     start() {
+        this.toggleModal();
+        RandomSoundGen.playRandomSound(ambience);
+        setInterval(() => {
+            RandomSoundGen.playRandomSound(ambience);
+        }, 35000);
         this.newTarget();
         this.targetTimer = window.setInterval(() => {
             this.newTarget();
@@ -199,6 +213,5 @@ window.onload = () => {
     game.hud.drawHUD();
     game.changeWeapon(mortar);
     loadSound();
-    game.start();
 };
 //# sourceMappingURL=app.js.map

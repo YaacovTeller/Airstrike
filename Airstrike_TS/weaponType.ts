@@ -89,6 +89,7 @@ class ChargeWeaponType extends WeaponType {
 
     public fireFunc(targets: Array<Target>) {
         if (this.activeInstance == null || this.activeInstance.ready === false) {
+            bleep_neg.play();
             console.log("hit NULL inst");
             return;
         }
@@ -99,8 +100,10 @@ class ChargeWeaponType extends WeaponType {
         let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
             return element.constructor.name === TunnelTarget.name;
         });
+        let hit: boolean = false;
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
+                hit = true;
                 this.shotCounter();
                 this.setHudSelect(inst);
                 RandomSoundGen.playSequentialSound(beeps);
@@ -112,6 +115,7 @@ class ChargeWeaponType extends WeaponType {
                 }, this.speed)
             };
         }
+        hit === false ? bleep_neg.play(): "";
     }
 }
 class ExplosiveWeaponType extends WeaponType {

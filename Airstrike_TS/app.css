@@ -225,3 +225,65 @@ audio {
         transform: rotate(360deg);
     }
 }
+
+#overlay {
+    z-index: 10;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-opaque black */
+}
+
+#modal {
+    z-index: 10;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 40px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+    #modal h2 {
+        margin-top: 0;
+    }
+
+    #modal ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    #modal li {
+        margin: 5px 0;
+    }
+    #modal div {
+        display:flex;
+        justify-content: center;
+    }
+
+#startbutton {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    #startbutton:hover {
+        background-color: #45a049; /* Darker Green */
+    }
+
+/*button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}*/
