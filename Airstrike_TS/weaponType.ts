@@ -54,7 +54,7 @@
         game.updateShotCounter();
     }
     protected setHudSelect(inst: weaponInstance) {
-       // this.activeInstance = this.getAvailableInstance();
+        this.activeInstance = this.getAvailableInstance();
         
         let instances: Array<weaponInstance> = this.instances;
         let name: weaponNames = this.name;
@@ -186,16 +186,17 @@ class ExplosiveWeaponType extends WeaponType {
     }
 
     private explosion_targetCheck(targets: Array<Target>, inst: ExplosiveWeaponInstance) {
-
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
+        this.genericExplosion(explosion, targets);
+    }
 
+    public genericExplosion(elem: HTMLElement, targets: Array<Target>) {
         for (let target of targets) {
-            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromElement(inst.blastRadElement, target.getTargetEl());
+            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromElement(elem, target.getTargetEl());
             if (collisionInfo) {
                 let fraction = collisionInfo.dist / collisionInfo.radius;
-                let severity: strikeSeverity = this.determineSeverity(fraction);          
-                //   console.log("SEVERITY: "+strikeSeverity[severity]);
+                let severity: strikeSeverity = this.determineSeverity(fraction);
 
                 if (this.determineExceptionsForArmour(target, severity)) {
                     continue
@@ -203,7 +204,6 @@ class ExplosiveWeaponType extends WeaponType {
                 if (target.movesAtBlast) {
                     severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
                 }
-
                 let direc: direction = this.determineDirectionForFlip(collisionInfo);
 
                 if (target.damage != Damage.destroyed) {

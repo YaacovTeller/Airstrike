@@ -26,8 +26,8 @@ type targetInfo = {
 const regTarget: targetInfo = {
     //maxSpeed: 3, //KIDS
     //minSpeed: 2,
-    maxSpeed: 8,
-    minSpeed: 4,
+    maxSpeed: 8, 
+    minSpeed: 4, 
     armour : Armour.none,
     picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
 }
@@ -47,8 +47,8 @@ const heavyTarget: targetInfo = {
     picSources: ['jeep_grey_armour.png']
 }
 const regTunnelTarget: targetInfo = {
-    maxSpeed: 3,
-    minSpeed: 1,
+    maxSpeed: 7, //3,
+    minSpeed: 5,// 1,
     armour: Armour.moderate,
     picSources: ['trans.png']
 }
@@ -158,9 +158,9 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
+                mortar.genericExplosion(imgArr[index], game.targets)
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150)
-            console.log('index:' + parseInt(index) + " final: " + parseInt(index) + 1 * 1000)
         }
     }
     public action() {

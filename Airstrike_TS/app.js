@@ -1,3 +1,4 @@
+const newTargetEvery = 2500;
 class GameHandler {
     targets = [];
     contentEl;
@@ -130,7 +131,7 @@ class GameHandler {
         this.newTarget();
         this.targetTimer = window.setInterval(() => {
             this.newTarget();
-        }, 3000);
+        }, newTargetEvery);
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
             this.targets.forEach((trg) => {
@@ -185,6 +186,7 @@ window.onload = () => {
     allWeaponTypes = [sniper, mortar, howitzer, airstrike, charge];
     //charge.pushNewWeaponInstance();
     //charge.pushNewWeaponInstance();
+    // charge.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();
     mortar.pushNewWeaponInstance();

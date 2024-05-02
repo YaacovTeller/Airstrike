@@ -50,7 +50,7 @@ class WeaponType {
         game.updateShotCounter();
     }
     setHudSelect(inst) {
-        // this.activeInstance = this.getAvailableInstance();
+        this.activeInstance = this.getAvailableInstance();
         let instances = this.instances;
         let name = this.name;
         let index = instances.indexOf(inst);
@@ -160,12 +160,14 @@ class ExplosiveWeaponType extends WeaponType {
     explosion_targetCheck(targets, inst) {
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
+        this.genericExplosion(explosion, targets);
+    }
+    genericExplosion(elem, targets) {
         for (let target of targets) {
-            let collisionInfo = CollisionDetection.checkCollisionFromElement(inst.blastRadElement, target.getTargetEl());
+            let collisionInfo = CollisionDetection.checkCollisionFromElement(elem, target.getTargetEl());
             if (collisionInfo) {
                 let fraction = collisionInfo.dist / collisionInfo.radius;
                 let severity = this.determineSeverity(fraction);
-                //   console.log("SEVERITY: "+strikeSeverity[severity]);
                 if (this.determineExceptionsForArmour(target, severity)) {
                     continue;
                 }

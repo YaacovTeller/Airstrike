@@ -1,5 +1,7 @@
-﻿class GameHandler {
-    private targets: Array<Target> = [];
+﻿const newTargetEvery: number = 2500;
+
+class GameHandler {
+    public targets: Array<Target> = [];
     private contentEl: HTMLElement;
     public hud = new HudHandler(); //MESSY?
     public shotCount: number = 0;
@@ -135,7 +137,7 @@
         this.targetTimer = window.setInterval(() => {
             this.newTarget();
 
-        }, 3000);
+        }, newTargetEvery);
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
             this.targets.forEach((trg) => {
@@ -196,6 +198,7 @@ var game: GameHandler;
 
         //charge.pushNewWeaponInstance();
         //charge.pushNewWeaponInstance();
+       // charge.pushNewWeaponInstance();
 
 
     mortar.pushNewWeaponInstance();
