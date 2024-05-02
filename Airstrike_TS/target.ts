@@ -47,8 +47,8 @@ const heavyTarget: targetInfo = {
     picSources: ['jeep_grey_armour.png']
 }
 const regTunnelTarget: targetInfo = {
-    maxSpeed: 7, //3,
-    minSpeed: 5,// 1,
+    maxSpeed: 4,
+    minSpeed: 1,
     armour: Armour.moderate,
     picSources: ['trans.png']
 }
