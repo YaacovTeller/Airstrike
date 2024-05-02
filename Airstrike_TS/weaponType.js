@@ -160,7 +160,7 @@ class ExplosiveWeaponType extends WeaponType {
     explosion_targetCheck(targets, inst) {
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
-        this.genericExplosion(explosion, targets);
+        this.genericExplosion(inst.blastRadElement, targets);
     }
     genericExplosion(elem, targets) {
         for (let target of targets) {
@@ -187,13 +187,13 @@ class ExplosiveWeaponType extends WeaponType {
         let exception = false;
         if (target.armour == Armour.moderate) {
             if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
-                this.name < weaponNames.nuke && severity == strikeSeverity.light) {
+                this.name < weaponNames.nuke && severity <= strikeSeverity.light) {
                 exception = true;
             }
         }
         if (target.armour >= Armour.heavy) {
             if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
-                this.name < weaponNames.nuke && severity == strikeSeverity.medium) {
+                this.name < weaponNames.nuke && severity <= strikeSeverity.medium) {
                 exception = true;
             }
         }
