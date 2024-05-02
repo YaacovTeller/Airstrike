@@ -11,12 +11,10 @@ class GameHandler {
         this.contentEl.addEventListener("click", (event) => this.fireFunc());
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        this.hud.drawHUD();
-        this.changeWeapon(mortar);
-        if (this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
-            let w = this.weapon;
-            w.switchBlastIndicatorStyle(false, null);
-        }
+        //if (this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
+        //    let w = this.weapon as ExplosiveWeaponType
+        //    w.switchBlastIndicatorStyle(false, null);
+        //}
     }
     updateShotCounter() {
         this.hud.updateScore(this.shotCount);
@@ -178,6 +176,7 @@ var allWeaponTypes;
 var game;
 window.onload = () => {
     const contentEl = document.getElementById("content");
+    game = new GameHandler(contentEl);
     charge = new ChargeWeaponType(chargeInfo);
     sniper = new ExplosiveWeaponType(sniperInfo);
     mortar = new ExplosiveWeaponType(mortarInfo);
@@ -191,11 +190,12 @@ window.onload = () => {
     mortar.pushNewWeaponInstance();
     airstrike.pushNewWeaponInstance();
     airstrike.pushNewWeaponInstance();
-    airstrike.pushNewWeaponInstance();
+    //airstrike.pushNewWeaponInstance();
     howitzer.pushNewWeaponInstance();
     howitzer.pushNewWeaponInstance();
     howitzer.pushNewWeaponInstance();
-    game = new GameHandler(contentEl);
+    game.hud.drawHUD();
+    game.changeWeapon(mortar);
     loadSound();
     game.start();
 };

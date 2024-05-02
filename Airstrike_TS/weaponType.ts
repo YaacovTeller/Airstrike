@@ -25,17 +25,12 @@
         let current = this.activeInstance;
         let nextReady: weaponInstance = null;
         for (let i in this.instances) {
-            if (game) {
-                game.hud.deselectInst(parseInt(i)) //MESSY?
-            }
+            game.hud.deselectInst(parseInt(i), this.name) //MESSY?
             if (this.instances[i].ready === true) {
                 if (nextReady == null) {
                     nextReady = this.instances[i];
-                    if (game) {
-                        game.hud.selectInst(parseInt(i)); //MESSY?
-                    }
+                    game.hud.selectInst(parseInt(i), this.name); //MESSY?
                 }
-                
             }
         }
      //   let nextReady = this.instances.find(inst => inst.ready == true) || null;
@@ -54,6 +49,25 @@
         };
         this.instances.push(inst);
     }
+    protected shotCounter() {
+        game.shotCount++
+        game.updateShotCounter();
+    }
+    protected setHudSelect(inst: weaponInstance) {
+       // this.activeInstance = this.getAvailableInstance();
+        
+        let instances: Array<weaponInstance> = this.instances;
+        let name: weaponNames = this.name;
+        let index = instances.indexOf(inst);
+        game.hud.unavailInst(index, name);
+        inst.ready = false;
+
+        setTimeout(() => {
+            inst.ready = true;
+            game.hud.availInst(index, name); //MESSY?
+            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
+        }, this.cooldown);
+    }
 
     public fireFunc(targets: Array<Target>) {
 
@@ -70,44 +84,31 @@
 class ChargeWeaponType extends WeaponType {
     constructor(info: weaponInfo) {
         super(info);
-
         this.pushNewWeaponInstance();
     }
-    private setHudSelect(inst) {
-        this.activeInstance = this.getAvailableInstance();
-        game.hud.unavailInst(this.instances.indexOf(inst));
-        inst.ready = false;
 
-        setTimeout(() => {
-            inst.ready = true;
-            game.hud.availInst(this.instances.indexOf(inst)); //MESSY?
-            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
-        }, this.cooldown);
-    }
     public fireFunc(targets: Array<Target>) {
         if (this.activeInstance == null || this.activeInstance.ready === false) {
             console.log("hit NULL inst");
             return;
         }
 
-        let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
+        let inst: weaponInstance = this.activeInstance as weaponInstance;
         this.activeInstance = this.getAvailableInstance();
         
-        let collided: boolean
         let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
             return element.constructor.name === TunnelTarget.name;
         });
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
-                game.shotCount++
-                game.updateShotCounter();
+                this.shotCounter();
                 this.setHudSelect(inst);
-                RandomSoundGen.playNotSoRandomSound(beeps);
-                RandomSoundGen.playNotSoRandomSound(ticks);
+                RandomSoundGen.playSequentialSound(beeps);
+                RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
                     let severity = this.determineSeverity();
-                    tunnel.hit(severity);
-                    RandomSoundGen.playNotSoRandomSound(multiExplosions);
+                    tunnel.hit(severity);       // TARGET - Main hit function
+                    RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed)
             };
         }
@@ -149,20 +150,8 @@ class ExplosiveWeaponType extends WeaponType {
         this.instances.push(inst);
         ContentElHandler.addToContentEl(el);
     }
-
-    public fireFunc(targets: Array<Target>) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            console.log("hit NULL inst");
-            return;
-        }
-        game.shotCount++
-        game.updateShotCounter();
-
-        let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
+    private setExplosionPos(inst: ExplosiveWeaponInstance) {
         let blastRadiusEl = inst.blastRadElement;
-
-        this.prepFire(true, inst);
-
         let explosion = inst.explosion;
         let blastRect = blastRadiusEl.getBoundingClientRect();
         explosion.style.width = blastRect.width + 'px';
@@ -171,19 +160,29 @@ class ExplosiveWeaponType extends WeaponType {
         let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
         explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
         explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
+    }
+
+    public fireFunc(targets: Array<Target>) {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
+            console.log("hit NULL inst");
+            return;
+        }
+
+        let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
+        
+        this.setExplosionPos(inst);
+        this.prepFire(true, inst);
 
         this.activeInstance = this.getAvailableInstance();
-        game.hud.unavailInst(this.instances.indexOf(inst));
+
+        this.shotCounter();
 
         setTimeout(() => {
             this.explosion_targetCheck(targets, inst);
             this.prepFire(false, inst);
         }, this.speed);
-        setTimeout(() => {
-            inst.ready = true;
-            game.hud.availInst(this.instances.indexOf(inst)); //MESSY?
-            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
-        }, this.cooldown);
+
+        this.setHudSelect(inst);
     }
 
     private explosion_targetCheck(targets: Array<Target>, inst: ExplosiveWeaponInstance) {
@@ -198,7 +197,9 @@ class ExplosiveWeaponType extends WeaponType {
                 let severity: strikeSeverity = this.determineSeverity(fraction);          
                 //   console.log("SEVERITY: "+strikeSeverity[severity]);
 
-                this.determineExceptionsForArmour(target, severity);
+                if (this.determineExceptionsForArmour(target, severity)) {
+                    continue
+                };
                 if (target.movesAtBlast) {
                     severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
                 }
@@ -223,6 +224,11 @@ class ExplosiveWeaponType extends WeaponType {
         if (target.armour >= Armour.heavy) {
             if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
                 this.name < weaponNames.nuke && severity == strikeSeverity.medium) {
+                exception = true;
+            }
+        }
+        if (target.movesAtBlast === false) {
+            if (this.name < weaponNames.airstrike) {
                 exception = true;
             }
         }
@@ -271,12 +277,12 @@ class ExplosiveWeaponType extends WeaponType {
         this.switchBlastIndicatorStyle(bool, inst);
         if (bool) {
             this.rippleEffect(inst);
-            RandomSoundGen.playNotSoRandomSound(this.sound);
+            RandomSoundGen.playSequentialSound(this.sound);
             //if (this.activeInstance != inst) {
             //    inst.blastRadElement.style.visibility = 'hidden';
             //}
             if (this.explosionInfo.sound.length) {
-                setTimeout(() => RandomSoundGen.playNotSoRandomSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
+                setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
             }
         }
         inst.ready = !bool;

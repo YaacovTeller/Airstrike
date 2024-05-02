@@ -105,30 +105,40 @@ class HudHandler {
         }
     }
     public selectBox(wepName: weaponNames) {
+        this.getWepboxByName(wepName, true)
+        
+    }
+    private getWepboxByName(wepName: weaponNames, select?: boolean) {
         let weps: HTMLCollectionOf<Element> = this.hud.getElementsByClassName('wepBox');
+        let wepBox: Element = null;
         for (let x of weps) {
-            if (x.getAttribute('data-name') == wepName.toString()) {
-                x.classList.add("selected")
-                this.selectedWep = x;
+            select ? x.classList.remove("selected"): "";   // MESSY
+            if (x.getAttribute('data-name') === wepName.toString()) {
+                wepBox = x;
+                if (select) {
+                    wepBox.classList.add("selected");
+                    this.selectedWep = wepBox;
+                }
             }
-            else x.classList.remove("selected");
         }
+        return wepBox;
+    }
+    public genericChangeClass(num: number, name: weaponNames, action: "add" | "remove", classname: string) {
+        let wep = this.getWepboxByName(name)
+        let insts = wep.getElementsByClassName('instBox');
+        action === "add" ? insts[num].classList.add(classname) : insts[num].classList.remove(classname)
     }
 
-    public selectInst(num: number) {
-        let insts = this.selectedWep.getElementsByClassName('instBox');
-        insts[num].classList.add("instSelected")
+    public selectInst(num: number, name: weaponNames) {
+        this.genericChangeClass(num, name, "add", "instSelected")
     }
-    public deselectInst(num: number) {
-        let insts = this.selectedWep.getElementsByClassName('instBox');
-        insts[num].classList.remove("instSelected")
+    public deselectInst(num: number, name: weaponNames) {
+        this.genericChangeClass(num, name, "remove", "instSelected")
     }
-    public unavailInst(num: number) {
-        let insts = this.selectedWep.getElementsByClassName('instBox');
-        insts[num].classList.add("instUnavailable")
+    public unavailInst(num: number, name: weaponNames) {
+        this.genericChangeClass(num, name, "add", "instUnavailable")
     }
-    public availInst(num: number) {
-        let insts = this.selectedWep.getElementsByClassName('instBox');
-        insts[num].classList.remove("instUnavailable")
+    public availInst(num: number, name: weaponNames) {
+        this.genericChangeClass(num, name, "remove", "instUnavailable")
     }
 }

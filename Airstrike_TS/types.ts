@@ -91,7 +91,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'tank.svg',
     sound: howitzerSounds,
     speed: 3000,
-    cooldown: 5000,
+    cooldown: 6000,
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
@@ -106,7 +106,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'jet.svg',
     sound: airstrikeSounds,
     speed: 4000,
-    cooldown: 8000,
+    cooldown: 9000,
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,

@@ -34,7 +34,7 @@ class RandomSoundGen {
         let sound = this.getRandomSound(sounds);
         sound.play();
     }
-    static playNotSoRandomSound(sounds) {
+    static playSequentialSound(sounds) {
         if (this.soundIndex >= sounds.length - 1) {
             this.soundIndex = 0;
         }

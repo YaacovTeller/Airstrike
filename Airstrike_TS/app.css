@@ -68,7 +68,7 @@ audio {
     }
         .wepBox.selected .instBox {
             background-color: lightgray;
-            opacity: 0.8;
+            opacity: 0.6;
         }
             .wepBox.selected .instBox.instSelected {
                 background-color: forestgreen;
@@ -80,8 +80,13 @@ audio {
     border-radius: 2px;
     height: 20px;
     width: 20px;
-    background-color: rgba(173,216,230, 0.6);
+    /*background-color: rgba(173,216,230, 0.6);*/
+    background-color: rgb(173,216,230);
+    opacity: 0.6;
 }
+    .instBox.instUnavailable {
+        background-color: indianred;
+    }
 
     .cursor1 {
         cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
