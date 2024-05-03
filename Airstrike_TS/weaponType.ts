@@ -213,7 +213,9 @@ class ExplosiveWeaponType extends WeaponType {
 
                 if (target.damage != Damage.destroyed) {
                     target.hit(severity, direc); // TARGET - Main hit function
-                    this.bonusHitSound();
+                    if (target.damage < Damage.heavyDamaged) {
+                        this.bonusHitSound();
+                    }
                 }
             }
         }
