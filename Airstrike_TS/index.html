@@ -17,18 +17,42 @@
 <body>
     <div id="overlay" style="display: block"></div>
     <div id="modal" style="display: block">
-        <h2>Intructions:</h2>
-        <ol>
-            <li>Stop anything you see.</li>
-            <li>Select weapons by clicking on the boxes or with number keys.</li>
-            <li>Fire with <b>left mouse</b> or <b>ctrl</b>.</li>
-            <li>Armoured targets are impervious to gunfire, and require direct hits with explosives.</li>
-            <li><b>No. 5</b> is an explosive charge for tunnels, watch out for tunnels.</li>
-            <li>Tunnels can also be halted, or even destroyed, with a well placed airstrike.</li>
-            <li><b>No. 6</b> is... off limits. Unless you press <b>SHIFT N</b>. You were warned.</li>
-        </ol>
-        <div>
-            <button id="startbutton">Start</button>
+        <div class="modalContainer">
+
+            <h2>Intructions:</h2>
+            <ol>
+                <li>Stop anything you see.</li>
+                <li>Select weapons by clicking on the boxes or with number keys.</li>
+                <li>Fire with <b>left mouse</b> or <b>ctrl</b>.</li>
+                <li>Armoured targets are impervious to gunfire, and require direct hits with explosives.</li>
+                <li><b>No. 5</b> is an explosive charge for tunnels, watch out for tunnels.</li>
+                <li>Tunnels can also be halted, or even destroyed, with a well placed airstrike.</li>
+                <li><b>No. 6</b> is... off limits. Unless you press <b>SHIFT N</b>. You were warned.</li>
+            </ol>
+
+            <h2>Difficulty:</h2>
+            <div class="container">
+                <ul>
+                    <li>
+                        <input type="radio" id="option1" name="selector" value="3000" checked>
+                        <label for="option1">Normal</label>
+                        <div class="check"></div>
+                    </li>
+                    <li>
+                        <input type="radio" id="option2" name="selector" value="2000">
+                        <label for="option2">Hard</label>
+                        <div class="check"><div class="inside"></div></div>
+                    </li>
+                    <li>
+                        <input type="radio" id="option3" name="selector" value="1000">
+                        <label for="option3">Chaos</label>
+                        <div class="check"><div class="inside"></div></div>
+                    </li>
+                </ul>
+            </div>
+            <div class="buttonContainer">
+                <button id="startbutton">Start</button>
+            </div>
         </div>
     </div>
 

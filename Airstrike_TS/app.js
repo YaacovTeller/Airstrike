@@ -1,4 +1,4 @@
-const newTargetEvery = 2500;
+var newTargetEvery;
 class GameHandler {
     targets = [];
     contentEl;
@@ -9,8 +9,13 @@ class GameHandler {
     weapon;
     constructor(element) {
         this.contentEl = element;
-        document.getElementById("startbutton").addEventListener("click", (event) => {
-            this.start();
+        document.getElementById("startbutton").addEventListener("click", (event) => this.start());
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(radioButton => {
+            radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
+            if (radioButton.checked) {
+                newTargetEvery = parseInt(radioButton.value);
+            }
         });
         this.contentEl.addEventListener("click", (event) => this.fireFunc());
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
@@ -19,6 +24,10 @@ class GameHandler {
         //    let w = this.weapon as ExplosiveWeaponType
         //    w.switchBlastIndicatorStyle(false, null);
         //}
+    }
+    handleOptionChange(event) {
+        const selectedOption = event.target.value;
+        newTargetEvery = parseInt(selectedOption);
     }
     toggleModal() {
         var overlay = document.getElementById("overlay");
