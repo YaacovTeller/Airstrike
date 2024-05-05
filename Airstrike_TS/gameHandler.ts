@@ -67,7 +67,7 @@
 
     private handleKeyPress(event) {
         console.log(event.key);
-        if (event.code === 'Space' || event.key === 'z') { this.fireFunc(); }
+        if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') { this.fireFunc(); }
         let int = parseInt(event.key);
         if (int && allWeaponTypes[int - 1]) {
             this.changeWeapon(allWeaponTypes[int - 1]);

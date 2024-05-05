@@ -60,7 +60,7 @@ class GameHandler {
     }
     handleKeyPress(event) {
         console.log(event.key);
-        if (event.code === 'Space' || event.key === 'z') {
+        if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
             this.fireFunc();
         }
         let int = parseInt(event.key);
