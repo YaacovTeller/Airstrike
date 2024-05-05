@@ -125,8 +125,8 @@ class HudHandler {
     }
     public genericChangeClass(num: number, name: weaponNames, action: "add" | "remove", classname: string) {
         let wep = this.getWepboxByName(name)
-        let insts = wep.getElementsByClassName('instBox');
-        action === "add" ? insts[num].classList.add(classname) : insts[num].classList.remove(classname)
+        let instboxes = wep.getElementsByClassName('instBox');
+        action === "add" ? instboxes[num].classList.add(classname) : instboxes[num].classList.remove(classname)
     }
 
     public selectInst(num: number, name: weaponNames) {

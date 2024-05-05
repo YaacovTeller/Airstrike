@@ -136,6 +136,9 @@ audio {
     background-color: rgb(195,170,100);
     filter: blur(15px);
 }
+.tunnelFocus {
+    cursor: url(./AS_assets/unbounded.cur), crosshair;
+}
 .lightDamaged {
     width: 100%;
     padding-bottom: 35px;

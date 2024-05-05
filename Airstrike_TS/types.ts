@@ -11,10 +11,6 @@ enum strikeSeverity {
     heavy,
     catastrophic
 }
-type position = {
-    X,
-    Y
-}
 enum weaponNames {
     gun,
     mortar,
@@ -22,6 +18,21 @@ enum weaponNames {
     airstrike,
     nuke,
     charge
+}
+type position = {
+    X,
+    Y
+}
+type speedRange = {
+    max: number,
+    min: number
+}
+type difficultyLevelInfo = {
+    newTargetEvery: number,
+    regTargetSpeed: speedRange,
+    modTargetSpeed: speedRange,
+    heavyTargetSpeed: speedRange,
+    tunnelTargetSpeed: speedRange,
 }
 type explosionInfo = {
     imageSource: string,
@@ -47,6 +58,42 @@ type weaponInfo = {
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
     explosionInfo: explosionInfo,
+}
+
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
+const normal: difficultyLevelInfo = {
+    newTargetEvery: 3000,
+    regTargetSpeed: { min: 4, max: 8 },
+    modTargetSpeed: { min: 4, max: 5 },
+    heavyTargetSpeed: { min: 1, max: 3 },
+    tunnelTargetSpeed: { min: 1, max: 2 },
+}
+const hard: difficultyLevelInfo = {
+    newTargetEvery: 2000,
+    regTargetSpeed: { min: 4, max: 8 },
+    modTargetSpeed: { min: 4, max: 6 },
+    heavyTargetSpeed: { min: 1, max: 3 },
+    tunnelTargetSpeed: { min: 1, max: 2 },
+}
+const chaos: difficultyLevelInfo = {
+    newTargetEvery: 1000,
+    regTargetSpeed: { min: 4, max: 8 },
+    modTargetSpeed: { min: 4, max: 6 },
+    heavyTargetSpeed: { min: 1, max: 3 },
+    tunnelTargetSpeed: { min: 1, max: 3 },
+}
+const dev: difficultyLevelInfo = {
+    newTargetEvery: 300,
+    regTargetSpeed: { min: 4, max: 8 },
+    modTargetSpeed: { min: 4, max: 6 },
+    heavyTargetSpeed: { min: 1, max: 3 },
+    tunnelTargetSpeed: { min: 3, max: 5 },
 }
 
 
@@ -130,4 +177,37 @@ const chargeInfo: weaponInfo = {
     sound: gunSounds,
     speed: 3000,
     cooldown: 8000
+}
+
+function loadNewImage() {
+    return '?' + new Date().getTime();
+}
+class ContentElHandler {
+    static returnContentEl() {
+        return document.getElementById("content")!;
+    }
+    static addToContentEl(elem: HTMLElement) {
+        let contentEl: HTMLElement = this.returnContentEl();
+        contentEl.appendChild(elem);
+    }
+    static contentElWidth() {
+        return document.getElementById("content").clientWidth;
+    }
+}
+
+class MouseHandler {
+    static mousePos: position = { X: '', Y: '' };
+
+    static updateMousePos(event?: MouseEvent) {
+        if (event) {
+            this.mousePos.X = event.clientX
+            this.mousePos.Y = event.clientY
+        }
+        return this.mousePos
+    }
+}
+class RandomNumberGen {
+    static randomNumBetween(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 }

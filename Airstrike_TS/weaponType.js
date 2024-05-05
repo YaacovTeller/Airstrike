@@ -15,9 +15,15 @@ class WeaponType {
         this.speed = info.speed;
         this.cooldown = info.cooldown;
     }
-    switchTo() {
+    setActiveInstance() {
         this.activeInstance = this.getAvailableInstance();
+        game.updateCursorPosition(); // NEEDED?
     }
+    switchTo() {
+        //const container = ContentElHandler.returnContentEl();
+        //container.removeEventListener("mouseenter")
+    }
+    ;
     getAvailableInstance() {
         let current = this.activeInstance;
         let nextReady = null;
@@ -49,20 +55,21 @@ class WeaponType {
         game.shotCount++;
         game.updateShotCounter();
     }
-    setHudSelect(inst) {
-        this.activeInstance = this.getAvailableInstance();
+    fireFunc(targets) {
+    }
+    cooldownTimeout(inst) {
+        inst.ready = false;
         let instances = this.instances;
         let name = this.name;
         let index = instances.indexOf(inst);
         game.hud.unavailInst(index, name);
-        inst.ready = false;
+        let _this = this;
         setTimeout(() => {
             inst.ready = true;
             game.hud.availInst(index, name); //MESSY?
-            this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
-        }, this.cooldown);
-    }
-    fireFunc(targets) {
+            _this.activeInstance = _this.activeInstance == null ? _this.getAvailableInstance() : _this.activeInstance;
+            game.updateCursorPosition(); //MESSY?
+        }, _this.cooldown);
     }
     determineSeverity(fraction) {
         let severity;
@@ -70,41 +77,6 @@ class WeaponType {
             severity = strikeSeverity.catastrophic;
         }
         return severity;
-    }
-}
-class ChargeWeaponType extends WeaponType {
-    constructor(info) {
-        super(info);
-        this.pushNewWeaponInstance();
-    }
-    fireFunc(targets) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            bleep_neg.play();
-            console.log("hit NULL inst");
-            return;
-        }
-        let inst = this.activeInstance;
-        this.activeInstance = this.getAvailableInstance();
-        let tunnels = targets.filter((element) => {
-            return element.constructor.name === TunnelTarget.name;
-        });
-        let hit = false;
-        for (let tunnel of tunnels) {
-            if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
-                hit = true;
-                this.shotCounter();
-                this.setHudSelect(inst);
-                RandomSoundGen.playSequentialSound(beeps);
-                RandomSoundGen.playSequentialSound(ticks);
-                setTimeout(() => {
-                    let severity = this.determineSeverity();
-                    tunnel.hit(severity); // TARGET - Main hit function
-                    RandomSoundGen.playSequentialSound(multiExplosions);
-                }, this.speed);
-            }
-            ;
-        }
-        hit === false ? bleep_neg.play() : "";
     }
 }
 class ExplosiveWeaponType extends WeaponType {
@@ -135,6 +107,24 @@ class ExplosiveWeaponType extends WeaponType {
         this.instances.push(inst);
         ContentElHandler.addToContentEl(el);
     }
+    fireFunc(targets) {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
+            console.log("hit NULL inst");
+            bleep_neg.play();
+            return;
+        }
+        let inst = this.activeInstance;
+        this.setExplosionPos(inst);
+        this.prepFire(true, inst);
+        this.shotCounter();
+        setTimeout(() => {
+            this.explosion_targetCheck(targets, inst);
+            this.prepFire(false, inst);
+        }, this.speed);
+        //    this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
+        this.cooldownTimeout(inst);
+        this.activeInstance = this.getAvailableInstance();
+    }
     setExplosionPos(inst) {
         let blastRadiusEl = inst.blastRadElement;
         let explosion = inst.explosion;
@@ -144,22 +134,6 @@ class ExplosiveWeaponType extends WeaponType {
         let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
         explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
         explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
-    }
-    fireFunc(targets) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            console.log("hit NULL inst");
-            return;
-        }
-        let inst = this.activeInstance;
-        this.setExplosionPos(inst);
-        this.prepFire(true, inst);
-        this.activeInstance = this.getAvailableInstance();
-        this.shotCounter();
-        setTimeout(() => {
-            this.explosion_targetCheck(targets, inst);
-            this.prepFire(false, inst);
-        }, this.speed);
-        this.setHudSelect(inst);
     }
     explosion_targetCheck(targets, inst) {
         let explosion = inst.explosion;
@@ -260,19 +234,18 @@ class ExplosiveWeaponType extends WeaponType {
                 setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
             }
         }
-        inst.ready = !bool;
     }
     switchBlastIndicatorStyle(bool, inst) {
         if (inst == null)
             return;
-        let blastRadiusEl = inst.blastRadElement;
+        let blastRadEl = inst.blastRadElement;
         if (bool) {
-            blastRadiusEl.classList.remove("preFire");
-            blastRadiusEl.classList.add("firing");
+            blastRadEl.classList.remove("preFire");
+            blastRadEl.classList.add("firing");
         }
         else {
-            blastRadiusEl.classList.add("preFire");
-            blastRadiusEl.classList.remove("firing");
+            blastRadEl.classList.add("preFire");
+            blastRadEl.classList.remove("firing");
         }
     }
     rippleEffect(inst) {
@@ -289,6 +262,62 @@ class ExplosiveWeaponType extends WeaponType {
     }
     bonusHitSound() {
         RandomNumberGen.randomNumBetween(1, 8) == 8 ? pgia.play() : "";
+    }
+}
+class ChargeWeaponType extends WeaponType {
+    constructor(info) {
+        super(info);
+        this.pushNewWeaponInstance();
+    }
+    switchTo() {
+        //  this.assignSpecialClasses();
+    }
+    ;
+    assignSpecialClasses() {
+        const container = ContentElHandler.returnContentEl();
+        container.addEventListener('mouseenter', this.handleMouseEnter);
+        container.addEventListener('mouseleave', this.handleMouseLeave);
+    }
+    handleMouseEnter(event) {
+        const target = event.target;
+        if (target.classList.contains('tunnelHead')) {
+            target.classList.add('tunnelFocus');
+        }
+    }
+    handleMouseLeave(event) {
+        const target = event.target;
+        if (target.classList.contains('tunnelHead')) {
+            target.classList.remove('tunnelFocus');
+        }
+    }
+    fireFunc(targets) {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
+            bleep_neg.play();
+            console.log("hit NULL inst");
+            return;
+        }
+        let inst = this.activeInstance;
+        this.activeInstance = this.getAvailableInstance();
+        let tunnels = targets.filter((element) => {
+            return element.constructor.name === TunnelTarget.name;
+        });
+        let hit = false;
+        for (let tunnel of tunnels) {
+            if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
+                hit = true;
+                this.shotCounter();
+                this.cooldownTimeout(inst);
+                RandomSoundGen.playSequentialSound(beeps);
+                RandomSoundGen.playSequentialSound(ticks);
+                setTimeout(() => {
+                    let severity = this.determineSeverity();
+                    tunnel.hit(severity); // TARGET - Main hit function
+                    RandomSoundGen.playSequentialSound(multiExplosions);
+                }, this.speed);
+            }
+            ;
+        }
+        hit === false ? bleep_neg.play() : "";
     }
 }
 //# sourceMappingURL=weaponType.js.map

@@ -22,32 +22,28 @@ type targetInfo = {
     armour: Armour,
     picSources: Array<string>,
 }
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget: targetInfo = {
-    //maxSpeed: 3, //KIDS
-    //minSpeed: 2,
-    maxSpeed: 8, 
     minSpeed: 4, 
+    maxSpeed: 8, 
     armour : Armour.none,
     picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
 }
 const modTarget: targetInfo = {
-    //maxSpeed: 1, //KIDS
-    //minSpeed: 1,
-    maxSpeed: 6,
     minSpeed: 4,
+    maxSpeed: 6,
     armour: Armour.moderate,
     picSources: ['jeep_grey.png']
 }
 const heavyTarget: targetInfo = {
-    maxSpeed: 3, 
-    //maxSpeed: 1, //KIDS
     minSpeed: 1,
+    maxSpeed: 3, 
     armour: Armour.heavy,
     picSources: ['jeep_grey_armour.png']
 }
 const regTunnelTarget: targetInfo = {
-    maxSpeed: 2,
     minSpeed: 1,
+    maxSpeed: 2,
     armour: Armour.moderate,
     picSources: ['trans.png']
 }

@@ -85,6 +85,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="collisionDetection.ts" />
+    <TypeScriptCompile Include="gameHandler.ts" />
     <TypeScriptCompile Include="hudHandler.ts" />
     <TypeScriptCompile Include="types.ts" />
     <TypeScriptCompile Include="sound.ts" />
