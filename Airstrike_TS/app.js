@@ -30,8 +30,6 @@ window.onload = () => {
     const contentEl = ContentElHandler.returnContentEl();
     game = new GameHandler(contentEl);
     pushWeaponInstances();
-    game.hud.drawHUD();
-    game.changeWeapon(mortar);
     loadSound();
 };
 //# sourceMappingURL=app.js.map

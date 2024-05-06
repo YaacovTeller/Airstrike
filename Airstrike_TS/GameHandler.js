@@ -219,7 +219,6 @@ class GameHandler {
         this.start();
     }
     start() {
-        //    this.hud.drawHUD();
         this.changeWeapon(mortar);
         this.toggleModal();
         RandomSoundGen.playRandomSound(ambience);
