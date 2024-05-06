@@ -6,13 +6,25 @@ class GameHandler {
     shotCount = 0;
     targetTimer;
     gameTimer;
+    soundTimer;
     weapon;
     constructor(element) {
         this.contentEl = element;
-        document.getElementById("startbutton").addEventListener("click", (event) => this.start());
-        document.getElementById("option1").setAttribute("value", JSON.stringify(normal));
-        document.getElementById("option2").setAttribute("value", JSON.stringify(hard));
-        document.getElementById("option3").setAttribute("value", JSON.stringify(chaos));
+        this.menuSetup();
+        window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        this.setEventListeners();
+    }
+    setEventListeners() {
+        this.contentEl.addEventListener("click", () => this.fireFunc());
+        this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
+    }
+    menuSetup() {
+        let container = document.getElementById("difficultiesContainer");
+        let lis = container.getElementsByTagName('li');
+        this.setIndivMenuDifficulty(normal, lis[0]);
+        this.setIndivMenuDifficulty(hard, lis[1]);
+        this.setIndivMenuDifficulty(chaos, lis[2]);
+        document.getElementById("startbutton").addEventListener("click", () => this.newGame());
         const radioButtons = document.querySelectorAll('input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
@@ -20,13 +32,17 @@ class GameHandler {
                 this.jsonParseRadioDifficulty(radioButton.value);
             }
         });
-        this.contentEl.addEventListener("click", () => this.fireFunc());
-        this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
-        window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        //if (this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
-        //    let w = this.weapon as ExplosiveWeaponType
-        //    w.switchBlastIndicatorStyle(false, null);
-        //}
+    }
+    setIndivMenuDifficulty(dif, li) {
+        let opt = li.getElementsByTagName('input')[0];
+        opt.setAttribute("value", JSON.stringify(dif));
+        let label = li.getElementsByTagName('label')[0];
+        let span = document.createElement('span');
+        span.innerText = dif.name;
+        label.appendChild(span);
+        span = document.createElement('span');
+        span.innerText = dif.description;
+        label.appendChild(span);
     }
     handleOptionChange(event) {
         this.jsonParseRadioDifficulty(event.target.value);
@@ -37,6 +53,7 @@ class GameHandler {
         this.setIndivTargetSpeed(modTarget, difficulty.modTargetSpeed);
         this.setIndivTargetSpeed(heavyTarget, difficulty.heavyTargetSpeed);
         this.setIndivTargetSpeed(regTunnelTarget, difficulty.tunnelTargetSpeed);
+        this.hud.killStats.failLimit = difficulty.failLimit;
     }
     setIndivTargetSpeed(target, speed) {
         target.minSpeed = speed.min;
@@ -47,10 +64,12 @@ class GameHandler {
         this.setDifficulty(selected);
     }
     toggleModal() {
-        var overlay = document.getElementById("overlay");
-        var modal = document.getElementById("modal");
-        overlay.style.display = overlay.style.display === "block" ? "none" : "block";
-        modal.style.display = modal.style.display === "block" ? "none" : "block";
+        this.toggleElem("overlay");
+        this.toggleElem("modal");
+    }
+    toggleElem(id) {
+        var elem = document.getElementById(id);
+        elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
     updateShotCounter() {
         this.hud.updateScore(this.shotCount);
@@ -62,6 +81,9 @@ class GameHandler {
         console.log(event.key);
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
             this.fireFunc();
+        }
+        else if (event.key === 'Escape') {
+            this.toggleGamePause();
         }
         let int = parseInt(event.key);
         if (int && allWeaponTypes[int - 1]) {
@@ -113,17 +135,17 @@ class GameHandler {
     }
     newTarget() {
         let newTarget;
-        let rand = RandomNumberGen.randomNumBetween(1, 21);
+        let rand = RandomNumberGen.randomNumBetween(1, 100);
         switch (true) {
-            case (rand >= 18):
+            case (rand >= 92):
                 newTarget = new TunnelTarget(regTunnelTarget);
                 break;
-            //case (rand >= 16):
-            //    newTarget = new VehicleTarget(heavyTarget);
-            //    break;
-            //case (rand >= 12):
-            //    newTarget = new VehicleTarget(modTarget);
-            //    break;
+            case (rand >= 85):
+                newTarget = new VehicleTarget(heavyTarget);
+                break;
+            case (rand >= 75):
+                newTarget = new VehicleTarget(modTarget);
+                break;
             default:
                 newTarget = new VehicleTarget(regTarget);
                 break;
@@ -138,34 +160,75 @@ class GameHandler {
         this.hud.drawHUD();
     }
     updateHudScore() {
-        this.hud.killStats.disabled = this.targets.reduce((acc, target) => {
+        let stats = this.hud.killStats;
+        stats.disabled = this.targets.reduce((acc, target) => {
             if (target.status === Status.disabled && target.damage === Damage.damaged) {
                 return acc + 1;
             }
             else
                 return acc;
         }, 0);
-        this.hud.killStats.destroyed = this.targets.reduce((acc, target) => {
+        stats.destroyed = this.targets.reduce((acc, target) => {
             if (target.damage >= Damage.moderateDamaged) {
                 return acc + 1;
             }
             else
                 return acc;
         }, 0);
-        this.hud.killStats.escaped = this.targets.reduce((acc, target) => {
+        stats.escaped = this.targets.reduce((acc, target) => {
             if (target.status === Status.escaped) {
                 return acc + 1;
             }
             else
                 return acc;
         }, 0);
-        this.hud.killStats.total = this.targets.length || 0;
+        stats.total = this.targets.length || 0;
+        if (stats.escaped >= stats.failLimit) {
+            this.stop();
+            alert("oh no! Try again.");
+        }
         this.hud.updateScore();
+    }
+    toggleGamePause() {
+        if (this.gameTimer) {
+            this.stop();
+        }
+        else {
+            if (this.targets.length) {
+                this.start();
+            }
+        }
+    }
+    stop() {
+        this.toggleModal();
+        clearInterval(this.gameTimer);
+        this.gameTimer = undefined;
+        clearInterval(this.targetTimer);
+        clearInterval(this.soundTimer);
+    }
+    reset() {
+        //let contentEl = ContentElHandler.returnContentEl();
+        //let targets = contentEl.getElementsByClassName("target");
+        //for (let x of targets) {
+        //    x.remove();
+        //}
+        for (let x of this.targets) {
+            x.getTargetEl().remove();
+        }
+        //ContentElHandler.clearContent();
+        //this.setEventListeners();
+        this.targets = [];
+        this.hud.drawHUD();
+        this.hud.resetStats();
+    }
+    newGame() {
+        this.reset();
+        this.start();
     }
     start() {
         this.toggleModal();
         RandomSoundGen.playRandomSound(ambience);
-        setInterval(() => {
+        this.soundTimer = setInterval(() => {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
         this.newTarget();

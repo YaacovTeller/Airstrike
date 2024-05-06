@@ -7,7 +7,7 @@ var nuke;
 var allWeaponTypes;
 var game;
 window.onload = () => {
-    const contentEl = document.getElementById("content");
+    const contentEl = ContentElHandler.returnContentEl();
     game = new GameHandler(contentEl);
     charge = new ChargeWeaponType(chargeInfo);
     sniper = new ExplosiveWeaponType(sniperInfo);

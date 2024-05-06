@@ -30,31 +30,43 @@ var weaponNames;
 //}
 const normal = {
     newTargetEvery: 3000,
+    failLimit: 15,
     regTargetSpeed: { min: 4, max: 8 },
     modTargetSpeed: { min: 4, max: 5 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
+    name: "Normal",
+    description: "Regular speed targets, up to 15 will get taken care of for you."
 };
 const hard = {
-    newTargetEvery: 2000,
+    newTargetEvery: 2500,
+    failLimit: 10,
     regTargetSpeed: { min: 4, max: 8 },
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
+    name: "Hard",
+    description: "Faster targets, don't miss more than 10."
 };
 const chaos = {
-    newTargetEvery: 1000,
+    failLimit: 1,
+    newTargetEvery: 1500,
     regTargetSpeed: { min: 4, max: 8 },
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 3 },
+    name: "Chaos",
+    description: "Targets pile in at a ridiculous rate, you're on your own."
 };
 const dev = {
+    failLimit: 9999,
     newTargetEvery: 300,
     regTargetSpeed: { min: 4, max: 8 },
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 3, max: 5 },
+    name: "Dev",
+    description: "dev"
 };
 const sniperInfo = {
     name: weaponNames.gun,
@@ -150,6 +162,9 @@ class ContentElHandler {
     }
     static contentElWidth() {
         return document.getElementById("content").clientWidth;
+    }
+    static clearContent() {
+        document.getElementById("content").innerHTML = "";
     }
 }
 class MouseHandler {

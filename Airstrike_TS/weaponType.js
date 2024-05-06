@@ -19,13 +19,7 @@ class WeaponType {
         this.activeInstance = this.getAvailableInstance();
         game.updateCursorPosition(); // NEEDED?
     }
-    switchTo() {
-        //const container = ContentElHandler.returnContentEl();
-        //container.removeEventListener("mouseenter")
-    }
-    ;
     getAvailableInstance() {
-        let current = this.activeInstance;
         let nextReady = null;
         for (let i in this.instances) {
             game.hud.deselectInst(parseInt(i), this.name); //MESSY?
@@ -36,11 +30,9 @@ class WeaponType {
                 }
             }
         }
-        //   let nextReady = this.instances.find(inst => inst.ready == true) || null;
         if (nextReady != null) {
             nextReady.blastRadElement.style.visibility = "visible";
         }
-        //    nextReady === current ? console.log("SAME!") : console.log("DIFF!")
         return nextReady;
     }
     pushNewWeaponInstance() {
@@ -268,27 +260,6 @@ class ChargeWeaponType extends WeaponType {
     constructor(info) {
         super(info);
         this.pushNewWeaponInstance();
-    }
-    switchTo() {
-        //  this.assignSpecialClasses();
-    }
-    ;
-    assignSpecialClasses() {
-        const container = ContentElHandler.returnContentEl();
-        container.addEventListener('mouseenter', this.handleMouseEnter);
-        container.addEventListener('mouseleave', this.handleMouseLeave);
-    }
-    handleMouseEnter(event) {
-        const target = event.target;
-        if (target.classList.contains('tunnelHead')) {
-            target.classList.add('tunnelFocus');
-        }
-    }
-    handleMouseLeave(event) {
-        const target = event.target;
-        if (target.classList.contains('tunnelHead')) {
-            target.classList.remove('tunnelFocus');
-        }
     }
     fireFunc(targets) {
         if (this.activeInstance == null || this.activeInstance.ready === false) {

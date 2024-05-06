@@ -3,6 +3,7 @@
     disabled: number;
     destroyed: number;
     escaped: number;
+    failLimit: number;
 }
 enum killStatsOptions {
     total = 'Total',
@@ -22,10 +23,16 @@ class HudHandler {
             total: 0,
             disabled: 0,
             destroyed: 0,
-            escaped: 0
+            escaped: 0,
+            failLimit: 1
         }
     }
-
+    public resetStats() {
+        this.killStats.total = 0;
+        this.killStats.disabled = 0;
+        this.killStats.destroyed = 0;
+        this.killStats.escaped = 0;
+    }
     public drawHUD() {
         let hud = document.getElementById('hud');
         if (hud) hud.remove();
@@ -87,6 +94,7 @@ class HudHandler {
         let num = this.killStats[title.toLowerCase()]
         span.innerText = title + ": " + num;
         if (title === killStatsOptions.escaped) {
+            span.innerText += "/" + this.killStats.failLimit;
             if (num > 0) {
                 span.classList.add('red');
             }

@@ -21,13 +21,8 @@
         this.activeInstance = this.getAvailableInstance();
         game.updateCursorPosition(); // NEEDED?
     }
-    public switchTo() {
-        //const container = ContentElHandler.returnContentEl();
-        //container.removeEventListener("mouseenter")
-    };
 
     public getAvailableInstance() {
-        let current = this.activeInstance;
         let nextReady: weaponInstance = null;
         for (let i in this.instances) {
             game.hud.deselectInst(parseInt(i), this.name) //MESSY?
@@ -38,11 +33,9 @@
                 }
             }
         }
-     //   let nextReady = this.instances.find(inst => inst.ready == true) || null;
         if (nextReady != null) {
             nextReady.blastRadElement.style.visibility = "visible";
         }
-        //    nextReady === current ? console.log("SAME!") : console.log("DIFF!")
         return nextReady;
     }
 
@@ -307,28 +300,6 @@ class ChargeWeaponType extends WeaponType {
         super(info);
         this.pushNewWeaponInstance();
     }
-    public switchTo() {
-      //  this.assignSpecialClasses();
-    };
-
-    private assignSpecialClasses() {
-        const container = ContentElHandler.returnContentEl();
-        container.addEventListener('mouseenter', this.handleMouseEnter);
-        container.addEventListener('mouseleave', this.handleMouseLeave);
-    }
-    private handleMouseEnter(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('tunnelHead')) {
-            target.classList.add('tunnelFocus');
-        }
-    }
-    private handleMouseLeave(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('tunnelHead')) {
-            target.classList.remove('tunnelFocus');
-        }
-    }
-
 
     public fireFunc(targets: Array<Target>) {
         if (this.activeInstance == null || this.activeInstance.ready === false) {

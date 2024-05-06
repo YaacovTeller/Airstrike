@@ -7,8 +7,8 @@ var nuke: ExplosiveWeaponType;
 var allWeaponTypes: Array<WeaponType>
 
 var game: GameHandler;
-    window.onload = () => {
-    const contentEl: HTMLElement = document.getElementById("content")!;
+window.onload = () => {
+    const contentEl: HTMLElement = ContentElHandler.returnContentEl();
         game = new GameHandler(contentEl);
 
         charge = new ChargeWeaponType(chargeInfo);

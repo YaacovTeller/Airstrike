@@ -50,6 +50,9 @@ audio {
 .red {
     color: red;
 }
+.paddingBottom20 {
+    padding-bottom: 20px;
+}
 .wepBox {
     border-radius: var(--borderRad);
     height: 80%;
@@ -200,19 +203,7 @@ audio {
     transition: transform var(--crashTimeout) linear;
     transform: rotate(160deg);
 }
-/*@keyframes moveWithArc {
-    0% {
-        transform: translateY(0) translateX(0);
-    }
 
-    50% {
-        transform: translateY(-50px) translateX(100px) rotate(-90deg);
-        
-    }
-    100% {
-        transform: translateY(0) translateX(200px) rotate(-180deg);
-    }
-}*/
 
 @keyframes ripple {
     to {
@@ -252,13 +243,17 @@ audio {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
     #modal h2 {
-        margin-top: 0;
+        margin: 0;
     }
     #modal ul {
         list-style: none;
         padding: 0;
-        margin: -45px 0px;
+        margin: 0px;
     }
+        #modal ul li:first-child {
+            margin-top: -20px;
+        }
+
     #modal li {
         margin: 5px 0;
     }
@@ -302,21 +297,33 @@ ul li input[type=radio] {
     position: absolute;
     visibility: hidden;
 }
-
     ul li label {
-        width: 20%;
-        float: left;
-        display: block;
-        position: relative;
-        font-weight: 300;
-        font-size: 1.35em;
-        padding: 18px 25px 25px 70px;
-        margin: 10px auto;
-        height: 30px;
-        z-index: 9;
-        cursor: pointer;
-        -webkit-transition: all 0.25s linear;
+        display: flex;
+        /*        justify-content: space-between;
+*/      width: 100%;
+        padding-top: 20px;
     }
+
+        ul li label span:first-child {
+            /*       float: left;
+        display: inline;*/
+            flex: 0 0 10%;
+            width: 20%;
+            position: relative;
+            font-weight: 300;
+            font-size: 1.35em;
+            padding: 8px 25px 25px 70px;
+            height: 15px;
+            z-index: 9;
+            cursor: pointer;
+            -webkit-transition: all 0.25s linear;
+        }
+
+    ul li label span {
+        padding: 12px 0px 0px 0px;
+        margin: 0px 0px;
+/*        -webkit-transition: all 0.25s linear;
+*/    }
 
 ul li:hover label {
     color: black
