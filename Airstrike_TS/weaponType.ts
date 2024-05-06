@@ -66,6 +66,9 @@
             inst.ready = true;
             game.hud.availInst(index, name); //MESSY?
             _this.activeInstance = _this.activeInstance == null ? _this.getAvailableInstance() : _this.activeInstance;
+            if (_this !== game.weapon) {
+                _this.activeInstance.blastRadElement.style.visibility = 'hidden';
+            }
             game.updateCursorPosition(); //MESSY?
         }, _this.cooldown);
     }

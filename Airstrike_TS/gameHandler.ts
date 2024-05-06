@@ -4,11 +4,11 @@
     private newTargetFrequency: number;
     public hud = new HudHandler(); //MESSY?
     public shotCount: number = 0;
+    public weapon: WeaponType;
 
     private targetTimer: number;
     private gameTimer: number;
     private soundTimer: number;
-    private weapon: WeaponType;
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
@@ -85,7 +85,6 @@
     }
 
     private handleKeyPress(event) {
-        console.log(event.key);
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') { this.fireFunc(); }
         else if (event.key === 'Escape') {
             this.toggleGamePause();

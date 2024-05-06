@@ -4,10 +4,10 @@ class GameHandler {
     newTargetFrequency;
     hud = new HudHandler(); //MESSY?
     shotCount = 0;
+    weapon;
     targetTimer;
     gameTimer;
     soundTimer;
-    weapon;
     constructor(element) {
         this.contentEl = element;
         this.menuSetup();
@@ -78,7 +78,6 @@ class GameHandler {
         this.weapon.fireFunc(this.targets);
     }
     handleKeyPress(event) {
-        console.log(event.key);
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
             this.fireFunc();
         }
