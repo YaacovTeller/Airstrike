@@ -6,9 +6,7 @@ var airstrike;
 var nuke;
 var allWeaponTypes;
 var game;
-window.onload = () => {
-    const contentEl = ContentElHandler.returnContentEl();
-    game = new GameHandler(contentEl);
+function pushWeaponInstances() {
     charge = new ChargeWeaponType(chargeInfo);
     sniper = new ExplosiveWeaponType(sniperInfo);
     mortar = new ExplosiveWeaponType(mortarInfo);
@@ -27,6 +25,11 @@ window.onload = () => {
     howitzer.pushNewWeaponInstance();
     howitzer.pushNewWeaponInstance();
     howitzer.pushNewWeaponInstance();
+}
+window.onload = () => {
+    const contentEl = ContentElHandler.returnContentEl();
+    game = new GameHandler(contentEl);
+    pushWeaponInstances();
     game.hud.drawHUD();
     game.changeWeapon(mortar);
     loadSound();

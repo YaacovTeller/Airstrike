@@ -50,7 +50,6 @@ class WeaponType {
     fireFunc(targets) {
     }
     cooldownTimeout(inst) {
-        inst.ready = false;
         let instances = this.instances;
         let name = this.name;
         let index = instances.indexOf(inst);
@@ -106,12 +105,14 @@ class ExplosiveWeaponType extends WeaponType {
             return;
         }
         let inst = this.activeInstance;
+        inst.ready = false;
         this.setExplosionPos(inst);
         this.prepFire(true, inst);
         this.shotCounter();
         setTimeout(() => {
             this.explosion_targetCheck(targets, inst);
             this.prepFire(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
         //    this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
         this.cooldownTimeout(inst);

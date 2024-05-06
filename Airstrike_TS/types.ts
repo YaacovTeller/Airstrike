@@ -1,6 +1,55 @@
 ﻿const assetsFolder: string = "./AS_assets/";
 const classicExplosion: string = 'expl1.gif';
 
+enum Status {
+    active,
+    disabled,
+    escaped
+}
+enum Damage {
+    undamaged,
+    damaged,
+    moderateDamaged,
+    heavyDamaged,
+    destroyed
+}
+enum Armour {
+    none,
+    moderate,
+    heavy,
+}
+type targetInfo = {
+    maxSpeed: number,
+    minSpeed: number,
+    armour: Armour,
+    picSources: Array<string>,
+}
+// speeds are actually set with the difficulty settings. Nominal values here
+const regTarget: targetInfo = {
+    minSpeed: 4,
+    maxSpeed: 8,
+    armour: Armour.none,
+    picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
+}
+const modTarget: targetInfo = {
+    minSpeed: 4,
+    maxSpeed: 6,
+    armour: Armour.moderate,
+    picSources: ['jeep_grey.png']
+}
+const heavyTarget: targetInfo = {
+    minSpeed: 1,
+    maxSpeed: 3,
+    armour: Armour.heavy,
+    picSources: ['jeep_grey_armour.png']
+}
+const regTunnelTarget: targetInfo = {
+    minSpeed: 1,
+    maxSpeed: 2,
+    armour: Armour.moderate,
+    picSources: ['trans.png']
+}
+
 enum direction {
     forward = "forward",
     backward = "backward"
@@ -111,8 +160,6 @@ const dev: difficultyLevelInfo = {
     name: "Dev",
     description: "dev"
 }
-
-
 const sniperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.gun,
     blastRadius: 6,

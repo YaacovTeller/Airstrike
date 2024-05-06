@@ -56,8 +56,6 @@
     }
 
     protected cooldownTimeout(inst: weaponInstance) {
-        inst.ready = false;
-
         let instances: Array<weaponInstance> = this.instances;
         let name: weaponNames = this.name;
         let index = instances.indexOf(inst);
@@ -128,6 +126,7 @@ class ExplosiveWeaponType extends WeaponType {
         }
 
         let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
+        inst.ready = false;
 
         this.setExplosionPos(inst);
         this.prepFire(true, inst);
@@ -137,6 +136,7 @@ class ExplosiveWeaponType extends WeaponType {
         setTimeout(() => {
             this.explosion_targetCheck(targets, inst);
             this.prepFire(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
 
     //    this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;

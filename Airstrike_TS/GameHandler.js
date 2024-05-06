@@ -117,15 +117,15 @@ class GameHandler {
         }
         this.switchCursor();
         this.updateCursorPosition();
-        allWeaponTypes.forEach((x) => {
-            if (x !== wep) {
-                if (x.instances.length && x.activeInstance) {
-                    if (x.activeInstance.ready != false) {
-                        x.instances.forEach((inst) => { inst.blastRadElement.style.visibility = "hidden"; });
-                    }
-                }
-            }
-        });
+        //allWeaponTypes.forEach((x) => {
+        //    if (x !== wep) {
+        //        if (x.instances.length && x.activeInstance) {
+        //            if (x.activeInstance.ready != false) {
+        //                x.instances.forEach((inst) => { inst.blastRadElement.style.visibility = "hidden"; });
+        //            }
+        //        }
+        //    }
+        //});
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -207,16 +207,9 @@ class GameHandler {
         clearInterval(this.soundTimer);
     }
     reset() {
-        //let contentEl = ContentElHandler.returnContentEl();
-        //let targets = contentEl.getElementsByClassName("target");
-        //for (let x of targets) {
-        //    x.remove();
-        //}
         for (let x of this.targets) {
             x.getTargetEl().remove();
         }
-        //ContentElHandler.clearContent();
-        //this.setEventListeners();
         this.targets = [];
         this.hud.drawHUD();
         this.hud.resetStats();
@@ -226,6 +219,8 @@ class GameHandler {
         this.start();
     }
     start() {
+        //    this.hud.drawHUD();
+        this.changeWeapon(mortar);
         this.toggleModal();
         RandomSoundGen.playRandomSound(ambience);
         this.soundTimer = setInterval(() => {

@@ -1,5 +1,50 @@
 const assetsFolder = "./AS_assets/";
 const classicExplosion = 'expl1.gif';
+var Status;
+(function (Status) {
+    Status[Status["active"] = 0] = "active";
+    Status[Status["disabled"] = 1] = "disabled";
+    Status[Status["escaped"] = 2] = "escaped";
+})(Status || (Status = {}));
+var Damage;
+(function (Damage) {
+    Damage[Damage["undamaged"] = 0] = "undamaged";
+    Damage[Damage["damaged"] = 1] = "damaged";
+    Damage[Damage["moderateDamaged"] = 2] = "moderateDamaged";
+    Damage[Damage["heavyDamaged"] = 3] = "heavyDamaged";
+    Damage[Damage["destroyed"] = 4] = "destroyed";
+})(Damage || (Damage = {}));
+var Armour;
+(function (Armour) {
+    Armour[Armour["none"] = 0] = "none";
+    Armour[Armour["moderate"] = 1] = "moderate";
+    Armour[Armour["heavy"] = 2] = "heavy";
+})(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
+const regTarget = {
+    minSpeed: 4,
+    maxSpeed: 8,
+    armour: Armour.none,
+    picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
+};
+const modTarget = {
+    minSpeed: 4,
+    maxSpeed: 6,
+    armour: Armour.moderate,
+    picSources: ['jeep_grey.png']
+};
+const heavyTarget = {
+    minSpeed: 1,
+    maxSpeed: 3,
+    armour: Armour.heavy,
+    picSources: ['jeep_grey_armour.png']
+};
+const regTunnelTarget = {
+    minSpeed: 1,
+    maxSpeed: 2,
+    armour: Armour.moderate,
+    picSources: ['trans.png']
+};
 var direction;
 (function (direction) {
     direction["forward"] = "forward";
