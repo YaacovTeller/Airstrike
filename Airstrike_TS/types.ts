@@ -208,7 +208,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     blastRadius: 100,
     cursor: "cursor4",
     explosionInfo: {
-        imageSource: assetsFolder + classicExplosion,
+        imageSource: assetsFolder + 'expl_big.gif',
         sound: strikes,
         soundDelay: 2500,
         length: 1000

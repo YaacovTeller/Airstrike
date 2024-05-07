@@ -5,7 +5,7 @@ Escape to pause.\
 Armoured targets are impervious to gunfire, and require direct hits with explosives.\
 No. 5 is an explosive charge for tunnels, watch out for tunnels.\
 Tunnels can also be halted, or even destroyed, with a well placed airstrike.\
-No. 6 is... off limits. Unless you press SHIFT N. You were warned.\
+No. 6 is... off limits. Unless you press SHIFT N. You were warned.
 
 1. gun
 2. mortar
