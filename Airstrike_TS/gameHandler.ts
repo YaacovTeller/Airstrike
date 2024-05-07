@@ -5,6 +5,7 @@
     public targets: Array<Target> = [];
     private newTargetFrequency: number;
     public shotCount: number = 0;
+    public winLimit: number = 20;
 
     private targetTimer: number;
     private gameTimer: number;
@@ -160,12 +161,50 @@
                 break;
         }
         this.targets.push(newTarget);
+        if (this.targets.length >= this.winLimit) {
+            clearInterval(this.targetTimer);
+            let int = setInterval(() => {
+                if (this.checkGameEnd()) {
+                    clearInterval(int);
+                    this.endGame();
+                }
+            }, 100)
+        }
+    }
+    public showPopup(text) {
+        let popup = document.getElementById("popupBox");
+        document.getElementById("popupText").innerText = text;
+        popup.classList.add("show");
+        setTimeout(function () {
+            popup.classList.remove("show");
+        }, 3000); 
+    }
+    private endGame() {
+        this.showPopup("Nice job!")
+        this.nextWave();
+    }
+    private nextWave() {
+        setTimeout(() => {
+            this.showPopup("Get ready, more coming!")
+        }, 3000)
+        setTimeout(() => {
+            this.winLimit += this.winLimit;
+            this.startTargetTimer();
+        },3000)
+    }
+    private checkGameEnd() {
+        let fin: boolean = true;
+        for (let t of this.targets) {
+            if (t.status === Status.active) {
+                fin = false;
+            }
+        }
+        return fin;
     }
 
     private addNuke() {
         if (allWeaponTypes.includes(nuke))
             return;
-
         nuke = new ExplosiveWeaponType(nukeInfo);
         allWeaponTypes.push(nuke);
         this.hud.drawHUD();
@@ -193,7 +232,7 @@
         stats.total = this.targets.length || 0;
         if (stats.escaped >= stats.failLimit) {
             this.stop();
-            alert("oh no! Try again.");
+            this.showPopup("Oh No! Try again.")
         }
         this.hud.updateScore();
     }
@@ -226,6 +265,11 @@
         this.reset();
         this.start();
     }
+    private startTargetTimer() {
+        this.targetTimer = window.setInterval(() => {
+            this.newTarget();
+        }, this.newTargetFrequency);
+    }
 
     public start() {
         this.changeWeapon(mortar);
@@ -235,11 +279,8 @@
         this.soundTimer = setInterval(() => {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
-        this.newTarget();
-        this.targetTimer = window.setInterval(() => {
-            this.newTarget();
-
-        }, this.newTargetFrequency);
+        //this.newTarget();
+        this.startTargetTimer();
 
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
@@ -247,5 +288,6 @@
                 trg.action();
             });
         }, 100);
+        
     }
 }

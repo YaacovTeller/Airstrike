@@ -268,7 +268,6 @@ class ChargeWeaponType extends WeaponType {
     fireFunc(targets) {
         if (this.activeInstance == null || this.activeInstance.ready === false) {
             bleep_neg.play();
-            console.log("hit NULL inst");
             return;
         }
         let inst = this.activeInstance;

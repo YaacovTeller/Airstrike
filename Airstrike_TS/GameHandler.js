@@ -5,6 +5,7 @@ class GameHandler {
     targets = [];
     newTargetFrequency;
     shotCount = 0;
+    winLimit = 20;
     targetTimer;
     gameTimer;
     soundTimer;
@@ -151,6 +152,45 @@ class GameHandler {
                 break;
         }
         this.targets.push(newTarget);
+        if (this.targets.length >= this.winLimit) {
+            clearInterval(this.targetTimer);
+            let int = setInterval(() => {
+                if (this.checkGameEnd()) {
+                    clearInterval(int);
+                    this.endGame();
+                }
+            }, 100);
+        }
+    }
+    showPopup(text) {
+        let popup = document.getElementById("popupBox");
+        document.getElementById("popupText").innerText = text;
+        popup.classList.add("show");
+        setTimeout(function () {
+            popup.classList.remove("show");
+        }, 3000);
+    }
+    endGame() {
+        this.showPopup("Nice job!");
+        this.nextWave();
+    }
+    nextWave() {
+        setTimeout(() => {
+            this.showPopup("Get ready, more coming!");
+        }, 3000);
+        setTimeout(() => {
+            this.winLimit += this.winLimit;
+            this.startTargetTimer();
+        }, 3000);
+    }
+    checkGameEnd() {
+        let fin = true;
+        for (let t of this.targets) {
+            if (t.status === Status.active) {
+                fin = false;
+            }
+        }
+        return fin;
     }
     addNuke() {
         if (allWeaponTypes.includes(nuke))
@@ -185,7 +225,7 @@ class GameHandler {
         stats.total = this.targets.length || 0;
         if (stats.escaped >= stats.failLimit) {
             this.stop();
-            alert("oh no! Try again.");
+            this.showPopup("Oh No! Try again.");
         }
         this.hud.updateScore();
     }
@@ -218,6 +258,11 @@ class GameHandler {
         this.reset();
         this.start();
     }
+    startTargetTimer() {
+        this.targetTimer = window.setInterval(() => {
+            this.newTarget();
+        }, this.newTargetFrequency);
+    }
     start() {
         this.changeWeapon(mortar);
         this.toggleModal();
@@ -225,10 +270,8 @@ class GameHandler {
         this.soundTimer = setInterval(() => {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
-        this.newTarget();
-        this.targetTimer = window.setInterval(() => {
-            this.newTarget();
-        }, this.newTargetFrequency);
+        //this.newTarget();
+        this.startTargetTimer();
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
             this.targets.forEach((trg) => {

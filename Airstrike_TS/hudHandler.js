@@ -89,6 +89,9 @@ class HudHandler {
             else
                 span.classList.remove('red');
         }
+        if (title === killStatsOptions.total) {
+            span.innerText += "/" + game.winLimit;
+        }
     }
     updateScore(shots) {
         if (shots) {

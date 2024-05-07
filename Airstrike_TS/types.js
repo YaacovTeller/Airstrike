@@ -74,10 +74,10 @@ var weaponNames;
 //    tunnelTargetSpeed: { min: 1, max: 2 },
 //}
 const normal = {
-    newTargetEvery: 3000,
+    newTargetEvery: 3500,
     failLimit: 15,
-    regTargetSpeed: { min: 4, max: 8 },
-    modTargetSpeed: { min: 4, max: 5 },
+    regTargetSpeed: { min: 3, max: 6 },
+    modTargetSpeed: { min: 3, max: 4 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
     name: "Normal",
@@ -86,7 +86,7 @@ const normal = {
 const hard = {
     newTargetEvery: 2500,
     failLimit: 10,
-    regTargetSpeed: { min: 4, max: 8 },
+    regTargetSpeed: { min: 4, max: 7 },
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
