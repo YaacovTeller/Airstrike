@@ -91,7 +91,8 @@ type explosionInfo = {
     imageSource: string,
     length: number,
     sound: Array<Sound>,
-    soundDelay?: number
+    soundDelay?: number,
+    craterSource?: string
 }
 type weaponInstance = {
     ready: boolean;
@@ -162,7 +163,7 @@ const dev: difficultyLevelInfo = {
 }
 const sniperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.gun,
-    blastRadius: 6,
+    blastRadius: 5,
     cursor: "cursor1",
     explosionInfo: {
         imageSource: assetsFolder + 'fire_1.gif',
@@ -181,7 +182,8 @@ const mortarInfo: ExplosiveWeaponInfo = {
     explosionInfo: {
         imageSource: assetsFolder + classicExplosion,
         sound: [],
-        length: 1000
+        length: 1000,
+        craterSource: assetsFolder + "crater.png"
     },
     imageSource: assetsFolder + 'mortar.svg',
     sound: mortarSounds,
@@ -196,7 +198,8 @@ const howitzerInfo: ExplosiveWeaponInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         soundDelay: 3000,
-        length: 1000
+        length: 1000,
+        craterSource: assetsFolder + "crater.png"
     },
     imageSource: assetsFolder + 'tank.svg',
     sound: howitzerSounds,
@@ -211,7 +214,8 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
         imageSource: assetsFolder + 'expl_big.gif',
         sound: strikes,
         soundDelay: 2500,
-        length: 1000
+        length: 1000,
+        craterSource: assetsFolder + "crater.png"
     },
     imageSource: assetsFolder + 'jet.svg',
     sound: airstrikeSounds,
@@ -226,7 +230,8 @@ const nukeInfo: ExplosiveWeaponInfo = {
         imageSource: assetsFolder + 'mushroom_1.gif',
         sound: bigExplosions,
         soundDelay: 6500,
-        length: 2500
+        length: 2500,
+        craterSource: assetsFolder + "crater.png"
     },
     imageSource: assetsFolder + 'bomb.svg',
     sound: nukeSounds,
@@ -239,7 +244,7 @@ const chargeInfo: weaponInfo = {
     imageSource: assetsFolder + 'dynamite.svg',
     sound: gunSounds,
     speed: 3000,
-    cooldown: 8000
+    cooldown: 8000,
 }
 
 function loadNewImage() {

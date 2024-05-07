@@ -108,9 +108,7 @@ class ExplosiveWeaponType extends WeaponType {
         el.style.width = el.style.height = this.blastRadius * 2 + 'px';
         el.style.visibility = "hidden";
 
-        let explosion = document.createElement('img');
-        explosion.classList.add('explosion');
-        ContentElHandler.addToContentEl(explosion);
+        let explosion = this.returnNewImageEl("explosion");
 
         let inst: ExplosiveWeaponInstance = {
             ready: true,
@@ -135,14 +133,14 @@ class ExplosiveWeaponType extends WeaponType {
         this.prepFire(true, inst);
 
         this.shotCounter();
+        let crater = this.setAndReturnCrater(inst);
 
         setTimeout(() => {
-            this.explosion_targetCheck(targets, inst);
+            this.explosion_targetCheck(targets, inst, crater);
             this.prepFire(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
 
-    //    this.activeInstance = this.activeInstance == null ? this.getAvailableInstance() : this.activeInstance;
         this.cooldownTimeout(inst);
         this.activeInstance = this.getAvailableInstance();
     }
@@ -151,17 +149,40 @@ class ExplosiveWeaponType extends WeaponType {
         let blastRadiusEl = inst.blastRadElement;
         let explosion = inst.explosion;
         let blastRect = blastRadiusEl.getBoundingClientRect();
+
         explosion.style.width = blastRect.width + 'px';
         explosion.style.height = blastRect.height + 'px';
 
         let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
-        explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
+        explosion.style.left =  blastCenter.X - explosion.clientWidth / 2 + 'px';
         explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
     }
+    private setAndReturnCrater(inst: ExplosiveWeaponInstance) {
+        let blastRadiusEl = inst.blastRadElement;
+        let blastRect = blastRadiusEl.getBoundingClientRect();
+        let crater = this.returnNewImageEl("crater", this.explosionInfo.craterSource);
 
-    private explosion_targetCheck(targets: Array<Target>, inst: ExplosiveWeaponInstance) {
+        crater.style.width = blastRect.width / 2 + 'px';
+        crater.style.height = blastRect.height / 4 + 'px';
+
+        let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
+        crater.style.left = blastCenter.X - crater.clientWidth / 2 + 'px';
+        crater.style.top = blastCenter.Y - crater.clientHeight / 2 + 'px';
+        return crater;
+    }
+
+    private returnNewImageEl(classname: string, src?: string) {
+        let el = document.createElement('img');
+        if (src) el.src = src;
+        el.className = classname;
+        ContentElHandler.addToContentEl(el);
+        return el;
+    }
+
+    private explosion_targetCheck(targets: Array<Target>, inst: ExplosiveWeaponInstance, crater: HTMLImageElement) {
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
+        crater.style.visibility = "visible";
 
         this.genericExplosion(inst.blastRadElement, targets);
     }
