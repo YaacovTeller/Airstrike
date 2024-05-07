@@ -1,10 +1,10 @@
 ﻿class GameHandler {
-    public targets: Array<Target> = [];
-    private contentEl: HTMLElement;
-    private newTargetFrequency: number;
     public hud = new HudHandler(); //MESSY?
-    public shotCount: number = 0;
     public weapon: WeaponType;
+    private contentEl: HTMLElement;
+    public targets: Array<Target> = [];
+    private newTargetFrequency: number;
+    public shotCount: number = 0;
 
     private targetTimer: number;
     private gameTimer: number;
@@ -122,15 +122,15 @@
         }
         this.switchCursor();
         this.updateCursorPosition();
-        //allWeaponTypes.forEach((x) => {
-        //    if (x !== wep) {
-        //        if (x.instances.length && x.activeInstance) {
-        //            if (x.activeInstance.ready != false) {
-        //                x.instances.forEach((inst) => { inst.blastRadElement.style.visibility = "hidden"; });
-        //            }
-        //        }
-        //    }
-        //});
+        allWeaponTypes.forEach((x) => {
+            if (x !== wep) {
+                if (x.instances.length && x.activeInstance) {
+                    if (x.activeInstance.ready == true) {
+                        x.activeInstance.blastRadElement.style.visibility = "hidden";
+                    }
+                }
+            }
+        });
     }
 
     private switchCursor() {
@@ -155,6 +155,7 @@
                 newTarget = new VehicleTarget(modTarget);
                 break;
             default:
+             //   newTarget = new TunnelTarget(regTunnelTarget)
                 newTarget = new VehicleTarget(regTarget);
                 break;
         }

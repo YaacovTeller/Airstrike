@@ -13,25 +13,28 @@ class Target {
     public damage: number = Damage.undamaged;
     public movesAtBlast: boolean;
 
-    constructor(info: targetInfo) {
+    constructor(info: targetInfo, position?: position) {
         this.targetEl = document.createElement("div");
         this.picEl = document.createElement("img");
         this.damageEl = document.createElement("img");
-
         this.targetEl.classList.add('target', 'flexCenter');
-
         this.targetEl.appendChild(this.picEl);
         this.targetEl.appendChild(this.damageEl);
 
-        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
-        this.targetEl.style.top = window.innerHeight * this.startPosition / 100 + 'px';
-        this.targetEl.style.left = 0 + 'px';
         ContentElHandler.addToContentEl(this.targetEl);
 
         this.picEl.src = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
+        position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(info.minSpeed, info.maxSpeed);
         this.armour = info.armour;
     }
+    protected setStartPos(left: number, top?: number) {
+        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
+        top = top ? top : window.innerHeight * this.startPosition / 100;
+        this.targetEl.style.top = top + 'px';
+        this.targetEl.style.left = left + 'px';
+    }
+
     public hit(sev: strikeSeverity, direc: direction) { }
 
     protected move() {
@@ -65,6 +68,8 @@ class TunnelTarget extends Target {
     protected damagedSource: string = assetsFolder + 'smoke_3.gif';
     protected destroyedSource: string = assetsFolder + 'fire_1.gif';
     public movesAtBlast: boolean = false;
+    private targetTimer: number;
+    private newTargetFrequency: number = 5000;
 
     private trail: HTMLElement;
     constructor(info: targetInfo) {
@@ -74,25 +79,44 @@ class TunnelTarget extends Target {
         this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
-        this.targetEl.append(this.trail)
+        this.targetEl.append(this.trail);
+
+        this.setTargetProduction();
     }
 
-    protected extendTunnel() {
+    private extendTunnel() {
         this.trail.style.width = this.targetEl.getBoundingClientRect().width + parseInt(this.targetEl.style.left) + 'px';
+    }
+    private produceTargetCheck() {
+        let num = RandomNumberGen.randomNumBetween(1, 100);
+        if (num >= 95) {
+            let rect = this.getTargetEl().getBoundingClientRect();
+            let pos: position = { X: rect.x, Y: rect.y }
+            let newTarget = new VehicleTarget(regTarget, pos);
+            game.targets.push(newTarget);
+        }
+    }
+    private setTargetProduction() {
+        this.targetTimer = window.setInterval(() => {
+            this.produceTargetCheck();
+        }, this.newTargetFrequency);
+    }
+    private stopTargetProduction() {
+        clearInterval(this.targetTimer);
     }
 
     public hit(sev: strikeSeverity) {
         this.status = Status.disabled;
-        console.log("tunnel hit, SEV: " + sev)
         if (sev >= strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
             this.picEl.src = this.damagedSource;
             this.targetEl.classList.remove('tunnelHead');
+            this.stopTargetProduction();
             this.blowTunnel();
         }
         else {
-            console.log("... but not blown")
-}
+
+                }
     }
     private blowTunnel() {
         let numOfimgs: number = parseInt(this.trail.style.width) / 100;
@@ -123,8 +147,8 @@ class VehicleTarget extends Target {
     protected badDamagedSource: string = assetsFolder + 'fire_1.gif';
     public movesAtBlast: boolean = true;
 
-    constructor(info: targetInfo) {
-        super(info);
+    constructor(info: targetInfo, position?: position) {
+        super(info, position);
     }
 
     public hit(sev: strikeSeverity, direc: direction) {

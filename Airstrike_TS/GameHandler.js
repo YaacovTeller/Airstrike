@@ -1,10 +1,10 @@
 class GameHandler {
-    targets = [];
-    contentEl;
-    newTargetFrequency;
     hud = new HudHandler(); //MESSY?
-    shotCount = 0;
     weapon;
+    contentEl;
+    targets = [];
+    newTargetFrequency;
+    shotCount = 0;
     targetTimer;
     gameTimer;
     soundTimer;
@@ -116,15 +116,15 @@ class GameHandler {
         }
         this.switchCursor();
         this.updateCursorPosition();
-        //allWeaponTypes.forEach((x) => {
-        //    if (x !== wep) {
-        //        if (x.instances.length && x.activeInstance) {
-        //            if (x.activeInstance.ready != false) {
-        //                x.instances.forEach((inst) => { inst.blastRadElement.style.visibility = "hidden"; });
-        //            }
-        //        }
-        //    }
-        //});
+        allWeaponTypes.forEach((x) => {
+            if (x !== wep) {
+                if (x.instances.length && x.activeInstance) {
+                    if (x.activeInstance.ready == true) {
+                        x.activeInstance.blastRadElement.style.visibility = "hidden";
+                    }
+                }
+            }
+        });
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -146,6 +146,7 @@ class GameHandler {
                 newTarget = new VehicleTarget(modTarget);
                 break;
             default:
+                //   newTarget = new TunnelTarget(regTunnelTarget)
                 newTarget = new VehicleTarget(regTarget);
                 break;
         }

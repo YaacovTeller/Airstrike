@@ -9,20 +9,24 @@ class Target {
     status = Status.active;
     damage = Damage.undamaged;
     movesAtBlast;
-    constructor(info) {
+    constructor(info, position) {
         this.targetEl = document.createElement("div");
         this.picEl = document.createElement("img");
         this.damageEl = document.createElement("img");
         this.targetEl.classList.add('target', 'flexCenter');
         this.targetEl.appendChild(this.picEl);
         this.targetEl.appendChild(this.damageEl);
-        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
-        this.targetEl.style.top = window.innerHeight * this.startPosition / 100 + 'px';
-        this.targetEl.style.left = 0 + 'px';
         ContentElHandler.addToContentEl(this.targetEl);
         this.picEl.src = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
+        position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(info.minSpeed, info.maxSpeed);
         this.armour = info.armour;
+    }
+    setStartPos(left, top) {
+        this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
+        top = top ? top : window.innerHeight * this.startPosition / 100;
+        this.targetEl.style.top = top + 'px';
+        this.targetEl.style.left = left + 'px';
     }
     hit(sev, direc) { }
     move() {
@@ -52,6 +56,8 @@ class TunnelTarget extends Target {
     damagedSource = assetsFolder + 'smoke_3.gif';
     destroyedSource = assetsFolder + 'fire_1.gif';
     movesAtBlast = false;
+    targetTimer;
+    newTargetFrequency = 5000;
     trail;
     constructor(info) {
         super(info);
@@ -61,21 +67,38 @@ class TunnelTarget extends Target {
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.targetEl.append(this.trail);
+        this.setTargetProduction();
     }
     extendTunnel() {
         this.trail.style.width = this.targetEl.getBoundingClientRect().width + parseInt(this.targetEl.style.left) + 'px';
     }
+    produceTargetCheck() {
+        let num = RandomNumberGen.randomNumBetween(1, 100);
+        if (num >= 95) {
+            let rect = this.getTargetEl().getBoundingClientRect();
+            let pos = { X: rect.x, Y: rect.y };
+            let newTarget = new VehicleTarget(regTarget, pos);
+            game.targets.push(newTarget);
+        }
+    }
+    setTargetProduction() {
+        this.targetTimer = window.setInterval(() => {
+            this.produceTargetCheck();
+        }, this.newTargetFrequency);
+    }
+    stopTargetProduction() {
+        clearInterval(this.targetTimer);
+    }
     hit(sev) {
         this.status = Status.disabled;
-        console.log("tunnel hit, SEV: " + sev);
         if (sev >= strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
             this.picEl.src = this.damagedSource;
             this.targetEl.classList.remove('tunnelHead');
+            this.stopTargetProduction();
             this.blowTunnel();
         }
         else {
-            console.log("... but not blown");
         }
     }
     blowTunnel() {
@@ -106,8 +129,8 @@ class VehicleTarget extends Target {
     damagedSource = assetsFolder + 'smoke_3.gif';
     badDamagedSource = assetsFolder + 'fire_1.gif';
     movesAtBlast = true;
-    constructor(info) {
-        super(info);
+    constructor(info, position) {
+        super(info, position);
     }
     hit(sev, direc) {
         if (sev > strikeSeverity.light) {
