@@ -5,7 +5,7 @@
     public targets: Array<Target> = [];
     private newTargetFrequency: number;
     public shotCount: number = 0;
-    public winLimit: number = 20;
+    public winLimit: number = 40;
 
     private targetTimer: number;
     private gameTimer: number;
