@@ -5,7 +5,7 @@ class WeaponType {
     imageSource;
     speed;
     cooldown;
-    craterDecalStay = 3000;
+    craterDecalStay = 5000;
     craterFadingTillRemoval = 5000;
     activeInstance;
     instances = [];

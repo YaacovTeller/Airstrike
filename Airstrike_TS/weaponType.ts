@@ -5,7 +5,7 @@
     public imageSource: string;
     public speed: number;
     public cooldown: number;
-    public craterDecalStay: number = 3000;
+    public craterDecalStay: number = 5000;
     public craterFadingTillRemoval: number = 5000;
 
 
