@@ -97,7 +97,8 @@ ul li {
         padding-top: 20px;
     }
 
-        ul li label span:first-child {
+        ul li label span:first-child,
+        ul li label span:nth-child(3) {
             flex: 0 0 10%;
             width: 20%;
             position: relative;

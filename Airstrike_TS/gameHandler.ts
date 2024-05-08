@@ -34,8 +34,9 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame();
         document.getElementById("langbutton").onclick = () => this.toggleLang();
 
-        this.setMenuDifficulty(arr.slice(0, 3), Languages.eng);
-        this.setMenuDifficulty(arr.slice(3), Languages.heb);
+        //this.setMenuDifficulty(arr.slice(0, 3), Languages.eng);
+        //this.setMenuDifficulty(arr.slice(3), Languages.heb);
+        this.setMenuDifficulty(arr);
         this.toggleLang();
 
         const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
@@ -46,10 +47,10 @@ class GameHandler {
             }
         });
     }
-    private setMenuDifficulty(liOptions, lang: Languages) {
-        this.setIndivMenuDifficulty(normal, liOptions[0], lang);
-        this.setIndivMenuDifficulty(hard, liOptions[1], lang);
-        this.setIndivMenuDifficulty(chaos, liOptions[2], lang);
+    private setMenuDifficulty(liOptions) {
+        this.setIndivMenuDifficulty(normal, liOptions[0]);
+        this.setIndivMenuDifficulty(hard, liOptions[1]);
+        this.setIndivMenuDifficulty(chaos, liOptions[2]);
     }
     private getMenuLis() {
         let container = document.getElementById("difficultiesContainer");
@@ -78,24 +79,29 @@ class GameHandler {
                 x.classList.remove("displayNone");
             }
         }
-        let lis = this.getMenuLis();
-        let langLis = lis.filter((x) => { return x.classList.contains(Languages[this.language]) })
-        let radio: HTMLInputElement = langLis[0].querySelector("input[type='radio']")
-        radio.checked = true;
+        //let lis = this.getMenuLis();
+        //let langLis = lis.filter((x) => { return x.classList.contains(Languages[this.language]) })
+        //let radio: HTMLInputElement = langLis[0].querySelector("input[type='radio']")
+        //radio.checked = true;
     }
 
-    private setIndivMenuDifficulty(dif: difficultyLevelInfo, li: Element, lang: Languages) {
-        li.classList.add(Languages[lang])
+    private setIndivMenuDifficulty(dif: difficultyLevelInfo, li: Element) {
         let opt = li.getElementsByTagName('input')[0];
         opt.setAttribute("value", JSON.stringify(dif));
 
-        let langOpt = lang == Languages.eng ? dif.eng : dif.heb;
+        this.createSpansByLanguage(dif, li, Languages.eng);
+        this.createSpansByLanguage(dif, li, Languages.heb);
+    }
+    private createSpansByLanguage(dif: difficultyLevelInfo, li: Element, lang: Languages) {
+        let langString = Languages[lang];
         let label = li.getElementsByTagName('label')[0];
         let span = document.createElement('span');
-        span.innerText = langOpt.name;
+        span.innerText = dif[langString].name;
+        span.classList.add(langString)
         label.appendChild(span);
         span = document.createElement('span');
-        span.innerText = langOpt.description;
+        span.innerText = dif[langString].description;
+        span.classList.add(langString)
         label.appendChild(span);
     }
     public handleOptionChange(event: Event) {
