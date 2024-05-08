@@ -174,9 +174,11 @@
     public showPopup(text) {
         let popup = document.getElementById("popupBox");
         document.getElementById("popupText").innerText = text;
-        popup.classList.add("show");
+        // popup.classList.add("show");
+        popup.classList.remove("hide");
         setTimeout(function () {
-            popup.classList.remove("show");
+        //    popup.classList.remove("show");
+            popup.classList.add("hide");
         }, 3000); 
     }
     private endGame() {

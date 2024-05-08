@@ -192,7 +192,11 @@ audio {
 .crater {
     position: absolute;
     z-index: -1;
+    transition: opacity 5s ease-in-out;
 }
+    .crater.fadeOut {
+        opacity: 0;
+    }
 img.crater {
     visibility: hidden;
 }
@@ -382,14 +386,14 @@ input[type=radio]:checked ~ label {
     position: fixed;
     top: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%); /*just centers*/
     background-color: #ffffff;
     padding: 20px;
     border: 1px solid #000000;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    opacity: 0;
+    z-index: 11;
+    transition: opacity 0.5s ease-in-out;
 }
 
 #popupText {
@@ -397,12 +401,8 @@ input[type=radio]:checked ~ label {
 }
 
 .show {
-    animation: fadeIn 0.5s ease forwards;
+    opacity: 1;
 }
-
-@keyframes fadeIn {
-    from { opacity: 0; } to { opacity: 1; }
-}
-@keyframes fadeOut {
-    from { opacity: 1; } to { opacity: 0; }
+.hide {
+    opacity: 0;
 }

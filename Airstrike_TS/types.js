@@ -209,6 +209,10 @@ class ContentElHandler {
         let contentEl = this.returnContentEl();
         contentEl.appendChild(elem);
     }
+    static removeFromContentEl(elem) {
+        let contentEl = this.returnContentEl();
+        contentEl.removeChild(elem);
+    }
     static contentElWidth() {
         return document.getElementById("content").clientWidth;
     }

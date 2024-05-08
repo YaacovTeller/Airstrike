@@ -5,6 +5,8 @@ class WeaponType {
     imageSource;
     speed;
     cooldown;
+    craterDecalStay = 3000;
+    craterFadingTillRemoval = 5000;
     activeInstance;
     instances = [];
     constructor(info) {
@@ -152,6 +154,12 @@ class ExplosiveWeaponType extends WeaponType {
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
         crater.style.visibility = "visible";
+        setTimeout(() => {
+            crater.classList.add("fadeOut");
+        }, this.craterDecalStay);
+        setTimeout(() => {
+            ContentElHandler.removeFromContentEl(crater);
+        }, this.craterDecalStay + this.craterFadingTillRemoval);
         this.genericExplosion(inst.blastRadElement, targets);
     }
     genericExplosion(elem, targets) {
