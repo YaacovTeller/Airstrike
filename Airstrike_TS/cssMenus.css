@@ -50,12 +50,7 @@
     display: flex;
     flex-direction: column;
 }
-
-#startbutton {
-    margin-top: 15px;
-    display: block;
-    width: 80%;
-    padding: 10px;
+.greenButtonStyle {
     font-size: 16px;
     background-color: #4CAF50; /* Green */
     color: white;
@@ -63,10 +58,23 @@
     border-radius: 5px;
     cursor: pointer;
 }
-
-    #startbutton:hover {
+    .greenButtonStyle:hover {
         background-color: #45a049; /* Darker Green */
     }
+#startbutton {
+    margin-top: 15px;
+    display: block;
+    width: 80%;
+    padding: 10px;
+}
+
+#langbutton {
+    position: absolute;
+    top: 5%;
+    right: 4%;
+    padding: 5px;
+    font-size: 16px;
+}
 
 /**/
 ul li {

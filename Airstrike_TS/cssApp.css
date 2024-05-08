@@ -194,3 +194,6 @@ img#crater { /*to override the img[src]!*/
 .hide {
     opacity: 0;
 }
+.displayNone{
+    display: none;
+}

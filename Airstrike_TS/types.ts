@@ -29,7 +29,7 @@ const regTarget: targetInfo = {
     minSpeed: 4,
     maxSpeed: 8,
     armour: Armour.none,
-    picSources: ['jeep.png', 'jeep.png', 'jeep2.png', 'jeep3.png', 'jeep4_cres.png']
+    picSources: ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png','jeep3.png', 'jeep3.png', 'jeep4_cres.png']
 }
 const modTarget: targetInfo = {
     minSpeed: 4,
@@ -84,6 +84,10 @@ type difficultyLevelInfo = {
     modTargetSpeed: speedRange,
     heavyTargetSpeed: speedRange,
     tunnelTargetSpeed: speedRange,
+    eng: langInfo,
+    heb: langInfo
+}
+type langInfo = {
     name: string,
     description: string
 }
@@ -128,8 +132,14 @@ const normal: difficultyLevelInfo = {
     modTargetSpeed: { min: 3, max: 4 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
-    name: "Normal",
-    description: "Regular speed targets, up to 15 will get taken care of for you."
+    eng: {
+        name: "Normal",
+        description: "Regular speed targets, up to 15 will get taken care of for you.",
+    },
+    heb: {
+        name: "רגיל",
+        description: "יעדי מהירות רגילים, עד 15 יטופלו עבורך."
+    }
 }
 const hard: difficultyLevelInfo = {
     newTargetEvery: 2500,
@@ -138,8 +148,14 @@ const hard: difficultyLevelInfo = {
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
-    name: "Hard",
-    description: "Faster targets, don't miss more than 10."
+    eng: {
+        name: "Hard",
+        description: "Faster targets, don't miss more than 10.",
+    },
+    heb: {
+        name: "קשה",
+        description: "מטרות מהירות יותר, אל תפספסו יותר מ-10."
+    }
 }
 const chaos: difficultyLevelInfo = {
     failLimit: 1,
@@ -148,8 +164,14 @@ const chaos: difficultyLevelInfo = {
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 3 },
-    name: "Chaos",
-    description: "Targets pile in at a ridiculous rate, you're on your own."
+    eng: {
+        name: "Chaos",
+        description: "Targets pile in at a ridiculous rate, you're on your own.",
+    },
+    heb: {
+        name: "מהומה",
+        description: "מטרות נערמות בקצב מגוחך, אתה לבד"
+    }
 }
 const dev: difficultyLevelInfo = {
     failLimit: 9999,
@@ -158,8 +180,14 @@ const dev: difficultyLevelInfo = {
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 3, max: 5 },
-    name: "Dev",
-    description: "dev"
+    eng: {
+        name: "Dev",
+        description: "",
+    },
+    heb: {
+        name: "",
+        description: ""
+    }
 }
 const sniperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.gun,

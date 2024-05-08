@@ -1,11 +1,18 @@
-﻿class GameHandler {
+﻿const winLimit: number = 20;
+enum Languages {
+    'eng',
+    'heb'
+}
+
+class GameHandler {
     public hud = new HudHandler(); //MESSY?
     public weapon: WeaponType;
     private contentEl: HTMLElement;
     public targets: Array<Target> = [];
     private newTargetFrequency: number;
     public shotCount: number = 0;
-    public winLimit: number = 50;
+    public winLimit: number;
+    private language: Languages = Languages.heb;
 
     private targetTimer: number;
     private gameTimer: number;
@@ -23,13 +30,14 @@
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
     }
     public menuSetup() {
-        let container = document.getElementById("difficultiesContainer");
-        let lis = container.getElementsByTagName('li');
+        let arr = this.getMenuLis();
+        document.getElementById("startbutton").onclick = () => this.newGame();
+        document.getElementById("langbutton").onclick = () => this.toggleLang();
 
-        this.setIndivMenuDifficulty(normal, lis[0]);
-        this.setIndivMenuDifficulty(hard, lis[1]);
-        this.setIndivMenuDifficulty(chaos, lis[2]);
-        document.getElementById("startbutton").addEventListener("click", () => this.newGame());
+        this.setMenuDifficulty(arr.slice(0, 3), Languages.eng);
+        this.setMenuDifficulty(arr.slice(3), Languages.heb);
+        this.toggleLang();
+
         const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
@@ -38,16 +46,56 @@
             }
         });
     }
-    private setIndivMenuDifficulty(dif: difficultyLevelInfo, li: Element) {
+    private setMenuDifficulty(liOptions, lang: Languages) {
+        this.setIndivMenuDifficulty(normal, liOptions[0], lang);
+        this.setIndivMenuDifficulty(hard, liOptions[1], lang);
+        this.setIndivMenuDifficulty(chaos, liOptions[2], lang);
+    }
+    private getMenuLis() {
+        let container = document.getElementById("difficultiesContainer");
+        let lis = container.getElementsByTagName('li');
+        return Array.from(lis);
+    }
+
+    private toggleLang() {
+        let heb = document.getElementsByClassName('heb')
+        let eng = document.getElementsByClassName('eng')
+        if (this.language == Languages.heb) {
+            this.language = Languages.eng
+            for (let x of heb) {
+                x.classList.add("displayNone");
+            }
+            for (let x of eng) {
+                x.classList.remove("displayNone");
+            }
+        }
+        else {
+            this.language = Languages.heb
+            for (let x of eng) {
+                x.classList.add("displayNone");
+            }
+            for (let x of heb) {
+                x.classList.remove("displayNone");
+            }
+        }
+        let lis = this.getMenuLis();
+        let langLis = lis.filter((x) => { return x.classList.contains(Languages[this.language]) })
+        let radio: HTMLInputElement = langLis[0].querySelector("input[type='radio']")
+        radio.checked = true;
+    }
+
+    private setIndivMenuDifficulty(dif: difficultyLevelInfo, li: Element, lang: Languages) {
+        li.classList.add(Languages[lang])
         let opt = li.getElementsByTagName('input')[0];
         opt.setAttribute("value", JSON.stringify(dif));
 
+        let langOpt = lang == Languages.eng ? dif.eng : dif.heb;
         let label = li.getElementsByTagName('label')[0];
         let span = document.createElement('span');
-        span.innerText = dif.name;
+        span.innerText = langOpt.name;
         label.appendChild(span);
         span = document.createElement('span');
-        span.innerText = dif.description;
+        span.innerText = langOpt.description;
         label.appendChild(span);
     }
     public handleOptionChange(event: Event) {
@@ -166,7 +214,7 @@
             let int = setInterval(() => {
                 if (this.checkGameEnd()) {
                     clearInterval(int);
-                    this.endGame();
+                    this.endWave();
                 }
             }, 100)
         }
@@ -174,14 +222,12 @@
     public showPopup(text) {
         let popup = document.getElementById("popupBox");
         document.getElementById("popupText").innerText = text;
-        // popup.classList.add("show");
         popup.classList.remove("hide");
         setTimeout(function () {
-        //    popup.classList.remove("show");
             popup.classList.add("hide");
         }, 3000); 
     }
-    private endGame() {
+    private endWave() {
         this.showPopup("Nice job!")
         this.nextWave();
     }
@@ -190,9 +236,12 @@
             this.showPopup("Get ready, more coming!")
         }, 3000)
         setTimeout(() => {
-            this.winLimit += this.winLimit;
+            let halfCurrentProgress = this.winLimit / 2;
+
+            this.winLimit += winLimit > halfCurrentProgress ? winLimit : halfCurrentProgress;
+            this.winLimit = Math.ceil(this.winLimit / 10) * 10;
             this.startTargetTimer();
-        },3000)
+        },3500)
     }
     private checkGameEnd() {
         let fin: boolean = true;
@@ -259,6 +308,7 @@
         for (let x of this.targets) {
             x.getTargetEl().remove();
         }
+        this.winLimit = winLimit;
         this.targets = [];
         this.hud.drawHUD();
         this.hud.resetStats();
