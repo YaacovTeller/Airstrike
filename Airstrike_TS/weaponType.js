@@ -135,6 +135,7 @@ class ExplosiveWeaponType extends WeaponType {
         let blastRadiusEl = inst.blastRadElement;
         let blastRect = blastRadiusEl.getBoundingClientRect();
         let crater = this.returnNewImageEl("crater", this.explosionInfo.craterSource);
+        crater.id = "crater";
         crater.style.width = blastRect.width / 2 + 'px';
         crater.style.height = blastRect.height / 4 + 'px';
         let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
@@ -155,7 +156,7 @@ class ExplosiveWeaponType extends WeaponType {
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
         crater.style.visibility = "visible";
         setTimeout(() => {
-            crater.classList.add("fadeOut");
+            crater.classList.add("hide");
         }, this.craterDecalStay);
         setTimeout(() => {
             ContentElHandler.removeFromContentEl(crater);

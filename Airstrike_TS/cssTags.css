@@ -1,0 +1,33 @@
+﻿:root {
+    --borderRad: 5px;
+    --crashTimeout: 600ms;
+}
+
+img {
+    visibility: hidden;
+    user-select: none;
+}
+
+    img[src] {
+        visibility: visible;
+    }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    margin: 0px;
+}
+
+audio {
+    display: none;
+}
+
+#content {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-image: url(./AS_assets/DS_sand.png);
+    background-repeat: round;
+    z-index: -2;
+}

@@ -95,7 +95,7 @@ const hard = {
 };
 const chaos = {
     failLimit: 1,
-    newTargetEvery: 1500,
+    newTargetEvery: 1300,
     regTargetSpeed: { min: 4, max: 8 },
     modTargetSpeed: { min: 4, max: 6 },
     heavyTargetSpeed: { min: 1, max: 3 },

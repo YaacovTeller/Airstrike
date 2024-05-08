@@ -1,0 +1,196 @@
+﻿
+.wepBoxContainer {
+    display: flex;
+    justify-content: flex-start;
+}
+.hud {
+    width: 100%;
+    border-radius: var(--borderRad);
+    position: absolute;
+    height: 80px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+}
+.score {
+    background-color: rgba(224, 255, 255, 0.5);
+    border-radius: var(--borderRad);
+    min-width: 100px;
+    width: fit-content;
+    height: fit-content;
+        padding: 8px;
+}
+.red {
+    color: red;
+}
+.paddingBottom20 {
+    padding-bottom: 20px;
+}
+.wepBox {
+    border-radius: var(--borderRad);
+    height: 80%;
+    width: 100px;
+    background-color: rgba(224,255,255, 0.5);
+    display: flex;
+    justify-content: flex-start;
+    align-items: end;
+
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+    .wepBox.selected {
+        background-color: #3ca3ff7a;
+    }
+        .wepBox.selected .instBox {
+            background-color: lightgray;
+            opacity: 0.6;
+        }
+            .wepBox.selected .instBox.instSelected {
+                background-color: forestgreen;
+            }
+            .wepBox.selected .instBox.instUnavailable {
+                background-color: indianred;
+            }
+.instBox {
+    border-radius: 2px;
+    height: 20px;
+    width: 20px;
+    /*background-color: rgba(173,216,230, 0.6);*/
+    background-color: rgb(173,216,230);
+    opacity: 0.6;
+}
+    .instBox.instUnavailable {
+        background-color: indianred;
+    }
+
+    .cursor1 {
+        cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
+    }
+.cursor2 {
+    cursor: url(./AS_assets/cursors/crosshair.cur), crosshair;
+}
+.cursor3 {
+    cursor: url(./AS_assets/cursors/target.cur), crosshair;
+}
+.cursor4 {
+    cursor: url(./AS_assets/cursors/bazooka.cur), crosshair;
+}
+.trail {
+    position: absolute;
+    height: inherit;
+    width: inherit;
+    display:flex;
+    justify-content:space-between;
+}
+.flexCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.flexEnd {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    
+}
+.target {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    user-select: none;
+    z-index: 5;
+/*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
+}
+    .target > img {
+        position: absolute;
+        max-width: 100%;
+        max-height: 100%;
+        user-select: none;
+    }
+.tunnelHead {
+    background-color: rgb(195,170,100);
+    filter: blur(15px);
+}
+.tunnelFocus {
+    cursor: url(./AS_assets/unbounded.cur), crosshair;
+}
+.lightDamaged {
+    width: 100%;
+    padding-bottom: 35px;
+    padding-left: 20px;
+    z-index: 4;
+}
+.badDamaged {
+    width: 60%;
+    padding-bottom: 22px;
+}
+.destroyed {
+    width: 100%;
+    padding-bottom: 22px;
+}
+.preFire {
+    border: 2px dashed black;
+    border-style: dashed;
+    animation: rotate 40s linear infinite;
+}
+.nukeIndicator {
+    background-image: url(./AS_assets/rad.svg);
+    background-repeat: no-repeat;
+    background-position:center;
+}
+.firing {
+    /*    background-color: lightblue;*/
+    background-color: rgba(173, 216, 230, 0.5);
+}
+.explosion {
+    position: absolute;
+    user-select: none;
+    z-index: 1;
+}
+.wepNum {
+    position: fixed;
+    top: 0;
+    padding-left: 6px;
+    font-weight: 800;
+}
+.blastRadius {
+    opacity: 0.5;
+    position: fixed;
+    border-radius: 50%;
+    /*    pointer-events: none;
+*/ /*overflow: hidden;*/
+}
+.crater {
+    position: absolute;
+    z-index: -1;
+    transition: opacity 5s ease-in-out;
+}
+
+img#crater { /*to override the img[src]!*/
+    visibility: hidden;
+}
+
+.blastRadius .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 1000ms linear;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+.flipbackward {
+    transition: transform var(--crashTimeout) linear;
+    transform: rotate(-200deg);
+}
+.flipforward {
+    transition: transform var(--crashTimeout) linear;
+    transform: rotate(160deg);
+}
+
+
+.show {
+    opacity: 1;
+}
+.hide {
+    opacity: 0;
+}

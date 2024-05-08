@@ -5,7 +5,7 @@ class GameHandler {
     targets = [];
     newTargetFrequency;
     shotCount = 0;
-    winLimit = 40;
+    winLimit = 50;
     targetTimer;
     gameTimer;
     soundTimer;
