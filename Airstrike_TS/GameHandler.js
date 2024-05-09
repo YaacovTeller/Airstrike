@@ -30,8 +30,6 @@ class GameHandler {
         let arr = this.getMenuLis();
         document.getElementById("startbutton").onclick = () => this.newGame();
         document.getElementById("langbutton").onclick = () => this.toggleLang();
-        //this.setMenuDifficulty(arr.slice(0, 3), Languages.eng);
-        //this.setMenuDifficulty(arr.slice(3), Languages.heb);
         this.setMenuDifficulty(arr);
         this.toggleLang();
         const radioButtons = document.querySelectorAll('input[type="radio"]');
@@ -224,13 +222,13 @@ class GameHandler {
     nextWave() {
         setTimeout(() => {
             this.showPopup("Get ready, more coming!");
-        }, 3000);
+        }, 3500);
         setTimeout(() => {
             let halfCurrentProgress = this.winLimit / 2;
             this.winLimit += winLimit > halfCurrentProgress ? winLimit : halfCurrentProgress;
             this.winLimit = Math.ceil(this.winLimit / 10) * 10;
             this.startTargetTimer();
-        }, 3500);
+        }, 5000);
     }
     checkGameEnd() {
         let fin = true;
