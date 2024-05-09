@@ -12,7 +12,7 @@ class GameHandler {
     newTargetFrequency;
     shotCount = 0;
     winLimit;
-    language = Languages.heb;
+    language = Languages.eng;
     targetTimer;
     gameTimer;
     soundTimer;
@@ -73,10 +73,6 @@ class GameHandler {
                 x.classList.remove("displayNone");
             }
         }
-        //let lis = this.getMenuLis();
-        //let langLis = lis.filter((x) => { return x.classList.contains(Languages[this.language]) })
-        //let radio: HTMLInputElement = langLis[0].querySelector("input[type='radio']")
-        //radio.checked = true;
     }
     setIndivMenuDifficulty(dif, li) {
         let opt = li.getElementsByTagName('input')[0];
@@ -123,9 +119,6 @@ class GameHandler {
         var elem = document.getElementById(id);
         elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
-    updateShotCounter() {
-        this.hud.updateScore(this.shotCount);
-    }
     fireFunc() {
         this.weapon.fireFunc(this.targets);
     }
@@ -144,6 +137,10 @@ class GameHandler {
             this.addNuke();
         }
     }
+    positionElem(elem, pos) {
+        elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
+        elem.style.top = pos.Y - elem.offsetHeight / 2 + 'px';
+    }
     updateCursorPosition(event) {
         let newMousePos = MouseHandler.updateMousePos(event);
         if (this.weapon.activeInstance) {
@@ -151,9 +148,8 @@ class GameHandler {
             this.positionElem(blast, newMousePos);
         }
     }
-    positionElem(elem, pos) {
-        elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
-        elem.style.top = pos.Y - elem.offsetHeight / 2 + 'px';
+    updateShotCounter() {
+        this.hud.updateScore(this.shotCount);
     }
     changeWeapon(wep) {
         if (!allWeaponTypes.includes(wep))

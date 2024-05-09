@@ -12,7 +12,7 @@ class GameHandler {
     private newTargetFrequency: number;
     public shotCount: number = 0;
     public winLimit: number;
-    private language: Languages = Languages.heb;
+    private language: Languages = Languages.eng;
 
     private targetTimer: number;
     private gameTimer: number;
@@ -79,10 +79,6 @@ class GameHandler {
                 x.classList.remove("displayNone");
             }
         }
-        //let lis = this.getMenuLis();
-        //let langLis = lis.filter((x) => { return x.classList.contains(Languages[this.language]) })
-        //let radio: HTMLInputElement = langLis[0].querySelector("input[type='radio']")
-        //radio.checked = true;
     }
 
     private setIndivMenuDifficulty(dif: difficultyLevelInfo, li: Element) {
@@ -107,7 +103,7 @@ class GameHandler {
     public handleOptionChange(event: Event) {
         this.jsonParseRadioDifficulty((event.target as HTMLInputElement).value);
     }
-    public setDifficulty(difficulty: difficultyLevelInfo) {
+    private setDifficulty(difficulty: difficultyLevelInfo) {
         this.newTargetFrequency = difficulty.newTargetEvery;
         this.setIndivTargetSpeed(regTarget, difficulty.regTargetSpeed);
         this.setIndivTargetSpeed(modTarget, difficulty.modTargetSpeed);
@@ -131,9 +127,6 @@ class GameHandler {
         var elem = document.getElementById(id);
         elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
-    public updateShotCounter() {
-        this.hud.updateScore(this.shotCount);
-    }
 
     private fireFunc() {
         this.weapon.fireFunc(this.targets);
@@ -150,6 +143,12 @@ class GameHandler {
         }
         else if (event.shiftKey && event.key === 'N') { this.addNuke(); }
     }
+
+    private positionElem(elem: HTMLElement, pos: position) {
+        elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
+        elem.style.top = pos.Y - elem.offsetHeight / 2 + 'px';
+    }
+
     public updateCursorPosition(event?: MouseEvent) {
         let newMousePos = MouseHandler.updateMousePos(event);
         if (this.weapon.activeInstance) {
@@ -158,12 +157,9 @@ class GameHandler {
             this.positionElem(blast, newMousePos);
         }
     }
-
-    private positionElem(elem: HTMLElement, pos: position) {
-        elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
-        elem.style.top = pos.Y - elem.offsetHeight / 2 + 'px';
+    public updateShotCounter() {
+        this.hud.updateScore(this.shotCount);
     }
-
     public changeWeapon(wep: WeaponType) {
         if (!allWeaponTypes.includes(wep))
             return;
