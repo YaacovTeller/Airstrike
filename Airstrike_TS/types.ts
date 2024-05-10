@@ -111,7 +111,8 @@ type weaponInfo = {
     imageSource: string,
     cursor: string,
     speed: number,
-    cooldown: number
+    cooldown: number,
+    noAmmo: Sound
 }
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
@@ -202,6 +203,7 @@ const sniperInfo: ExplosiveWeaponInfo = {
     sound: gunSounds,
     speed: 0,
     cooldown: 500,
+    noAmmo: click_1
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
@@ -217,6 +219,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
     sound: mortarSounds,
     speed: 2000,
     cooldown: 2000,
+    noAmmo: click_2
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.howitzer,
@@ -233,6 +236,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     sound: howitzerSounds,
     speed: 3000,
     cooldown: 6000,
+    noAmmo: click_2
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
@@ -249,6 +253,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     sound: airstrikeSounds,
     speed: 4000,
     cooldown: 9000,
+    noAmmo: bleep_neg
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
@@ -265,6 +270,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
     sound: nukeSounds,
     speed: 6000,
     cooldown: 15000,
+    noAmmo: bleep_neg
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.charge,
@@ -273,6 +279,7 @@ const chargeInfo: weaponInfo = {
     sound: gunSounds,
     speed: 3000,
     cooldown: 8000,
+    noAmmo: bleep_neg
 }
 
 function loadNewImage() {

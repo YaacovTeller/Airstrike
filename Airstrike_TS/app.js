@@ -8,7 +8,7 @@ var allWeaponTypes;
 var game;
 function pushWeaponInstances() {
     charge = new ChargeWeaponType(chargeInfo);
-    sniper = new ExplosiveWeaponType(sniperInfo);
+    sniper = new BulletWeaponType(sniperInfo);
     mortar = new ExplosiveWeaponType(mortarInfo);
     howitzer = new ExplosiveWeaponType(howitzerInfo);
     airstrike = new ExplosiveWeaponType(airstrikeInfo);

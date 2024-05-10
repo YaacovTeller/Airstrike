@@ -129,7 +129,7 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                mortar.genericExplosion(imgArr[index], game.targets)
+                mortar.checkForTargets(imgArr[index], game.targets)
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150)
         }

@@ -150,6 +150,7 @@ const sniperInfo = {
     sound: gunSounds,
     speed: 0,
     cooldown: 500,
+    noAmmo: click_1
 };
 const mortarInfo = {
     name: weaponNames.mortar,
@@ -165,6 +166,7 @@ const mortarInfo = {
     sound: mortarSounds,
     speed: 2000,
     cooldown: 2000,
+    noAmmo: click_2
 };
 const howitzerInfo = {
     name: weaponNames.howitzer,
@@ -181,6 +183,7 @@ const howitzerInfo = {
     sound: howitzerSounds,
     speed: 3000,
     cooldown: 6000,
+    noAmmo: click_2
 };
 const airstrikeInfo = {
     name: weaponNames.airstrike,
@@ -197,6 +200,7 @@ const airstrikeInfo = {
     sound: airstrikeSounds,
     speed: 4000,
     cooldown: 9000,
+    noAmmo: bleep_neg
 };
 const nukeInfo = {
     name: weaponNames.nuke,
@@ -213,6 +217,7 @@ const nukeInfo = {
     sound: nukeSounds,
     speed: 6000,
     cooldown: 15000,
+    noAmmo: bleep_neg
 };
 const chargeInfo = {
     name: weaponNames.charge,
@@ -221,6 +226,7 @@ const chargeInfo = {
     sound: gunSounds,
     speed: 3000,
     cooldown: 8000,
+    noAmmo: bleep_neg
 };
 function loadNewImage() {
     return '?' + new Date().getTime();

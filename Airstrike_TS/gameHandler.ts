@@ -204,8 +204,9 @@ class GameHandler {
                 newTarget = new VehicleTarget(modTarget);
                 break;
             default:
-             //   newTarget = new TunnelTarget(regTunnelTarget)
+            //    newTarget = new TunnelTarget(regTunnelTarget)
                 newTarget = new VehicleTarget(regTarget);
+           //     newTarget = new VehicleTarget(heavyTarget);
                 break;
         }
         this.targets.push(newTarget);
