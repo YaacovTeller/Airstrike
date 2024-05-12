@@ -7,28 +7,19 @@
     <link rel="stylesheet" href="cssApp.css" type="text/css" />
     <link rel="stylesheet" href="cssTags.css" type="text/css" />
     <link rel="stylesheet" href="cssMenus.css" type="text/css" />
-    <script src="sound.js"></script>
-    <script src="types.js"></script>
-    <script src="collisionDetection.js"></script>
-    <script src="weaponType.js"></script>
-    <script src="app.js"></script>
-    <script src="hudHandler.js"></script>
-    <script src="gameHandler.js"></script>
-    <script src="target.js"></script>
-
 </head>
 <body>
     <div id="popupBox" class="hide">
-        <span id="popupText" ></span>
+        <span id="popupText"></span>
     </div>
-    <div id="overlay" style="display: block"></div>
-    <div id="modal" style="display: block">
-        <div class="modalContainer" >
+    <div id="overlay" ></div>
+    <div id="modal" >
+        <div class="modalContainer">
             <!--<button id="langbutton" class="eng greenButtonStyle">Heb</button>
             <button id="langbutton" class="heb greenButtonStyle">Eng</button>-->
             <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
             <h2 class="eng">Intructions:</h2>
-            <h2 class="heb" >הנחיות:</h2>
+            <h2 class="heb">הנחיות:</h2>
             <ol class="eng">
                 <li>Stop anything you see.</li>
                 <li>Select weapons by clicking on the boxes or with number keys.</li>
@@ -73,7 +64,7 @@
             </div>
             <div class="buttonContainer">
                 <!--<button class="heb greenButtonStyle" id="startbutton" >מתחיל</button>-->
-                <button class="greenButtonStyle" id="startbutton" ><span class="eng">Start</span><span class="heb">מתחיל</span></button>
+                <button class="greenButtonStyle" id="startbutton"><span class="eng">Start</span><span class="heb">מתחיל</span></button>
             </div>
         </div>
     </div>
@@ -82,3 +73,11 @@
 
 </body>
 </html>
+<script src="sound.js"></script>
+<script src="types.js"></script>
+<script src="collisionDetection.js"></script>
+<script src="weaponType.js"></script>
+<script src="app.js"></script>
+<script src="hudHandler.js"></script>
+<script src="gameHandler.js"></script>
+<script src="target.js"></script>

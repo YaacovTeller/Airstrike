@@ -164,7 +164,7 @@
 .crater {
     position: absolute;
     z-index: -1;
-    transition: opacity 5s ease-in-out;
+    transition: opacity 8s ease-in-out;
 }
 
 img#crater { /*to override the img[src]!*/

@@ -48,6 +48,9 @@ class Target {
     public getTargetEl() {
         return this.targetEl;
     }
+    public getPicEl() {
+        return this.picEl;
+    }
 
     protected flip(direc: direction) {
             this.picEl.classList.remove('flipforward');

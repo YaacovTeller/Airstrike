@@ -45,13 +45,14 @@ class RandomSoundGen {
         sounds[this.soundIndex].play();
     }
 }
-    const soundFolder: string = "./AS_assets/sound/"
 
-var pgia: Sound;
-var bleep_neg: Sound;
-var aluak: Sound;
-var click_1: Sound;
-var click_2: Sound;
+const soundFolder: string = "./AS_assets/sound/"
+
+var pgia = new Sound(soundFolder + "pgia.mp3");
+var aluak = new Sound(soundFolder + "aluAk.mp3");
+var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
+var click_1 = new Sound(soundFolder + "click_1.mp3");
+var click_2 = new Sound(soundFolder + "click_2.mp3");
 
 var gunSounds: Array<Sound> = [];
 var mortarSounds: Array<Sound> = [];
@@ -70,17 +71,11 @@ var ambience: Array<Sound> = [];
 var ricochet: Array<Sound> = [];
 
 function loadSound() {
-    aluak = new Sound(soundFolder + "aluAk.mp3");
-    pgia = new Sound(soundFolder + "pgia.mp3");
-    bleep_neg = new Sound(soundFolder + "target_lost.mp3");
-    click_1 = new Sound(soundFolder + "click_1.mp3");
-    click_2 = new Sound(soundFolder + "click_2.mp3");
-
     ricochet.push(
         new Sound(soundFolder + "ricochet_1.mp3"),
         new Sound(soundFolder + "ricochet_2.mp3"),
-        new Sound(soundFolder + "ricochet_3.mp3"),
-        new Sound(soundFolder + "ricochet_4.mp3"),
+        //new Sound(soundFolder + "ricochet_3.mp3"),
+        //new Sound(soundFolder + "ricochet_4.mp3"),
         new Sound(soundFolder + "ricochet_5.mp3"),
     )
     ticks.push(
@@ -163,6 +158,5 @@ function loadSound() {
         new Sound(soundFolder + "expl_dull.mp3"),
         new Sound(soundFolder + "expl_dull2.mp3"),
         new Sound(soundFolder + "messy_bomb_3.mp3"),
-
     )
 }

@@ -17,6 +17,7 @@ class GameHandler {
     private targetTimer: number;
     private gameTimer: number;
     private soundTimer: number;
+    private gameInProgress: boolean;
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
@@ -36,6 +37,7 @@ class GameHandler {
 
         this.setMenuDifficulty(arr);
         this.toggleLang();
+        this.toggleModal();
 
         const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
         radioButtons.forEach(radioButton => {
@@ -289,11 +291,12 @@ class GameHandler {
         this.hud.updateScore();
     }
     public toggleGamePause() {
-        if (this.gameTimer) {
-            this.stop();
-        }
-        else {
-            if (this.targets.length) {
+        if (this.gameInProgress) {
+            if (this.gameTimer) {
+
+                this.stop();
+            }
+            else {
                 this.start();
             }
         }
@@ -304,6 +307,9 @@ class GameHandler {
         this.gameTimer = undefined;
         clearInterval(this.targetTimer);
         clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
+        }
     }
     public reset() {
         for (let x of this.targets) {
@@ -323,18 +329,22 @@ class GameHandler {
             this.newTarget();
         }, this.newTargetFrequency);
     }
-
-    public start() {
-        this.changeWeapon(mortar);
-
-        this.toggleModal();
+    private startAmbience() {
         RandomSoundGen.playRandomSound(ambience);
         this.soundTimer = setInterval(() => {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
-        //this.newTarget();
+    }
+
+    public start() {
+        this.gameInProgress = true;
+        this.changeWeapon(mortar);
+        this.startAmbience();
+        this.toggleModal();
+
         this.startTargetTimer();
 
+        //this.newTarget();
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
             this.targets.forEach((trg) => {

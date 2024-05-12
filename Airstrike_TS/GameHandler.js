@@ -16,6 +16,7 @@ class GameHandler {
     targetTimer;
     gameTimer;
     soundTimer;
+    gameInProgress;
     constructor(element) {
         this.contentEl = element;
         this.menuSetup();
@@ -32,6 +33,7 @@ class GameHandler {
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         this.setMenuDifficulty(arr);
         this.toggleLang();
+        this.toggleModal();
         const radioButtons = document.querySelectorAll('input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
@@ -278,11 +280,11 @@ class GameHandler {
         this.hud.updateScore();
     }
     toggleGamePause() {
-        if (this.gameTimer) {
-            this.stop();
-        }
-        else {
-            if (this.targets.length) {
+        if (this.gameInProgress) {
+            if (this.gameTimer) {
+                this.stop();
+            }
+            else {
                 this.start();
             }
         }
@@ -293,6 +295,9 @@ class GameHandler {
         this.gameTimer = undefined;
         clearInterval(this.targetTimer);
         clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
+        }
     }
     reset() {
         for (let x of this.targets) {
@@ -312,15 +317,19 @@ class GameHandler {
             this.newTarget();
         }, this.newTargetFrequency);
     }
-    start() {
-        this.changeWeapon(mortar);
-        this.toggleModal();
+    startAmbience() {
         RandomSoundGen.playRandomSound(ambience);
         this.soundTimer = setInterval(() => {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
-        //this.newTarget();
+    }
+    start() {
+        this.gameInProgress = true;
+        this.changeWeapon(mortar);
+        this.startAmbience();
+        this.toggleModal();
         this.startTargetTimer();
+        //this.newTarget();
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
             this.targets.forEach((trg) => {

@@ -39,6 +39,9 @@ class Target {
     getTargetEl() {
         return this.targetEl;
     }
+    getPicEl() {
+        return this.picEl;
+    }
     flip(direc) {
         this.picEl.classList.remove('flipforward');
         this.picEl.classList.remove('flipbackward');

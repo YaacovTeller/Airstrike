@@ -5,8 +5,8 @@
     public imageSource: string;
     public speed: number;
     public cooldown: number;
-    public craterDecalStay: number = 5000;
-    public craterFadingTillRemoval: number = 5000;
+    public craterDecalStay: number = 10000;
+    public craterFadingTillRemoval: number = 8000;
     public noAmmo: Sound;
 
     public activeInstance: weaponInstance;
@@ -77,6 +77,13 @@
         }, _this.cooldown);
     }
 
+    protected ammoCheck() {
+        if (this.activeInstance == null || this.activeInstance.ready === false) {
+            this.noAmmo.play();
+            return false;
+        }
+        else return true
+    }
 
     protected determineSeverity(fraction?: number) {
         let severity: strikeSeverity;
@@ -97,12 +104,9 @@ class BulletWeaponType extends WeaponType {
 
     }
     public fireFunc(targets: Array<Target>) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            console.log("hit NULL inst");
-            this.noAmmo.play();
-            return;
-        }
+        if (this.ammoCheck() === false) { return }
 
+        RandomSoundGen.playSequentialSound(this.sound);
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         inst.ready = false;
         this.shotCounter();
@@ -114,11 +118,15 @@ class BulletWeaponType extends WeaponType {
         this.cooldownTimeout(inst);
         this.activeInstance = this.getAvailableInstance();
     }
+    protected determineSeverity() {
+        let severity: strikeSeverity = strikeSeverity.light
+        return severity
+    }
     public checkForTargets(elem: HTMLElement, targets: Array<Target>) {
         for (let target of targets) {
             
-            if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, target.getTargetEl())) {
-                let severity: strikeSeverity = strikeSeverity.light
+            if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, target.getPicEl())) {
+                let severity: strikeSeverity = this.determineSeverity();
                 if (this.determineExceptionsForArmour(target, severity)) {
                     continue
                 };
@@ -176,25 +184,26 @@ class ExplosiveWeaponType extends WeaponType {
     }
 
     public fireFunc(targets: Array<Target>) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            console.log("hit NULL inst");
-            this.noAmmo.play();
-            return;
-        }
+        if (this.ammoCheck() === false) { return }
+        RandomSoundGen.playSequentialSound(this.sound);
+        this.shotCounter();
 
         let inst: ExplosiveWeaponInstance = this.activeInstance as ExplosiveWeaponInstance;
         inst.ready = false;
 
-        this.setExplosionPos(inst);
-        this.prepFire(true, inst);
+        this.rippleEffect(inst);
+        this.switchBlastIndicatorStyle(true, inst);
 
-        this.shotCounter();
+        this.setExplosionPos(inst);
+        if (this.explosionInfo.sound.length) {
+            setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
+        }
         let crater = this.setAndReturnCrater(inst);
 
         setTimeout(() => {
             this.explosion(inst, crater);
             this.checkForTargets(inst.blastRadElement, targets);
-            this.prepFire(false, inst);
+            this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
 
@@ -336,19 +345,6 @@ class ExplosiveWeaponType extends WeaponType {
         }
         return severity
     }
-    private prepFire(bool: boolean, inst: ExplosiveWeaponInstance) {
-        this.switchBlastIndicatorStyle(bool, inst);
-        if (bool) {
-            this.rippleEffect(inst);
-            RandomSoundGen.playSequentialSound(this.sound);
-            //if (this.activeInstance != inst) {
-            //    inst.blastRadElement.style.visibility = 'hidden';
-            //}
-            if (this.explosionInfo.sound.length) {
-                setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
-            }
-        }
-    }
 
     public switchBlastIndicatorStyle(bool: boolean, inst: ExplosiveWeaponInstance) {
         if (inst == null)
@@ -388,10 +384,7 @@ class ChargeWeaponType extends WeaponType {
     }
 
     public fireFunc(targets: Array<Target>) {
-        if (this.activeInstance == null || this.activeInstance.ready === false) {
-            bleep_neg.play();
-            return;
-        }
+        if (this.ammoCheck() === false) { return }
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         this.activeInstance = this.getAvailableInstance();
@@ -403,6 +396,8 @@ class ChargeWeaponType extends WeaponType {
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
                 hit = true;
+                inst.ready = false;
+
                 this.shotCounter();
                 this.cooldownTimeout(inst);
                 RandomSoundGen.playSequentialSound(beeps);
