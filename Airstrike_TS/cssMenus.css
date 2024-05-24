@@ -1,4 +1,5 @@
-﻿#overlay {
+﻿
+#overlay {
     display: none;
     z-index: 10;
     position: fixed;
@@ -8,19 +9,24 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5); /* semi-opaque black */
 }
+#content{
+    top: 0;
+}
 
 #modal {
     display: none;
     z-index: 10;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     padding: 25px;
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    /*    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);*/
+    max-width: 50%;
+    top: 10%;
 }
 
     #modal h2 {
@@ -170,7 +176,7 @@ input[type=radio]:checked ~ label {
 
 #popupBox {
     position: fixed;
-    top: 20px;
+    top: 15%;
     left: 50%;
     transform: translateX(-50%); /*just centers*/
     background-color: #ffffff;
@@ -185,11 +191,116 @@ input[type=radio]:checked ~ label {
 #popupText {
     color: #333333;
 }
+.directionalFluidContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+
+@media only screen and (max-height: 400px) {
+    .directionalFluidContainer {
+        flex-direction: row;
+    }
+
+    #modal {
+        max-height: 90%;
+        max-width: 100%;
+        overflow: scroll;
+        top: 0%;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #modal {
+        max-height: 90%;
+        max-width: 90%;
+        overflow: scroll;
+        top: 0%;
+    }
+
+/*    ul li label span:first-child,
+    ul li label span:nth-child(3) {
+        flex: 0 0 30%;
+    }*/
+}
+
+    .container {
+        display: none;
+        pointer-events: none;
+        margin-left: 40%;
+        position: absolute;
+        width: 30%;
+        background-color: rgba(255, 255, 255, 0.3); /* slightly transparent white */
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* shadow effect */
+    }
+
+    .progress-container {
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0);
+        /*background-color: #f0f0f0;*/
+        border-radius: 5px;
+        margin-bottom: -8px;
+    }
+
+    .progress-bar {
+        width: 0%;
+        height: 20px;
+        /*    background-color: #4caf50;    */
+        opacity: 0.8;
+        background-color: red;
+        border-radius: 5px;
+        transition: width 1s ease-in-out;
+    }
+
+    .progress-markers {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+
+    .progress-marker {
+        position: relative;
+    }
+
+        .progress-marker::after {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 5px;
+            background-color: black;
+        }
 
 @keyframes ripple {
     to {
         transform: scale(4);
         opacity: 0;
+    }
+}
+
+@keyframes expandContract {
+    0%, 100% {
+        transform: scale(1.5);
+    }
+    50% {
+        transform: scale(2);
+    }
+}
+@keyframes expandContractRotate {
+    0% {
+        transform: scale(1.5) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(2) rotate(180deg);
+    }
+
+    100% {
+        transform: scale(1.5) rotate(360deg);
     }
 }
 

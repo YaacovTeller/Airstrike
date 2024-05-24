@@ -1,6 +1,7 @@
 ﻿:root {
     --borderRad: 5px;
     --crashTimeout: 600ms;
+    --chargeSelected: hidden;
 }
 
 img {

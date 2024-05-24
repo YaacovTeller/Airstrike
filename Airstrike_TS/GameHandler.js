@@ -1,4 +1,4 @@
-const winLimit = 20;
+const winLimit = 10;
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";
@@ -9,6 +9,8 @@ class GameHandler {
     weapon;
     contentEl;
     targets = [];
+    progressBar;
+    progressNumber;
     newTargetFrequency;
     shotCount = 0;
     winLimit;
@@ -19,6 +21,9 @@ class GameHandler {
     gameInProgress;
     constructor(element) {
         this.contentEl = element;
+        this.progressBar = document.getElementById('progress');
+        this.progressNumber = 30;
+        this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
         this.setEventListeners();
@@ -158,9 +163,16 @@ class GameHandler {
         this.hud.selectBox(wep.name);
         this.weapon.setActiveInstance();
         let inst = this.weapon.activeInstance;
-        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
+        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.name) {
             let w = this.weapon;
             w.switchBlastIndicatorStyle(false, inst);
+        }
+        const root = document.querySelector(':root');
+        if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
+            root.style.setProperty('--chargeSelected', 'visible');
+        }
+        else {
+            root.style.setProperty('--chargeSelected', 'hidden');
         }
         this.switchCursor();
         this.updateCursorPosition();
@@ -199,7 +211,13 @@ class GameHandler {
                 //     newTarget = new VehicleTarget(heavyTarget);
                 break;
         }
+        this.targetCreation(newTarget);
+    }
+    targetCreation(newTarget) {
         this.targets.push(newTarget);
+        this.winLimitCheck();
+    }
+    winLimitCheck() {
         if (this.targets.length >= this.winLimit) {
             clearInterval(this.targetTimer);
             let int = setInterval(() => {
@@ -323,6 +341,11 @@ class GameHandler {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
     }
+    updateProgressBar() {
+        if (parseInt(this.progressBar.style.width) != this.progressNumber) {
+            this.progressBar.style.width = this.progressNumber + '%';
+        }
+    }
     start() {
         this.gameInProgress = true;
         this.changeWeapon(mortar);
@@ -332,6 +355,7 @@ class GameHandler {
         //this.newTarget();
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
+            this.updateProgressBar();
             this.targets.forEach((trg) => {
                 trg.action();
             });

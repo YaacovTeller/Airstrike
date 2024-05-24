@@ -1,4 +1,4 @@
-﻿const winLimit: number = 20;
+﻿const winLimit: number = 10;
 enum Languages {
     'eng',
     'heb'
@@ -9,6 +9,8 @@ class GameHandler {
     public weapon: WeaponType;
     private contentEl: HTMLElement;
     public targets: Array<Target> = [];
+    private progressBar: HTMLElement;
+    private progressNumber: number;
     private newTargetFrequency: number;
     public shotCount: number = 0;
     public winLimit: number;
@@ -21,6 +23,10 @@ class GameHandler {
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
+        this.progressBar = document.getElementById('progress');
+
+        this.progressNumber = 30;
+        this.updateProgressBar();
 
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
@@ -152,7 +158,6 @@ class GameHandler {
     public updateCursorPosition(event?: MouseEvent) {
         let newMousePos = MouseHandler.updateMousePos(event);
         if (this.weapon.activeInstance) {
-
             let blast = this.weapon.activeInstance.blastRadElement;
             this.positionElem(blast, newMousePos);
         }
@@ -167,9 +172,16 @@ class GameHandler {
         this.hud.selectBox(wep.name);
         this.weapon.setActiveInstance();
         let inst = this.weapon.activeInstance;
-        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.constructor.name) {
+        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.name) {
             let w = this.weapon as ExplosiveWeaponType;
             w.switchBlastIndicatorStyle(false, inst as ExplosiveWeaponInstance);
+        }
+        const root: HTMLElement = document.querySelector(':root');
+        if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
+            root.style.setProperty('--chargeSelected', 'visible');
+        }
+        else {
+            root.style.setProperty('--chargeSelected', 'hidden');
         }
         this.switchCursor();
         this.updateCursorPosition();
@@ -211,7 +223,13 @@ class GameHandler {
            //     newTarget = new VehicleTarget(heavyTarget);
                 break;
         }
+        this.targetCreation(newTarget);
+    }
+    public targetCreation(newTarget: Target) {
         this.targets.push(newTarget);
+        this.winLimitCheck();
+    }
+    private winLimitCheck() {
         if (this.targets.length >= this.winLimit) {
             clearInterval(this.targetTimer);
             let int = setInterval(() => {
@@ -335,18 +353,26 @@ class GameHandler {
             RandomSoundGen.playRandomSound(ambience);
         }, 35000);
     }
+    private updateProgressBar() {
+        if (parseInt(this.progressBar.style.width) != this.progressNumber) {
+            this.progressBar.style.width = this.progressNumber + '%';
+        }
+    }
 
     public start() {
         this.gameInProgress = true;
         this.changeWeapon(mortar);
         this.startAmbience();
+
         this.toggleModal();
+        
 
         this.startTargetTimer();
 
         //this.newTarget();
         this.gameTimer = window.setInterval(() => {
             this.updateHudScore();
+            this.updateProgressBar();
             this.targets.forEach((trg) => {
                 trg.action();
             });

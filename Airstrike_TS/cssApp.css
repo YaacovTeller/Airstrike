@@ -18,7 +18,7 @@
     min-width: 100px;
     width: fit-content;
     height: fit-content;
-        padding: 8px;
+    padding: 8px;
 }
 .red {
     color: red;
@@ -64,9 +64,9 @@
         background-color: indianred;
     }
 
-    .cursor1 {
-        cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
-    }
+.cursor1 {
+    cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
+}
 .cursor2 {
     cursor: url(./AS_assets/cursors/crosshair.cur), crosshair;
 }
@@ -76,13 +76,7 @@
 .cursor4 {
     cursor: url(./AS_assets/cursors/bazooka.cur), crosshair;
 }
-.trail {
-    position: absolute;
-    height: inherit;
-    width: inherit;
-    display:flex;
-    justify-content:space-between;
-}
+
 .flexCenter {
     display: flex;
     align-items: center;
@@ -96,8 +90,8 @@
 }
 .target {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     user-select: none;
     z-index: 5;
 /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
@@ -108,12 +102,33 @@
         max-height: 100%;
         user-select: none;
     }
+    .target > .lockon {
+        visibility: hidden;
+        opacity: 0.3;
+        animation: expandContract 1.5s linear infinite
+    }
+.tunnelHead:hover > .lockon {
+    visibility: var(--chargeSelected);
+}
 .tunnelHead {
-    background-color: rgb(195,170,100);
-    filter: blur(15px);
+    /*    background-color: rgb(195,170,100);*/
+    /*    filter: blur(15px);*/
+
 }
 .tunnelFocus {
-    cursor: url(./AS_assets/unbounded.cur), crosshair;
+    cursor: url(./AS_assets/cursors/unbounded.cur), crosshair;
+}
+.trail {
+    pointer-events: none;
+    position: absolute;
+    height: inherit;
+    width: inherit;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 0px 100px 100px 0px;
+    box-shadow: 0px 0px 50px rgba(90,90,90,.8);
+
+    transition: opacity 3s ease-in-out;
 }
 .lightDamaged {
     width: 100%;

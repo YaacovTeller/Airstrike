@@ -69,6 +69,7 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -77,6 +78,97 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AS_assets\bomb.svg" />
+    <Content Include="AS_assets\crater.png" />
+    <Content Include="AS_assets\cursors\battlefieldH.cur" />
+    <Content Include="AS_assets\cursors\bazooka.cur" />
+    <Content Include="AS_assets\cursors\crosshair.cur" />
+    <Content Include="AS_assets\cursors\sniper.cur" />
+    <Content Include="AS_assets\cursors\target.cur" />
+    <Content Include="AS_assets\cursors\unbounded.cur" />
+    <Content Include="AS_assets\DS_sand.png" />
+    <Content Include="AS_assets\dynamite.svg" />
+    <Content Include="AS_assets\expl1.gif" />
+    <Content Include="AS_assets\explode_unused.gif" />
+    <Content Include="AS_assets\expl_big.gif" />
+    <Content Include="AS_assets\expl_big_fast.gif" />
+    <Content Include="AS_assets\fire_1.gif" />
+    <Content Include="AS_assets\fire_3.gif" />
+    <Content Include="AS_assets\gun.svg" />
+    <Content Include="AS_assets\jeep2.png" />
+    <Content Include="AS_assets\jeep3.png" />
+    <Content Include="AS_assets\jeep4_cres.png" />
+    <Content Include="AS_assets\jeep4_dark.png" />
+    <Content Include="AS_assets\jeep_grey.png" />
+    <Content Include="AS_assets\jeep_grey_armour.png" />
+    <Content Include="AS_assets\jet.svg" />
+    <Content Include="AS_assets\mortar.svg" />
+    <Content Include="AS_assets\mushroom_1.gif" />
+    <Content Include="AS_assets\rad.svg" />
+    <Content Include="AS_assets\smoke_1.gif" />
+    <Content Include="AS_assets\smoke_2.gif" />
+    <Content Include="AS_assets\smoke_3.gif" />
+    <Content Include="AS_assets\sound\aluAk.mp3" />
+    <Content Include="AS_assets\sound\ambient_1_q.mp3" />
+    <Content Include="AS_assets\sound\ambient_2_q.mp3" />
+    <Content Include="AS_assets\sound\ambient_4_q.mp3" />
+    <Content Include="AS_assets\sound\ambient_5_q.mp3" />
+    <Content Include="AS_assets\sound\beep_tiny.mp3" />
+    <Content Include="AS_assets\sound\BigExpl.mp3" />
+    <Content Include="AS_assets\sound\click_1.mp3" />
+    <Content Include="AS_assets\sound\click_2.mp3" />
+    <Content Include="AS_assets\sound\crash_1.mp3" />
+    <Content Include="AS_assets\sound\crash_2.mp3" />
+    <Content Include="AS_assets\sound\crash_3.mp3" />
+    <Content Include="AS_assets\sound\crash_4.mp3" />
+    <Content Include="AS_assets\sound\crash_5.mp3" />
+    <Content Include="AS_assets\sound\expl_big.mp3" />
+    <Content Include="AS_assets\sound\expl_dull.mp3" />
+    <Content Include="AS_assets\sound\expl_dull2.mp3" />
+    <Content Include="AS_assets\sound\expl_many.mp3" />
+    <Content Include="AS_assets\sound\gun_1.mp3" />
+    <Content Include="AS_assets\sound\gun_2.mp3" />
+    <Content Include="AS_assets\sound\gun_3.mp3" />
+    <Content Include="AS_assets\sound\gun_5.mp3" />
+    <Content Include="AS_assets\sound\gun_6.mp3" />
+    <Content Include="AS_assets\sound\gun_7.mp3" />
+    <Content Include="AS_assets\sound\gun_8.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_3.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_grander.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_shot.mp3" />
+    <Content Include="AS_assets\sound\mortar_1.mp3" />
+    <Content Include="AS_assets\sound\mortar_2.mp3" />
+    <Content Include="AS_assets\sound\mortar_3.mp3" />
+    <Content Include="AS_assets\sound\mortar_4.mp3" />
+    <Content Include="AS_assets\sound\mortar_5.mp3" />
+    <Content Include="AS_assets\sound\pgia.mp3" />
+    <Content Include="AS_assets\sound\redAlert7.mp3" />
+    <Content Include="AS_assets\sound\ricochet_1.mp3" />
+    <Content Include="AS_assets\sound\ricochet_2.mp3" />
+    <Content Include="AS_assets\sound\ricochet_3.mp3" />
+    <Content Include="AS_assets\sound\ricochet_4.mp3" />
+    <Content Include="AS_assets\sound\ricochet_5.mp3" />
+    <Content Include="AS_assets\sound\rpg_fire.mp3" />
+    <Content Include="AS_assets\sound\shager_1.mp3" />
+    <Content Include="AS_assets\sound\shager_2.mp3" />
+    <Content Include="AS_assets\sound\shager_3.mp3" />
+    <Content Include="AS_assets\sound\shager_4.mp3" />
+    <Content Include="AS_assets\sound\shager_5.mp3" />
+    <Content Include="AS_assets\sound\stopwatch_3.mp3" />
+    <Content Include="AS_assets\sound\strike_1.mp3" />
+    <Content Include="AS_assets\sound\strike_2.mp3" />
+    <Content Include="AS_assets\sound\strike_3.mp3" />
+    <Content Include="AS_assets\sound\tank_fire.mp3" />
+    <Content Include="AS_assets\sound\target_lost.mp3" />
+    <Content Include="AS_assets\sound\unused\Messy_bomb.mp3" />
+    <Content Include="AS_assets\sound\unused\Messy_bomb_2.mp3" />
+    <Content Include="AS_assets\sound\unused\Messy_bomb_grand.mp3" />
+    <Content Include="AS_assets\sound\yoRE_1.mp3" />
+    <Content Include="AS_assets\sound\yoRE_2.mp3" />
+    <Content Include="AS_assets\sound\yoRE_3.mp3" />
+    <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
+    <Content Include="AS_assets\tank.svg" />
+    <Content Include="AS_assets\trans.png" />
     <Content Include="cssMenus.css" />
     <Content Include="cssApp.css" />
     <Content Include="AS_assets\jeep.png" />
@@ -97,9 +189,7 @@
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

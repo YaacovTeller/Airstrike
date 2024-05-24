@@ -28,6 +28,11 @@
 
     public getAvailableInstance() {
         let nextReady: weaponInstance = null;
+        nextReady = this.searchInstances(nextReady);
+      //  this.setBlastRadVisible(nextReady);
+        return nextReady;
+    }
+    protected searchInstances(nextReady) {
         for (let i in this.instances) {
             game.hud.deselectInst(parseInt(i), this.name) //MESSY?
             if (this.instances[i].ready === true) {
@@ -37,14 +42,16 @@
                 }
             }
         }
+        return nextReady
+    }
+    protected setBlastRadVisible(nextReady) {
         if (nextReady != null) {
             nextReady.blastRadElement.style.visibility = "visible";
         }
-        return nextReady;
     }
 
     public pushNewWeaponInstance() {
-        let el = document.createElement('div');
+        let el = this.returnBlastRadiusDiv(10);
         let inst: weaponInstance = {
             ready: true,
             blastRadElement: el,
@@ -55,6 +62,17 @@
         game.shotCount++
         game.updateShotCounter();
     }
+    protected returnBlastRadiusDiv(radius: number) {
+        let el = document.createElement('div');
+        el.classList.add('blastRadius');
+        el.classList.add('preFire');
+        el.style.width = el.style.height = radius * 2 + 'px';
+        el.style.visibility = "hidden";
+        el.id = weaponNames[this.name] + "_" + this.instances.length + 1 + "";
+        ContentElHandler.addToContentEl(el);
+        return el;
+    }
+
     public fireFunc(targets: Array<Target>) {
 
     }
@@ -92,6 +110,7 @@
         }
         return severity;
     }
+
     protected bonusHitSound() {
         RandomNumberGen.randomNumBetween(1, 8) == 8 ? pgia.play() : "";
     }
@@ -103,6 +122,7 @@ class BulletWeaponType extends WeaponType {
         this.pushNewWeaponInstance();
 
     }
+
     public fireFunc(targets: Array<Target>) {
         if (this.ammoCheck() === false) { return }
 
@@ -116,7 +136,7 @@ class BulletWeaponType extends WeaponType {
         }, this.speed);
 
         this.cooldownTimeout(inst);
-        this.activeInstance = this.getAvailableInstance();
+        this.setActiveInstance();
     }
     protected determineSeverity() {
         let severity: strikeSeverity = strikeSeverity.light
@@ -163,14 +183,9 @@ class ExplosiveWeaponType extends WeaponType {
     }
 
     public pushNewWeaponInstance() {
-        let el = document.createElement('div');
-        el.classList.add('blastRadius');
-        el.classList.add('preFire');
+        let el = this.returnBlastRadiusDiv(this.blastRadius);
         this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
-
-        el.classList.add('circle' + this.instances.length);
-        el.style.width = el.style.height = this.blastRadius * 2 + 'px';
-        el.style.visibility = "hidden";
+   //     el.classList.add('circle' + this.instances.length);
 
         let explosion = this.returnNewImageEl("explosion");
 
@@ -180,7 +195,13 @@ class ExplosiveWeaponType extends WeaponType {
             explosion
         };
         this.instances.push(inst);
-        ContentElHandler.addToContentEl(el);
+    }
+
+    public getAvailableInstance() {
+        let nextReady: weaponInstance = null;
+        nextReady = this.searchInstances(nextReady);
+        this.setBlastRadVisible(nextReady);
+        return nextReady;
     }
 
     public fireFunc(targets: Array<Target>) {
@@ -208,7 +229,7 @@ class ExplosiveWeaponType extends WeaponType {
         }, this.speed);
 
         this.cooldownTimeout(inst);
-        this.activeInstance = this.getAvailableInstance();
+        this.setActiveInstance();
     }
 
     private setExplosionPos(inst: ExplosiveWeaponInstance) {
@@ -387,8 +408,8 @@ class ChargeWeaponType extends WeaponType {
         if (this.ammoCheck() === false) { return }
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
-        this.activeInstance = this.getAvailableInstance();
-        
+        this.setActiveInstance();
+
         let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
             return element.constructor.name === TunnelTarget.name;
         });

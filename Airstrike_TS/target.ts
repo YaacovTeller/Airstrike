@@ -4,6 +4,7 @@ class Target {
     protected targetEl: HTMLElement;
     protected picEl: HTMLImageElement;
     protected damageEl: HTMLImageElement;
+    protected lockonEl: HTMLImageElement;
 
     protected speed: number;
     public armour: Armour;
@@ -15,18 +16,24 @@ class Target {
 
     constructor(info: targetInfo, position?: position) {
         this.targetEl = document.createElement("div");
-        this.picEl = document.createElement("img");
-        this.damageEl = document.createElement("img");
         this.targetEl.classList.add('target', 'flexCenter');
-        this.targetEl.appendChild(this.picEl);
-        this.targetEl.appendChild(this.damageEl);
+        let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
+        this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
+        this.damageEl = this.returnNewImageEl(this.targetEl, "");
+        this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsFolder + "target-box2.svg");
 
         ContentElHandler.addToContentEl(this.targetEl);
 
-        this.picEl.src = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
         position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(info.minSpeed, info.maxSpeed);
         this.armour = info.armour;
+    }
+    private returnNewImageEl(parent: HTMLElement, classname: string, src?: string) {
+        let el = document.createElement('img');
+        if (src) el.src = src;
+        el.className = classname;
+        parent.appendChild(el);
+        return el;
     }
     protected setStartPos(left: number, top?: number) {
         this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
@@ -82,6 +89,7 @@ class TunnelTarget extends Target {
         this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
+        this.picEl.classList.add('tunnelFocus');
         this.targetEl.append(this.trail);
 
         this.setTargetProduction();
@@ -96,7 +104,7 @@ class TunnelTarget extends Target {
             let rect = this.getTargetEl().getBoundingClientRect();
             let pos: position = { X: rect.x, Y: rect.y }
             let newTarget = new VehicleTarget(regTarget, pos);
-            game.targets.push(newTarget);
+            game.targetCreation(newTarget);
         }
     }
     private setTargetProduction() {
@@ -121,6 +129,11 @@ class TunnelTarget extends Target {
 
                 }
     }
+    private removeTunnel(length) {
+        this.trail.classList.add('hide');
+   //     setTimeout(() => { this.trail.remove() }, length * 250)
+        setTimeout(() => { this.trail.remove() }, 8000)
+    }
     private blowTunnel() {
         let numOfimgs: number = parseInt(this.trail.style.width) / 100;
         let imgArr: Array<HTMLImageElement> = [];
@@ -136,6 +149,7 @@ class TunnelTarget extends Target {
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150)
         }
+        this.removeTunnel(imgArr.length);
     }
     public action() {
         if (this.status == Status.active) {
@@ -186,12 +200,15 @@ class VehicleTarget extends Target {
             this.damageEl.style.visibility = "hidden";
         }
     }
+    private hitAcknowledge() {
+        RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
+    }
     private badDamage(direc) {
         this.damageEl.src = this.badDamagedSource;
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
 
-        RandomNumberGen.randomNumBetween(1, 8) == 8 ? aluak.play() : "";
+        RandomNumberGen.randomNumBetween(1, 8) == 8 ? this.hitAcknowledge() : "";
         CollisionDetection.throw(this.targetEl, direc); // ARC
         this.flip(direc);                               // ROTATION
     }

@@ -25,6 +25,11 @@ class WeaponType {
     }
     getAvailableInstance() {
         let nextReady = null;
+        nextReady = this.searchInstances(nextReady);
+        //  this.setBlastRadVisible(nextReady);
+        return nextReady;
+    }
+    searchInstances(nextReady) {
         for (let i in this.instances) {
             game.hud.deselectInst(parseInt(i), this.name); //MESSY?
             if (this.instances[i].ready === true) {
@@ -34,13 +39,15 @@ class WeaponType {
                 }
             }
         }
+        return nextReady;
+    }
+    setBlastRadVisible(nextReady) {
         if (nextReady != null) {
             nextReady.blastRadElement.style.visibility = "visible";
         }
-        return nextReady;
     }
     pushNewWeaponInstance() {
-        let el = document.createElement('div');
+        let el = this.returnBlastRadiusDiv(10);
         let inst = {
             ready: true,
             blastRadElement: el,
@@ -50,6 +57,16 @@ class WeaponType {
     shotCounter() {
         game.shotCount++;
         game.updateShotCounter();
+    }
+    returnBlastRadiusDiv(radius) {
+        let el = document.createElement('div');
+        el.classList.add('blastRadius');
+        el.classList.add('preFire');
+        el.style.width = el.style.height = radius * 2 + 'px';
+        el.style.visibility = "hidden";
+        el.id = weaponNames[this.name] + "_" + this.instances.length + 1 + "";
+        ContentElHandler.addToContentEl(el);
+        return el;
     }
     fireFunc(targets) {
     }
@@ -105,7 +122,7 @@ class BulletWeaponType extends WeaponType {
             this.checkForTargets(inst.blastRadElement, targets);
         }, this.speed);
         this.cooldownTimeout(inst);
-        this.activeInstance = this.getAvailableInstance();
+        this.setActiveInstance();
     }
     determineSeverity() {
         let severity = strikeSeverity.light;
@@ -147,13 +164,9 @@ class ExplosiveWeaponType extends WeaponType {
         this.pushNewWeaponInstance();
     }
     pushNewWeaponInstance() {
-        let el = document.createElement('div');
-        el.classList.add('blastRadius');
-        el.classList.add('preFire');
+        let el = this.returnBlastRadiusDiv(this.blastRadius);
         this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
-        el.classList.add('circle' + this.instances.length);
-        el.style.width = el.style.height = this.blastRadius * 2 + 'px';
-        el.style.visibility = "hidden";
+        //     el.classList.add('circle' + this.instances.length);
         let explosion = this.returnNewImageEl("explosion");
         let inst = {
             ready: true,
@@ -161,7 +174,12 @@ class ExplosiveWeaponType extends WeaponType {
             explosion
         };
         this.instances.push(inst);
-        ContentElHandler.addToContentEl(el);
+    }
+    getAvailableInstance() {
+        let nextReady = null;
+        nextReady = this.searchInstances(nextReady);
+        this.setBlastRadVisible(nextReady);
+        return nextReady;
     }
     fireFunc(targets) {
         if (this.ammoCheck() === false) {
@@ -185,7 +203,7 @@ class ExplosiveWeaponType extends WeaponType {
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
         this.cooldownTimeout(inst);
-        this.activeInstance = this.getAvailableInstance();
+        this.setActiveInstance();
     }
     setExplosionPos(inst) {
         let blastRadiusEl = inst.blastRadElement;
@@ -348,7 +366,7 @@ class ChargeWeaponType extends WeaponType {
             return;
         }
         let inst = this.activeInstance;
-        this.activeInstance = this.getAvailableInstance();
+        this.setActiveInstance();
         let tunnels = targets.filter((element) => {
             return element.constructor.name === TunnelTarget.name;
         });

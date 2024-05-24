@@ -50,6 +50,7 @@ const soundFolder: string = "./AS_assets/sound/"
 
 var pgia = new Sound(soundFolder + "pgia.mp3");
 var aluak = new Sound(soundFolder + "aluAk.mp3");
+var matara = new Sound(soundFolder + "matara_shmd.mp3");
 var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
 var click_1 = new Sound(soundFolder + "click_1.mp3");
 var click_2 = new Sound(soundFolder + "click_2.mp3");
@@ -141,8 +142,6 @@ function loadSound() {
         new Sound(soundFolder + "yoRE_Eish.mp3"),
         new Sound(soundFolder + "tank_fire.mp3"),
         new Sound(soundFolder + "tank_fire.mp3"),
-        // new Sound(soundFolder + "yoRE_4.mp3"),
-        // new Sound(soundFolder + "yoRE_5.mp3")
     )
     airstrikeSounds.push(
         new Sound(soundFolder + "shager_1.mp3"),
