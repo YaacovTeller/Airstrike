@@ -122,7 +122,6 @@
     <Content Include="AS_assets\sound\crash_3.mp3" />
     <Content Include="AS_assets\sound\crash_4.mp3" />
     <Content Include="AS_assets\sound\crash_5.mp3" />
-    <Content Include="AS_assets\sound\expl_big.mp3" />
     <Content Include="AS_assets\sound\expl_dull.mp3" />
     <Content Include="AS_assets\sound\expl_dull2.mp3" />
     <Content Include="AS_assets\sound\expl_many.mp3" />
@@ -163,9 +162,6 @@
     <Content Include="AS_assets\sound\unused\Messy_bomb.mp3" />
     <Content Include="AS_assets\sound\unused\Messy_bomb_2.mp3" />
     <Content Include="AS_assets\sound\unused\Messy_bomb_grand.mp3" />
-    <Content Include="AS_assets\sound\yoRE_1.mp3" />
-    <Content Include="AS_assets\sound\yoRE_2.mp3" />
-    <Content Include="AS_assets\sound\yoRE_3.mp3" />
     <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
     <Content Include="AS_assets\tank.svg" />
     <Content Include="AS_assets\trans.png" />

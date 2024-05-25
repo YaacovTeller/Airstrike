@@ -230,6 +230,7 @@ class GameHandler {
         this.winLimitCheck();
     }
     private winLimitCheck() {
+        if (this.gameInProgress === false) return
         if (this.targets.length >= this.winLimit) {
             clearInterval(this.targetTimer);
             let int = setInterval(() => {
