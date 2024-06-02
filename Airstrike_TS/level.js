@@ -1,6 +1,5 @@
 class level {
     nextLevelCallback;
-    //    public addWeaponFunc: Function;
     index = -1;
     frequency;
     winLimits;
@@ -10,9 +9,7 @@ class level {
     targetTimer;
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
-        //       this.addWeaponFunc = addWeaponFunc;
         this.frequency = game.difficulty.newTargetEvery;
-        //this.currentLimit = this.winLimits[this.index]
         PopupHandler.addToArray("Starting " + this.constructor.name);
     }
     winLimitCheck() {
@@ -75,7 +72,7 @@ class level {
                 this.finalStageArms();
                 break;
             case (this.winLimits.length):
-                this.index = -1; // MESSY force reset? wont work
+                this.index = -1;
                 return false;
             default:
         }
@@ -84,7 +81,6 @@ class level {
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED?
         this.targetTimer = setInterval(() => {
             this.produceSingleTarget();
         }, this.frequency);
@@ -167,19 +163,8 @@ class level_3 extends level {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
         let newTarget;
         switch (true) {
-            //case (rand >= 92):
-            //    newTarget = new TunnelTarget(regTunnelTarget);
-            //    break;
-            //case (rand >= 85):
-            //    newTarget = new VehicleTarget(heavyTarget);
-            //    break;
-            //case (rand >= 75):
-            //    newTarget = new VehicleTarget(modTarget);
-            //    break;
             default:
-                //    newTarget = new TunnelTarget(regTunnelTarget)
                 newTarget = new VehicleTarget(heavyTarget);
-                //     newTarget = new VehicleTarget(heavyTarget);
                 break;
         }
         return newTarget;
@@ -202,12 +187,6 @@ class level_4 extends level {
             case (rand >= 50):
                 newTarget = new TunnelTarget(regTunnelTarget);
                 break;
-            //case (rand >= 85):
-            //    newTarget = new VehicleTarget(heavyTarget);
-            //    break;
-            //case (rand >= 75):
-            //    newTarget = new VehicleTarget(modTarget);
-            //    break;
             default:
                 newTarget = new VehicleTarget(heavyTarget);
                 break;
@@ -248,4 +227,3 @@ class level_5 extends level {
         this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
     }
 }
-//# sourceMappingURL=level.js.map

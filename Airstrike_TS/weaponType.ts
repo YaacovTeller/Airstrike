@@ -402,9 +402,6 @@ class ChargeWeaponType extends WeaponType {
     constructor(info: weaponInfo) {
         super(info);
         this.pushNewWeaponInstance();
-        this.pushNewWeaponInstance();
-        this.pushNewWeaponInstance();
-
     }
 
     public fireFunc(targets: Array<Target>) {
