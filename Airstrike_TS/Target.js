@@ -12,7 +12,7 @@ class Target {
     movesAtBlast;
     constructor(info, position) {
         this.targetEl = document.createElement("div");
-        this.targetEl.classList.add('target', 'flexCenter');
+        this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
         let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
         this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
@@ -36,7 +36,7 @@ class Target {
         this.targetEl.style.top = top + 'px';
         this.targetEl.style.left = left + 'px';
     }
-    hit(sev, direc) { }
+    hit(sev, wepName, direc) { }
     move() {
         let x = parseInt(this.targetEl.style.left);
         if (x > ContentElHandler.contentElWidth()) {
@@ -74,7 +74,7 @@ class TunnelTarget extends Target {
         super(info);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
-        this.targetEl.classList.remove('flexCenter');
+        this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.picEl.classList.add('tunnelFocus');
@@ -115,6 +115,7 @@ class TunnelTarget extends Target {
     }
     removeTunnel(length) {
         this.trail.classList.add('hide');
+        //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove(); }, 8000);
     }
     blowTunnel() {
@@ -128,7 +129,7 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                let mrtr = allWeaponTypes[weaponNames.mortar];
+                let mrtr = allWeaponTypes[weaponNames.mortar]; // MESSY
                 if (mrtr) {
                     mrtr.checkForTargets(imgArr[index], game.returnLevelTargets());
                 }
@@ -152,32 +153,38 @@ class VehicleTarget extends Target {
     constructor(info, position) {
         super(info, position);
     }
-    hit(sev, direc) {
-        if (sev > strikeSeverity.light) {
-            this.status = Status.disabled;
-        }
-        else {
+    hit(sev, wepName, direc) {
+        this.targetEl.classList.remove('smoothTransition');
+        if (wepName == weaponNames.gun) { // JUST FOR GUN
             setTimeout(() => this.status = Status.disabled, 1000);
-        }
-        if (sev == strikeSeverity.light) {
-            this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
             this.damage = Damage.damaged;
             this.damageEl.src = this.damagedSource;
             this.damageEl.classList.add('lightDamaged');
         }
-        if (sev == strikeSeverity.medium) {
-            this.damage = Damage.moderateDamaged;
-            this.badDamage(direc);
-        }
-        if (sev == strikeSeverity.heavy) {
-            this.damage = Damage.heavyDamaged;
-            this.badDamage(direc);
-        }
-        if (sev == strikeSeverity.catastrophic) {
-            this.damage = Damage.destroyed;
-            this.picEl.src = this.destroyedSource;
-            this.picEl.className = 'destroyed';
-            this.damageEl.style.visibility = "hidden";
+        else {
+            if (sev > strikeSeverity.light) {
+                this.status = Status.disabled;
+            }
+            if (sev == strikeSeverity.light) {
+                this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
+                this.damage = Damage.damaged;
+                this.damageEl.src = this.damagedSource;
+                this.damageEl.classList.add('lightDamaged');
+            }
+            if (sev == strikeSeverity.medium) {
+                this.damage = Damage.moderateDamaged;
+                this.badDamage(direc);
+            }
+            if (sev == strikeSeverity.heavy) {
+                this.damage = Damage.heavyDamaged;
+                this.badDamage(direc);
+            }
+            if (sev == strikeSeverity.catastrophic) {
+                this.damage = Damage.destroyed;
+                this.picEl.src = this.destroyedSource;
+                this.picEl.className = 'destroyed';
+                this.damageEl.style.visibility = "hidden";
+            }
         }
     }
     hitAcknowledge() {
@@ -188,7 +195,8 @@ class VehicleTarget extends Target {
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
         RandomNumberGen.randomNumBetween(1, 8) == 8 ? this.hitAcknowledge() : "";
-        CollisionDetection.throw(this.targetEl, direc);
-        this.flip(direc);
+        CollisionDetection.throw(this.targetEl, direc); // ARC
+        this.flip(direc); // ROTATION
     }
 }
+//# sourceMappingURL=target.js.map

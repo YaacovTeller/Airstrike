@@ -138,7 +138,7 @@ class BulletWeaponType extends WeaponType {
                 }
                 ;
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, direction.forward); // TARGET - Main hit function
+                    target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
                     if (target.status == Status.active) {
                         this.bonusHitSound();
                     }
@@ -262,7 +262,7 @@ class ExplosiveWeaponType extends WeaponType {
                 }
                 let direc = this.determineDirectionForFlip(collisionInfo);
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, direc); // TARGET - Main hit function
+                    target.hit(severity, this.name, direc); // TARGET - Main hit function
                     if (target.status == Status.active) {
                         this.bonusHitSound();
                     }

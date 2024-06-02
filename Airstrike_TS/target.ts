@@ -16,7 +16,7 @@ class Target {
 
     constructor(info: targetInfo, position?: position) {
         this.targetEl = document.createElement("div");
-        this.targetEl.classList.add('target', 'flexCenter');
+        this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
         let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
         this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
@@ -42,7 +42,7 @@ class Target {
         this.targetEl.style.left = left + 'px';
     }
 
-    public hit(sev: strikeSeverity, direc: direction) { }
+    public hit(sev: strikeSeverity, wepName: weaponNames, direc: direction) { }
 
     protected move() {
         let x = parseInt(this.targetEl.style.left)
@@ -171,36 +171,43 @@ class VehicleTarget extends Target {
         super(info, position);
     }
 
-    public hit(sev: strikeSeverity, direc: direction) {
-        if (sev > strikeSeverity.light) {
-            this.status = Status.disabled;
-        }
-        else {
+    public hit(sev: strikeSeverity, wepName: weaponNames, direc: direction) {
+        this.targetEl.classList.remove('smoothTransition');
+        if (wepName == weaponNames.gun) { // JUST FOR GUN
             setTimeout(() => this.status = Status.disabled, 1000)
-        }
-        if (sev == strikeSeverity.light) {
-            this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
+
             this.damage = Damage.damaged;
 
             this.damageEl.src = this.damagedSource;
             this.damageEl.classList.add('lightDamaged');
         }
-        if (sev == strikeSeverity.medium) {
-            this.damage = Damage.moderateDamaged;
+        else {
+            if (sev > strikeSeverity.light) {
+                this.status = Status.disabled;
+            }
 
-            this.badDamage(direc);
-        }
-        if (sev == strikeSeverity.heavy) {
-            this.damage = Damage.heavyDamaged;
+            if (sev == strikeSeverity.light) {
+                this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
+                this.damage = Damage.damaged;
 
-            this.badDamage(direc);
-        }
-        if (sev == strikeSeverity.catastrophic) {
-            this.damage = Damage.destroyed;
+                this.damageEl.src = this.damagedSource;
+                this.damageEl.classList.add('lightDamaged');
+            }
+            if (sev == strikeSeverity.medium) {
+                this.damage = Damage.moderateDamaged;
+                this.badDamage(direc);
+            }
+            if (sev == strikeSeverity.heavy) {
+                this.damage = Damage.heavyDamaged;
+                this.badDamage(direc);
+            }
+            if (sev == strikeSeverity.catastrophic) {
+                this.damage = Damage.destroyed;
 
-            this.picEl.src = this.destroyedSource;
-            this.picEl.className = 'destroyed';
-            this.damageEl.style.visibility = "hidden";
+                this.picEl.src = this.destroyedSource;
+                this.picEl.className = 'destroyed';
+                this.damageEl.style.visibility = "hidden";
+            }
         }
     }
     private hitAcknowledge() {

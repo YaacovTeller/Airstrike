@@ -104,6 +104,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -130,7 +131,8 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        this.weapon.fireFunc(allTargets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
@@ -174,7 +176,7 @@ class GameHandler {
         }
         const root = document.querySelector(':root');
         if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
-            root.style.setProperty('--chargeSelected', 'visible');
+            root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
         }
         else {
             root.style.setProperty('--chargeSelected', 'hidden');
@@ -283,6 +285,9 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame() {
         if (this.gameWasPlayed) {
@@ -291,7 +296,7 @@ class GameHandler {
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.newLevel(allLevelClassesArray[0]);
         this.hud.drawHUD();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
@@ -316,3 +321,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

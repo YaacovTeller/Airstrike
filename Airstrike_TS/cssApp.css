@@ -88,14 +88,16 @@
     justify-content: flex-end;
     
 }
+.smoothTransition {
+    transition: left 0.1s linear;
+}
 .target {
     position: absolute;
     width: 45px;
     height: 45px;
     user-select: none;
     z-index: 5;
-/*    transition: left 0.5s linear;
-*/    /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
+    /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
     .target > img {
         position: absolute;
