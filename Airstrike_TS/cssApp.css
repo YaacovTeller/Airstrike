@@ -94,7 +94,8 @@
     height: 45px;
     user-select: none;
     z-index: 5;
-/*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
+/*    transition: left 0.5s linear;
+*/    /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
     .target > img {
         position: absolute;

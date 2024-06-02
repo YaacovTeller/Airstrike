@@ -59,12 +59,12 @@ var strikeSeverity;
 })(strikeSeverity || (strikeSeverity = {}));
 var weaponNames;
 (function (weaponNames) {
-    weaponNames[weaponNames["gun"] = 0] = "gun";
-    weaponNames[weaponNames["mortar"] = 1] = "mortar";
-    weaponNames[weaponNames["howitzer"] = 2] = "howitzer";
-    weaponNames[weaponNames["airstrike"] = 3] = "airstrike";
-    weaponNames[weaponNames["nuke"] = 4] = "nuke";
-    weaponNames[weaponNames["charge"] = 5] = "charge";
+    weaponNames[weaponNames["gun"] = 1] = "gun";
+    weaponNames[weaponNames["mortar"] = 2] = "mortar";
+    weaponNames[weaponNames["tank"] = 3] = "tank";
+    weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
+    weaponNames[weaponNames["tunnelcharge"] = 5] = "tunnelcharge";
+    weaponNames[weaponNames["nuke"] = 6] = "nuke";
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -124,10 +124,10 @@ const chaos = {
 const dev = {
     failLimit: 9999,
     newTargetEvery: 300,
-    regTargetSpeed: { min: 4, max: 8 },
-    modTargetSpeed: { min: 4, max: 6 },
-    heavyTargetSpeed: { min: 1, max: 3 },
-    tunnelTargetSpeed: { min: 3, max: 5 },
+    regTargetSpeed: { min: 8, max: 8 },
+    modTargetSpeed: { min: 9, max: 9 },
+    heavyTargetSpeed: { min: 8, max: 8 },
+    tunnelTargetSpeed: { min: 4, max: 6 },
     eng: {
         name: "Dev",
         description: "",
@@ -149,7 +149,7 @@ const sniperInfo = {
     imageSource: assetsFolder + 'gun.svg',
     sound: gunSounds,
     speed: 0,
-    cooldown: 500,
+    cooldown: 700,
     noAmmo: click_1
 };
 const mortarInfo = {
@@ -165,11 +165,11 @@ const mortarInfo = {
     imageSource: assetsFolder + 'mortar.svg',
     sound: mortarSounds,
     speed: 2000,
-    cooldown: 2000,
+    cooldown: 2200,
     noAmmo: click_2
 };
 const howitzerInfo = {
-    name: weaponNames.howitzer,
+    name: weaponNames.tank,
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
@@ -182,7 +182,7 @@ const howitzerInfo = {
     imageSource: assetsFolder + 'tank.svg',
     sound: howitzerSounds,
     speed: 3000,
-    cooldown: 6000,
+    cooldown: 7000,
     noAmmo: click_2
 };
 const airstrikeInfo = {
@@ -199,7 +199,7 @@ const airstrikeInfo = {
     imageSource: assetsFolder + 'jet.svg',
     sound: airstrikeSounds,
     speed: 4000,
-    cooldown: 9000,
+    cooldown: 10000,
     noAmmo: bleep_neg
 };
 const nukeInfo = {
@@ -216,11 +216,11 @@ const nukeInfo = {
     imageSource: assetsFolder + 'bomb.svg',
     sound: nukeSounds,
     speed: 6000,
-    cooldown: 15000,
+    cooldown: 30000,
     noAmmo: bleep_neg
 };
 const chargeInfo = {
-    name: weaponNames.charge,
+    name: weaponNames.tunnelcharge,
     cursor: "cursor4",
     imageSource: assetsFolder + 'dynamite.svg',
     sound: gunSounds,
@@ -230,6 +230,30 @@ const chargeInfo = {
 };
 function loadNewImage() {
     return '?' + new Date().getTime();
+}
+class PopupHandler {
+    static popUpArray = [];
+    static addToArray(text) {
+        this.popUpArray.push(text);
+        if (this.popUpArray.length == 1) {
+            this.showPopup();
+        }
+    }
+    static showPopup() {
+        if (!this.popUpArray.length)
+            return;
+        let popup = document.getElementById("popupBox");
+        document.getElementById("popupText").innerText = this.popUpArray[0];
+        popup.classList.remove("hide");
+        let this_ = this;
+        setTimeout(function () {
+            popup.classList.add("hide");
+        }, 3000);
+        setTimeout(function () {
+            this_.popUpArray.shift();
+            this_.showPopup();
+        }, 3500);
+    }
 }
 class ContentElHandler {
     static returnContentEl() {

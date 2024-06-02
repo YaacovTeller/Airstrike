@@ -1,24 +1,26 @@
-const winLimit = 10;
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";
     Languages[Languages["heb"] = 1] = "heb";
 })(Languages || (Languages = {}));
+var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5];
+var allWeaponTypes = [];
+var allTargets = [];
 class GameHandler {
-    hud = new HudHandler(); //MESSY?
+    hud = new HudHandler();
     weapon;
     contentEl;
-    targets = [];
     progressBar;
     progressNumber;
-    newTargetFrequency;
     shotCount = 0;
-    winLimit;
     language = Languages.eng;
-    targetTimer;
+    difficulty;
+    masterTargets = [];
+    level;
     gameTimer;
     soundTimer;
-    gameInProgress;
+    gameInProgress = false;
+    gameWasPlayed = false;
     constructor(element) {
         this.contentEl = element;
         this.progressBar = document.getElementById('progress');
@@ -26,7 +28,14 @@ class GameHandler {
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(); };
         this.setEventListeners();
+    }
+    newLevel(LevelClass) {
+        let index = allLevelClassesArray.indexOf(LevelClass);
+        let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index];
+        this.level = new LevelClass(() => this.newLevel(nextLevel));
+        this.level.nextWave();
     }
     setEventListeners() {
         this.contentEl.addEventListener("click", () => this.fireFunc());
@@ -58,25 +67,16 @@ class GameHandler {
         return Array.from(lis);
     }
     toggleLang() {
-        let heb = document.getElementsByClassName('heb');
-        let eng = document.getElementsByClassName('eng');
+        const root = document.querySelector(':root');
         if (this.language == Languages.heb) {
             this.language = Languages.eng;
-            for (let x of heb) {
-                x.classList.add("displayNone");
-            }
-            for (let x of eng) {
-                x.classList.remove("displayNone");
-            }
+            root.style.setProperty('--hebDisplay', 'none');
+            root.style.setProperty('--engDisplay', 'block');
         }
         else {
             this.language = Languages.heb;
-            for (let x of eng) {
-                x.classList.add("displayNone");
-            }
-            for (let x of heb) {
-                x.classList.remove("displayNone");
-            }
+            root.style.setProperty('--hebDisplay', 'block');
+            root.style.setProperty('--engDisplay', 'none');
         }
     }
     setIndivMenuDifficulty(dif, li) {
@@ -100,21 +100,24 @@ class GameHandler {
     handleOptionChange(event) {
         this.jsonParseRadioDifficulty(event.target.value);
     }
+    jsonParseRadioDifficulty(value) {
+        const selected = JSON.parse(value);
+        this.setDifficulty(selected);
+    }
+    ////////
     setDifficulty(difficulty) {
-        this.newTargetFrequency = difficulty.newTargetEvery;
-        this.setIndivTargetSpeed(regTarget, difficulty.regTargetSpeed);
-        this.setIndivTargetSpeed(modTarget, difficulty.modTargetSpeed);
-        this.setIndivTargetSpeed(heavyTarget, difficulty.heavyTargetSpeed);
-        this.setIndivTargetSpeed(regTunnelTarget, difficulty.tunnelTargetSpeed);
-        this.hud.killStats.failLimit = difficulty.failLimit;
+        this.difficulty = difficulty;
+        this.setSpeeds();
+    }
+    setSpeeds() {
+        this.setIndivTargetSpeed(regTarget, this.difficulty.regTargetSpeed);
+        this.setIndivTargetSpeed(modTarget, this.difficulty.modTargetSpeed);
+        this.setIndivTargetSpeed(heavyTarget, this.difficulty.heavyTargetSpeed);
+        this.setIndivTargetSpeed(regTunnelTarget, this.difficulty.tunnelTargetSpeed);
     }
     setIndivTargetSpeed(target, speed) {
         target.minSpeed = speed.min;
         target.maxSpeed = speed.max;
-    }
-    jsonParseRadioDifficulty(value) {
-        const selected = JSON.parse(value);
-        this.setDifficulty(selected);
     }
     toggleModal() {
         this.toggleElem("overlay");
@@ -124,8 +127,12 @@ class GameHandler {
         var elem = document.getElementById(id);
         elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
+    redrawHudWithWepSelectionChecked() {
+        this.hud.drawHUD(this.weapon ? this.weapon.name : "");
+    }
     fireFunc() {
-        this.weapon.fireFunc(this.targets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
@@ -139,7 +146,7 @@ class GameHandler {
             this.changeWeapon(allWeaponTypes[int - 1]);
         }
         else if (event.shiftKey && event.key === 'N') {
-            this.addNuke();
+            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
         }
     }
     positionElem(elem, pos) {
@@ -169,7 +176,7 @@ class GameHandler {
         }
         const root = document.querySelector(':root');
         if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
-            root.style.setProperty('--chargeSelected', 'visible');
+            root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
         }
         else {
             root.style.setProperty('--chargeSelected', 'hidden');
@@ -192,150 +199,14 @@ class GameHandler {
         });
         this.contentEl.classList.add(this.weapon.cursor);
     }
-    newTarget() {
-        let newTarget;
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        switch (true) {
-            case (rand >= 92):
-                newTarget = new TunnelTarget(regTunnelTarget);
-                break;
-            case (rand >= 85):
-                newTarget = new VehicleTarget(heavyTarget);
-                break;
-            case (rand >= 75):
-                newTarget = new VehicleTarget(modTarget);
-                break;
-            default:
-                //    newTarget = new TunnelTarget(regTunnelTarget)
-                newTarget = new VehicleTarget(regTarget);
-                //     newTarget = new VehicleTarget(heavyTarget);
-                break;
-        }
-        this.targetCreation(newTarget);
-    }
     targetCreation(newTarget) {
-        this.targets.push(newTarget);
-        this.winLimitCheck();
+        this.level.produceSingleTarget(newTarget);
     }
-    winLimitCheck() {
-        if (this.gameInProgress === false)
-            return;
-        if (this.targets.length >= this.winLimit) {
-            clearInterval(this.targetTimer);
-            let int = setInterval(() => {
-                if (this.checkGameEnd()) {
-                    clearInterval(int);
-                    this.endWave();
-                }
-            }, 100);
-        }
+    returnLevelTargets() {
+        return this.level.targets;
     }
-    showPopup(text) {
-        let popup = document.getElementById("popupBox");
-        document.getElementById("popupText").innerText = text;
-        popup.classList.remove("hide");
-        setTimeout(function () {
-            popup.classList.add("hide");
-        }, 3000);
-    }
-    endWave() {
-        this.showPopup("Nice job!");
-        this.nextWave();
-    }
-    nextWave() {
-        setTimeout(() => {
-            this.showPopup("Get ready, more coming!");
-        }, 3500);
-        setTimeout(() => {
-            let halfCurrentProgress = this.winLimit / 2;
-            this.winLimit += winLimit > halfCurrentProgress ? winLimit : halfCurrentProgress;
-            this.winLimit = Math.ceil(this.winLimit / 10) * 10;
-            this.startTargetTimer();
-        }, 5000);
-    }
-    checkGameEnd() {
-        let fin = true;
-        for (let t of this.targets) {
-            if (t.status === Status.active) {
-                fin = false;
-            }
-        }
-        return fin;
-    }
-    addNuke() {
-        if (allWeaponTypes.includes(nuke))
-            return;
-        nuke = new ExplosiveWeaponType(nukeInfo);
-        allWeaponTypes.push(nuke);
-        this.hud.drawHUD();
-    }
-    updateHudScore() {
-        let stats = this.hud.killStats;
-        stats.disabled = this.targets.reduce((acc, target) => {
-            if (target.status === Status.disabled && target.damage === Damage.damaged) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.destroyed = this.targets.reduce((acc, target) => {
-            if (target.damage >= Damage.moderateDamaged) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.escaped = this.targets.reduce((acc, target) => {
-            if (target.status === Status.escaped) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.total = this.targets.length || 0;
-        if (stats.escaped >= stats.failLimit) {
-            this.stop();
-            this.showPopup("Oh No! Try again.");
-        }
-        this.hud.updateScore();
-    }
-    toggleGamePause() {
-        if (this.gameInProgress) {
-            if (this.gameTimer) {
-                this.stop();
-            }
-            else {
-                this.start();
-            }
-        }
-    }
-    stop() {
-        this.toggleModal();
-        clearInterval(this.gameTimer);
-        this.gameTimer = undefined;
-        clearInterval(this.targetTimer);
-        clearInterval(this.soundTimer);
-        for (let a of ambience) {
-            a.stop();
-        }
-    }
-    reset() {
-        for (let x of this.targets) {
-            x.getTargetEl().remove();
-        }
-        this.winLimit = winLimit;
-        this.targets = [];
-        this.hud.drawHUD();
-        this.hud.resetStats();
-    }
-    newGame() {
-        this.reset();
-        this.start();
-    }
-    startTargetTimer() {
-        this.targetTimer = window.setInterval(() => {
-            this.newTarget();
-        }, this.newTargetFrequency);
+    returnLevelLimit() {
+        return this.level.currentLimit;
     }
     startAmbience() {
         RandomSoundGen.playRandomSound(ambience);
@@ -348,17 +219,103 @@ class GameHandler {
             this.progressBar.style.width = this.progressNumber + '%';
         }
     }
-    start() {
-        this.gameInProgress = true;
-        this.changeWeapon(mortar);
+    updateHudScore() {
+        let targets = this.level.targets;
+        let stats = this.hud.killStats;
+        stats.disabled = targets.reduce((acc, target) => {
+            if (target.status === Status.disabled && target.damage === Damage.damaged) {
+                return acc + 1;
+            }
+            else
+                return acc;
+        }, 0);
+        stats.destroyed = targets.reduce((acc, target) => {
+            if (target.damage >= Damage.moderateDamaged) {
+                return acc + 1;
+            }
+            else
+                return acc;
+        }, 0);
+        stats.escaped = targets.reduce((acc, target) => {
+            if (target.status === Status.escaped) {
+                return acc + 1;
+            }
+            else
+                return acc;
+        }, 0);
+        stats.total = targets.length || 0;
+        this.hud.updateScore();
+    }
+    checkEnd() {
+        let stats = this.hud.killStats;
+        if (stats.escaped >= stats.failLimit) {
+            this.pause();
+            this.gameInProgress = false;
+            PopupHandler.addToArray("Oh No! Try again.");
+        }
+    }
+    toggleGamePause() {
+        if (this.gameInProgress) {
+            if (this.gameTimer) {
+                this.pause();
+            }
+            else {
+                this.start_unpause();
+            }
+        }
+    }
+    wave_gradual() {
+    }
+    wave_sudden() {
+    }
+    pause() {
+        this.toggleModal();
+        clearInterval(this.gameTimer);
+        this.gameTimer = undefined;
+        this.level.pauseWave();
+        clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
+        }
+    }
+    reset() {
+        this.level.resetTargets();
+        this.level.pauseWave();
+        this.level = null;
+        allWeaponTypes = [];
+        this.redrawHudWithWepSelectionChecked();
+        this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
+    }
+    newGame() {
+        if (this.gameWasPlayed) {
+            this.reset();
+        }
+        PopupHandler.addToArray(game.difficulty.eng.name);
+        this.newLevel(allLevelClassesArray[0]);
+        this.hud.drawHUD();
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
+        this.start_unpause();
+    }
+    start_unpause() {
+        if (this.gameInProgress == false) {
+            this.gameInProgress = true;
+            this.gameWasPlayed = true;
+            this.redrawHudWithWepSelectionChecked();
+        }
+        else {
+            this.level.continueWave();
+        }
         this.startAmbience();
         this.toggleModal();
-        this.startTargetTimer();
-        //this.newTarget();
         this.gameTimer = window.setInterval(() => {
+            this.checkEnd();
             this.updateHudScore();
             this.updateProgressBar();
-            this.targets.forEach((trg) => {
+            this.level.targets.forEach((trg) => {
                 trg.action();
             });
         }, 100);

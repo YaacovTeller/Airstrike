@@ -129,7 +129,10 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                mortar.checkForTargets(imgArr[index], game.targets);
+                let mrtr = allWeaponTypes[weaponNames.mortar]; // MESSY
+                if (mrtr) {
+                    mrtr.checkForTargets(imgArr[index], game.returnLevelTargets());
+                }
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150);
         }

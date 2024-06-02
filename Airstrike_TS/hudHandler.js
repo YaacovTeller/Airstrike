@@ -25,7 +25,7 @@ class HudHandler {
         this.killStats.destroyed = 0;
         this.killStats.escaped = 0;
     }
-    drawHUD() {
+    drawHUD(wepname) {
         let hud = document.getElementById('hud');
         if (hud)
             hud.remove();
@@ -49,13 +49,19 @@ class HudHandler {
             wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
             wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation(); };
             wepBoxContainer.appendChild(wepBox);
-            for (let y of wep.instances) {
-                let instBox = document.createElement('div');
-                instBox.classList.add("instBox");
-                wepBox.appendChild(instBox);
-            }
+            this.drawInstances(wep, wepBox);
+        }
+        if (wepname) {
+            this.selectBox(wepname);
         }
         this.drawScore();
+    }
+    drawInstances(wep, wepBox) {
+        for (let y of wep.instances) {
+            let instBox = document.createElement('div');
+            instBox.classList.add("instBox");
+            wepBox.appendChild(instBox);
+        }
     }
     drawScore() {
         this.scoreBox = document.createElement('div');
@@ -90,7 +96,7 @@ class HudHandler {
                 span.classList.remove('red');
         }
         if (title === killStatsOptions.total) {
-            span.innerText += "/" + game.winLimit;
+            span.innerText += "/" + game.returnLevelLimit();
         }
     }
     updateScore(shots) {

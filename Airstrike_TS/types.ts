@@ -61,12 +61,12 @@ enum strikeSeverity {
     catastrophic
 }
 enum weaponNames {
-    gun,
-    mortar,
-    howitzer,
-    airstrike,
-    nuke,
-    charge
+    gun = 1,
+    mortar = 2,
+    tank = 3,
+    airstrike = 4,
+    tunnelcharge = 5,
+    nuke = 6,
 }
 type position = {
     X,
@@ -177,10 +177,10 @@ const chaos: difficultyLevelInfo = {
 const dev: difficultyLevelInfo = {
     failLimit: 9999,
     newTargetEvery: 300,
-    regTargetSpeed: { min: 4, max: 8 },
-    modTargetSpeed: { min: 4, max: 6 },
-    heavyTargetSpeed: { min: 1, max: 3 },
-    tunnelTargetSpeed: { min: 3, max: 5 },
+    regTargetSpeed: { min: 8, max: 8 },
+    modTargetSpeed: { min: 9, max: 9 },
+    heavyTargetSpeed: { min: 8, max: 8 },
+    tunnelTargetSpeed: { min: 4, max: 6 },
     eng: {
         name: "Dev",
         description: "",
@@ -202,7 +202,7 @@ const sniperInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'gun.svg',
     sound: gunSounds,
     speed: 0,
-    cooldown: 500,
+    cooldown: 700,
     noAmmo: click_1
 }
 const mortarInfo: ExplosiveWeaponInfo = {
@@ -218,11 +218,11 @@ const mortarInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'mortar.svg',
     sound: mortarSounds,
     speed: 2000,
-    cooldown: 2000,
+    cooldown: 2200,
     noAmmo: click_2
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
-    name: weaponNames.howitzer,
+    name: weaponNames.tank,
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
@@ -235,7 +235,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'tank.svg',
     sound: howitzerSounds,
     speed: 3000,
-    cooldown: 6000,
+    cooldown: 7000,
     noAmmo: click_2
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
@@ -252,7 +252,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'jet.svg',
     sound: airstrikeSounds,
     speed: 4000,
-    cooldown: 9000,
+    cooldown: 10000,
     noAmmo: bleep_neg
 }
 const nukeInfo: ExplosiveWeaponInfo = {
@@ -269,11 +269,11 @@ const nukeInfo: ExplosiveWeaponInfo = {
     imageSource: assetsFolder + 'bomb.svg',
     sound: nukeSounds,
     speed: 6000,
-    cooldown: 15000,
+    cooldown: 30000,
     noAmmo: bleep_neg
 }
 const chargeInfo: weaponInfo = {
-    name: weaponNames.charge,
+    name: weaponNames.tunnelcharge,
     cursor: "cursor4",
     imageSource: assetsFolder + 'dynamite.svg',
     sound: gunSounds,
@@ -284,6 +284,29 @@ const chargeInfo: weaponInfo = {
 
 function loadNewImage() {
     return '?' + new Date().getTime();
+}
+class PopupHandler {
+    static popUpArray: Array<string> = [];
+    static addToArray(text) {
+        this.popUpArray.push(text);
+        if (this.popUpArray.length == 1) {
+            this.showPopup();
+        }
+    }
+    private static showPopup() {
+        if (!this.popUpArray.length) return
+        let popup = document.getElementById("popupBox");
+        document.getElementById("popupText").innerText = this.popUpArray[0];
+        popup.classList.remove("hide");
+        let this_ = this;
+        setTimeout(function () {
+            popup.classList.add("hide");
+        }, 3000);
+        setTimeout(function () {
+            this_.popUpArray.shift();
+            this_.showPopup();
+        }, 3500);
+    }
 }
 class ContentElHandler {
     static returnContentEl() {

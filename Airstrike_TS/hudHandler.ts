@@ -33,7 +33,7 @@ class HudHandler {
         this.killStats.destroyed = 0;
         this.killStats.escaped = 0;
     }
-    public drawHUD() {
+    public drawHUD(wepname?) {
         let hud = document.getElementById('hud');
         if (hud) hud.remove();
 
@@ -58,13 +58,19 @@ class HudHandler {
             wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
             wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
             wepBoxContainer.appendChild(wepBox);
-            for (let y of wep.instances) {
-                let instBox = document.createElement('div');
-                instBox.classList.add("instBox");
-                wepBox.appendChild(instBox);
-            }
+            this.drawInstances(wep, wepBox)
+        }
+        if (wepname) {
+            this.selectBox(wepname)
         }
         this.drawScore();
+    }
+    public drawInstances(wep, wepBox) {
+        for (let y of wep.instances) {
+            let instBox = document.createElement('div');
+            instBox.classList.add("instBox");
+            wepBox.appendChild(instBox);
+        }
     }
     public drawScore() {
         this.scoreBox = document.createElement('div');
@@ -101,7 +107,7 @@ class HudHandler {
             else span.classList.remove('red');
         }
         if (title === killStatsOptions.total) {
-            span.innerText += "/" + game.winLimit;
+            span.innerText += "/" + game.returnLevelLimit();
         }
     }
     public updateScore(shots?) {
@@ -116,8 +122,7 @@ class HudHandler {
         }
     }
     public selectBox(wepName: weaponNames) {
-        this.getWepboxByName(wepName, true)
-        
+        this.getWepboxByName(wepName, true)      
     }
     private getWepboxByName(wepName: weaponNames, select?: boolean) {
         let weps: HTMLCollectionOf<Element> = this.hud.getElementsByClassName('wepBox');

@@ -83,6 +83,11 @@
     padding: 10px;
     font-size: 16px;
 }
+#devDiff {
+    width: fit-content;
+    font-size: xx-small;
+    border: none;
+}
 
 /**/
 ul li {
@@ -179,7 +184,9 @@ input[type=radio]:checked ~ label {
     top: 15%;
     left: 50%;
     transform: translateX(-50%); /*just centers*/
-    background-color: #ffffff;
+    font-family: monospace;
+    font-size: larger;
+    background-color: rgba(255, 255, 255, 0.4);
     padding: 20px;
     border: 1px solid #000000;
     border-radius: 5px;

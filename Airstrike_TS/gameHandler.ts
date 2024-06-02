@@ -1,25 +1,29 @@
-﻿const winLimit: number = 10;
-enum Languages {
+﻿enum Languages {
     'eng',
     'heb'
 }
 
+var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5]
+var allWeaponTypes: Array<WeaponType> = []
+var allTargets: Array<Target> = []
+
 class GameHandler {
-    public hud = new HudHandler(); //MESSY?
+    public hud = new HudHandler();
     public weapon: WeaponType;
     private contentEl: HTMLElement;
-    public targets: Array<Target> = [];
     private progressBar: HTMLElement;
     private progressNumber: number;
-    private newTargetFrequency: number;
     public shotCount: number = 0;
-    public winLimit: number;
     private language: Languages = Languages.eng;
+    public difficulty: difficultyLevelInfo;
+    public masterTargets: Array<Target> = []
 
-    private targetTimer: number;
+
+    private level: level;
     private gameTimer: number;
     private soundTimer: number;
-    private gameInProgress: boolean;
+    private gameInProgress: boolean = false;
+    private gameWasPlayed: boolean = false;
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
@@ -30,8 +34,17 @@ class GameHandler {
 
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(); }
         this.setEventListeners();
     }
+
+    private newLevel(LevelClass) {
+        let index = allLevelClassesArray.indexOf(LevelClass);
+        let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index]
+        this.level = new LevelClass(() => this.newLevel(nextLevel));
+        this.level.nextWave();
+    }
+
     private setEventListeners() {
         this.contentEl.addEventListener("click", () => this.fireFunc());
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
@@ -65,25 +78,16 @@ class GameHandler {
     }
 
     private toggleLang() { // CLEAN UP
-        let heb = document.getElementsByClassName('heb')
-        let eng = document.getElementsByClassName('eng')
+        const root: HTMLElement = document.querySelector(':root');
         if (this.language == Languages.heb) {
             this.language = Languages.eng
-            for (let x of heb) {
-                x.classList.add("displayNone");
-            }
-            for (let x of eng) {
-                x.classList.remove("displayNone");
-            }
+            root.style.setProperty('--hebDisplay', 'none');
+            root.style.setProperty('--engDisplay', 'block');
         }
         else {
             this.language = Languages.heb
-            for (let x of eng) {
-                x.classList.add("displayNone");
-            }
-            for (let x of heb) {
-                x.classList.remove("displayNone");
-            }
+            root.style.setProperty('--hebDisplay', 'block');
+            root.style.setProperty('--engDisplay', 'none');
         }
     }
 
@@ -109,21 +113,25 @@ class GameHandler {
     public handleOptionChange(event: Event) {
         this.jsonParseRadioDifficulty((event.target as HTMLInputElement).value);
     }
+    private jsonParseRadioDifficulty(value) {
+        const selected = JSON.parse(value) as difficultyLevelInfo;
+        this.setDifficulty(selected);
+    }
+
+    ////////
     private setDifficulty(difficulty: difficultyLevelInfo) {
-        this.newTargetFrequency = difficulty.newTargetEvery;
-        this.setIndivTargetSpeed(regTarget, difficulty.regTargetSpeed);
-        this.setIndivTargetSpeed(modTarget, difficulty.modTargetSpeed);
-        this.setIndivTargetSpeed(heavyTarget, difficulty.heavyTargetSpeed);
-        this.setIndivTargetSpeed(regTunnelTarget, difficulty.tunnelTargetSpeed);
-        this.hud.killStats.failLimit = difficulty.failLimit;
+        this.difficulty = difficulty
+        this.setSpeeds();
+    }
+    private setSpeeds() {
+        this.setIndivTargetSpeed(regTarget, this.difficulty.regTargetSpeed);
+        this.setIndivTargetSpeed(modTarget, this.difficulty.modTargetSpeed);
+        this.setIndivTargetSpeed(heavyTarget, this.difficulty.heavyTargetSpeed);
+        this.setIndivTargetSpeed(regTunnelTarget, this.difficulty.tunnelTargetSpeed);
     }
     private setIndivTargetSpeed(target: targetInfo, speed: speedRange) {
         target.minSpeed = speed.min;
         target.maxSpeed = speed.max;
-    }
-    private jsonParseRadioDifficulty(value) {
-        const selected = JSON.parse(value) as difficultyLevelInfo;
-        this.setDifficulty(selected);
     }
     private toggleModal() {
         this.toggleElem("overlay");
@@ -133,9 +141,14 @@ class GameHandler {
         var elem = document.getElementById(id);
         elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
+  
+    public redrawHudWithWepSelectionChecked() {
+        this.hud.drawHUD(this.weapon ? this.weapon.name : "");
+    }
 
     private fireFunc() {
-        this.weapon.fireFunc(this.targets);
+       // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
 
     private handleKeyPress(event) {
@@ -147,7 +160,7 @@ class GameHandler {
         if (int && allWeaponTypes[int - 1]) {
             this.changeWeapon(allWeaponTypes[int - 1]);
         }
-        else if (event.shiftKey && event.key === 'N') { this.addNuke(); }
+        else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo); }
     }
 
     private positionElem(elem: HTMLElement, pos: position) {
@@ -178,7 +191,7 @@ class GameHandler {
         }
         const root: HTMLElement = document.querySelector(':root');
         if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
-            root.style.setProperty('--chargeSelected', 'visible');
+            root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
         }
         else {
             root.style.setProperty('--chargeSelected', 'hidden');
@@ -203,151 +216,16 @@ class GameHandler {
         this.contentEl.classList.add(this.weapon.cursor);
     }
 
-    private newTarget() {
-        let newTarget: Target;
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-
-        switch (true) {
-            case (rand >= 92):
-                newTarget = new TunnelTarget(regTunnelTarget);
-                break;
-            case (rand >= 85):
-                newTarget = new VehicleTarget(heavyTarget);
-                break;
-            case (rand >= 75):
-                newTarget = new VehicleTarget(modTarget);
-                break;
-            default:
-            //    newTarget = new TunnelTarget(regTunnelTarget)
-                newTarget = new VehicleTarget(regTarget);
-           //     newTarget = new VehicleTarget(heavyTarget);
-                break;
-        }
-        this.targetCreation(newTarget);
-    }
     public targetCreation(newTarget: Target) {
-        this.targets.push(newTarget);
-        this.winLimitCheck();
+        this.level.produceSingleTarget(newTarget);
     }
-    private winLimitCheck() {
-        if (this.gameInProgress === false) return
-        if (this.targets.length >= this.winLimit) {
-            clearInterval(this.targetTimer);
-            let int = setInterval(() => {
-                if (this.checkGameEnd()) {
-                    clearInterval(int);
-                    this.endWave();
-                }
-            }, 100)
-        }
+    public returnLevelTargets() {
+        return this.level.targets
     }
-    public showPopup(text) {
-        let popup = document.getElementById("popupBox");
-        document.getElementById("popupText").innerText = text;
-        popup.classList.remove("hide");
-        setTimeout(function () {
-            popup.classList.add("hide");
-        }, 3000); 
-    }
-    private endWave() {
-        this.showPopup("Nice job!")
-        this.nextWave();
-    }
-    private nextWave() {
-        setTimeout(() => {
-            this.showPopup("Get ready, more coming!")
-        }, 3500)
-        setTimeout(() => {
-            let halfCurrentProgress = this.winLimit / 2;
-
-            this.winLimit += winLimit > halfCurrentProgress ? winLimit : halfCurrentProgress;
-            this.winLimit = Math.ceil(this.winLimit / 10) * 10;
-            this.startTargetTimer();
-        }, 5000)
-    }
-    private checkGameEnd() {
-        let fin: boolean = true;
-        for (let t of this.targets) {
-            if (t.status === Status.active) {
-                fin = false;
-            }
-        }
-        return fin;
+    public returnLevelLimit() {
+        return this.level.currentLimit
     }
 
-    private addNuke() {
-        if (allWeaponTypes.includes(nuke))
-            return;
-        nuke = new ExplosiveWeaponType(nukeInfo);
-        allWeaponTypes.push(nuke);
-        this.hud.drawHUD();
-    }
-    private updateHudScore() {
-        let stats = this.hud.killStats;
-        stats.disabled = this.targets.reduce((acc, target) => {
-            if (target.status === Status.disabled && target.damage === Damage.damaged) {
-                return acc + 1;
-            } else
-                return acc;
-        }, 0);
-        stats.destroyed = this.targets.reduce((acc, target) => {
-            if (target.damage >= Damage.moderateDamaged) {
-                return acc + 1;
-            } else
-                return acc;
-        }, 0);
-        stats.escaped = this.targets.reduce((acc, target) => {
-            if (target.status === Status.escaped) {
-                return acc + 1;
-            } else
-                return acc;
-        }, 0);
-        stats.total = this.targets.length || 0;
-        if (stats.escaped >= stats.failLimit) {
-            this.stop();
-            this.showPopup("Oh No! Try again.")
-        }
-        this.hud.updateScore();
-    }
-    public toggleGamePause() {
-        if (this.gameInProgress) {
-            if (this.gameTimer) {
-
-                this.stop();
-            }
-            else {
-                this.start();
-            }
-        }
-    }
-    public stop() {
-        this.toggleModal();
-        clearInterval(this.gameTimer);
-        this.gameTimer = undefined;
-        clearInterval(this.targetTimer);
-        clearInterval(this.soundTimer);
-        for (let a of ambience) {
-            a.stop();
-        }
-    }
-    public reset() {
-        for (let x of this.targets) {
-            x.getTargetEl().remove();
-        }
-        this.winLimit = winLimit;
-        this.targets = [];
-        this.hud.drawHUD();
-        this.hud.resetStats();
-    }
-    public newGame() {
-        this.reset();
-        this.start();
-    }
-    private startTargetTimer() {
-        this.targetTimer = window.setInterval(() => {
-            this.newTarget();
-        }, this.newTargetFrequency);
-    }
     private startAmbience() {
         RandomSoundGen.playRandomSound(ambience);
         this.soundTimer = setInterval(() => {
@@ -359,22 +237,114 @@ class GameHandler {
             this.progressBar.style.width = this.progressNumber + '%';
         }
     }
+   
+    private updateHudScore() {
+        let targets = this.level.targets
+        let stats = this.hud.killStats;
+        stats.disabled = targets.reduce((acc, target) => {
+            if (target.status === Status.disabled && target.damage === Damage.damaged) {
+                return acc + 1;
+            } else
+                return acc;
+        }, 0);
+        stats.destroyed = targets.reduce((acc, target) => {
+            if (target.damage >= Damage.moderateDamaged) {
+                return acc + 1;
+            } else
+                return acc;
+        }, 0);
+        stats.escaped = targets.reduce((acc, target) => {
+            if (target.status === Status.escaped) {
+                return acc + 1;
+            } else
+                return acc;
+        }, 0);
+        stats.total = targets.length || 0;
 
-    public start() {
-        this.gameInProgress = true;
-        this.changeWeapon(mortar);
+        this.hud.updateScore();
+    }
+    public checkEnd() {
+        let stats = this.hud.killStats;
+        if (stats.escaped >= stats.failLimit) {
+            this.pause();
+            this.gameInProgress = false;
+            PopupHandler.addToArray("Oh No! Try again.");
+        }
+    }
+
+    public toggleGamePause() {
+        if (this.gameInProgress) {
+            if (this.gameTimer) {
+
+                this.pause();
+            }
+            else {
+                this.start_unpause();
+            }
+        }
+    }
+    private wave_gradual() {
+
+    }
+    private wave_sudden() {
+
+    }
+    public pause() {
+        this.toggleModal();
+        clearInterval(this.gameTimer);
+        this.gameTimer = undefined;
+
+        this.level.pauseWave();
+
+        clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
+        }
+    }
+    public reset() {
+        this.level.resetTargets();
+        this.level.pauseWave();
+        this.level = null;
+
+        allWeaponTypes = [];
+        this.redrawHudWithWepSelectionChecked();
+        this.hud.resetStats();
+
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
+    }
+    public newGame() {
+        if (this.gameWasPlayed) {
+            this.reset();
+        }
+        PopupHandler.addToArray(game.difficulty.eng.name);
+        this.newLevel(allLevelClassesArray[0])
+        this.hud.drawHUD();
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
+
+        this.start_unpause();
+    }
+
+    public start_unpause() {
+        if (this.gameInProgress == false) {
+            this.gameInProgress = true;
+            this.gameWasPlayed = true;
+            this.redrawHudWithWepSelectionChecked();
+        }
+        else {
+            this.level.continueWave();
+        }
         this.startAmbience();
-
         this.toggleModal();
         
 
-        this.startTargetTimer();
-
-        //this.newTarget();
         this.gameTimer = window.setInterval(() => {
+            this.checkEnd();
             this.updateHudScore();
             this.updateProgressBar();
-            this.targets.forEach((trg) => {
+            this.level.targets.forEach((trg) => {
                 trg.action();
             });
         }, 100);

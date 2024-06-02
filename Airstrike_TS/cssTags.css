@@ -2,8 +2,15 @@
     --borderRad: 5px;
     --crashTimeout: 600ms;
     --chargeSelected: hidden;
+    --hebDisplay: none;
+    --engDisplay: block;
 }
-
+.heb {
+    display: var(--hebDisplay);
+}
+.eng {
+    display: var(--engDisplay);
+}
 img {
     visibility: hidden;
     user-select: none;

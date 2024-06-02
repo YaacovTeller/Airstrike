@@ -20,6 +20,8 @@
         this.speed = info.speed;
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
+
+        allWeaponTypes[this.name -1] = this
     }
     public setActiveInstance() {
         this.activeInstance = this.getAvailableInstance();
@@ -29,7 +31,6 @@
     public getAvailableInstance() {
         let nextReady: weaponInstance = null;
         nextReady = this.searchInstances(nextReady);
-      //  this.setBlastRadVisible(nextReady);
         return nextReady;
     }
     protected searchInstances(nextReady) {
@@ -57,6 +58,7 @@
             blastRadElement: el,
         };
         this.instances.push(inst);
+        game.redrawHudWithWepSelectionChecked();
     }
     protected shotCounter() {
         game.shotCount++
@@ -105,7 +107,7 @@
 
     protected determineSeverity(fraction?: number) {
         let severity: strikeSeverity;
-                if (this.name === weaponNames.charge) {
+        if (this.name === weaponNames.tunnelcharge) {
             severity = strikeSeverity.catastrophic;
         }
         return severity;
@@ -175,7 +177,6 @@ class ExplosiveWeaponType extends WeaponType {
 
     constructor(info: ExplosiveWeaponInfo) {
         super(info);
-
         this.explosionInfo = info.explosionInfo;
         this.blastRadius = info.blastRadius;
 
@@ -185,8 +186,6 @@ class ExplosiveWeaponType extends WeaponType {
     public pushNewWeaponInstance() {
         let el = this.returnBlastRadiusDiv(this.blastRadius);
         this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
-   //     el.classList.add('circle' + this.instances.length);
-
         let explosion = this.returnNewImageEl("explosion");
 
         let inst: ExplosiveWeaponInstance = {
@@ -195,6 +194,7 @@ class ExplosiveWeaponType extends WeaponType {
             explosion
         };
         this.instances.push(inst);
+        game.redrawHudWithWepSelectionChecked();
     }
 
     public getAvailableInstance() {
@@ -337,7 +337,7 @@ class ExplosiveWeaponType extends WeaponType {
         }
         else if (angle > 150 && angle < 210) {
             direc = direction.backward;
-            console.log("DIREC: " + direction.backward);
+      //      console.log("DIREC: " + direction.backward);
         }
         return direc
     }
@@ -402,13 +402,15 @@ class ChargeWeaponType extends WeaponType {
     constructor(info: weaponInfo) {
         super(info);
         this.pushNewWeaponInstance();
+        this.pushNewWeaponInstance();
+        this.pushNewWeaponInstance();
+
     }
 
     public fireFunc(targets: Array<Target>) {
         if (this.ammoCheck() === false) { return }
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
-        this.setActiveInstance();
 
         let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
             return element.constructor.name === TunnelTarget.name;
@@ -430,6 +432,8 @@ class ChargeWeaponType extends WeaponType {
                 }, this.speed)
             };
         }
-        hit === false ? bleep_neg.play(): "";
+        hit === false ? bleep_neg.play() : "";
+        this.setActiveInstance();
+
     }
 }
