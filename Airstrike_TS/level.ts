@@ -13,12 +13,11 @@
     abstract finalStageArms();
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
- //       this.addWeaponFunc = addWeaponFunc;
+        //       this.addWeaponFunc = addWeaponFunc;
         this.frequency = game.difficulty.newTargetEvery;
         //this.currentLimit = this.winLimits[this.index]
-        PopupHandler.addToArray(
-            "Starting " + this.constructor.name
-        )
+    //    let newLevMsg: popupMsg = { text: "", title: this.constructor.name.replace("_", " "), length: msgLength.long }
+        PopupHandler.addToArray("", this.constructor.name.replace("_", " "), msgLength.long)
     }
 
     public winLimitCheck() {
@@ -50,10 +49,8 @@
         return fin;
     }
     protected endWave() {
-        console.log("ENDED WAVE" + this.constructor.name)
         PopupHandler.addToArray(
-            "Nice job!" + "\n" +
-            "WaveIndex " + this.index + " of " + this.winLimits.length
+           "Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
         );
         if (this.index >= this.winLimits.length) {
             PopupHandler.addToArray("Past array length, /n pls fix this, wth")
@@ -64,12 +61,12 @@
     }
     protected nextWavePrepGap() {
         setTimeout(() => {
-            PopupHandler.addToArray("Get ready, more coming!");
+        //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 this.nextLevelCallback();
-                console.log("NEXT WAVE callback")
+                console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -83,7 +80,6 @@
                 this.finalStageArms();
                 break;
             case (this.winLimits.length):
-                this.index = -1; // MESSY force reset? wont work
                 return false;
             default:
         }
@@ -94,7 +90,7 @@
     }
 
     public continueWave() {
-        // this.winLimitCheck(); // UNNEEDED?
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         this.targetTimer = setInterval(() => {
             this.produceSingleTarget();
         }, this.frequency);
@@ -120,7 +116,7 @@
     public addNewWeapon(className, info: weaponInfo) {
         let wepName = weaponNames[info.name]
         if (allWeaponTypes[info.name - 1]) {
-            PopupHandler.addToArray("You got another " + wepName + "!");
+            PopupHandler.addToArray("You got another " + wepName);
             allWeaponTypes[info.name - 1].pushNewWeaponInstance();
         }
         else {

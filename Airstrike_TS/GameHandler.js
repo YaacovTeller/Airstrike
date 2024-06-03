@@ -148,6 +148,14 @@ class GameHandler {
         else if (event.shiftKey && event.key === 'N') {
             this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
         }
+        else if (event.shiftKey && event.key === 'A') {
+            this.level.addNewWeapon(WeaponType, sniperInfo);
+            this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+            this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+            this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+            this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
+            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+        }
     }
     positionElem(elem, pos) {
         elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
@@ -167,6 +175,7 @@ class GameHandler {
         if (!allWeaponTypes.includes(wep))
             return;
         this.weapon = wep;
+        this.weapon.select.play();
         this.hud.selectBox(wep.name);
         this.weapon.setActiveInstance();
         let inst = this.weapon.activeInstance;
@@ -220,7 +229,7 @@ class GameHandler {
         }
     }
     updateHudScore() {
-        let targets = this.level.targets;
+        let targets = allTargets;
         let stats = this.hud.killStats;
         stats.disabled = targets.reduce((acc, target) => {
             if (target.status === Status.disabled && target.damage === Damage.damaged) {
@@ -236,7 +245,7 @@ class GameHandler {
             else
                 return acc;
         }, 0);
-        stats.escaped = targets.reduce((acc, target) => {
+        stats.escaped = this.level.targets.reduce((acc, target) => {
             if (target.status === Status.escaped) {
                 return acc + 1;
             }
@@ -251,7 +260,7 @@ class GameHandler {
         if (stats.escaped >= stats.failLimit) {
             this.pause();
             this.gameInProgress = false;
-            PopupHandler.addToArray("Oh No! Try again.");
+            PopupHandler.addToArray("", "Game Over!", msgLength.long);
         }
     }
     toggleGamePause() {

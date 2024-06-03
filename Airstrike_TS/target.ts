@@ -1,4 +1,6 @@
 ﻿const crashTimeout = 600;
+const destroyedTargetStay = 20000;
+const fadeAnimTime = 8000;
 
 class Target {
     protected targetEl: HTMLElement;
@@ -174,7 +176,7 @@ class VehicleTarget extends Target {
     public hit(sev: strikeSeverity, wepName: weaponNames, direc: direction) {
         this.targetEl.classList.remove('smoothTransition');
         if (wepName == weaponNames.gun) { // JUST FOR GUN
-            setTimeout(() => this.status = Status.disabled, 1000)
+            setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200,1200))
 
             this.damage = Damage.damaged;
 
@@ -192,6 +194,7 @@ class VehicleTarget extends Target {
 
                 this.damageEl.src = this.damagedSource;
                 this.damageEl.classList.add('lightDamaged');
+                this.speed = this.speed / 3;
             }
             if (sev == strikeSeverity.medium) {
                 this.damage = Damage.moderateDamaged;
@@ -207,9 +210,12 @@ class VehicleTarget extends Target {
                 this.picEl.src = this.destroyedSource;
                 this.picEl.className = 'destroyed';
                 this.damageEl.style.visibility = "hidden";
+                this.targetEl.classList.add('show');
+                ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime)
             }
         }
     }
+
     private hitAcknowledge() {
         RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
     }

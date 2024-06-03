@@ -1,4 +1,6 @@
 const crashTimeout = 600;
+const destroyedTargetStay = 20000;
+const fadeAnimTime = 8000;
 class Target {
     targetEl;
     picEl;
@@ -156,7 +158,7 @@ class VehicleTarget extends Target {
     hit(sev, wepName, direc) {
         this.targetEl.classList.remove('smoothTransition');
         if (wepName == weaponNames.gun) { // JUST FOR GUN
-            setTimeout(() => this.status = Status.disabled, 1000);
+            setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200));
             this.damage = Damage.damaged;
             this.damageEl.src = this.damagedSource;
             this.damageEl.classList.add('lightDamaged');
@@ -170,6 +172,7 @@ class VehicleTarget extends Target {
                 this.damage = Damage.damaged;
                 this.damageEl.src = this.damagedSource;
                 this.damageEl.classList.add('lightDamaged');
+                this.speed = this.speed / 3;
             }
             if (sev == strikeSeverity.medium) {
                 this.damage = Damage.moderateDamaged;
@@ -184,6 +187,8 @@ class VehicleTarget extends Target {
                 this.picEl.src = this.destroyedSource;
                 this.picEl.className = 'destroyed';
                 this.damageEl.style.visibility = "hidden";
+                this.targetEl.classList.add('show');
+                ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
             }
         }
     }

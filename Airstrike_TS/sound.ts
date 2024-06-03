@@ -54,6 +54,14 @@ var matara = new Sound(soundFolder + "matara_shmd.mp3");
 var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
 var click_1 = new Sound(soundFolder + "click_1.mp3");
 var click_2 = new Sound(soundFolder + "click_2.mp3");
+var beep = new Sound(soundFolder + "Beep.wav");
+
+var mag = new Sound(soundFolder + "automag_reload.wav");
+var flak = new Sound(soundFolder + "flak_cannon_ready.wav");
+var pickup = new Sound(soundFolder + "weapon_pickup.wav");
+var redeemerpickup = new Sound(soundFolder + "redeemerpickup.wav");
+var alarm3 = new Sound(soundFolder + "alarm3.wav");
+
 
 var gunSounds: Array<Sound> = [];
 var mortarSounds: Array<Sound> = [];

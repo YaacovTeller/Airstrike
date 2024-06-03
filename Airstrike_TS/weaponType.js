@@ -6,8 +6,9 @@ class WeaponType {
     speed;
     cooldown;
     craterDecalStay = 10000;
-    craterFadingTillRemoval = 8000;
+    craterFadingTillRemoval = fadeAnimTime;
     noAmmo;
+    select;
     activeInstance;
     instances = [];
     constructor(info) {
@@ -18,6 +19,7 @@ class WeaponType {
         this.speed = info.speed;
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
+        this.select = info.select;
         allWeaponTypes[this.name - 1] = this;
     }
     setActiveInstance() {
@@ -165,6 +167,7 @@ class ExplosiveWeaponType extends WeaponType {
         this.pushNewWeaponInstance();
     }
     pushNewWeaponInstance() {
+        pickup.play();
         let el = this.returnBlastRadiusDiv(this.blastRadius);
         this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
         let explosion = this.returnNewImageEl("explosion");
@@ -240,12 +243,7 @@ class ExplosiveWeaponType extends WeaponType {
         let explosion = inst.explosion;
         explosion.src = this.explosionInfo.imageSource + loadNewImage();
         crater.style.visibility = "visible";
-        setTimeout(() => {
-            crater.classList.add("hide");
-        }, this.craterDecalStay);
-        setTimeout(() => {
-            ContentElHandler.removeFromContentEl(crater);
-        }, this.craterDecalStay + this.craterFadingTillRemoval);
+        ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
     }
     checkForTargets(elem, targets) {
         for (let target of targets) {
@@ -270,19 +268,22 @@ class ExplosiveWeaponType extends WeaponType {
             }
         }
     }
+    ricochetChance() {
+        RandomNumberGen.randomNumBetween(1, 10) > 6 ? RandomSoundGen.playRandomSound(ricochet) : "";
+    }
     determineExceptionsForArmour(target, severity) {
         let exception = false;
         if (target.armour == Armour.moderate) {
             if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
                 this.name < weaponNames.nuke && severity <= strikeSeverity.light) {
-                RandomSoundGen.playRandomSound(ricochet);
+                this.ricochetChance();
                 exception = true;
             }
         }
         if (target.armour >= Armour.heavy) {
             if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
                 this.name < weaponNames.nuke && severity <= strikeSeverity.medium) {
-                RandomSoundGen.playRandomSound(ricochet);
+                this.ricochetChance();
                 exception = true;
             }
         }

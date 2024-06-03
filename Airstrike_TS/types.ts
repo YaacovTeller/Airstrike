@@ -112,7 +112,8 @@ type weaponInfo = {
     cursor: string,
     speed: number,
     cooldown: number,
-    noAmmo: Sound
+    noAmmo: Sound,
+    select: Sound,
 }
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
@@ -203,7 +204,8 @@ const sniperInfo: ExplosiveWeaponInfo = {
     sound: gunSounds,
     speed: 0,
     cooldown: 700,
-    noAmmo: click_1
+    noAmmo: click_1,
+    select: mag
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
@@ -219,7 +221,8 @@ const mortarInfo: ExplosiveWeaponInfo = {
     sound: mortarSounds,
     speed: 2000,
     cooldown: 2200,
-    noAmmo: click_2
+    noAmmo: click_2,
+    select: mag
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tank,
@@ -236,7 +239,8 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     sound: howitzerSounds,
     speed: 3000,
     cooldown: 7000,
-    noAmmo: click_2
+    noAmmo: click_2,
+    select: flak
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
@@ -253,7 +257,8 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     sound: airstrikeSounds,
     speed: 4000,
     cooldown: 10000,
-    noAmmo: bleep_neg
+    noAmmo: bleep_neg,
+    select: redeemerpickup
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
@@ -270,7 +275,8 @@ const nukeInfo: ExplosiveWeaponInfo = {
     sound: nukeSounds,
     speed: 6000,
     cooldown: 30000,
-    noAmmo: bleep_neg
+    noAmmo: bleep_neg,
+    select: redeemerpickup
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnelcharge,
@@ -279,33 +285,55 @@ const chargeInfo: weaponInfo = {
     sound: gunSounds,
     speed: 3000,
     cooldown: 8000,
-    noAmmo: bleep_neg
+    noAmmo: bleep_neg,
+    select: redeemerpickup
 }
 
 function loadNewImage() {
     return '?' + new Date().getTime();
 }
+enum msgLength {
+    long = 3000,
+    short = 2000
+}
+type popupMsg = {
+    title: string,
+    text: string,
+    length: msgLength
+}
 class PopupHandler {
-    static popUpArray: Array<string> = [];
-    static addToArray(text) {
-        this.popUpArray.push(text);
+    static popUpArray: Array<popupMsg> = [];
+    static addToArray(txt, title?, lngth?) {
+        let msg: popupMsg = {
+            text: txt,
+            title: title ? title : null,
+            length: lngth ? lngth : msgLength.short
+        }
+        this.popUpArray.push(msg);
         if (this.popUpArray.length == 1) {
             this.showPopup();
         }
     }
     private static showPopup() {
+        beep.play();
         if (!this.popUpArray.length) return
         let popup = document.getElementById("popupBox");
-        document.getElementById("popupText").innerText = this.popUpArray[0];
+        let currentMsg = this.popUpArray[0]
+        let titlebox = document.getElementById("popupTitle")
+        let textbox = document.getElementById("popupText")
+        titlebox.innerText = currentMsg.title;
+        textbox.innerText = currentMsg.text;
         popup.classList.remove("hide");
         let this_ = this;
         setTimeout(function () {
             popup.classList.add("hide");
-        }, 3000);
+        }, currentMsg.length);
         setTimeout(function () {
+            titlebox.innerText = "";
+            textbox.innerText = "";
             this_.popUpArray.shift();
             this_.showPopup();
-        }, 3500);
+        }, currentMsg.length + 200);
     }
 }
 class ContentElHandler {
@@ -325,6 +353,14 @@ class ContentElHandler {
     }
     static clearContent() {
         document.getElementById("content").innerHTML = "";
+    }
+    static fadeRemoveItem(item: HTMLElement, stayTime, fadeTime) {
+        setTimeout(() => {
+            item.classList.add("hide");
+        }, stayTime)
+        setTimeout(() => {
+            ContentElHandler.removeFromContentEl(item);
+        }, stayTime + fadeTime)
     }
 }
 

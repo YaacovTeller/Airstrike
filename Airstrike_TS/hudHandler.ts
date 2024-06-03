@@ -107,7 +107,8 @@ class HudHandler {
             else span.classList.remove('red');
         }
         if (title === killStatsOptions.total) {
-            span.innerText += "/" + game.returnLevelLimit();
+
+          //  span.innerText += "/" + game.returnLevelLimit();
         }
     }
     public updateScore(shots?) {
