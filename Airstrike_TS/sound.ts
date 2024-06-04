@@ -61,7 +61,7 @@ var flak = new Sound(soundFolder + "flak_cannon_ready.wav");
 var pickup = new Sound(soundFolder + "weapon_pickup.wav");
 var redeemerpickup = new Sound(soundFolder + "redeemerpickup.wav");
 var alarm3 = new Sound(soundFolder + "alarm3.wav");
-
+var jet = new Sound(soundFolder + "jet_fly.mp3");
 
 var gunSounds: Array<Sound> = [];
 var mortarSounds: Array<Sound> = [];

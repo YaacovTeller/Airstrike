@@ -108,11 +108,14 @@
     <Content Include="AS_assets\smoke_1.gif" />
     <Content Include="AS_assets\smoke_2.gif" />
     <Content Include="AS_assets\smoke_3.gif" />
+    <Content Include="AS_assets\sound\alarm3.wav" />
     <Content Include="AS_assets\sound\aluAk.mp3" />
     <Content Include="AS_assets\sound\ambient_1_q.mp3" />
     <Content Include="AS_assets\sound\ambient_2_q.mp3" />
     <Content Include="AS_assets\sound\ambient_4_q.mp3" />
     <Content Include="AS_assets\sound\ambient_5_q.mp3" />
+    <Content Include="AS_assets\sound\automag_reload.wav" />
+    <Content Include="AS_assets\sound\Beep.wav" />
     <Content Include="AS_assets\sound\beep_tiny.mp3" />
     <Content Include="AS_assets\sound\BigExpl.mp3" />
     <Content Include="AS_assets\sound\click_1.mp3" />
@@ -125,6 +128,7 @@
     <Content Include="AS_assets\sound\expl_dull.mp3" />
     <Content Include="AS_assets\sound\expl_dull2.mp3" />
     <Content Include="AS_assets\sound\expl_many.mp3" />
+    <Content Include="AS_assets\sound\flak_cannon_ready.wav" />
     <Content Include="AS_assets\sound\gun_1.mp3" />
     <Content Include="AS_assets\sound\gun_2.mp3" />
     <Content Include="AS_assets\sound\gun_3.mp3" />
@@ -132,6 +136,8 @@
     <Content Include="AS_assets\sound\gun_6.mp3" />
     <Content Include="AS_assets\sound\gun_7.mp3" />
     <Content Include="AS_assets\sound\gun_8.mp3" />
+    <Content Include="AS_assets\sound\jet_fly.mp3" />
+    <Content Include="AS_assets\sound\matara_shmd.mp3" />
     <Content Include="AS_assets\sound\Messy_bomb_3.mp3" />
     <Content Include="AS_assets\sound\Messy_bomb_grander.mp3" />
     <Content Include="AS_assets\sound\Messy_bomb_shot.mp3" />
@@ -142,6 +148,7 @@
     <Content Include="AS_assets\sound\mortar_5.mp3" />
     <Content Include="AS_assets\sound\pgia.mp3" />
     <Content Include="AS_assets\sound\redAlert7.mp3" />
+    <Content Include="AS_assets\sound\redeemerpickup.wav" />
     <Content Include="AS_assets\sound\ricochet_1.mp3" />
     <Content Include="AS_assets\sound\ricochet_2.mp3" />
     <Content Include="AS_assets\sound\ricochet_3.mp3" />
@@ -162,8 +169,10 @@
     <Content Include="AS_assets\sound\unused\Messy_bomb.mp3" />
     <Content Include="AS_assets\sound\unused\Messy_bomb_2.mp3" />
     <Content Include="AS_assets\sound\unused\Messy_bomb_grand.mp3" />
+    <Content Include="AS_assets\sound\weapon_pickup.wav" />
     <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
     <Content Include="AS_assets\tank.svg" />
+    <Content Include="AS_assets\target-box2.svg" />
     <Content Include="AS_assets\trans.png" />
     <Content Include="cssMenus.css" />
     <Content Include="cssApp.css" />

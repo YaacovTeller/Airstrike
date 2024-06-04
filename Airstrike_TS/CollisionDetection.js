@@ -1,6 +1,5 @@
 class CollisionDetection {
     static checkCollisionFromPosition(mousePos, targetEl) {
-        //let trgtPos: position = this.getXYfromPoint(targetEl);
         let targetRect = targetEl.getBoundingClientRect();
         if (mousePos.X >= targetRect.left &&
             mousePos.X <= targetRect.left + targetRect.width &&
@@ -64,8 +63,7 @@ class CollisionDetection {
             if (!start)
                 start = timestamp;
             var progress = timestamp - start;
-            var mult = (500 / radius) - 3; // MESSY?
-            //            console.log("radius: " + radius + " - mult: " + mult)
+            var mult = (500 / radius) - 3;
             elem.style.left = (currentLeft + progress / mult * deltaX) + "px";
             elem.style.top = (currentTop + progress / mult * deltaY) + "px";
             if (progress < 200) {
@@ -77,9 +75,9 @@ class CollisionDetection {
     static throw(elem, direc) {
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
-        let distance = RandomNumberGen.randomNumBetween(10, 40); //20
-        let height = 50 - distance; //RandomNumberGen.randomNumBetween(20, 80) //30
-        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100); //1000;
+        let distance = RandomNumberGen.randomNumBetween(10, 40);
+        let height = 50 - distance;
+        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100);
         var start = null;
         function step(timestamp) {
             if (!start)
@@ -115,4 +113,3 @@ class CollisionDetection {
         requestAnimationFrame(step);
     }
 }
-//# sourceMappingURL=collisionDetection.js.map

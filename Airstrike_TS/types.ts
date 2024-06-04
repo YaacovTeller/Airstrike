@@ -258,7 +258,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: redeemerpickup
+    select: jet
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
@@ -286,7 +286,7 @@ const chargeInfo: weaponInfo = {
     speed: 3000,
     cooldown: 8000,
     noAmmo: bleep_neg,
-    select: redeemerpickup
+    select: alarm3//beeps[0]
 }
 
 function loadNewImage() {

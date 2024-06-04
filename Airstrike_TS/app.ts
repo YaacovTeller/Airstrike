@@ -2,6 +2,6 @@
 
 window.onload = () => {
     const contentEl: HTMLElement = ContentElHandler.returnContentEl();
-    game = new GameHandler(contentEl);
     loadSound();
+    game = new GameHandler(contentEl);
 };

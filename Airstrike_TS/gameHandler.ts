@@ -2,6 +2,10 @@
     'eng',
     'heb'
 }
+enum GameMode {
+    'regular',
+    'sandbox'
+}
 
 var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5]
 var allWeaponTypes: Array<WeaponType> = []
@@ -34,7 +38,7 @@ class GameHandler {
 
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(); }
+        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
     }
 
@@ -51,7 +55,8 @@ class GameHandler {
     }
     public menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame();
+        document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
+        document.getElementById("startbuttonSandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
 
         this.setMenuDifficulty(arr);
@@ -162,15 +167,19 @@ class GameHandler {
         }
         else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo); }
         else if (event.shiftKey && event.key === 'A') {
-            this.level.addNewWeapon(WeaponType, sniperInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-            this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.addAllWeapons();
         }
     }
-
+    private addAllWeapons() {
+        this.level.addNewWeapon(BulletWeaponType, sniperInfo);
+        this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        if (!allWeaponTypes[5]) {
+         this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+        }
+    }
     private positionElem(elem: HTMLElement, pos: position) {
         elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
         elem.style.top = pos.Y - elem.offsetHeight / 2 + 'px';
@@ -323,12 +332,20 @@ class GameHandler {
         //    this.hud.selectBox(this.weapon.name);
         //}
     }
-    public newGame() {
+    public newGame(mode: GameMode) {
         if (this.gameWasPlayed) {
             this.reset();
         }
         PopupHandler.addToArray(game.difficulty.eng.name);
-        this.newLevel(allLevelClassesArray[0])
+        if (mode == GameMode.regular) {
+            this.newLevel(allLevelClassesArray[0])
+        }
+        else if (mode = GameMode.sandbox) {
+            this.newLevel(allLevelClassesArray[4])
+            this.addAllWeapons();
+            this.addAllWeapons();
+            this.addAllWeapons();
+        }
         this.hud.drawHUD();
         this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);

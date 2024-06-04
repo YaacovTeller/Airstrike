@@ -3,6 +3,11 @@ var Languages;
     Languages[Languages["eng"] = 0] = "eng";
     Languages[Languages["heb"] = 1] = "heb";
 })(Languages || (Languages = {}));
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["regular"] = 0] = "regular";
+    GameMode[GameMode["sandbox"] = 1] = "sandbox";
+})(GameMode || (GameMode = {}));
 var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5];
 var allWeaponTypes = [];
 var allTargets = [];
@@ -28,7 +33,7 @@ class GameHandler {
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(); };
+        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); };
         this.setEventListeners();
     }
     newLevel(LevelClass) {
@@ -43,7 +48,8 @@ class GameHandler {
     }
     menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame();
+        document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
+        document.getElementById("startbuttonSandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         this.setMenuDifficulty(arr);
         this.toggleLang();
@@ -104,7 +110,6 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
-    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -131,8 +136,7 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        // this.weapon.fireFunc(this.level.targets);
-        this.weapon.fireFunc(allTargets); // MESSY??
+        this.weapon.fireFunc(allTargets);
     }
     handleKeyPress(event) {
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
@@ -149,11 +153,16 @@ class GameHandler {
             this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
         }
         else if (event.shiftKey && event.key === 'A') {
-            this.level.addNewWeapon(WeaponType, sniperInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-            this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-            this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
+            this.addAllWeapons();
+        }
+    }
+    addAllWeapons() {
+        this.level.addNewWeapon(BulletWeaponType, sniperInfo);
+        this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        if (!allWeaponTypes[5]) {
             this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
         }
     }
@@ -185,7 +194,7 @@ class GameHandler {
         }
         const root = document.querySelector(':root');
         if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
-            root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
+            root.style.setProperty('--chargeSelected', 'visible');
         }
         else {
             root.style.setProperty('--chargeSelected', 'hidden');
@@ -294,18 +303,23 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
-        //if (this.weapon) {
-        //    this.hud.selectBox(this.weapon.name);
-        //}
     }
-    newGame() {
+    newGame(mode) {
         if (this.gameWasPlayed) {
             this.reset();
         }
         PopupHandler.addToArray(game.difficulty.eng.name);
-        this.newLevel(allLevelClassesArray[0]);
+        if (mode == GameMode.regular) {
+            this.newLevel(allLevelClassesArray[0]);
+        }
+        else if (mode = GameMode.sandbox) {
+            this.newLevel(allLevelClassesArray[4]);
+            this.addAllWeapons();
+            this.addAllWeapons();
+            this.addAllWeapons();
+        }
         this.hud.drawHUD();
-        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.hud.killStats.failLimit = this.difficulty.failLimit;
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
@@ -330,4 +344,3 @@ class GameHandler {
         }, 100);
     }
 }
-//# sourceMappingURL=gameHandler.js.map

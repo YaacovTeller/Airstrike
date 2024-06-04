@@ -24,7 +24,7 @@ class WeaponType {
     }
     setActiveInstance() {
         this.activeInstance = this.getAvailableInstance();
-        game.updateCursorPosition(); // NEEDED?
+        game.updateCursorPosition();
     }
     getAvailableInstance() {
         let nextReady = null;
@@ -33,11 +33,11 @@ class WeaponType {
     }
     searchInstances(nextReady) {
         for (let i in this.instances) {
-            game.hud.deselectInst(parseInt(i), this.name); //MESSY?
+            game.hud.deselectInst(parseInt(i), this.name);
             if (this.instances[i].ready === true) {
                 if (nextReady == null) {
                     nextReady = this.instances[i];
-                    game.hud.selectInst(parseInt(i), this.name); //MESSY?
+                    game.hud.selectInst(parseInt(i), this.name);
                 }
             }
         }
@@ -81,12 +81,12 @@ class WeaponType {
         let _this = this;
         setTimeout(() => {
             inst.ready = true;
-            game.hud.availInst(index, name); //MESSY?
+            game.hud.availInst(index, name);
             _this.activeInstance = _this.activeInstance == null ? _this.getAvailableInstance() : _this.activeInstance;
             if (_this !== game.weapon) {
                 _this.activeInstance.blastRadElement.style.visibility = 'hidden';
             }
-            game.updateCursorPosition(); //MESSY?
+            game.updateCursorPosition();
         }, _this.cooldown);
     }
     ammoCheck() {
@@ -140,7 +140,7 @@ class BulletWeaponType extends WeaponType {
                 }
                 ;
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
+                    target.hit(severity, this.name, direction.forward);
                     if (target.status == Status.active) {
                         this.bonusHitSound();
                     }
@@ -260,7 +260,7 @@ class ExplosiveWeaponType extends WeaponType {
                 }
                 let direc = this.determineDirectionForFlip(collisionInfo);
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direc); // TARGET - Main hit function
+                    target.hit(severity, this.name, direc);
                     if (target.status == Status.active) {
                         this.bonusHitSound();
                     }
@@ -296,14 +296,12 @@ class ExplosiveWeaponType extends WeaponType {
     }
     determineDirectionForFlip(collisionInfo) {
         let angle = collisionInfo.angle;
-        //       console.log("ANGLE: " + angle);
         let direc;
         if (angle > 300 && angle < 360 || angle > 0 && angle < 60) {
             direc = direction.forward;
         }
         else if (angle > 150 && angle < 210) {
             direc = direction.backward;
-            //      console.log("DIREC: " + direction.backward);
         }
         return direc;
     }
@@ -382,7 +380,7 @@ class ChargeWeaponType extends WeaponType {
                 RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
                     let severity = this.determineSeverity();
-                    tunnel.hit(severity); // TARGET - Main hit function
+                    tunnel.hit(severity);
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed);
             }
@@ -392,4 +390,3 @@ class ChargeWeaponType extends WeaponType {
         this.setActiveInstance();
     }
 }
-//# sourceMappingURL=weaponType.js.map
