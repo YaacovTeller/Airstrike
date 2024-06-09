@@ -1,5 +1,12 @@
 const assetsFolder = "./AS_assets/";
 const classicExplosion = 'expl1.gif';
+var ExplSizes;
+(function (ExplSizes) {
+    ExplSizes[ExplSizes["small"] = 100] = "small";
+    ExplSizes[ExplSizes["large"] = 140] = "large";
+    ExplSizes[ExplSizes["XL"] = 200] = "XL";
+    ExplSizes[ExplSizes["XXL"] = 800] = "XXL";
+})(ExplSizes || (ExplSizes = {}));
 var Status;
 (function (Status) {
     Status[Status["active"] = 0] = "active";
@@ -20,6 +27,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -64,7 +72,15 @@ var weaponNames;
     weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
     weaponNames[weaponNames["tunnelcharge"] = 5] = "tunnelcharge";
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
+    weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -131,13 +147,13 @@ const dev = {
 };
 const sniperInfo = {
     name: weaponNames.gun,
-    blastRadius: 5,
+    // blastRadius: 5,
     cursor: "cursor1",
-    explosionInfo: {
-        imageSource: assetsFolder + 'fire_1.gif',
-        sound: [],
-        length: 1000
-    },
+    //explosionInfo: {
+    //    imageSource: assetsFolder + 'fire_1.gif',
+    //    sound: [],
+    //    length: 1000
+    //},
     imageSource: assetsFolder + 'gun.svg',
     sound: gunSounds,
     speed: 0,
@@ -150,6 +166,7 @@ const mortarInfo = {
     blastRadius: 50,
     cursor: "cursor2",
     explosionInfo: {
+        size: ExplSizes.small,
         imageSource: assetsFolder + classicExplosion,
         sound: [],
         length: 1000,
@@ -167,6 +184,7 @@ const howitzerInfo = {
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
+        size: ExplSizes.large,
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         soundDelay: 3000,
@@ -185,6 +203,7 @@ const airstrikeInfo = {
     blastRadius: 100,
     cursor: "cursor4",
     explosionInfo: {
+        size: ExplSizes.XL,
         imageSource: assetsFolder + 'expl_big.gif',
         sound: strikes,
         soundDelay: 2500,
@@ -203,6 +222,7 @@ const nukeInfo = {
     blastRadius: 400,
     cursor: "cursor4",
     explosionInfo: {
+        size: ExplSizes.XXL,
         imageSource: assetsFolder + 'mushroom_1.gif',
         sound: bigExplosions,
         soundDelay: 6500,
@@ -224,7 +244,17 @@ const chargeInfo = {
     speed: 3000,
     cooldown: 8000,
     noAmmo: bleep_neg,
-    select: alarm3
+    select: alarm3 //beeps[0]
+};
+const droneInfo = {
+    name: weaponNames.drone,
+    cursor: "cursor4",
+    imageSource: assetsFolder + 'missile.svg',
+    sound: [jet],
+    speed: 3000,
+    cooldown: 8000,
+    noAmmo: bleep_neg,
+    select: jet
 };
 function loadNewImage() {
     return '?' + new Date().getTime();
@@ -248,7 +278,7 @@ class PopupHandler {
         }
     }
     static showPopup() {
-        beep.play();
+        pop.play();
         if (!this.popUpArray.length)
             return;
         let popup = document.getElementById("popupBox");
@@ -312,3 +342,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

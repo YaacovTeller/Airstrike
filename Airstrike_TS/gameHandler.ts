@@ -134,7 +134,7 @@ class GameHandler {
         this.setIndivTargetSpeed(heavyTarget, this.difficulty.heavyTargetSpeed);
         this.setIndivTargetSpeed(regTunnelTarget, this.difficulty.tunnelTargetSpeed);
     }
-    private setIndivTargetSpeed(target: targetInfo, speed: speedRange) {
+    private setIndivTargetSpeed(target: TargetInfo, speed: speedRange) {
         target.minSpeed = speed.min;
         target.maxSpeed = speed.max;
     }
@@ -176,8 +176,9 @@ class GameHandler {
         this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
         this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
         this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        if (!allWeaponTypes[5]) {
-         this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+        this.level.addNewWeapon(DroneWeaponType, droneInfo);
+        if (!allWeaponTypes[weaponNames.nuke-1]) {
+            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
         }
     }
     private positionElem(elem: HTMLElement, pos: position) {
@@ -205,7 +206,7 @@ class GameHandler {
         let inst = this.weapon.activeInstance;
         if (inst && this.weapon.constructor.name === ExplosiveWeaponType.name) {
             let w = this.weapon as ExplosiveWeaponType;
-            w.switchBlastIndicatorStyle(false, inst as ExplosiveWeaponInstance);
+            w.switchBlastIndicatorStyle(false, inst as weaponInstance);
         }
         const root: HTMLElement = document.querySelector(':root');
         if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
@@ -237,9 +238,7 @@ class GameHandler {
     public targetCreation(newTarget: Target) {
         this.level.produceSingleTarget(newTarget);
     }
-    public returnLevelTargets() {
-        return this.level.targets
-    }
+
     public returnLevelLimit() {
         return this.level.currentLimit
     }

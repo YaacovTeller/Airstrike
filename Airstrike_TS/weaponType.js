@@ -5,8 +5,6 @@ class WeaponType {
     imageSource;
     speed;
     cooldown;
-    craterDecalStay = 10000;
-    craterFadingTillRemoval = fadeAnimTime;
     noAmmo;
     select;
     activeInstance;
@@ -24,7 +22,7 @@ class WeaponType {
     }
     setActiveInstance() {
         this.activeInstance = this.getAvailableInstance();
-        game.updateCursorPosition();
+        game.updateCursorPosition(); // NEEDED?
     }
     getAvailableInstance() {
         let nextReady = null;
@@ -33,11 +31,11 @@ class WeaponType {
     }
     searchInstances(nextReady) {
         for (let i in this.instances) {
-            game.hud.deselectInst(parseInt(i), this.name);
+            game.hud.deselectInst(parseInt(i), this.name); //MESSY?
             if (this.instances[i].ready === true) {
                 if (nextReady == null) {
                     nextReady = this.instances[i];
-                    game.hud.selectInst(parseInt(i), this.name);
+                    game.hud.selectInst(parseInt(i), this.name); //MESSY?
                 }
             }
         }
@@ -49,13 +47,18 @@ class WeaponType {
         }
     }
     pushNewWeaponInstance() {
-        let el = this.returnBlastRadiusDiv(10);
+        pickup.play();
+        let el = this.returnBlastRadiusDiv(this.blastRadNum());
+        this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
         let inst = {
             ready: true,
-            blastRadElement: el,
+            blastRadElement: el
         };
         this.instances.push(inst);
         game.redrawHudWithWepSelectionChecked();
+    }
+    blastRadNum() {
+        return 10;
     }
     shotCounter() {
         game.shotCount++;
@@ -81,12 +84,12 @@ class WeaponType {
         let _this = this;
         setTimeout(() => {
             inst.ready = true;
-            game.hud.availInst(index, name);
+            game.hud.availInst(index, name); //MESSY?
             _this.activeInstance = _this.activeInstance == null ? _this.getAvailableInstance() : _this.activeInstance;
             if (_this !== game.weapon) {
                 _this.activeInstance.blastRadElement.style.visibility = 'hidden';
             }
-            game.updateCursorPosition();
+            game.updateCursorPosition(); //MESSY?
         }, _this.cooldown);
     }
     ammoCheck() {
@@ -99,7 +102,7 @@ class WeaponType {
     }
     determineSeverity(fraction) {
         let severity;
-        if (this.name === weaponNames.tunnelcharge) {
+        if (this.name === weaponNames.tunnelcharge || this.name === weaponNames.drone) {
             severity = strikeSeverity.catastrophic;
         }
         return severity;
@@ -140,7 +143,7 @@ class BulletWeaponType extends WeaponType {
                 }
                 ;
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direction.forward);
+                    target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
                     if (target.status == Status.active) {
                         this.bonusHitSound();
                     }
@@ -166,18 +169,8 @@ class ExplosiveWeaponType extends WeaponType {
         this.blastRadius = info.blastRadius;
         this.pushNewWeaponInstance();
     }
-    pushNewWeaponInstance() {
-        pickup.play();
-        let el = this.returnBlastRadiusDiv(this.blastRadius);
-        this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
-        let explosion = this.returnNewImageEl("explosion");
-        let inst = {
-            ready: true,
-            blastRadElement: el,
-            explosion
-        };
-        this.instances.push(inst);
-        game.redrawHudWithWepSelectionChecked();
+    blastRadNum() {
+        return this.blastRadius;
     }
     getAvailableInstance() {
         let nextReady = null;
@@ -195,13 +188,12 @@ class ExplosiveWeaponType extends WeaponType {
         inst.ready = false;
         this.rippleEffect(inst);
         this.switchBlastIndicatorStyle(true, inst);
-        this.setExplosionPos(inst);
         if (this.explosionInfo.sound.length) {
             setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
         }
-        let crater = this.setAndReturnCrater(inst);
         setTimeout(() => {
-            this.explosion(inst, crater);
+            let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource);
             this.checkForTargets(inst.blastRadElement, targets);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
@@ -209,65 +201,39 @@ class ExplosiveWeaponType extends WeaponType {
         this.cooldownTimeout(inst);
         this.setActiveInstance();
     }
-    setExplosionPos(inst) {
-        let blastRadiusEl = inst.blastRadElement;
-        let explosion = inst.explosion;
-        let blastRect = blastRadiusEl.getBoundingClientRect();
-        explosion.style.width = blastRect.width + 'px';
-        explosion.style.height = blastRect.height + 'px';
-        let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
-        explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
-        explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
-    }
-    setAndReturnCrater(inst) {
-        let blastRadiusEl = inst.blastRadElement;
-        let blastRect = blastRadiusEl.getBoundingClientRect();
-        let crater = this.returnNewImageEl("crater", this.explosionInfo.craterSource);
-        crater.id = "crater";
-        crater.style.width = blastRect.width / 2 + 'px';
-        crater.style.height = blastRect.height / 4 + 'px';
-        let blastCenter = CollisionDetection.getXYfromPoint(blastRadiusEl);
-        crater.style.left = blastCenter.X - crater.clientWidth / 2 + 'px';
-        crater.style.top = blastCenter.Y - crater.clientHeight / 2 + 'px';
-        return crater;
-    }
-    returnNewImageEl(classname, src) {
-        let el = document.createElement('img');
-        if (src)
-            el.src = src;
-        el.className = classname;
-        ContentElHandler.addToContentEl(el);
-        return el;
-    }
-    explosion(inst, crater) {
-        let explosion = inst.explosion;
-        explosion.src = this.explosionInfo.imageSource + loadNewImage();
-        crater.style.visibility = "visible";
-        ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
-    }
     checkForTargets(elem, targets) {
         for (let target of targets) {
             let collisionInfo = CollisionDetection.checkCollisionFromElement(elem, target.getTargetEl());
             if (collisionInfo) {
-                let fraction = collisionInfo.dist / collisionInfo.radius;
-                let severity = this.determineSeverity(fraction);
-                if (this.determineExceptionsForArmour(target, severity)) {
-                    continue;
-                }
-                ;
-                if (target.movesAtBlast) {
-                    severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
-                }
-                let direc = this.determineDirectionForFlip(collisionInfo);
-                if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direc);
-                    if (target.status == Status.active) {
-                        this.bonusHitSound();
-                    }
-                }
+                this.targetStrike(target, collisionInfo);
             }
         }
     }
+    targetStrike(target, collisionInfo) {
+        let fraction = collisionInfo.dist / collisionInfo.radius;
+        let severity = this.determineSeverity(fraction);
+        if (this.determineExceptionsForArmour(target, severity)) {
+            return;
+        }
+        ;
+        if (target.movesAtBlast) {
+            severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
+        }
+        let direc = this.determineDirectionForFlip(collisionInfo);
+        if (target.damage != Damage.destroyed) {
+            target.hit(severity, this.name, direc); // TARGET - Main hit function
+            if (target.status == Status.active) {
+                this.bonusHitSound();
+            }
+        }
+    }
+    //private returnNewImageEl(classname: string, src?: string) {
+    //    let el = document.createElement('img');
+    //    if (src) el.src = src;
+    //    el.className = classname;
+    //    ContentElHandler.addToContentEl(el);
+    //    return el;
+    //}
     ricochetChance() {
         RandomNumberGen.randomNumBetween(1, 10) > 6 ? RandomSoundGen.playRandomSound(ricochet) : "";
     }
@@ -380,7 +346,7 @@ class ChargeWeaponType extends WeaponType {
                 RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
                     let severity = this.determineSeverity();
-                    tunnel.hit(severity);
+                    tunnel.hit(severity); // TARGET - Main hit function
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed);
             }
@@ -390,3 +356,84 @@ class ChargeWeaponType extends WeaponType {
         this.setActiveInstance();
     }
 }
+class DroneWeaponType extends ExplosiveWeaponType {
+    attackLimit = 3;
+    constructor(info) {
+        super(info);
+        this.pushNewWeaponInstance();
+    }
+    fireFunc(targets) {
+        if (this.ammoCheck() === false) {
+            return;
+        }
+        let inst = this.activeInstance;
+        inst.ready = false;
+        RandomSoundGen.playSequentialSound(this.sound);
+        this.cooldownTimeout(inst);
+        let activeTargets = targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false);
+        //  let armouredTargets = activeTargets.filter(t => t.armour === Armour.heavy);
+        let sortedByArmour = activeTargets.sort((a, b) => b.armour - a.armour);
+        let chosenTargets = sortedByArmour.slice(0, this.attackLimit);
+        let speedInc = 150;
+        let currentSpeedBuffer = 0;
+        chosenTargets.forEach((trgt) => {
+            currentSpeedBuffer += speedInc;
+            trgt.toggleLockOn(true);
+            setTimeout(() => {
+                trgt.toggleLockOn(false);
+                RandomSoundGen.playSequentialSound(multiExplosions);
+                let deviation = 10;
+                let deviationX = RandomNumberGen.randomNumBetween(-deviation, deviation);
+                let deviationY = RandomNumberGen.randomNumBetween(-deviation, deviation);
+                let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
+                blastCenter.X += deviationX;
+                blastCenter.Y += deviationY;
+                ExplosionHandler.basicExplosion(blastCenter, ExplSizes.small, assetsFolder + classicExplosion);
+                this.checkForTargets(trgt.getTargetEl(), allTargets);
+            }, this.speed + currentSpeedBuffer);
+        });
+        this.setActiveInstance();
+    }
+}
+class ExplosionHandler {
+    static craterDecalStay = 10000;
+    static craterFadingTillRemoval = fadeAnimTime;
+    static basicExplosion(blastCenter, size, explSrc) {
+        let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
+        let crater = this.setAndReturnCrater(blastCenter, size);
+        this.explode(explosion, crater);
+    }
+    static returnNewImageEl(classname, src) {
+        let el = document.createElement('img');
+        if (src)
+            el.src = src;
+        el.className = classname;
+        ContentElHandler.addToContentEl(el);
+        return el;
+    }
+    static explode(explosion, crater) {
+        explosion.style.visibility = "visible";
+        crater.style.visibility = "visible";
+        ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
+    }
+    static setAndReturnExplosion(blastCenter, size, explSrc) {
+        let explosion = this.returnNewImageEl("explosion");
+        explosion.src = explSrc + loadNewImage();
+        explosion.style.width = size + 'px';
+        explosion.style.height = size + 'px';
+        explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
+        explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
+        return explosion;
+    }
+    static setAndReturnCrater(blastCenter, size) {
+        let craterSrc = assetsFolder + "crater.png";
+        let crater = this.returnNewImageEl("crater", craterSrc);
+        crater.id = "crater";
+        crater.style.width = size / 1.5 + 'px';
+        crater.style.height = size / 3 + 'px';
+        crater.style.left = blastCenter.X - crater.clientWidth / 2 + 'px';
+        crater.style.top = blastCenter.Y - crater.clientHeight / 2 + 'px';
+        return crater;
+    }
+}
+//# sourceMappingURL=weaponType.js.map

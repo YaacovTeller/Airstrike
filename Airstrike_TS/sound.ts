@@ -9,7 +9,6 @@
         this.sound.setAttribute("preload", "auto");
         this.sound.setAttribute("controls", "none");
         document.body.appendChild(this.sound);
-
     }
 
     public setVolume(vol: number) {
@@ -54,7 +53,8 @@ var matara = new Sound(soundFolder + "matara_shmd.mp3");
 var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
 var click_1 = new Sound(soundFolder + "click_1.mp3");
 var click_2 = new Sound(soundFolder + "click_2.mp3");
-var beep = new Sound(soundFolder + "Beep.wav");
+//var beep = new Sound(soundFolder + "Beep.wav");
+var pop = new Sound(soundFolder + "pop_click.wav");
 
 var mag = new Sound(soundFolder + "automag_reload.wav");
 var flak = new Sound(soundFolder + "flak_cannon_ready.wav");

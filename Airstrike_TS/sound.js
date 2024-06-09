@@ -50,7 +50,8 @@ var matara = new Sound(soundFolder + "matara_shmd.mp3");
 var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
 var click_1 = new Sound(soundFolder + "click_1.mp3");
 var click_2 = new Sound(soundFolder + "click_2.mp3");
-var beep = new Sound(soundFolder + "Beep.wav");
+//var beep = new Sound(soundFolder + "Beep.wav");
+var pop = new Sound(soundFolder + "pop_click.wav");
 var mag = new Sound(soundFolder + "automag_reload.wav");
 var flak = new Sound(soundFolder + "flak_cannon_ready.wav");
 var pickup = new Sound(soundFolder + "weapon_pickup.wav");
@@ -73,7 +74,10 @@ var clicks = [];
 var ambience = [];
 var ricochet = [];
 function loadSound() {
-    ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), new Sound(soundFolder + "ricochet_5.mp3"));
+    ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 
+    //new Sound(soundFolder + "ricochet_3.mp3"),
+    //new Sound(soundFolder + "ricochet_4.mp3"),
+    new Sound(soundFolder + "ricochet_5.mp3"));
     ticks.push(new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"));
     ambience.push(new Sound(soundFolder + "ambient_1_q.mp3"), new Sound(soundFolder + "ambient_2_q.mp3"), new Sound(soundFolder + "ambient_4_q.mp3"), new Sound(soundFolder + "ambient_5_q.mp3"));
     beeps.push(new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"));
@@ -83,8 +87,13 @@ function loadSound() {
     strikes.push(new Sound(soundFolder + "strike_1.mp3"), new Sound(soundFolder + "strike_2.mp3"), new Sound(soundFolder + "strike_3.mp3"));
     gunSounds.push(new Sound(soundFolder + "gun_1.mp3"), new Sound(soundFolder + "gun_2.mp3"), new Sound(soundFolder + "gun_3.mp3"), new Sound(soundFolder + "gun_5.mp3"), new Sound(soundFolder + "gun_6.mp3"), new Sound(soundFolder + "gun_7.mp3"), new Sound(soundFolder + "gun_8.mp3"));
     mortarSounds.push(new Sound(soundFolder + "mortar_1.mp3"), new Sound(soundFolder + "mortar_2.mp3"), new Sound(soundFolder + "mortar_3.mp3"), new Sound(soundFolder + "mortar_4.mp3"), new Sound(soundFolder + "mortar_5.mp3"));
-    howitzerSounds.push(new Sound(soundFolder + "tank_fire.mp3"), new Sound(soundFolder + "yoRE_Eish.mp3"), new Sound(soundFolder + "tank_fire.mp3"), new Sound(soundFolder + "tank_fire.mp3"));
+    howitzerSounds.push(
+    //new Sound(soundFolder + "yoRE_1.mp3"),
+    //new Sound(soundFolder + "yoRE_2.mp3"),
+    //new Sound(soundFolder + "yoRE_3.mp3"),
+    new Sound(soundFolder + "tank_fire.mp3"), new Sound(soundFolder + "yoRE_Eish.mp3"), new Sound(soundFolder + "tank_fire.mp3"), new Sound(soundFolder + "tank_fire.mp3"));
     airstrikeSounds.push(new Sound(soundFolder + "shager_1.mp3"), new Sound(soundFolder + "shager_2.mp3"), new Sound(soundFolder + "shager_3.mp3"), new Sound(soundFolder + "shager_4.mp3"), new Sound(soundFolder + "shager_5.mp3"));
     nukeSounds.push(new Sound(soundFolder + "redAlert7.mp3"));
     explosions.push(new Sound(soundFolder + "expl_dull.mp3"), new Sound(soundFolder + "expl_dull2.mp3"), new Sound(soundFolder + "messy_bomb_3.mp3"));
 }
+//# sourceMappingURL=sound.js.map

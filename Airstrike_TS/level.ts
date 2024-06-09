@@ -1,6 +1,5 @@
 ﻿abstract class level {
     public nextLevelCallback: Function;
-//    public addWeaponFunc: Function;
     public index: number = -1;
     public frequency: number;
     public winLimits: Array<number>;
@@ -13,7 +12,6 @@
     abstract finalStageArms();
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
-        //       this.addWeaponFunc = addWeaponFunc;
         this.frequency = game.difficulty.newTargetEvery;
         //this.currentLimit = this.winLimits[this.index]
     //    let newLevMsg: popupMsg = { text: "", title: this.constructor.name.replace("_", " "), length: msgLength.long }
@@ -46,6 +44,7 @@
                 fin = false;
             }
         }
+        console.log("FIN?: " + fin)
         return fin;
     }
     protected endWave() {
@@ -80,6 +79,7 @@
                 this.finalStageArms();
                 break;
             case (this.winLimits.length):
+                this.index = -1;
                 return false;
             default:
         }
@@ -173,21 +173,9 @@ class level_3 extends level {
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
         let newTarget: Target;
-
         switch (true) {
-            //case (rand >= 92):
-            //    newTarget = new TunnelTarget(regTunnelTarget);
-            //    break;
-            //case (rand >= 85):
-            //    newTarget = new VehicleTarget(heavyTarget);
-            //    break;
-            //case (rand >= 75):
-            //    newTarget = new VehicleTarget(modTarget);
-            //    break;
             default:
-                //    newTarget = new TunnelTarget(regTunnelTarget)
                 newTarget = new VehicleTarget(heavyTarget);
-                //     newTarget = new VehicleTarget(heavyTarget);
                 break;
         }
         return newTarget;
@@ -210,12 +198,6 @@ class level_4 extends level {
             case (rand >= 50):
                 newTarget = new TunnelTarget(regTunnelTarget);
                 break;
-            //case (rand >= 85):
-            //    newTarget = new VehicleTarget(heavyTarget);
-            //    break;
-            //case (rand >= 75):
-            //    newTarget = new VehicleTarget(modTarget);
-            //    break;
             default:
                 newTarget = new VehicleTarget(heavyTarget);
                 break;

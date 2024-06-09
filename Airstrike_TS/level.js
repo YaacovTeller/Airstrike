@@ -10,6 +10,8 @@ class level {
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
         this.frequency = game.difficulty.newTargetEvery;
+        //this.currentLimit = this.winLimits[this.index]
+        //    let newLevMsg: popupMsg = { text: "", title: this.constructor.name.replace("_", " "), length: msgLength.long }
         PopupHandler.addToArray("", this.constructor.name.replace("_", " "), msgLength.long);
     }
     winLimitCheck() {
@@ -38,10 +40,12 @@ class level {
                 fin = false;
             }
         }
+        console.log("FIN?: " + fin);
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         if (this.index >= this.winLimits.length) {
             PopupHandler.addToArray("Past array length, /n pls fix this, wth");
         }
@@ -51,6 +55,7 @@ class level {
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -69,6 +74,7 @@ class level {
                 this.finalStageArms();
                 break;
             case (this.winLimits.length):
+                this.index = -1;
                 return false;
             default:
         }
@@ -77,6 +83,7 @@ class level {
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         this.targetTimer = setInterval(() => {
             this.produceSingleTarget();
         }, this.frequency);
@@ -223,3 +230,4 @@ class level_5 extends level {
         this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
     }
 }
+//# sourceMappingURL=level.js.map

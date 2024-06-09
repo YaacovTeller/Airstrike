@@ -21,7 +21,7 @@ class CollisionDetection {
     public static checkCollisionFromElement(blastRadiusEl: HTMLElement, targetEl: HTMLElement): vectorMoveObj {
         let blastPos: position = this.getXYfromPoint(blastRadiusEl);
         let trgtPos: position = this.getXYfromPoint(targetEl);
-        let radius = parseInt(blastRadiusEl.style.width) / 2;
+        let radius = blastRadiusEl.getBoundingClientRect().width / 2; //parseInt(blastRadiusEl.style.width) / 2;
 
         if (trgtPos.X >= blastPos.X - radius &&
             trgtPos.X <= blastPos.X + radius &&

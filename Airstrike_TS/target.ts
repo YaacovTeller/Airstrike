@@ -16,7 +16,7 @@ class Target {
     public damage: number = Damage.undamaged;
     public movesAtBlast: boolean;
 
-    constructor(info: targetInfo, position?: position) {
+    constructor(info: TargetInfo, position?: position) {
         this.targetEl = document.createElement("div");
         this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
         let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
@@ -54,18 +54,17 @@ class Target {
         this.targetEl.style.left = x + this.speed + "px";
   
     }
+    public toggleLockOn(bool) { 
+        bool ? this.lockonEl.style.visibility = 'visible' : this.lockonEl.style.visibility = 'hidden';
+    }
+    public getLockOnStatus() {
+        return this.lockonEl.style.visibility == 'visible' ? true : false;
+    }
     public getTargetEl() {
         return this.targetEl;
     }
     public getPicEl() {
         return this.picEl;
-    }
-
-    protected flip(direc: direction) {
-            this.picEl.classList.remove('flipforward');
-            this.picEl.classList.remove('flipbackward');
-            this.picEl.classList.add('flip' + direc);
-            setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
     }
 
     public action() {
@@ -84,7 +83,7 @@ class TunnelTarget extends Target {
     private newTargetFrequency: number = 5000;
 
     private trail: HTMLElement;
-    constructor(info: targetInfo) {
+    constructor(info: TargetInfo) {
         super(info);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
@@ -136,6 +135,7 @@ class TunnelTarget extends Target {
    //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove() }, 8000)
     }
+
     private blowTunnel() {
         let numOfimgs: number = parseInt(this.trail.style.width) / 100;
         let imgArr: Array<HTMLImageElement> = [];
@@ -149,7 +149,7 @@ class TunnelTarget extends Target {
             setTimeout(() => {
                 let mrtr: ExplosiveWeaponType = allWeaponTypes[weaponNames.mortar] as ExplosiveWeaponType // MESSY
                 if (mrtr) {
-                    mrtr.checkForTargets(imgArr[index], game.returnLevelTargets())
+                    mrtr.checkForTargets(imgArr[index], allTargets)
                 }
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150)
@@ -169,7 +169,7 @@ class VehicleTarget extends Target {
     protected badDamagedSource: string = assetsFolder + 'fire_1.gif';
     public movesAtBlast: boolean = true;
 
-    constructor(info: targetInfo, position?: position) {
+    constructor(info: TargetInfo, position?: position) {
         super(info, position);
     }
 
@@ -186,6 +186,7 @@ class VehicleTarget extends Target {
         else {
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
+                this.hitAcknowledge();
             }
 
             if (sev == strikeSeverity.light) {
@@ -217,15 +218,26 @@ class VehicleTarget extends Target {
     }
 
     private hitAcknowledge() {
-        RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
+        if (this.damage <= Damage.damaged) {
+            let rollForHit = RandomNumberGen.randomNumBetween(1, 8);
+            if (rollForHit == 8) {
+                RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
+            }
+        }
     }
     private badDamage(direc) {
         this.damageEl.src = this.badDamagedSource;
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
 
-        RandomNumberGen.randomNumBetween(1, 8) == 8 ? this.hitAcknowledge() : "";
+        this.flip(direc);                               
+    }
+    protected flip(direc: direction) {
         CollisionDetection.throw(this.targetEl, direc); // ARC
-        this.flip(direc);                               // ROTATION
+
+        this.picEl.classList.remove('flipforward');
+        this.picEl.classList.remove('flipbackward');
+        this.picEl.classList.add('flip' + direc); // ROTATION
+        setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
     }
 }

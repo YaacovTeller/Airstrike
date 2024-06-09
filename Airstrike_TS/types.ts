@@ -1,6 +1,11 @@
 ﻿const assetsFolder: string = "./AS_assets/";
 const classicExplosion: string = 'expl1.gif';
-
+enum ExplSizes {
+    small = 100,
+    large = 140,
+    XL = 200,
+    XXL = 800,
+}
 enum Status {
     active,
     disabled,
@@ -18,32 +23,32 @@ enum Armour {
     moderate,
     heavy,
 }
-type targetInfo = {
+type TargetInfo = {
     maxSpeed: number,
     minSpeed: number,
     armour: Armour,
     picSources: Array<string>,
 }
 // speeds are actually set with the difficulty settings. Nominal values here
-const regTarget: targetInfo = {
+const regTarget: TargetInfo = {
     minSpeed: 4,
     maxSpeed: 8,
     armour: Armour.none,
     picSources: ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png','jeep3.png', 'jeep3.png', 'jeep4_cres.png']
 }
-const modTarget: targetInfo = {
+const modTarget: TargetInfo = {
     minSpeed: 4,
     maxSpeed: 6,
     armour: Armour.moderate,
     picSources: ['jeep_grey.png']
 }
-const heavyTarget: targetInfo = {
+const heavyTarget: TargetInfo = {
     minSpeed: 1,
     maxSpeed: 3,
     armour: Armour.heavy,
     picSources: ['jeep_grey_armour.png']
 }
-const regTunnelTarget: targetInfo = {
+const regTunnelTarget: TargetInfo = {
     minSpeed: 1,
     maxSpeed: 2,
     armour: Armour.moderate,
@@ -67,6 +72,7 @@ enum weaponNames {
     airstrike = 4,
     tunnelcharge = 5,
     nuke = 6,
+    drone = 7,
 }
 type position = {
     X,
@@ -91,20 +97,12 @@ type langInfo = {
     name: string,
     description: string
 }
-type explosionInfo = {
-    imageSource: string,
-    length: number,
-    sound: Array<Sound>,
-    soundDelay?: number,
-    craterSource?: string
-}
+
 type weaponInstance = {
     ready: boolean;
     blastRadElement: HTMLElement;
 }
-type ExplosiveWeaponInstance = weaponInstance & {
-    explosion: HTMLImageElement;
-}
+
 type weaponInfo = {
     name: weaponNames,
     sound: Array<Sound>,
@@ -117,7 +115,15 @@ type weaponInfo = {
 }
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
-    explosionInfo: explosionInfo,
+    explosionInfo: ExplosionInfo,
+}
+type ExplosionInfo = {
+    imageSource: string,
+    size: ExplSizes,
+    length: number,
+    sound: Array<Sound>,
+    soundDelay?: number,
+    craterSource?: string
 }
 
 //const easy: difficultyLevelInfo = {
@@ -191,15 +197,15 @@ const dev: difficultyLevelInfo = {
         description: ""
     }
 }
-const sniperInfo: ExplosiveWeaponInfo = {
+const sniperInfo: weaponInfo = {
     name: weaponNames.gun,
-    blastRadius: 5,
+   // blastRadius: 5,
     cursor: "cursor1",
-    explosionInfo: {
-        imageSource: assetsFolder + 'fire_1.gif',
-        sound: [],
-        length: 1000
-    },
+    //explosionInfo: {
+    //    imageSource: assetsFolder + 'fire_1.gif',
+    //    sound: [],
+    //    length: 1000
+    //},
     imageSource: assetsFolder + 'gun.svg',
     sound: gunSounds,
     speed: 0,
@@ -212,6 +218,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
     blastRadius: 50,
     cursor: "cursor2",
     explosionInfo: {
+        size: ExplSizes.small,
         imageSource: assetsFolder + classicExplosion,
         sound: [],
         length: 1000,
@@ -229,6 +236,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
+        size: ExplSizes.large,
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         soundDelay: 3000,
@@ -247,6 +255,8 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     blastRadius: 100,
     cursor: "cursor4",
     explosionInfo: {
+        size: ExplSizes.XL,
+
         imageSource: assetsFolder + 'expl_big.gif',
         sound: strikes,
         soundDelay: 2500,
@@ -265,6 +275,8 @@ const nukeInfo: ExplosiveWeaponInfo = {
     blastRadius: 400,
     cursor: "cursor4",
     explosionInfo: {
+        size: ExplSizes.XXL,
+
         imageSource: assetsFolder + 'mushroom_1.gif',
         sound: bigExplosions,
         soundDelay: 6500,
@@ -287,6 +299,16 @@ const chargeInfo: weaponInfo = {
     cooldown: 8000,
     noAmmo: bleep_neg,
     select: alarm3//beeps[0]
+}
+const droneInfo: weaponInfo = {
+    name: weaponNames.drone,
+    cursor: "cursor4",
+    imageSource: assetsFolder + 'missile.svg',
+    sound: [jet],
+    speed: 3000,
+    cooldown: 8000,
+    noAmmo: bleep_neg,
+    select: jet
 }
 
 function loadNewImage() {
@@ -315,7 +337,7 @@ class PopupHandler {
         }
     }
     private static showPopup() {
-        beep.play();
+        pop.play();
         if (!this.popUpArray.length) return
         let popup = document.getElementById("popupBox");
         let currentMsg = this.popUpArray[0]
