@@ -22,7 +22,7 @@ class Target {
         let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
         this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
-        this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsFolder + "target-box2.svg");
+        this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box2.svg");
 
         ContentElHandler.addToContentEl(this.targetEl);
 
@@ -149,7 +149,8 @@ class TunnelTarget extends Target {
             setTimeout(() => {
                 let mrtr: ExplosiveWeaponType = allWeaponTypes[weaponNames.mortar] as ExplosiveWeaponType // MESSY
                 if (mrtr) {
-                    mrtr.checkForTargets(imgArr[index], allTargets)
+                    let pos: position = CollisionDetection.getXYfromPoint(imgArr[index])
+                    mrtr.checkForTargets(pos, allTargets)
                 }
                 imgArr[index].src = this.trailBlast + loadNewImage();
             }, (parseInt(index) + 1) * 150)

@@ -35,6 +35,7 @@ class GameHandler {
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
         document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); };
         this.setEventListeners();
+        document.getElementById("loader").style.display = 'none';
     }
     newLevel(LevelClass) {
         let index = allLevelClassesArray.indexOf(LevelClass);
@@ -175,7 +176,7 @@ class GameHandler {
     }
     updateCursorPosition(event) {
         let newMousePos = MouseHandler.updateMousePos(event);
-        if (this.weapon.activeInstance) {
+        if (this.weapon.activeInstance && this.weapon.activeInstance.blastRadElement) {
             let blast = this.weapon.activeInstance.blastRadElement;
             this.positionElem(blast, newMousePos);
         }

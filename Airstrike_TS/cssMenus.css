@@ -286,6 +286,24 @@ input[type=radio]:checked ~ label {
             height: 5px;
             background-color: black;
         }
+.loader-container {
+    pointer-events: none;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.loader {
+    border: 50px solid #f3f4f6; /* Light border color */
+    border-top: 50px solid #45a049;
+    border-radius: 50%;
+    width: 250px;
+    height: 250px;
+    animation: rotate 2s linear infinite;
+}
 
 @keyframes ripple {
     to {

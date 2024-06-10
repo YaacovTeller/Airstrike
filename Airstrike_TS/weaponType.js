@@ -48,17 +48,19 @@ class WeaponType {
     }
     pushNewWeaponInstance() {
         pickup.play();
-        let el = this.returnBlastRadiusDiv(this.blastRadNum());
-        this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
         let inst = {
             ready: true,
-            blastRadElement: el
         };
+        if (this.blastRadNum()) {
+            let el = this.returnBlastRadiusDiv(this.blastRadNum());
+            this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
+            inst.blastRadElement = el;
+        }
         this.instances.push(inst);
         game.redrawHudWithWepSelectionChecked();
     }
     blastRadNum() {
-        return 10;
+        return 0;
     }
     shotCounter() {
         game.shotCount++;
@@ -175,7 +177,9 @@ class ExplosiveWeaponType extends WeaponType {
     getAvailableInstance() {
         let nextReady = null;
         nextReady = this.searchInstances(nextReady);
-        this.setBlastRadVisible(nextReady);
+        if (this.blastRadNum()) { // MESSY // MESSY
+            this.setBlastRadVisible(nextReady);
+        }
         return nextReady;
     }
     fireFunc(targets) {
@@ -194,16 +198,17 @@ class ExplosiveWeaponType extends WeaponType {
         setTimeout(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource);
-            this.checkForTargets(inst.blastRadElement, targets);
+            let blastPos = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            this.checkForTargets(blastPos, targets);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
         this.cooldownTimeout(inst);
         this.setActiveInstance();
     }
-    checkForTargets(elem, targets) {
+    checkForTargets(blastPos, targets) {
         for (let target of targets) {
-            let collisionInfo = CollisionDetection.checkCollisionFromElement(elem, target.getTargetEl());
+            let collisionInfo = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, target.getTargetEl(), this.explosionInfo.size / 2); // MESSY!
             if (collisionInfo) {
                 this.targetStrike(target, collisionInfo);
             }
@@ -374,6 +379,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
         //  let armouredTargets = activeTargets.filter(t => t.armour === Armour.heavy);
         let sortedByArmour = activeTargets.sort((a, b) => b.armour - a.armour);
         let chosenTargets = sortedByArmour.slice(0, this.attackLimit);
+        chosenTargets = chosenTargets.sort((a, b) => b.getTargetEl().getBoundingClientRect().x - a.getTargetEl().getBoundingClientRect().x);
         let speedInc = 150;
         let currentSpeedBuffer = 0;
         chosenTargets.forEach((trgt) => {
@@ -389,7 +395,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
                 ExplosionHandler.basicExplosion(blastCenter, ExplSizes.small, assetsFolder + classicExplosion);
-                this.checkForTargets(trgt.getTargetEl(), allTargets);
+                this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer);
         });
         this.setActiveInstance();

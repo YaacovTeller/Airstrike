@@ -154,7 +154,7 @@
     animation: rotate 40s linear infinite;
 }
 .nukeIndicator {
-    background-image: url(./AS_assets/rad.svg);
+    background-image: url(./AS_assets/SVG/rad.svg);
     background-repeat: no-repeat;
     background-position:center;
 }

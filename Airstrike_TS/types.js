@@ -1,4 +1,5 @@
 const assetsFolder = "./AS_assets/";
+const assetsSVGFolder = assetsFolder + "SVG/";
 const classicExplosion = 'expl1.gif';
 var ExplSizes;
 (function (ExplSizes) {
@@ -147,14 +148,8 @@ const dev = {
 };
 const sniperInfo = {
     name: weaponNames.gun,
-    // blastRadius: 5,
     cursor: "cursor1",
-    //explosionInfo: {
-    //    imageSource: assetsFolder + 'fire_1.gif',
-    //    sound: [],
-    //    length: 1000
-    //},
-    imageSource: assetsFolder + 'gun.svg',
+    imageSource: assetsSVGFolder + 'gun.svg',
     sound: gunSounds,
     speed: 0,
     cooldown: 700,
@@ -170,9 +165,8 @@ const mortarInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: [],
         length: 1000,
-        craterSource: assetsFolder + "crater.png"
     },
-    imageSource: assetsFolder + 'mortar.svg',
+    imageSource: assetsSVGFolder + 'mortar.svg',
     sound: mortarSounds,
     speed: 2000,
     cooldown: 2200,
@@ -189,9 +183,8 @@ const howitzerInfo = {
         sound: explosions,
         soundDelay: 3000,
         length: 1000,
-        craterSource: assetsFolder + "crater.png"
     },
-    imageSource: assetsFolder + 'tank.svg',
+    imageSource: assetsSVGFolder + 'tank.svg',
     sound: howitzerSounds,
     speed: 3000,
     cooldown: 7000,
@@ -208,9 +201,8 @@ const airstrikeInfo = {
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
-        craterSource: assetsFolder + "crater.png"
     },
-    imageSource: assetsFolder + 'jet.svg',
+    imageSource: assetsSVGFolder + 'jet.svg',
     sound: airstrikeSounds,
     speed: 4000,
     cooldown: 10000,
@@ -227,9 +219,8 @@ const nukeInfo = {
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
-        craterSource: assetsFolder + "crater.png"
     },
-    imageSource: assetsFolder + 'bomb.svg',
+    imageSource: assetsSVGFolder + 'bomb.svg',
     sound: nukeSounds,
     speed: 6000,
     cooldown: 30000,
@@ -239,7 +230,7 @@ const nukeInfo = {
 const chargeInfo = {
     name: weaponNames.tunnelcharge,
     cursor: "cursor4",
-    imageSource: assetsFolder + 'dynamite.svg',
+    imageSource: assetsSVGFolder + 'dynamite.svg',
     sound: gunSounds,
     speed: 3000,
     cooldown: 8000,
@@ -249,12 +240,19 @@ const chargeInfo = {
 const droneInfo = {
     name: weaponNames.drone,
     cursor: "cursor4",
-    imageSource: assetsFolder + 'missile.svg',
-    sound: [jet],
+    blastRadius: 0,
+    explosionInfo: {
+        size: ExplSizes.small,
+        imageSource: assetsFolder + 'mushroom_1.gif',
+        sound: explosions,
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'chopper.svg',
+    sound: [chopper],
     speed: 3000,
-    cooldown: 8000,
+    cooldown: 15000,
     noAmmo: bleep_neg,
-    select: jet
+    select: chopper
 };
 function loadNewImage() {
     return '?' + new Date().getTime();

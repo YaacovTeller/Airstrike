@@ -18,11 +18,8 @@ class CollisionDetection {
         else return false
     }
 
-    public static checkCollisionFromElement(blastRadiusEl: HTMLElement, targetEl: HTMLElement): vectorMoveObj {
-        let blastPos: position = this.getXYfromPoint(blastRadiusEl);
+    public static checkCollisionFromPositionWithBlast(blastPos: position, targetEl: HTMLElement, radius: number): vectorMoveObj {
         let trgtPos: position = this.getXYfromPoint(targetEl);
-        let radius = blastRadiusEl.getBoundingClientRect().width / 2; //parseInt(blastRadiusEl.style.width) / 2;
-
         if (trgtPos.X >= blastPos.X - radius &&
             trgtPos.X <= blastPos.X + radius &&
             trgtPos.Y >= blastPos.Y - radius &&
@@ -41,6 +38,29 @@ class CollisionDetection {
         else
             return null;
     }
+    //public static checkCollisionFromElement(blastRadiusEl: HTMLElement, targetEl: HTMLElement): vectorMoveObj {
+    //    let blastPos: position = this.getXYfromPoint(blastRadiusEl);
+    //    let trgtPos: position = this.getXYfromPoint(targetEl);
+    //    let radius = blastRadiusEl.getBoundingClientRect().width / 2; //parseInt(blastRadiusEl.style.width) / 2;
+
+    //    if (trgtPos.X >= blastPos.X - radius &&
+    //        trgtPos.X <= blastPos.X + radius &&
+    //        trgtPos.Y >= blastPos.Y - radius &&
+    //        trgtPos.Y <= blastPos.Y + radius) {
+
+    //        let dist = this.distanceBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+    //        let angle = this.angleBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+    //        let obj: vectorMoveObj = {
+    //            elem: targetEl,
+    //            angle: angle,
+    //            dist: dist,
+    //            radius: radius
+    //        }
+    //        return obj;
+    //    }
+    //    else
+    //        return null;
+    //}
     public static getXYfromPoint(elem: HTMLElement): position {
         let rect = elem.getBoundingClientRect();
         var centerX = rect.left + rect.width / 2;
