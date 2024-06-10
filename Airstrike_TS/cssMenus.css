@@ -297,6 +297,7 @@ input[type=radio]:checked ~ label {
 }
 
 .loader {
+    opacity: 0.8;
     border: 50px solid #f3f4f6; /* Light border color */
     border-top: 50px solid #45a049;
     border-radius: 50%;

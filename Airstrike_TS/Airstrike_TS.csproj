@@ -69,6 +69,7 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="index.html - Shortcut.lnk" />
     <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -78,7 +79,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AS_assets\bomb.svg" />
     <Content Include="AS_assets\crater.png" />
     <Content Include="AS_assets\cursors\battlefieldH.cur" />
     <Content Include="AS_assets\cursors\bazooka.cur" />
@@ -87,24 +87,19 @@
     <Content Include="AS_assets\cursors\target.cur" />
     <Content Include="AS_assets\cursors\unbounded.cur" />
     <Content Include="AS_assets\DS_sand.png" />
-    <Content Include="AS_assets\dynamite.svg" />
     <Content Include="AS_assets\expl1.gif" />
     <Content Include="AS_assets\explode_unused.gif" />
     <Content Include="AS_assets\expl_big.gif" />
     <Content Include="AS_assets\expl_big_fast.gif" />
     <Content Include="AS_assets\fire_1.gif" />
     <Content Include="AS_assets\fire_3.gif" />
-    <Content Include="AS_assets\gun.svg" />
     <Content Include="AS_assets\jeep2.png" />
     <Content Include="AS_assets\jeep3.png" />
     <Content Include="AS_assets\jeep4_cres.png" />
     <Content Include="AS_assets\jeep4_dark.png" />
     <Content Include="AS_assets\jeep_grey.png" />
     <Content Include="AS_assets\jeep_grey_armour.png" />
-    <Content Include="AS_assets\jet.svg" />
-    <Content Include="AS_assets\mortar.svg" />
     <Content Include="AS_assets\mushroom_1.gif" />
-    <Content Include="AS_assets\rad.svg" />
     <Content Include="AS_assets\smoke_1.gif" />
     <Content Include="AS_assets\smoke_2.gif" />
     <Content Include="AS_assets\smoke_3.gif" />
@@ -118,6 +113,7 @@
     <Content Include="AS_assets\sound\Beep.wav" />
     <Content Include="AS_assets\sound\beep_tiny.mp3" />
     <Content Include="AS_assets\sound\BigExpl.mp3" />
+    <Content Include="AS_assets\sound\chopper.mp3" />
     <Content Include="AS_assets\sound\click_1.mp3" />
     <Content Include="AS_assets\sound\click_2.mp3" />
     <Content Include="AS_assets\sound\crash_1.mp3" />
@@ -147,6 +143,7 @@
     <Content Include="AS_assets\sound\mortar_4.mp3" />
     <Content Include="AS_assets\sound\mortar_5.mp3" />
     <Content Include="AS_assets\sound\pgia.mp3" />
+    <Content Include="AS_assets\sound\pop_click.wav" />
     <Content Include="AS_assets\sound\redAlert7.mp3" />
     <Content Include="AS_assets\sound\redeemerpickup.wav" />
     <Content Include="AS_assets\sound\ricochet_1.mp3" />
@@ -171,8 +168,18 @@
     <Content Include="AS_assets\sound\unused\Messy_bomb_grand.mp3" />
     <Content Include="AS_assets\sound\weapon_pickup.wav" />
     <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
-    <Content Include="AS_assets\tank.svg" />
-    <Content Include="AS_assets\target-box2.svg" />
+    <Content Include="AS_assets\SVG\bomb.svg" />
+    <Content Include="AS_assets\SVG\border-box.svg" />
+    <Content Include="AS_assets\SVG\chopper.svg" />
+    <Content Include="AS_assets\SVG\dynamite.svg" />
+    <Content Include="AS_assets\SVG\gun.svg" />
+    <Content Include="AS_assets\SVG\jet.svg" />
+    <Content Include="AS_assets\SVG\missile.svg" />
+    <Content Include="AS_assets\SVG\missiles.svg" />
+    <Content Include="AS_assets\SVG\mortar.svg" />
+    <Content Include="AS_assets\SVG\rad.svg" />
+    <Content Include="AS_assets\SVG\tank.svg" />
+    <Content Include="AS_assets\SVG\target-box2.svg" />
     <Content Include="AS_assets\trans.png" />
     <Content Include="cssMenus.css" />
     <Content Include="cssApp.css" />

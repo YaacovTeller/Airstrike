@@ -220,7 +220,7 @@ class GameHandler {
         this.updateCursorPosition();
         allWeaponTypes.forEach((x) => {
             if (x !== wep) {
-                if (x.instances.length && x.activeInstance) {
+                if (x.instances.length && x.activeInstance && x.activeInstance.blastRadElement) {
                     if (x.activeInstance.ready == true) {
                         x.activeInstance.blastRadElement.style.visibility = "hidden";
                     }
