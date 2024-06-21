@@ -41,17 +41,32 @@ class RandomSoundGen {
         else
             this.soundIndex++;
         sounds[this.soundIndex].play();
+        console.log("SOUNDINDEX: " + this.soundIndex);
     }
 }
 const soundFolder = "./AS_assets/sound/";
-var pgia = new Sound(soundFolder + "pgia.mp3");
 var aluak = new Sound(soundFolder + "aluAk.mp3");
+var pgia = new Sound(soundFolder + "pgia.mp3");
 var matara = new Sound(soundFolder + "matara_shmd.mp3");
+var meUle = new Sound(soundFolder + "MeUle.mp3");
 var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
+var bleep_pos = new Sound(soundFolder + "target_lock.wav");
 var click_1 = new Sound(soundFolder + "click_1.mp3");
 var click_2 = new Sound(soundFolder + "click_2.mp3");
-//var beep = new Sound(soundFolder + "Beep.wav");
 var pop = new Sound(soundFolder + "pop_click.wav");
+var radio_1 = new Sound(soundFolder + "radio_1.mp3");
+var radio_2 = new Sound(soundFolder + "radio_2.mp3");
+var bleepbleep = new Sound(soundFolder + "bleepbleep.mp3");
+//var beep = new Sound(soundFolder + "Beep.wav");
+var kibalti_1 = new Sound(soundFolder + "Kibalti.mp3");
+var kibalti_2 = new Sound(soundFolder + "Kibalti2.mp3");
+var nachon = new Sound(soundFolder + "bleepNachon.mp3");
+var rashai = new Sound(soundFolder + "Rashai.mp3");
+var meaAchuz = new Sound(soundFolder + "MeaAchuz.mp3");
+var muchan = new Sound(soundFolder + "Muchan.mp3");
+var sec_5 = new Sound(soundFolder + "5sec.mp3");
+var sec_4_3 = new Sound(soundFolder + "4_3.mp3");
+var waitBitzua = new Sound(soundFolder + "WaitBitzua.mp3");
 var mag = new Sound(soundFolder + "automag_reload.wav");
 var flak = new Sound(soundFolder + "flak_cannon_ready.wav");
 var pickup = new Sound(soundFolder + "weapon_pickup.wav");
@@ -74,7 +89,11 @@ var ticks = [];
 var clicks = [];
 var ambience = [];
 var ricochet = [];
+var strikePrep = [];
 function loadSound() {
+    strikePrep.push(kibalti_1, kibalti_2, nachon, 
+    //     rashai,  replace rashai?
+    meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
     ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 
     //new Sound(soundFolder + "ricochet_3.mp3"),
     //new Sound(soundFolder + "ricochet_4.mp3"),

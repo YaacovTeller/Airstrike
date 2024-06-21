@@ -22,7 +22,7 @@ class Target {
         let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
         this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
-        this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box2.svg");
+        this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
 
         ContentElHandler.addToContentEl(this.targetEl);
 
@@ -53,6 +53,9 @@ class Target {
         }
         this.targetEl.style.left = x + this.speed + "px";
   
+    }
+    public toggleLockOnStrike(bool) {
+        bool ? this.lockonEl.src = assetsSVGFolder + "target-box_green.svg" : this.lockonEl.src = assetsSVGFolder + "target-box.svg"
     }
     public toggleLockOn(bool) { 
         bool ? this.lockonEl.style.visibility = 'visible' : this.lockonEl.style.visibility = 'hidden';
@@ -185,9 +188,13 @@ class VehicleTarget extends Target {
             this.damageEl.classList.add('lightDamaged');
         }
         else {
+
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
-                this.hitAcknowledge();
+                this.hitAcknowledge();                 /////// put with the other!!!
+                //if (this.movesAtBlast) {
+                //    CollisionDetection.moveAtAngle(collisionInfo);
+                //}
             }
 
             if (sev == strikeSeverity.light) {

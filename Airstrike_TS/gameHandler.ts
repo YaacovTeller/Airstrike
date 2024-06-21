@@ -23,7 +23,7 @@ class GameHandler {
     public masterTargets: Array<Target> = []
 
 
-    private level: level;
+    public level: level;   // messy, fix
     private gameTimer: number;
     private soundTimer: number;
     private gameInProgress: boolean = false;
@@ -201,32 +201,16 @@ class GameHandler {
         if (!allWeaponTypes.includes(wep))
             return;
         this.weapon = wep;
-        this.weapon.select.play();
         this.hud.selectBox(wep.name);
-        this.weapon.setActiveInstance();
-        let inst = this.weapon.activeInstance;
-        if (inst && this.weapon.constructor.name === ExplosiveWeaponType.name) {
-            let w = this.weapon as ExplosiveWeaponType;
-            w.switchBlastIndicatorStyle(false, inst as weaponInstance);
-        }
-        const root: HTMLElement = document.querySelector(':root');
-        if (inst && this.weapon.constructor.name === ChargeWeaponType.name) {
-            root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
-        }
-        else {
-            root.style.setProperty('--chargeSelected', 'hidden');
-        }
+
         this.switchCursor();
         this.updateCursorPosition();
         allWeaponTypes.forEach((x) => {
             if (x !== wep) {
-                if (x.instances.length && x.activeInstance && x.activeInstance.blastRadElement) {
-                    if (x.activeInstance.ready == true) {
-                        x.activeInstance.blastRadElement.style.visibility = "hidden";
-                    }
-                }
+                x.switchFrom();
             }
         });
+        this.weapon.switchTo(); // Main weapon switch func
     }
 
     private switchCursor() {

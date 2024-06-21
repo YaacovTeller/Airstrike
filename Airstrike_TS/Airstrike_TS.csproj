@@ -69,6 +69,19 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="AS_assets\sound\4_3.mp3" />
+    <Content Include="AS_assets\sound\5sec.mp3" />
+    <Content Include="AS_assets\sound\bleepbleep.mp3" />
+    <Content Include="AS_assets\sound\bleepNachon.mp3" />
+    <Content Include="AS_assets\sound\Kibalti.mp3" />
+    <Content Include="AS_assets\sound\Kibalti2.mp3" />
+    <Content Include="AS_assets\sound\MeaAchuz.mp3" />
+    <Content Include="AS_assets\sound\MeUle.mp3" />
+    <Content Include="AS_assets\sound\Muchan.mp3" />
+    <Content Include="AS_assets\sound\radio_1.mp3" />
+    <Content Include="AS_assets\sound\radio_2.mp3" />
+    <Content Include="AS_assets\sound\target_lock.wav" />
+    <Content Include="AS_assets\sound\WaitBitzua.mp3" />
     <Content Include="index.html - Shortcut.lnk" />
     <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">

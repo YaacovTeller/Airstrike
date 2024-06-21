@@ -220,7 +220,7 @@ const nukeInfo = {
         soundDelay: 6500,
         length: 2500,
     },
-    imageSource: assetsSVGFolder + 'bomb.svg',
+    imageSource: assetsSVGFolder + 'bomb_nuke.svg',
     sound: nukeSounds,
     speed: 6000,
     cooldown: 30000,
