@@ -79,7 +79,7 @@ class TunnelTarget extends Target {
         super(info);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
-        this.targetEl.classList.remove('flexCenter'); // MESSY
+        this.targetEl.classList.remove('flexCenter');
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.picEl.classList.add('tunnelFocus');
@@ -121,7 +121,6 @@ class TunnelTarget extends Target {
     }
     removeTunnel(length) {
         this.trail.classList.add('hide');
-        //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove(); }, 8000);
     }
     blowTunnel() {
@@ -135,7 +134,7 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                let mrtr = allWeaponTypes[weaponNames.mortar]; // MESSY
+                let mrtr = allWeaponTypes[weaponNames.mortar];
                 if (mrtr) {
                     let pos = CollisionDetection.getXYfromPoint(imgArr[index]);
                     mrtr.checkForTargets(pos, allTargets);
@@ -162,7 +161,7 @@ class VehicleTarget extends Target {
     }
     hit(sev, wepName, direc) {
         this.targetEl.classList.remove('smoothTransition');
-        if (wepName == weaponNames.gun) { // JUST FOR GUN
+        if (wepName == weaponNames.gun) {
             setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200));
             this.damage = Damage.damaged;
             this.damageEl.src = this.damagedSource;
@@ -171,7 +170,7 @@ class VehicleTarget extends Target {
         else {
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
-                this.hitAcknowledge(); /////// put with the other!!!
+                this.hitAcknowledge();
             }
             if (sev == strikeSeverity.light) {
                 this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
@@ -213,11 +212,10 @@ class VehicleTarget extends Target {
         this.flip(direc);
     }
     flip(direc) {
-        CollisionDetection.throw(this.targetEl, direc); // ARC
+        CollisionDetection.throw(this.targetEl, direc);
         this.picEl.classList.remove('flipforward');
         this.picEl.classList.remove('flipbackward');
-        this.picEl.classList.add('flip' + direc); // ROTATION
+        this.picEl.classList.add('flip' + direc);
         setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
     }
 }
-//# sourceMappingURL=target.js.map

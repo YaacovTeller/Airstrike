@@ -72,16 +72,37 @@
     <Content Include="AS_assets\sound\4_3.mp3" />
     <Content Include="AS_assets\sound\5sec.mp3" />
     <Content Include="AS_assets\sound\bleepbleep.mp3" />
-    <Content Include="AS_assets\sound\bleepNachon.mp3" />
+    <Content Include="AS_assets\sound\gib_1.mp3" />
+    <Content Include="AS_assets\sound\gib_2.mp3" />
+    <Content Include="AS_assets\sound\gib_3.mp3" />
+    <Content Include="AS_assets\sound\gib_4.mp3" />
+    <Content Include="AS_assets\sound\gib_5.mp3" />
+    <Content Include="AS_assets\sound\gib_6.mp3" />
+    <Content Include="AS_assets\sound\jet_pass.mp3" />
     <Content Include="AS_assets\sound\Kibalti.mp3" />
     <Content Include="AS_assets\sound\Kibalti2.mp3" />
     <Content Include="AS_assets\sound\MeaAchuz.mp3" />
     <Content Include="AS_assets\sound\MeUle.mp3" />
     <Content Include="AS_assets\sound\Muchan.mp3" />
+    <Content Include="AS_assets\sound\nachon.mp3" />
     <Content Include="AS_assets\sound\radio_1.mp3" />
     <Content Include="AS_assets\sound\radio_2.mp3" />
+    <Content Include="AS_assets\sound\Rashai.mp3" />
+    <Content Include="AS_assets\sound\rev_1.mp3" />
+    <Content Include="AS_assets\sound\rev_2.mp3" />
+    <Content Include="AS_assets\sound\rev_3.mp3" />
     <Content Include="AS_assets\sound\target_lock.wav" />
     <Content Include="AS_assets\sound\WaitBitzua.mp3" />
+    <Content Include="AS_assets\SVG\bomb_nuke.svg" />
+    <Content Include="AS_assets\SVG\drone.svg" />
+    <Content Include="AS_assets\SVG\lock_red.svg" />
+    <Content Include="AS_assets\SVG\target-box.svg" />
+    <Content Include="icons\bomb.ico" />
+    <Content Include="icons\jet.ico" />
+    <Content Include="icons\missile.ico" />
+    <Content Include="icons\tank-mortar.ico" />
+    <Content Include="icons\tank.ico" />
+    <Content Include="icons\target.ico" />
     <Content Include="index.html - Shortcut.lnk" />
     <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
@@ -176,23 +197,15 @@
     <Content Include="AS_assets\sound\strike_3.mp3" />
     <Content Include="AS_assets\sound\tank_fire.mp3" />
     <Content Include="AS_assets\sound\target_lost.mp3" />
-    <Content Include="AS_assets\sound\unused\Messy_bomb.mp3" />
-    <Content Include="AS_assets\sound\unused\Messy_bomb_2.mp3" />
-    <Content Include="AS_assets\sound\unused\Messy_bomb_grand.mp3" />
     <Content Include="AS_assets\sound\weapon_pickup.wav" />
     <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
-    <Content Include="AS_assets\SVG\bomb.svg" />
-    <Content Include="AS_assets\SVG\border-box.svg" />
-    <Content Include="AS_assets\SVG\chopper.svg" />
     <Content Include="AS_assets\SVG\dynamite.svg" />
     <Content Include="AS_assets\SVG\gun.svg" />
     <Content Include="AS_assets\SVG\jet.svg" />
     <Content Include="AS_assets\SVG\missile.svg" />
-    <Content Include="AS_assets\SVG\missiles.svg" />
     <Content Include="AS_assets\SVG\mortar.svg" />
     <Content Include="AS_assets\SVG\rad.svg" />
     <Content Include="AS_assets\SVG\tank.svg" />
-    <Content Include="AS_assets\SVG\target-box2.svg" />
     <Content Include="AS_assets\trans.png" />
     <Content Include="cssMenus.css" />
     <Content Include="cssApp.css" />
@@ -215,7 +228,9 @@
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="AS_assets\sound\unused\" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
