@@ -3,7 +3,7 @@ class Sound {
     title;
     constructor(src) {
         let arr = src.split('/');
-        this.title = arr[arr.length - 2] + "/" + arr[arr.length - 1];
+        this.title = arr[arr.length - 1]; //arr[arr.length - 2] + "/" + arr[arr.length - 1]
         this.sound = document.createElement("audio");
         this.sound.src = src;
         this.sound.setAttribute("preload", "auto");
@@ -24,7 +24,7 @@ class Sound {
     }
 }
 class RandomSoundGen {
-    static soundIndex = 0;
+    static soundIndexes = {};
     static getRandomSound(sounds) {
         let length = sounds.length;
         let randNum = Math.floor(Math.random() * (length) + 1);
@@ -35,65 +35,73 @@ class RandomSoundGen {
         sound.play();
     }
     static playSequentialSound(sounds) {
-        if (this.soundIndex >= sounds.length - 1) {
-            this.soundIndex = 0;
+        let title = sounds[0].title;
+        let index = this.soundIndexes[title];
+        if (index == undefined || index >= sounds.length - 1) {
+            this.soundIndexes[title] = 0;
         }
-        else
-            this.soundIndex++;
-        sounds[this.soundIndex].play();
-        console.log("SOUNDINDEX: " + this.soundIndex);
+        else {
+            this.soundIndexes[title]++;
+        }
+        sounds[this.soundIndexes[title]].play();
     }
 }
 const soundFolder = "./AS_assets/sound/";
-var aluak = new Sound(soundFolder + "aluAk.mp3");
-var pgia = new Sound(soundFolder + "pgia.mp3");
-var matara = new Sound(soundFolder + "matara_shmd.mp3");
-var meUle = new Sound(soundFolder + "MeUle.mp3");
-var bleep_neg = new Sound(soundFolder + "target_lost.mp3");
-var bleep_pos = new Sound(soundFolder + "target_lock.wav");
-var click_1 = new Sound(soundFolder + "click_1.mp3");
-var click_2 = new Sound(soundFolder + "click_2.mp3");
-var pop = new Sound(soundFolder + "pop_click.wav");
-var radio_1 = new Sound(soundFolder + "radio_1.mp3");
-var radio_2 = new Sound(soundFolder + "radio_2.mp3");
-var bleepbleep = new Sound(soundFolder + "bleepbleep.mp3");
-//var beep = new Sound(soundFolder + "Beep.wav");
-var kibalti_1 = new Sound(soundFolder + "Kibalti.mp3");
-var kibalti_2 = new Sound(soundFolder + "Kibalti2.mp3");
-var nachon = new Sound(soundFolder + "bleepNachon.mp3");
-var rashai = new Sound(soundFolder + "Rashai.mp3");
-var meaAchuz = new Sound(soundFolder + "MeaAchuz.mp3");
-var muchan = new Sound(soundFolder + "Muchan.mp3");
-var sec_5 = new Sound(soundFolder + "5sec.mp3");
-var sec_4_3 = new Sound(soundFolder + "4_3.mp3");
-var waitBitzua = new Sound(soundFolder + "WaitBitzua.mp3");
-var mag = new Sound(soundFolder + "automag_reload.wav");
-var flak = new Sound(soundFolder + "flak_cannon_ready.wav");
-var pickup = new Sound(soundFolder + "weapon_pickup.wav");
-var redeemerpickup = new Sound(soundFolder + "redeemerpickup.wav");
-var alarm3 = new Sound(soundFolder + "alarm3.wav");
-var jet = new Sound(soundFolder + "jet_fly.mp3");
-var chopper = new Sound(soundFolder + "chopper.mp3");
-var gunSounds = [];
-var mortarSounds = [];
-var howitzerSounds = [];
-var airstrikeSounds = [];
-var nukeSounds = [];
-var explosions = [];
-var strikes = [];
-var bigExplosions = [];
-var multiExplosions = [];
-var crashes = [];
-var beeps = [];
-var ticks = [];
-var clicks = [];
-var ambience = [];
-var ricochet = [];
-var strikePrep = [];
+const aluak = new Sound(soundFolder + "aluAk.mp3");
+const pgia = new Sound(soundFolder + "pgia.mp3");
+const matara = new Sound(soundFolder + "matara_shmd.mp3");
+const meUle = new Sound(soundFolder + "MeUle.mp3");
+const bleep_neg = new Sound(soundFolder + "target_lost.mp3");
+const bleep_pos = new Sound(soundFolder + "target_lock.wav");
+const click_1 = new Sound(soundFolder + "click_1.mp3");
+const click_2 = new Sound(soundFolder + "click_2.mp3");
+const pop = new Sound(soundFolder + "pop_click.wav");
+const radio_1 = new Sound(soundFolder + "radio_1.mp3");
+const radio_2 = new Sound(soundFolder + "radio_2.mp3");
+const bleepbleep = new Sound(soundFolder + "bleepbleep.mp3");
+const nachon = new Sound(soundFolder + "nachon.mp3");
+//const beep = new Sound(soundFolder + "Beep.wav");
+//const bleepNachon = new Sound(soundFolder + "bleepNachon.mp3");
+const kibalti_1 = new Sound(soundFolder + "Kibalti.mp3");
+const kibalti_2 = new Sound(soundFolder + "Kibalti2.mp3");
+const rashai = new Sound(soundFolder + "Rashai.mp3");
+const meaAchuz = new Sound(soundFolder + "MeaAchuz.mp3");
+const muchan = new Sound(soundFolder + "Muchan.mp3");
+const sec_5 = new Sound(soundFolder + "5sec.mp3");
+const sec_4_3 = new Sound(soundFolder + "4_3.mp3");
+const waitBitzua = new Sound(soundFolder + "WaitBitzua.mp3");
+const mag = new Sound(soundFolder + "automag_reload.wav");
+const flak = new Sound(soundFolder + "flak_cannon_ready.wav");
+const pickup = new Sound(soundFolder + "weapon_pickup.wav");
+const redeemerpickup = new Sound(soundFolder + "redeemerpickup.wav");
+const alarm3 = new Sound(soundFolder + "alarm3.wav");
+const jet = new Sound(soundFolder + "jet_fly.mp3");
+const jet_pass = new Sound(soundFolder + "jet_pass.mp3");
+//const chopper = new Sound(soundFolder + "chopper.mp3");
+const gunSounds = [];
+const mortarSounds = [];
+const howitzerSounds = [];
+const airstrikeSounds = [];
+const nukeSounds = [];
+const explosions = [];
+const strikes = [];
+const bigExplosions = [];
+const multiExplosions = [];
+const crashes = [];
+const beeps = [];
+const ticks = [];
+const clicks = [];
+const ambience = [];
+const ricochet = [];
+const strikePrep = [];
+const acknowledge = [];
+const revs = [];
 function loadSound() {
-    strikePrep.push(kibalti_1, kibalti_2, nachon, 
+    strikePrep.push(
     //     rashai,  replace rashai?
-    meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
+    kibalti_1, kibalti_2, nachon, meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
+    acknowledge.push(pgia, matara, meUle, aluak, pgia);
+    revs.push(new Sound(soundFolder + "rev_1.mp3"), new Sound(soundFolder + "rev_2.mp3"), new Sound(soundFolder + "rev_3.mp3"));
     ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 
     //new Sound(soundFolder + "ricochet_3.mp3"),
     //new Sound(soundFolder + "ricochet_4.mp3"),

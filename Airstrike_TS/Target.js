@@ -91,10 +91,11 @@ class TunnelTarget extends Target {
     }
     produceTargetCheck() {
         let num = RandomNumberGen.randomNumBetween(1, 100);
-        if (num >= 95) {
+        if (num >= 90) {
             let rect = this.getTargetEl().getBoundingClientRect();
             let pos = { X: rect.x, Y: rect.y };
             let newTarget = new VehicleTarget(regTarget, pos);
+            RandomSoundGen.playSequentialSound(revs);
             game.targetCreation(newTarget);
         }
     }
@@ -171,9 +172,6 @@ class VehicleTarget extends Target {
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
                 this.hitAcknowledge(); /////// put with the other!!!
-                //if (this.movesAtBlast) {
-                //    CollisionDetection.moveAtAngle(collisionInfo);
-                //}
             }
             if (sev == strikeSeverity.light) {
                 this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
@@ -204,7 +202,7 @@ class VehicleTarget extends Target {
         if (this.damage <= Damage.damaged) {
             let rollForHit = RandomNumberGen.randomNumBetween(1, 8);
             if (rollForHit == 8) {
-                RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
+                RandomSoundGen.playRandomSound(acknowledge);
             }
         }
     }

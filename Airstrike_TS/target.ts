@@ -52,8 +52,8 @@ class Target {
             this.status = Status.escaped;
         }
         this.targetEl.style.left = x + this.speed + "px";
-  
     }
+
     public toggleLockOnStrike(bool) {
         bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg"
     }
@@ -104,10 +104,11 @@ class TunnelTarget extends Target {
     }
     private produceTargetCheck() {
         let num = RandomNumberGen.randomNumBetween(1, 100);
-        if (num >= 95) {
+        if (num >= 90) {
             let rect = this.getTargetEl().getBoundingClientRect();
             let pos: position = { X: rect.x, Y: rect.y }
             let newTarget = new VehicleTarget(regTarget, pos);
+            RandomSoundGen.playSequentialSound(revs);
             game.targetCreation(newTarget);
         }
     }
@@ -192,9 +193,6 @@ class VehicleTarget extends Target {
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
                 this.hitAcknowledge();                 /////// put with the other!!!
-                //if (this.movesAtBlast) {
-                //    CollisionDetection.moveAtAngle(collisionInfo);
-                //}
             }
 
             if (sev == strikeSeverity.light) {
@@ -229,7 +227,7 @@ class VehicleTarget extends Target {
         if (this.damage <= Damage.damaged) {
             let rollForHit = RandomNumberGen.randomNumBetween(1, 8);
             if (rollForHit == 8) {
-                RandomNumberGen.randomNumBetween(1, 2) == 2 ? aluak.play() : matara.play();
+                RandomSoundGen.playRandomSound(acknowledge)
             }
         }
     }

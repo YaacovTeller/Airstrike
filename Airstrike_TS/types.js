@@ -207,7 +207,7 @@ const airstrikeInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: jet
+    select: jet_pass
 };
 const nukeInfo = {
     name: weaponNames.nuke,
@@ -247,12 +247,12 @@ const droneInfo = {
         sound: explosions,
         length: 1000,
     },
-    imageSource: assetsSVGFolder + 'chopper.svg',
-    sound: [chopper],
+    imageSource: assetsSVGFolder + 'drone.svg',
+    sound: [jet],
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: chopper
+    select: jet
 };
 function loadNewImage() {
     return '?' + new Date().getTime();

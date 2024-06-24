@@ -23,6 +23,9 @@
 
         allWeaponTypes[this.name -1] = this
     }
+    protected playSound() {
+        RandomSoundGen.playSequentialSound(this.sound);
+    }
     public switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
             if (this.activeInstance.ready == true) {
@@ -137,9 +140,9 @@
         return severity;
     }
 
-    protected bonusHitSound() {
-        RandomNumberGen.randomNumBetween(1, 8) == 8 ? pgia.play() : "";
-    }
+    //protected bonusHitSound() {
+    //    RandomNumberGen.randomNumBetween(1, 8) == 8 ? pgia.play() : "";
+    //}
 }
 
 class BulletWeaponType extends WeaponType {
@@ -152,7 +155,7 @@ class BulletWeaponType extends WeaponType {
     public fireFunc(targets: Array<Target>) {
         if (this.ammoCheck() === false) { return }
 
-        RandomSoundGen.playSequentialSound(this.sound);
+        this.playSound();
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         inst.ready = false;
         this.shotCounter();
@@ -179,9 +182,9 @@ class BulletWeaponType extends WeaponType {
 
                 if (target.damage != Damage.destroyed) {
                     target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
-                    if (target.status == Status.active) {
-                        this.bonusHitSound();
-                    }
+                    //if (target.status == Status.active) {
+                    //    this.bonusHitSound();
+                    //}
                 }
             }
         }
@@ -197,7 +200,7 @@ class BulletWeaponType extends WeaponType {
 }
 class ExplosiveWeaponType extends WeaponType {
     public blastRadius: number;
-    private explosionInfo: ExplosionInfo;
+    protected explosionInfo: ExplosionInfo;
 
     constructor(info: ExplosiveWeaponInfo) {
         super(info);
@@ -227,7 +230,7 @@ class ExplosiveWeaponType extends WeaponType {
 
     public fireFunc(targets: Array<Target>) {
         if (this.ammoCheck() === false) { return }
-        RandomSoundGen.playSequentialSound(this.sound);
+        this.playSound();
         this.shotCounter();
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
@@ -275,9 +278,9 @@ class ExplosiveWeaponType extends WeaponType {
         let direc: direction = this.determineDirectionForFlip(collisionInfo);
         if (target.damage != Damage.destroyed) {
             target.hit(severity, this.name, direc); // TARGET - Main hit function
-            if (target.status == Status.active) {
-                this.bonusHitSound();
-            }
+            //if (target.status == Status.active) {
+            //    this.bonusHitSound();
+            //}
         }
     }
 
@@ -457,6 +460,14 @@ class DroneWeaponType extends ExplosiveWeaponType {
         })
         this.lockedTargets = chosenTargets;
     }
+    protected playSound() {
+        bleepbleep.play();
+        let snd = this.sound;
+        setTimeout(() => {
+            RandomSoundGen.playSequentialSound(strikePrep);
+            setTimeout(() => { RandomSoundGen.playRandomSound(snd); }, 300)
+        }, 300)
+    }
 
     public fireFunc(targets: Array<Target>) {
         if (this.lockedTargets.length < this.attackLimit) {
@@ -464,11 +475,10 @@ class DroneWeaponType extends ExplosiveWeaponType {
             return
         }
         if (this.ammoCheck() === false) { return }
-        RandomSoundGen.playRandomSound(strikePrep);
+        this.playSound();
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         inst.ready = false;
-        RandomSoundGen.playRandomSound(this.sound);
         this.cooldownTimeout(inst);
 
         let speedInc = 150;
@@ -479,9 +489,6 @@ class DroneWeaponType extends ExplosiveWeaponType {
             trgt.toggleLockOnStrike(true);
             currentSpeedBuffer += speedInc;
             setTimeout(() => {
-                //const index = strikingTargets.indexOf(trgt);
-                //if (index > -1) { strikingTargets.splice(index, 1) }
-
                 trgt.toggleLockOn(false)
                 trgt.toggleLockOnStrike(false);
                 RandomSoundGen.playSequentialSound(multiExplosions);
@@ -491,7 +498,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
-                ExplosionHandler.basicExplosion(blastCenter, ExplSizes.small, assetsFolder + classicExplosion);
+                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource);
                 this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer)
         })
@@ -501,7 +508,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
 }
 
 class ExplosionHandler {
-    private static craterDecalStay: number = 10000;
+    private static craterDecalStay: number = 15000;
     private static craterFadingTillRemoval: number = fadeAnimTime;
     public static basicExplosion(blastCenter, size, explSrc) {
         let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);

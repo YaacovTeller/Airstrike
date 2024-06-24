@@ -271,6 +271,7 @@ class GameHandler {
             this.pause();
             this.gameInProgress = false;
             PopupHandler.addToArray("", "Game Over!", msgLength.long);
+            alarm3.play();
         }
     }
 
