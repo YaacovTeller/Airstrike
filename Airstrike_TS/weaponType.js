@@ -366,6 +366,8 @@ class ChargeWeaponType extends WeaponType {
         let hit = false;
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
+                tunnel.toggleLockOn(true);
+                tunnel.toggleLockOnStrike(true);
                 hit = true;
                 inst.ready = false;
                 this.shotCounter();
@@ -375,6 +377,7 @@ class ChargeWeaponType extends WeaponType {
                 setTimeout(() => {
                     let severity = this.determineSeverity();
                     tunnel.hit(severity); // TARGET - Main hit function
+                    tunnel.toggleLockOn(false);
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed);
             }
@@ -391,19 +394,22 @@ class DroneWeaponType extends ExplosiveWeaponType {
         super(info);
         this.pushNewWeaponInstance();
     }
-    switchFrom() {
+    clearTargets() {
         this.lockedTargets.forEach((trgt) => {
             trgt.toggleLockOn(false);
         });
         this.lockedTargets = [];
+    }
+    switchFrom() {
+        this.clearTargets();
     }
     additionalSwitchFunc() {
         this.findTargets();
     }
     findTargets() {
         bleep_pos.play();
-        this.switchFrom();
-        let activeTargets = game.level.targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false);
+        this.clearTargets();
+        let activeTargets = game.level.targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false && t.movesAtBlast);
         //  let armouredTargets = activeTargets.filter(t => t.armour === Armour.heavy);
         let sortedByArmour = activeTargets.sort((a, b) => b.armour - a.armour);
         let chosenTargets = sortedByArmour.slice(0, this.attackLimit);

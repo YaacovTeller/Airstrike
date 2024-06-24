@@ -47,7 +47,7 @@ class Target {
         this.targetEl.style.left = x + this.speed + "px";
     }
     toggleLockOnStrike(bool) {
-        bool ? this.lockonEl.src = assetsSVGFolder + "target-box_green.svg" : this.lockonEl.src = assetsSVGFolder + "target-box.svg";
+        bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg";
     }
     toggleLockOn(bool) {
         bool ? this.lockonEl.style.visibility = 'visible' : this.lockonEl.style.visibility = 'hidden';
