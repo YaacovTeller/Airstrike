@@ -154,7 +154,7 @@ const sniperInfo = {
     speed: 0,
     cooldown: 700,
     noAmmo: click_1,
-    select: mag
+    select: [mag]
 };
 const mortarInfo = {
     name: weaponNames.mortar,
@@ -171,7 +171,7 @@ const mortarInfo = {
     speed: 2000,
     cooldown: 2200,
     noAmmo: click_2,
-    select: mag
+    select: gib
 };
 const howitzerInfo = {
     name: weaponNames.tank,
@@ -189,7 +189,7 @@ const howitzerInfo = {
     speed: 3000,
     cooldown: 7000,
     noAmmo: click_2,
-    select: flak
+    select: [flak]
 };
 const airstrikeInfo = {
     name: weaponNames.airstrike,
@@ -207,7 +207,7 @@ const airstrikeInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: jet_pass
+    select: [jet_pass]
 };
 const nukeInfo = {
     name: weaponNames.nuke,
@@ -225,7 +225,7 @@ const nukeInfo = {
     speed: 6000,
     cooldown: 30000,
     noAmmo: bleep_neg,
-    select: redeemerpickup
+    select: [redeemerpickup]
 };
 const chargeInfo = {
     name: weaponNames.tunnelcharge,
@@ -235,7 +235,7 @@ const chargeInfo = {
     speed: 3000,
     cooldown: 8000,
     noAmmo: bleep_neg,
-    select: alarm3 //beeps[0]
+    select: [alarm3]
 };
 const droneInfo = {
     name: weaponNames.drone,
@@ -252,7 +252,7 @@ const droneInfo = {
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: jet
+    select: [jet]
 };
 function loadNewImage() {
     return '?' + new Date().getTime();

@@ -112,7 +112,7 @@ type weaponInfo = {
     speed: number,
     cooldown: number,
     noAmmo: Sound,
-    select: Sound,
+    select: Array<Sound>,
 }
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
@@ -205,7 +205,7 @@ const sniperInfo: weaponInfo = {
     speed: 0,
     cooldown: 700,
     noAmmo: click_1,
-    select: mag
+    select: [mag]
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
@@ -222,7 +222,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
     speed: 2000,
     cooldown: 2200,
     noAmmo: click_2,
-    select: mag
+    select: gib
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tank,
@@ -240,7 +240,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     speed: 3000,
     cooldown: 7000,
     noAmmo: click_2,
-    select: flak
+    select: [flak]
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
@@ -259,7 +259,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: jet_pass
+    select: [jet_pass]
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
@@ -277,7 +277,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
     speed: 6000,
     cooldown: 30000,
     noAmmo: bleep_neg,
-    select: redeemerpickup
+    select: [redeemerpickup]
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnelcharge,
@@ -287,7 +287,7 @@ const chargeInfo: weaponInfo = {
     speed: 3000,
     cooldown: 8000,
     noAmmo: bleep_neg,
-    select: alarm3//beeps[0]
+    select: [alarm3]
 }
 const droneInfo: ExplosiveWeaponInfo = {
     name: weaponNames.drone,
@@ -304,7 +304,7 @@ const droneInfo: ExplosiveWeaponInfo = {
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: jet
+    select: [jet]
 }
 
 function loadNewImage() {

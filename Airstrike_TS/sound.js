@@ -96,11 +96,13 @@ const ricochet = [];
 const strikePrep = [];
 const acknowledge = [];
 const revs = [];
+const gib = [];
 function loadSound() {
     strikePrep.push(
     //     rashai,  replace rashai?
     kibalti_1, kibalti_2, nachon, meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
-    acknowledge.push(pgia, matara, meUle, aluak, pgia);
+    acknowledge.push(pgia, matara, meUle, pgia, aluak);
+    gib.push(new Sound(soundFolder + "gib_1.mp3"), new Sound(soundFolder + "gib_2.mp3"), new Sound(soundFolder + "gib_3.mp3"), new Sound(soundFolder + "gib_4.mp3"), new Sound(soundFolder + "gib_5.mp3"), new Sound(soundFolder + "gib_6.mp3"));
     revs.push(new Sound(soundFolder + "rev_1.mp3"), new Sound(soundFolder + "rev_2.mp3"), new Sound(soundFolder + "rev_3.mp3"));
     ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 
     //new Sound(soundFolder + "ricochet_3.mp3"),

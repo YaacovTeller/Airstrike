@@ -20,9 +20,6 @@ class WeaponType {
         this.select = info.select;
         allWeaponTypes[this.name - 1] = this;
     }
-    playSound() {
-        RandomSoundGen.playSequentialSound(this.sound);
-    }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
             if (this.activeInstance.ready == true) {
@@ -30,8 +27,14 @@ class WeaponType {
             }
         }
     }
+    playSound() {
+        RandomSoundGen.playSequentialSound(this.sound);
+    }
+    playSelectSound() {
+        RandomSoundGen.playSequentialSound(this.select);
+    }
     switchTo() {
-        this.select.play();
+        this.playSelectSound();
         this.setActiveInstance();
         this.additionalSwitchFunc();
     }

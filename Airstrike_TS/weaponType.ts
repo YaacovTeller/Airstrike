@@ -6,7 +6,7 @@
     public speed: number;
     public cooldown: number;
     public noAmmo: Sound;
-    public select: Sound;
+    public select: Array<Sound>;
 
     public activeInstance: weaponInstance;
     public instances: Array<weaponInstance> = [];
@@ -23,9 +23,7 @@
 
         allWeaponTypes[this.name -1] = this
     }
-    protected playSound() {
-        RandomSoundGen.playSequentialSound(this.sound);
-    }
+
     public switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
             if (this.activeInstance.ready == true) {
@@ -33,8 +31,14 @@
             }
         }
     }
+    protected playSound() {
+        RandomSoundGen.playSequentialSound(this.sound);
+    }
+    protected playSelectSound() {
+        RandomSoundGen.playSequentialSound(this.select);
+    }
     public switchTo() {
-        this.select.play();
+        this.playSelectSound();
         this.setActiveInstance();
         this.additionalSwitchFunc();
     }

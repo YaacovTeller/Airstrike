@@ -110,6 +110,7 @@ const ricochet: Array<Sound> = [];
 const strikePrep: Array<Sound> = [];
 const acknowledge: Array<Sound> = [];
 const revs: Array<Sound> = [];
+const gib: Array<Sound> = [];
 
 function loadSound() {
     strikePrep.push(
@@ -124,7 +125,15 @@ function loadSound() {
         waitBitzua
     )
     acknowledge.push(
-        pgia, matara, meUle, aluak, pgia
+        pgia, matara, meUle, pgia, aluak
+    )
+    gib.push(
+        new Sound(soundFolder + "gib_1.mp3"),
+        new Sound(soundFolder + "gib_2.mp3"),
+        new Sound(soundFolder + "gib_3.mp3"),
+        new Sound(soundFolder + "gib_4.mp3"),
+        new Sound(soundFolder + "gib_5.mp3"),
+        new Sound(soundFolder + "gib_6.mp3")
     )
     revs.push(
         new Sound(soundFolder + "rev_1.mp3"),
