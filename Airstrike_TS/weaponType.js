@@ -44,7 +44,7 @@ class WeaponType {
     }
     setActiveInstance() {
         this.activeInstance = this.getAvailableInstance();
-        game.updateCursorPosition();
+        game.updateCursorPosition(); // NEEDED?
     }
     getAvailableInstance() {
         let nextReady = null;
@@ -53,11 +53,11 @@ class WeaponType {
     }
     searchInstances(nextReady) {
         for (let i in this.instances) {
-            game.hud.deselectInst(parseInt(i), this.name);
+            game.hud.deselectInst(parseInt(i), this.name); //MESSY?
             if (this.instances[i].ready === true) {
                 if (nextReady == null) {
                     nextReady = this.instances[i];
-                    game.hud.selectInst(parseInt(i), this.name);
+                    game.hud.selectInst(parseInt(i), this.name); //MESSY?
                 }
             }
         }
@@ -108,12 +108,12 @@ class WeaponType {
         let _this = this;
         setTimeout(() => {
             inst.ready = true;
-            game.hud.availInst(index, name);
+            game.hud.availInst(index, name); //MESSY?
             _this.activeInstance = _this.activeInstance == null ? _this.getAvailableInstance() : _this.activeInstance;
             if (_this !== game.weapon && _this.activeInstance.blastRadElement) {
                 _this.activeInstance.blastRadElement.style.visibility = 'hidden';
             }
-            game.updateCursorPosition();
+            game.updateCursorPosition(); //MESSY?
         }, _this.cooldown);
     }
     ammoCheck() {
@@ -164,7 +164,10 @@ class BulletWeaponType extends WeaponType {
                 }
                 ;
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direction.forward);
+                    target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
+                    //if (target.status == Status.active) {
+                    //    this.bonusHitSound();
+                    //}
                 }
             }
         }
@@ -199,7 +202,7 @@ class ExplosiveWeaponType extends WeaponType {
     getAvailableInstance() {
         let nextReady = null;
         nextReady = this.searchInstances(nextReady);
-        if (this.blastRadNum()) {
+        if (this.blastRadNum()) { // MESSY // MESSY
             this.setBlastRadVisible(nextReady);
         }
         return nextReady;
@@ -230,7 +233,7 @@ class ExplosiveWeaponType extends WeaponType {
     }
     checkForTargets(blastPos, targets) {
         for (let target of targets) {
-            let collisionInfo = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, target.getTargetEl(), this.explosionInfo.size / 2);
+            let collisionInfo = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, target.getTargetEl(), this.explosionInfo.size / 2); // MESSY!
             if (collisionInfo) {
                 this.targetStrike(target, collisionInfo);
             }
@@ -248,7 +251,10 @@ class ExplosiveWeaponType extends WeaponType {
         }
         let direc = this.determineDirectionForFlip(collisionInfo);
         if (target.damage != Damage.destroyed) {
-            target.hit(severity, this.name, direc);
+            target.hit(severity, this.name, direc); // TARGET - Main hit function
+            //if (target.status == Status.active) {
+            //    this.bonusHitSound();
+            //}
         }
     }
     ricochetChance() {
@@ -350,7 +356,7 @@ class ChargeWeaponType extends WeaponType {
     }
     additionalSwitchFunc() {
         const root = document.querySelector(':root');
-        root.style.setProperty('--chargeSelected', 'visible');
+        root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
     }
     fireFunc(targets) {
         if (this.ammoCheck() === false) {
@@ -373,7 +379,7 @@ class ChargeWeaponType extends WeaponType {
                 RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
                     let severity = this.determineSeverity();
-                    tunnel.hit(severity);
+                    tunnel.hit(severity); // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed);
@@ -407,6 +413,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
         bleep_pos.play();
         this.clearTargets();
         let activeTargets = game.level.targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false && t.movesAtBlast);
+        //  let armouredTargets = activeTargets.filter(t => t.armour === Armour.heavy);
         let sortedByArmour = activeTargets.sort((a, b) => b.armour - a.armour);
         let chosenTargets = sortedByArmour.slice(0, this.attackLimit);
         chosenTargets = chosenTargets.sort((a, b) => b.getTargetEl().getBoundingClientRect().x - a.getTargetEl().getBoundingClientRect().x);
@@ -456,6 +463,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer);
         });
+        //  this.switchFrom();
         this.setActiveInstance();
     }
 }
@@ -500,3 +508,4 @@ class ExplosionHandler {
         return crater;
     }
 }
+//# sourceMappingURL=weaponType.js.map

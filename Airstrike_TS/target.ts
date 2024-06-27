@@ -1,6 +1,4 @@
-﻿const crashTimeout = 600;
-const destroyedTargetStay = 20000;
-const fadeAnimTime = 8000;
+﻿
 
 class Target {
     protected targetEl: HTMLElement;

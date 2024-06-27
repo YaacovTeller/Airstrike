@@ -21,7 +21,7 @@ class GameHandler {
     language = Languages.eng;
     difficulty;
     masterTargets = [];
-    level;
+    level; // messy, fix
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -111,6 +111,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -137,7 +138,8 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        this.weapon.fireFunc(allTargets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
         if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
@@ -151,21 +153,21 @@ class GameHandler {
             this.changeWeapon(allWeaponTypes[int - 1]);
         }
         else if (event.shiftKey && event.key === 'N') {
-            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.level.addNewWeapon(nukeInfo);
         }
         else if (event.shiftKey && event.key === 'A') {
             this.addAllWeapons();
         }
     }
     addAllWeapons() {
-        this.level.addNewWeapon(BulletWeaponType, sniperInfo);
-        this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.level.addNewWeapon(DroneWeaponType, droneInfo);
+        this.level.addNewWeapon(sniperInfo);
+        this.level.addNewWeapon(chargeInfo);
+        this.level.addNewWeapon(mortarInfo);
+        this.level.addNewWeapon(howitzerInfo);
+        this.level.addNewWeapon(airstrikeInfo);
+        this.level.addNewWeapon(droneInfo);
         if (!allWeaponTypes[weaponNames.nuke - 1]) {
-            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.level.addNewWeapon(nukeInfo);
         }
     }
     positionElem(elem, pos) {
@@ -194,7 +196,7 @@ class GameHandler {
                 x.switchFrom();
             }
         });
-        this.weapon.switchTo();
+        this.weapon.switchTo(); // Main weapon switch func
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -286,6 +288,9 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -302,7 +307,7 @@ class GameHandler {
             this.addAllWeapons();
         }
         this.hud.drawHUD();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
@@ -327,3 +332,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

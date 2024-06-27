@@ -1,6 +1,4 @@
-﻿const assetsFolder: string = "./AS_assets/";
-const assetsSVGFolder: string = assetsFolder + "SVG/"
-const classicExplosion: string = 'expl1.gif';
+﻿
 enum ExplSizes {
     small = 100,
     large = 140,
@@ -106,6 +104,7 @@ type weaponInstance = {
 
 type weaponInfo = {
     name: weaponNames,
+    class: typeof WeaponType,
     sound: Array<Sound>,
     imageSource: string,
     cursor: string,
@@ -199,6 +198,7 @@ const dev: difficultyLevelInfo = {
 }
 const sniperInfo: weaponInfo = {
     name: weaponNames.gun,
+    class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
     sound: gunSounds,
@@ -209,6 +209,7 @@ const sniperInfo: weaponInfo = {
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
+    class: ExplosiveWeaponType,
     blastRadius: 50,
     cursor: "cursor2",
     explosionInfo: {
@@ -226,6 +227,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tank,
+    class: ExplosiveWeaponType,
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
@@ -244,11 +246,11 @@ const howitzerInfo: ExplosiveWeaponInfo = {
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
+    class: ExplosiveWeaponType,
     blastRadius: 100,
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-
         imageSource: assetsFolder + 'expl_big.gif',
         sound: strikes,
         soundDelay: 2500,
@@ -263,6 +265,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.nuke,
+    class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
     explosionInfo: {
@@ -281,6 +284,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnelcharge,
+    class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
     sound: gunSounds,
@@ -291,6 +295,7 @@ const chargeInfo: weaponInfo = {
 }
 const droneInfo: ExplosiveWeaponInfo = {
     name: weaponNames.drone,
+    class: DroneWeaponType,
     cursor: "cursor4",
     blastRadius: 0,
     explosionInfo: {

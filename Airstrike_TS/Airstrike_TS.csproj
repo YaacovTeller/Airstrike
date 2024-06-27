@@ -217,6 +217,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="collisionDetection.ts" />
+    <TypeScriptCompile Include="const.ts" />
     <TypeScriptCompile Include="gameHandler.ts" />
     <TypeScriptCompile Include="hudHandler.ts" />
     <TypeScriptCompile Include="level.ts" />

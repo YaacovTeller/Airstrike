@@ -13,11 +13,9 @@
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
         this.frequency = game.difficulty.newTargetEvery;
-        //this.currentLimit = this.winLimits[this.index]
-    //    let newLevMsg: popupMsg = { text: "", title: this.constructor.name.replace("_", " "), length: msgLength.long }
         PopupHandler.addToArray("", this.constructor.name.replace("_", " "), msgLength.long)
     }
-
+    // Start // 
     public winLimitCheck() {
         if (this.targets.length >= this.currentLimit) {
             this.pauseWave();
@@ -113,7 +111,7 @@
         this.resetWincheck();
     }
 
-    public addNewWeapon(className, info: weaponInfo) {
+    public addNewWeapon(info: weaponInfo) {
         let wepName = weaponNames[info.name]
         if (allWeaponTypes[info.name - 1]) {
             PopupHandler.addToArray("You got another " + wepName);
@@ -121,7 +119,7 @@
         }
         else {
             PopupHandler.addToArray("New weapon:\n" + wepName)
-            new className(info);
+            new info.class(info);
         }
         game.redrawHudWithWepSelectionChecked();
     }
@@ -130,22 +128,22 @@ class level_1 extends level {
     public winLimits: Array<number> = [8, 22];
     public armingUp() {
         console.log("ARMING");
-        this.addNewWeapon(BulletWeaponType, sniperInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(sniperInfo);
+        this.addNewWeapon(mortarInfo);
+        this.addNewWeapon(mortarInfo);
     }
     public provideAvailTargets(): Target {
         return new VehicleTarget(regTarget);
     }
     public finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(mortarInfo);
     }
 }
 class level_2 extends level {
     public winLimits: Array<number> = [12, 30];
     public armingUp() {
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(howitzerInfo);
+        this.addNewWeapon(mortarInfo);
     }
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -161,14 +159,14 @@ class level_2 extends level {
         return newTarget;
     }
     public finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_3 extends level {
     public winLimits: Array<number> = [6, 16];
     public armingUp() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
     }
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -181,15 +179,15 @@ class level_3 extends level {
         return newTarget;
     }
     public finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_4 extends level {
     public winLimits: Array<number> = [5, 12];
     public armingUp() {
-        this.addNewWeapon(ChargeWeaponType, chargeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        this.addNewWeapon(chargeInfo);
+        this.addNewWeapon(airstrikeInfo);
     }
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -205,14 +203,14 @@ class level_4 extends level {
         return newTarget;
     }
     public finalStageArms() {
-        this.addNewWeapon(ChargeWeaponType, chargeInfo);
+        this.addNewWeapon(chargeInfo);
     }
 }
 class level_5 extends level {
     public winLimits: Array<number> = [30, 70];
     public armingUp() {
         if (!allWeaponTypes[weaponNames.nuke - 1]) {
-            this.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.addNewWeapon(nukeInfo);
         }
     }
     public provideAvailTargets(): Target {
@@ -235,6 +233,6 @@ class level_5 extends level {
         return newTarget;
     }
     public finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        this.addNewWeapon(airstrikeInfo);
     }
 }

@@ -1,4 +1,5 @@
-﻿class WeaponType {
+﻿
+class WeaponType {
     public name: weaponNames;
     public cursor: string;
     public sound: Array<Sound>;

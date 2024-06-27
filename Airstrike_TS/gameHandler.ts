@@ -166,20 +166,20 @@ class GameHandler {
         if (int && allWeaponTypes[int - 1]) {
             this.changeWeapon(allWeaponTypes[int - 1]);
         }
-        else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo); }
+        else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
         else if (event.shiftKey && event.key === 'A') {
             this.addAllWeapons();
         }
     }
     private addAllWeapons() {
-        this.level.addNewWeapon(BulletWeaponType, sniperInfo);
-        this.level.addNewWeapon(ChargeWeaponType, chargeInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-        this.level.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.level.addNewWeapon(DroneWeaponType, droneInfo);
+        this.level.addNewWeapon(sniperInfo);
+        this.level.addNewWeapon(chargeInfo);
+        this.level.addNewWeapon(mortarInfo);
+        this.level.addNewWeapon(howitzerInfo);
+        this.level.addNewWeapon(airstrikeInfo);
+        this.level.addNewWeapon(droneInfo);
         if (!allWeaponTypes[weaponNames.nuke-1]) {
-            this.level.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.level.addNewWeapon(nukeInfo);
         }
     }
     private positionElem(elem: HTMLElement, pos: position) {

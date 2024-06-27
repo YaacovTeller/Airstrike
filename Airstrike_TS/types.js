@@ -1,6 +1,3 @@
-const assetsFolder = "./AS_assets/";
-const assetsSVGFolder = assetsFolder + "SVG/";
-const classicExplosion = 'expl1.gif';
 var ExplSizes;
 (function (ExplSizes) {
     ExplSizes[ExplSizes["small"] = 100] = "small";
@@ -28,6 +25,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -74,6 +72,13 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -140,6 +145,7 @@ const dev = {
 };
 const sniperInfo = {
     name: weaponNames.gun,
+    class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
     sound: gunSounds,
@@ -150,6 +156,7 @@ const sniperInfo = {
 };
 const mortarInfo = {
     name: weaponNames.mortar,
+    class: ExplosiveWeaponType,
     blastRadius: 50,
     cursor: "cursor2",
     explosionInfo: {
@@ -167,6 +174,7 @@ const mortarInfo = {
 };
 const howitzerInfo = {
     name: weaponNames.tank,
+    class: ExplosiveWeaponType,
     blastRadius: 70,
     cursor: "cursor3",
     explosionInfo: {
@@ -185,6 +193,7 @@ const howitzerInfo = {
 };
 const airstrikeInfo = {
     name: weaponNames.airstrike,
+    class: ExplosiveWeaponType,
     blastRadius: 100,
     cursor: "cursor4",
     explosionInfo: {
@@ -203,6 +212,7 @@ const airstrikeInfo = {
 };
 const nukeInfo = {
     name: weaponNames.nuke,
+    class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
     explosionInfo: {
@@ -221,6 +231,7 @@ const nukeInfo = {
 };
 const chargeInfo = {
     name: weaponNames.tunnelcharge,
+    class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
     sound: gunSounds,
@@ -231,6 +242,7 @@ const chargeInfo = {
 };
 const droneInfo = {
     name: weaponNames.drone,
+    class: DroneWeaponType,
     cursor: "cursor4",
     blastRadius: 0,
     explosionInfo: {
@@ -332,3 +344,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

@@ -12,6 +12,7 @@ class level {
         this.frequency = game.difficulty.newTargetEvery;
         PopupHandler.addToArray("", this.constructor.name.replace("_", " "), msgLength.long);
     }
+    // Start // 
     winLimitCheck() {
         if (this.targets.length >= this.currentLimit) {
             this.pauseWave();
@@ -42,7 +43,8 @@ class level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         if (this.index >= this.winLimits.length) {
             PopupHandler.addToArray("Past array length, /n pls fix this, wth");
         }
@@ -52,6 +54,7 @@ class level {
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -79,6 +82,7 @@ class level {
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         this.targetTimer = setInterval(() => {
             this.produceSingleTarget();
         }, this.frequency);
@@ -100,7 +104,7 @@ class level {
         allTargets = [];
         this.resetWincheck();
     }
-    addNewWeapon(className, info) {
+    addNewWeapon(info) {
         let wepName = weaponNames[info.name];
         if (allWeaponTypes[info.name - 1]) {
             PopupHandler.addToArray("You got another " + wepName);
@@ -108,7 +112,7 @@ class level {
         }
         else {
             PopupHandler.addToArray("New weapon:\n" + wepName);
-            new className(info);
+            new info.class(info);
         }
         game.redrawHudWithWepSelectionChecked();
     }
@@ -117,22 +121,22 @@ class level_1 extends level {
     winLimits = [8, 22];
     armingUp() {
         console.log("ARMING");
-        this.addNewWeapon(BulletWeaponType, sniperInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(sniperInfo);
+        this.addNewWeapon(mortarInfo);
+        this.addNewWeapon(mortarInfo);
     }
     provideAvailTargets() {
         return new VehicleTarget(regTarget);
     }
     finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(mortarInfo);
     }
 }
 class level_2 extends level {
     winLimits = [12, 30];
     armingUp() {
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
-        this.addNewWeapon(ExplosiveWeaponType, mortarInfo);
+        this.addNewWeapon(howitzerInfo);
+        this.addNewWeapon(mortarInfo);
     }
     provideAvailTargets() {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -148,14 +152,14 @@ class level_2 extends level {
         return newTarget;
     }
     finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_3 extends level {
     winLimits = [6, 16];
     armingUp() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
     }
     provideAvailTargets() {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -168,15 +172,15 @@ class level_3 extends level {
         return newTarget;
     }
     finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, howitzerInfo);
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_4 extends level {
     winLimits = [5, 12];
     armingUp() {
-        this.addNewWeapon(ChargeWeaponType, chargeInfo);
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        this.addNewWeapon(chargeInfo);
+        this.addNewWeapon(airstrikeInfo);
     }
     provideAvailTargets() {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -192,14 +196,14 @@ class level_4 extends level {
         return newTarget;
     }
     finalStageArms() {
-        this.addNewWeapon(ChargeWeaponType, chargeInfo);
+        this.addNewWeapon(chargeInfo);
     }
 }
 class level_5 extends level {
     winLimits = [30, 70];
     armingUp() {
         if (!allWeaponTypes[weaponNames.nuke - 1]) {
-            this.addNewWeapon(ExplosiveWeaponType, nukeInfo);
+            this.addNewWeapon(nukeInfo);
         }
     }
     provideAvailTargets() {
@@ -222,6 +226,7 @@ class level_5 extends level {
         return newTarget;
     }
     finalStageArms() {
-        this.addNewWeapon(ExplosiveWeaponType, airstrikeInfo);
+        this.addNewWeapon(airstrikeInfo);
     }
 }
+//# sourceMappingURL=level.js.map
