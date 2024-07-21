@@ -318,7 +318,7 @@ class level_6 extends level_5 {
 
 class level_continuous extends level {
     public waves: Array<wave> = [
-            new wave(3, waveType.sudden),
+            new wave(12, waveType.sudden),
         ]
     public setCurrentWave() {
         let newWave: wave
