@@ -166,7 +166,7 @@
 .explosion {
     position: absolute;
     user-select: none;
-    z-index: 4;
+    z-index: 6;
 }
 .wepNum {
     position: fixed;
