@@ -252,13 +252,10 @@ class ExplosiveWeaponType extends WeaponType {
         let direc = this.determineDirectionForFlip(collisionInfo);
         if (target.damage != Damage.destroyed) {
             target.hit(severity, this.name, direc); // TARGET - Main hit function
-            //if (target.status == Status.active) {
-            //    this.bonusHitSound();
-            //}
         }
     }
     ricochetChance() {
-        RandomNumberGen.randomNumBetween(1, 10) > 6 ? RandomSoundGen.playRandomSound(ricochet) : "";
+        RandomNumberGen.randomNumBetween(1, 10) > 7 ? RandomSoundGen.playRandomSound(ricochet) : "";
     }
     determineExceptionsForArmour(target, severity) {
         let exception = false;

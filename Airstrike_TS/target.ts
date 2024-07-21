@@ -13,11 +13,13 @@ class Target {
     public status: number = Status.active;
     public damage: number = Damage.undamaged;
     public movesAtBlast: boolean;
+    protected info: TargetInfo;
 
     constructor(info: TargetInfo, position?: position) {
+        this.info = info;
         this.targetEl = document.createElement("div");
         this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
-        let picSrc = assetsFolder + info.picSources[RandomNumberGen.randomNumBetween(0, info.picSources.length - 1)];
+        let picSrc = assetsFolder + this.info.picSources[RandomNumberGen.randomNumBetween(0, this.info.picSources.length - 1)];
         this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
         this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
@@ -25,8 +27,8 @@ class Target {
         ContentElHandler.addToContentEl(this.targetEl);
 
         position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
-        this.speed = RandomNumberGen.randomNumBetween(info.minSpeed, info.maxSpeed);
-        this.armour = info.armour;
+        this.speed = RandomNumberGen.randomNumBetween(this.info.minSpeed, this.info.maxSpeed);
+        this.armour = this.info.armour;
     }
     private returnNewImageEl(parent: HTMLElement, classname: string, src?: string) {
         let el = document.createElement('img');
@@ -84,8 +86,8 @@ class TunnelTarget extends Target {
     private newTargetFrequency: number = 5000;
 
     private trail: HTMLElement;
-    constructor(info: TargetInfo) {
-        super(info);
+    constructor() {
+        super(regTunnelTarget);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
         this.targetEl.classList.remove('flexCenter'); // MESSY
@@ -105,7 +107,7 @@ class TunnelTarget extends Target {
         if (num >= 90) {
             let rect = this.getTargetEl().getBoundingClientRect();
             let pos: position = { X: rect.x, Y: rect.y }
-            let newTarget = new VehicleTarget(regTarget, pos);
+            let newTarget = new RegVehicleTarget(pos);
             RandomSoundGen.playSequentialSound(revs);
             game.targetCreation(newTarget);
         }
@@ -243,5 +245,21 @@ class VehicleTarget extends Target {
         this.picEl.classList.remove('flipbackward');
         this.picEl.classList.add('flip' + direc); // ROTATION
         setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
+    }
+}
+
+class RegVehicleTarget extends VehicleTarget {
+    constructor(position?: position) {
+        super(regTarget, position);
+    }
+}
+class ModVehicleTarget extends VehicleTarget {
+    constructor(position?: position) {
+        super(modTarget, position);
+    }
+}
+class HeavyVehicleTarget extends VehicleTarget {
+    constructor(position?: position) {
+        super(heavyTarget, position);
     }
 }

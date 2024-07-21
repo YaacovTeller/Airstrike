@@ -7,7 +7,7 @@ enum GameMode {
     'sandbox'
 }
 
-var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5]
+var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5, level_6]
 var allWeaponTypes: Array<WeaponType> = []
 var allTargets: Array<Target> = []
 
@@ -20,6 +20,7 @@ class GameHandler {
     public shotCount: number = 0;
     private language: Languages = Languages.eng;
     public difficulty: difficultyLevelInfo;
+    public gameMode: GameMode;
     public masterTargets: Array<Target> = []
 
 
@@ -43,10 +44,13 @@ class GameHandler {
         document.getElementById("loader").style.display = 'none';
     }
 
-    private newLevel(LevelClass) {
+    private newLevel(LevelClass, mode: GameMode) {
+        if (mode == GameMode.sandbox) {
+
+        }
         let index = allLevelClassesArray.indexOf(LevelClass);
         let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index]
-        this.level = new LevelClass(() => this.newLevel(nextLevel));
+        this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
         this.level.nextWave();
     }
 
@@ -166,20 +170,31 @@ class GameHandler {
         if (int && allWeaponTypes[int - 1]) {
             this.changeWeapon(allWeaponTypes[int - 1]);
         }
-        else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
+        //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
+        else if (event.key === 's') { this.level.showActiveTargets(); }
         else if (event.shiftKey && event.key === 'A') {
             this.addAllWeapons();
         }
     }
+
+    private addFullWeaponLoadout() {
+        this.addAllWeapons();
+        this.addAllWeapons();
+        this.addAllWeapons();
+        this.level.addNewWeapon(mortarInfo, false);
+        this.level.addNewWeapon(howitzerInfo, false);
+        this.level.addNewWeapon(airstrikeInfo, false);
+    }
+
     private addAllWeapons() {
-        this.level.addNewWeapon(sniperInfo);
-        this.level.addNewWeapon(chargeInfo);
-        this.level.addNewWeapon(mortarInfo);
-        this.level.addNewWeapon(howitzerInfo);
-        this.level.addNewWeapon(airstrikeInfo);
-        this.level.addNewWeapon(droneInfo);
+        this.level.addNewWeapon(sniperInfo, false);
+        this.level.addNewWeapon(chargeInfo, false);
+        this.level.addNewWeapon(mortarInfo, false);
+        this.level.addNewWeapon(howitzerInfo, false);
+        this.level.addNewWeapon(airstrikeInfo, false);
+        this.level.addNewWeapon(droneInfo, false);
         if (!allWeaponTypes[weaponNames.nuke-1]) {
-            this.level.addNewWeapon(nukeInfo);
+            this.level.addNewWeapon(nukeInfo, false);
         }
     }
     private positionElem(elem: HTMLElement, pos: position) {
@@ -222,10 +237,6 @@ class GameHandler {
 
     public targetCreation(newTarget: Target) {
         this.level.produceSingleTarget(newTarget);
-    }
-
-    public returnLevelLimit() {
-        return this.level.currentLimit
     }
 
     private startAmbience() {
@@ -286,12 +297,7 @@ class GameHandler {
             }
         }
     }
-    private wave_gradual() {
 
-    }
-    private wave_sudden() {
-
-    }
     public pause() {
         this.toggleModal();
         clearInterval(this.gameTimer);
@@ -321,15 +327,14 @@ class GameHandler {
         if (this.gameWasPlayed) {
             this.reset();
         }
+        this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
         if (mode == GameMode.regular) {
-            this.newLevel(allLevelClassesArray[0])
+            this.newLevel(allLevelClassesArray[0], mode)
         }
         else if (mode = GameMode.sandbox) {
-            this.newLevel(allLevelClassesArray[4])
-            this.addAllWeapons();
-            this.addAllWeapons();
-            this.addAllWeapons();
+            this.newLevel(level_continuous, mode)
+            this.addFullWeaponLoadout();
         }
         this.hud.drawHUD();
         this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level

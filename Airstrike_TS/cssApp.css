@@ -147,6 +147,7 @@
 .destroyed {
     width: 100%;
     padding-bottom: 22px;
+    z-index: 3;
 }
 .preFire {
     border: 2px dashed black;
@@ -165,7 +166,7 @@
 .explosion {
     position: absolute;
     user-select: none;
-    z-index: 1;
+    z-index: 4;
 }
 .wepNum {
     position: fixed;

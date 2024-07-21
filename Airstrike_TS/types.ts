@@ -23,6 +23,7 @@ enum Armour {
     heavy,
 }
 type TargetInfo = {
+    class: typeof Target,
     maxSpeed: number,
     minSpeed: number,
     armour: Armour,
@@ -30,24 +31,28 @@ type TargetInfo = {
 }
 // speeds are actually set with the difficulty settings. Nominal values here
 const regTarget: TargetInfo = {
+    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 8,
     armour: Armour.none,
     picSources: ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png','jeep3.png', 'jeep3.png', 'jeep4_cres.png']
 }
 const modTarget: TargetInfo = {
+    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 6,
     armour: Armour.moderate,
     picSources: ['jeep_grey.png']
 }
 const heavyTarget: TargetInfo = {
+    class: VehicleTarget,
     minSpeed: 1,
     maxSpeed: 3,
     armour: Armour.heavy,
     picSources: ['jeep_grey_armour.png']
 }
 const regTunnelTarget: TargetInfo = {
+    class: TunnelTarget,
     minSpeed: 1,
     maxSpeed: 2,
     armour: Armour.moderate,
@@ -300,7 +305,7 @@ const droneInfo: ExplosiveWeaponInfo = {
     blastRadius: 0,
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + 'mushroom_1.gif',
+        imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         length: 1000,
     },
