@@ -309,7 +309,7 @@ class level_6 extends level_5 {
 }
 class level_continuous extends level {
     waves = [
-        new wave(12, waveType.sudden),
+        new wave(14, waveType.gradual),
     ];
     setCurrentWave() {
         let newWave;
