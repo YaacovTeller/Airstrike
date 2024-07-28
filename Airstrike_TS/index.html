@@ -39,7 +39,14 @@
         <div id="modal">
             <div class="modalContainer">
                 <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
-                <button id="devDiff"><span>dev</span></button>
+                <!--<button id="devDiff"><span>dev</span></button>-->
+                <div id="input-container">
+                    <div id="userNameInput" >
+                        <input type="text" id="username" placeholder="Enter your name">
+                        <button id="userInput" class="greenButtonStyle">Submit</button>
+                    </div>
+                    <div class="displayNone" id="userDisplay"></div>
+                </div>
                 <div class="directionalFluidContainer">
                     <div>
                         <h2 class="eng">Intructions:</h2>
@@ -108,6 +115,7 @@
 </html>
 <script src="const.js"></script>
 <script src="sound.js"></script>
+<script src="users.js"></script>
 <script src="weaponType.js"></script>
 <script src="target.js"></script>
 <script src="types.js"></script>

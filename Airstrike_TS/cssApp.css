@@ -3,6 +3,7 @@
     display: flex;
     justify-content: flex-start;
 }
+
 .hud {
     width: 100%;
     border-radius: var(--borderRad);
@@ -12,6 +13,7 @@
     justify-content: space-between;
     z-index: 10;
 }
+
 .score {
     background-color: rgba(224, 255, 255, 0.5);
     border-radius: var(--borderRad);
@@ -20,12 +22,15 @@
     height: fit-content;
     padding: 8px;
 }
+
 .red {
     color: red;
 }
+
 .paddingBottom20 {
     padding-bottom: 20px;
 }
+
 .wepBox {
     border-radius: var(--borderRad);
     height: 80%;
@@ -34,24 +39,28 @@
     display: flex;
     justify-content: flex-start;
     align-items: end;
-
     background-position: center;
     background-size: contain;
     background-repeat: no-repeat;
 }
+
     .wepBox.selected {
         background-color: #3ca3ff7a;
     }
+
         .wepBox.selected .instBox {
             background-color: lightgray;
             opacity: 0.6;
         }
+
             .wepBox.selected .instBox.instSelected {
                 background-color: forestgreen;
             }
+
             .wepBox.selected .instBox.instUnavailable {
                 background-color: indianred;
             }
+
 .instBox {
     border-radius: 2px;
     height: 20px;
@@ -60,6 +69,7 @@
     background-color: rgb(173,216,230);
     opacity: 0.6;
 }
+
     .instBox.instUnavailable {
         background-color: indianred;
     }
@@ -67,12 +77,15 @@
 .cursor1 {
     cursor: url(./AS_assets/cursors/sniper.cur), crosshair;
 }
+
 .cursor2 {
     cursor: url(./AS_assets/cursors/crosshair.cur), crosshair;
 }
+
 .cursor3 {
     cursor: url(./AS_assets/cursors/target.cur), crosshair;
 }
+
 .cursor4 {
     cursor: url(./AS_assets/cursors/bazooka.cur), crosshair;
 }
@@ -82,15 +95,17 @@
     align-items: center;
     justify-content: center;
 }
+
 .flexEnd {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    
 }
+
 .smoothTransition {
     transition: left 0.1s linear;
 }
+
 .target {
     position: absolute;
     width: 45px;
@@ -100,28 +115,33 @@
     transition: opacity 8s ease-in-out;
     /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
+
     .target > img {
         position: absolute;
         max-width: 100%;
         max-height: 100%;
         user-select: none;
     }
+
     .target > .lockon {
         visibility: hidden;
         opacity: 0.3;
         animation: expandContract 1.5s linear infinite
     }
+
 .tunnelHead:hover > .lockon {
     visibility: var(--chargeSelected);
 }
+
 .tunnelHead {
     /*    background-color: rgb(195,170,100);*/
     /*    filter: blur(15px);*/
-
 }
+
 .tunnelFocus {
     cursor: url(./AS_assets/cursors/unbounded.cur), crosshair;
 }
+
 .trail {
     pointer-events: none;
     position: absolute;
@@ -131,49 +151,57 @@
     justify-content: space-between;
     border-radius: 0px 100px 100px 0px;
     box-shadow: 0px 0px 50px rgba(90,90,90,.8);
-
     transition: opacity 3s ease-in-out;
 }
+
 .lightDamaged {
     width: 100%;
     padding-bottom: 35px;
     padding-left: 20px;
     z-index: 4;
 }
+
 .badDamaged {
     width: 60%;
     padding-bottom: 22px;
 }
+
 .destroyed {
     width: 100%;
     padding-bottom: 22px;
     z-index: 3;
 }
+
 .preFire {
     border: 2px dashed black;
     border-style: dashed;
     animation: rotate 40s linear infinite;
 }
+
 .nukeIndicator {
     background-image: url(./AS_assets/SVG/rad.svg);
     background-repeat: no-repeat;
-    background-position:center;
+    background-position: center;
 }
+
 .firing {
     /*    background-color: lightblue;*/
     background-color: rgba(173, 216, 230, 0.5);
 }
+
 .explosion {
     position: absolute;
     user-select: none;
     z-index: 6;
 }
+
 .wepNum {
     position: fixed;
     top: 0;
     padding-left: 6px;
     font-weight: 800;
 }
+
 .blastRadius {
     opacity: 0.5;
     position: fixed;
@@ -181,6 +209,7 @@
     /*    pointer-events: none;
 */ /*overflow: hidden;*/
 }
+
 .crater {
     position: absolute;
     z-index: -1;
@@ -198,22 +227,19 @@ img#crater { /*to override the img[src]!*/
     animation: ripple 1000ms linear;
     background-color: rgba(255, 255, 255, 0.7);
 }
-.flipbackward {
-    transition: transform var(--crashTimeout) linear;
-    transform: rotate(-200deg);
-}
-.flipforward {
-    transition: transform var(--crashTimeout) linear;
-    transform: rotate(160deg);
-}
 
+.flip {
+    transition: transform var(--crashTimeout) linear;
+}
 
 .show {
     opacity: 1;
 }
+
 .hide {
     opacity: 0;
 }
-.displayNone{
+
+.displayNone {
     display: none;
 }

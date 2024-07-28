@@ -85,12 +85,14 @@
     padding: 10px;
     font-size: 16px;
 }
-#devDiff {
+/*#devDiff {
     width: fit-content;
     font-size: xx-small;
     border: none;
+}*/
+#input-container {
+    margin: auto;
 }
-
 /**/
 ul li {
     color: #AAAAAA;

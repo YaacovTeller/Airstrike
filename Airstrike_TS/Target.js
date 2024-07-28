@@ -78,7 +78,7 @@ class TunnelTarget extends Target {
         super(regTunnelTarget);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
-        this.targetEl.classList.remove('flexCenter');
+        this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.picEl.classList.add('tunnelFocus');
@@ -120,6 +120,7 @@ class TunnelTarget extends Target {
     }
     removeTunnel(length) {
         this.trail.classList.add('hide');
+        //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove(); }, 8000);
     }
     blowTunnel() {
@@ -133,7 +134,7 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                let mrtr = allWeaponTypes[weaponNames.mortar];
+                let mrtr = allWeaponTypes[weaponNames.mortar]; // MESSY
                 if (mrtr) {
                     let pos = CollisionDetection.getXYfromPoint(imgArr[index]);
                     mrtr.checkForTargets(pos, allTargets);
@@ -155,12 +156,13 @@ class VehicleTarget extends Target {
     damagedSource = assetsFolder + 'smoke_3.gif';
     badDamagedSource = assetsFolder + 'fire_1.gif';
     movesAtBlast = true;
+    angle = 0;
     constructor(info, position) {
         super(info, position);
     }
     hit(sev, wepName, direc) {
         this.targetEl.classList.remove('smoothTransition');
-        if (wepName == weaponNames.gun) {
+        if (wepName == weaponNames.gun) { // JUST FOR GUN
             setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200));
             this.damage = Damage.damaged;
             this.damageEl.src = this.damagedSource;
@@ -169,7 +171,7 @@ class VehicleTarget extends Target {
         else {
             if (sev > strikeSeverity.light) {
                 this.status = Status.disabled;
-                this.hitAcknowledge();
+                this.hitAcknowledge(); /////// put with the other!!!
             }
             if (sev == strikeSeverity.light) {
                 this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
@@ -188,6 +190,7 @@ class VehicleTarget extends Target {
             }
             if (sev == strikeSeverity.catastrophic) {
                 this.damage = Damage.destroyed;
+                this.removeFlip();
                 this.picEl.src = this.destroyedSource;
                 this.picEl.className = 'destroyed';
                 this.damageEl.style.visibility = "hidden";
@@ -195,6 +198,10 @@ class VehicleTarget extends Target {
                 ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
             }
         }
+    }
+    removeFlip() {
+        this.picEl.classList.remove('flip');
+        this.picEl.style.transform = `rotate(${0}deg)`;
     }
     hitAcknowledge() {
         if (this.damage <= Damage.damaged) {
@@ -211,11 +218,16 @@ class VehicleTarget extends Target {
         this.flip(direc);
     }
     flip(direc) {
-        CollisionDetection.throw(this.targetEl, direc);
-        this.picEl.classList.remove('flipforward');
-        this.picEl.classList.remove('flipbackward');
-        this.picEl.classList.add('flip' + direc);
-        setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
+        CollisionDetection.throw(this.targetEl, direc); // ARC
+        const angles = [-560, -360, -200, 0, 160, 360, 520];
+        const index = angles.indexOf(this.angle);
+        let deg = direc == direction.forward ? angles[index + 1] : angles[index - 1];
+        this.angle = deg;
+        this.picEl.style.transform = `rotate(${deg}deg)`;
+        this.picEl.classList.add('flip'); // ROTATION
+        setTimeout(() => {
+            RandomSoundGen.playRandomSound(crashes);
+        }, crashTimeout);
     }
 }
 class RegVehicleTarget extends VehicleTarget {
@@ -233,3 +245,4 @@ class HeavyVehicleTarget extends VehicleTarget {
         super(heavyTarget, position);
     }
 }
+//# sourceMappingURL=target.js.map

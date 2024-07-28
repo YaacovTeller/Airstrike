@@ -224,6 +224,7 @@
     <TypeScriptCompile Include="types.ts" />
     <TypeScriptCompile Include="sound.ts" />
     <TypeScriptCompile Include="target.ts" />
+    <TypeScriptCompile Include="users.ts" />
     <TypeScriptCompile Include="weaponType.ts" />
   </ItemGroup>
   <ItemGroup>

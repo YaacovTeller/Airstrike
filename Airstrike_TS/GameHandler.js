@@ -22,7 +22,7 @@ class GameHandler {
     difficulty;
     gameMode;
     masterTargets = [];
-    level;
+    level; // messy, fix
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -30,11 +30,15 @@ class GameHandler {
     constructor(element) {
         this.contentEl = element;
         this.progressBar = document.getElementById('progress');
+        userHandler.getUserInfo();
+        if (userHandler.userName) {
+            userHandler.displayName();
+        }
         this.progressNumber = 30;
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); };
+        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
@@ -55,6 +59,7 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbuttonSandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
+        document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr);
         this.toggleLang();
         this.toggleModal();
@@ -114,6 +119,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -140,24 +146,28 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        this.weapon.fireFunc(allTargets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
-        if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
-            this.fireFunc();
-        }
-        else if (event.key === 'Escape') {
+        if (event.key === 'Escape') {
             this.toggleGamePause();
         }
-        let int = parseInt(event.key);
-        if (int && allWeaponTypes[int - 1]) {
-            this.changeWeapon(allWeaponTypes[int - 1]);
-        }
-        else if (event.key === 's') {
-            this.level.showActiveTargets();
-        }
-        else if (event.shiftKey && event.key === 'A') {
-            this.addAllWeapons();
+        if (game.gameInProgress) {
+            if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
+                this.fireFunc();
+            }
+            let int = parseInt(event.key);
+            if (int && allWeaponTypes[int - 1]) {
+                this.changeWeapon(allWeaponTypes[int - 1]);
+            }
+            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
+            else if (event.key === 's') {
+                this.level.showActiveTargets();
+            }
+            else if (event.shiftKey && event.key === 'A') {
+                this.addAllWeapons();
+            }
         }
     }
     addFullWeaponLoadout() {
@@ -205,7 +215,7 @@ class GameHandler {
                 x.switchFrom();
             }
         });
-        this.weapon.switchTo();
+        this.weapon.switchTo(); // Main weapon switch func
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -290,6 +300,9 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -305,7 +318,7 @@ class GameHandler {
             this.addFullWeaponLoadout();
         }
         this.hud.drawHUD();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
@@ -330,3 +343,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

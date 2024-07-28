@@ -33,13 +33,17 @@ class GameHandler {
     constructor(element: HTMLElement) {
         this.contentEl = element;
         this.progressBar = document.getElementById('progress');
+        userHandler.getUserInfo();
+        if (userHandler.userName) {
+            userHandler.displayName();
+        }
 
         this.progressNumber = 30;
         this.updateProgressBar();
 
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
+      //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
@@ -63,6 +67,7 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbuttonSandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
+        document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
 
         this.setMenuDifficulty(arr);
         this.toggleLang();
@@ -162,18 +167,22 @@ class GameHandler {
     }
 
     private handleKeyPress(event) {
-        if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') { this.fireFunc(); }
-        else if (event.key === 'Escape') {
+        if (event.key === 'Escape') {
             this.toggleGamePause();
         }
-        let int = parseInt(event.key);
-        if (int && allWeaponTypes[int - 1]) {
-            this.changeWeapon(allWeaponTypes[int - 1]);
-        }
-        //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
-        else if (event.key === 's') { this.level.showActiveTargets(); }
-        else if (event.shiftKey && event.key === 'A') {
-            this.addAllWeapons();
+        if (game.gameInProgress) {
+
+            if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') { this.fireFunc(); }
+
+            let int = parseInt(event.key);
+            if (int && allWeaponTypes[int - 1]) {
+                this.changeWeapon(allWeaponTypes[int - 1]);
+            }
+            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
+            else if (event.key === 's') { this.level.showActiveTargets(); }
+            else if (event.shiftKey && event.key === 'A') {
+                this.addAllWeapons();
+            }
         }
     }
 

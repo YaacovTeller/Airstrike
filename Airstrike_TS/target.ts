@@ -173,6 +173,7 @@ class VehicleTarget extends Target {
     protected damagedSource: string = assetsFolder + 'smoke_3.gif';
     protected badDamagedSource: string = assetsFolder + 'fire_1.gif';
     public movesAtBlast: boolean = true;
+    public angle: number = 0;
 
     constructor(info: TargetInfo, position?: position) {
         super(info, position);
@@ -214,6 +215,8 @@ class VehicleTarget extends Target {
             if (sev == strikeSeverity.catastrophic) {
                 this.damage = Damage.destroyed;
 
+                this.removeFlip();
+
                 this.picEl.src = this.destroyedSource;
                 this.picEl.className = 'destroyed';
                 this.damageEl.style.visibility = "hidden";
@@ -221,6 +224,10 @@ class VehicleTarget extends Target {
                 ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime)
             }
         }
+    }
+    private removeFlip() {
+        this.picEl.classList.remove('flip');
+        this.picEl.style.transform = `rotate(${0}deg)`;
     }
 
     private hitAcknowledge() {
@@ -240,12 +247,18 @@ class VehicleTarget extends Target {
     }
     protected flip(direc: direction) {
         CollisionDetection.throw(this.targetEl, direc); // ARC
+        const angles = [-560, -360, -200, 0, 160, 360, 520];
+        const index = angles.indexOf(this.angle);
+        let deg = direc == direction.forward ? angles[index + 1] : angles[index - 1];
+        this.angle = deg;
+        this.picEl.style.transform = `rotate(${deg}deg)`;
 
-        this.picEl.classList.remove('flipforward');
-        this.picEl.classList.remove('flipbackward');
-        this.picEl.classList.add('flip' + direc); // ROTATION
-        setTimeout(() => RandomSoundGen.playRandomSound(crashes), crashTimeout);
+        this.picEl.classList.add('flip'); // ROTATION
+        setTimeout(() => {
+            RandomSoundGen.playRandomSound(crashes)
+        }, crashTimeout);
     }
+
 }
 
 class RegVehicleTarget extends VehicleTarget {
