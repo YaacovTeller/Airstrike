@@ -237,11 +237,9 @@ class VehicleTarget extends Target {
             deg = 0;
             this.angle = deg;
             this.picEl.classList.remove('flip');
-            //      this.picEl.style.transition = 'none';
             requestAnimationFrame(() => {
                 setTimeout(() => {
                     this.picEl.style.transform = `rotate(${deg}deg)`;
-                    //              this.picEl.style.transition = '';
                     this.picEl.offsetHeight; // forces reflow
                     this.rotate(direc);
                 }, 0);
