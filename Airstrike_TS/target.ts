@@ -247,16 +247,40 @@ class VehicleTarget extends Target {
     }
     protected flip(direc: direction) {
         CollisionDetection.throw(this.targetEl, direc); // ARC
-        const angles = [-560, -360, -200, 0, 160, 360, 520];
-        const index = angles.indexOf(this.angle);
-        let deg = direc == direction.forward ? angles[index + 1] : angles[index - 1];
-        this.angle = deg;
-        this.picEl.style.transform = `rotate(${deg}deg)`;
+        this.rotate(direc);                             // ROTATION
 
-        this.picEl.classList.add('flip'); // ROTATION
         setTimeout(() => {
             RandomSoundGen.playRandomSound(crashes)
         }, crashTimeout);
+    }
+    protected rotate(direc) {
+        const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
+        const index = angles.indexOf(this.angle);
+        let rand = RandomNumberGen.randomNumBetween(0, 20)
+        let increment = 1;
+        if (rand > 18) {
+            increment++;
+        }
+        let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
+        if (deg == undefined) {
+            deg = 0;
+            this.angle = deg;
+            this.picEl.classList.remove('flip');
+      //      this.picEl.style.transition = 'none';
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    this.picEl.style.transform = `rotate(${deg}deg)`;
+      //              this.picEl.style.transition = '';
+                    this.picEl.offsetHeight;  // forces reflow
+                    this.rotate(direc);
+                }, 0);
+            });
+        }
+        else {
+            this.angle = deg;
+            this.picEl.classList.add('flip');
+            this.picEl.style.transform = `rotate(${deg}deg)`;
+        }
     }
 
 }

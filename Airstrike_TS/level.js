@@ -18,7 +18,6 @@ class level {
     index = -1;
     frequency;
     waves;
-    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
@@ -34,7 +33,6 @@ class level {
             PopupHandler.addToArray("", "Sandbox", msgLength.short);
         }
     }
-    // Start // 
     winLimitCheck() {
         let spentWave = false;
         if (this.targets.length >= this.currentWave.number) {
@@ -79,13 +77,11 @@ class level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        PopupHandler.addToArray("Nice job!" + "\n");
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
-            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -117,12 +113,10 @@ class level {
             RandomSoundGen.playSequentialSound(revs);
         }
         console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number);
-        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == waveType.gradual) {
             freq = this.frequency;
@@ -348,4 +342,3 @@ class level_continuous extends level {
         return newTarget;
     }
 }
-//# sourceMappingURL=level.js.map
