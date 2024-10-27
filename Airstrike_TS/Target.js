@@ -45,6 +45,13 @@ class Target {
         }
         this.targetEl.style.left = x + this.speed + "px";
     }
+    targetDisabled() {
+        this.status = Status.disabled;
+        this.transmitDestruction();
+    }
+    transmitDestruction() {
+        game.updateHudMultiKill();
+    }
     toggleLockOnStrike(bool) {
         bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg";
     }
@@ -100,14 +107,16 @@ class TunnelTarget extends Target {
     }
     setTargetProduction() {
         this.targetTimer = window.setInterval(() => {
-            this.produceTargetCheck();
+            if (game.gameTimer) {
+                this.produceTargetCheck();
+            }
         }, this.newTargetFrequency);
     }
     stopTargetProduction() {
         clearInterval(this.targetTimer);
     }
     hit(sev) {
-        this.status = Status.disabled;
+        this.targetDisabled();
         if (sev >= strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
             this.picEl.src = this.damagedSource;
@@ -170,7 +179,7 @@ class VehicleTarget extends Target {
         }
         else {
             if (sev > strikeSeverity.light) {
-                this.status = Status.disabled;
+                this.targetDisabled();
                 this.hitAcknowledge(); /////// put with the other!!!
             }
             if (sev == strikeSeverity.light) {
@@ -201,7 +210,7 @@ class VehicleTarget extends Target {
     }
     removeFlip() {
         this.picEl.classList.remove('flip');
-        this.picEl.style.transform = `rotate(${0}deg)`;
+        this.cssRotateAngle(0);
     }
     hitAcknowledge() {
         if (this.damage <= Damage.damaged) {
@@ -239,7 +248,7 @@ class VehicleTarget extends Target {
             this.picEl.classList.remove('flip');
             requestAnimationFrame(() => {
                 setTimeout(() => {
-                    this.picEl.style.transform = `rotate(${deg}deg)`;
+                    this.cssRotateAngle(deg);
                     this.picEl.offsetHeight; // forces reflow
                     this.rotate(direc);
                 }, 0);
@@ -248,8 +257,11 @@ class VehicleTarget extends Target {
         else {
             this.angle = deg;
             this.picEl.classList.add('flip');
-            this.picEl.style.transform = `rotate(${deg}deg)`;
+            this.cssRotateAngle(deg);
         }
+    }
+    cssRotateAngle(deg) {
+        this.picEl.style.transform = `rotate(${deg}deg)`;
     }
 }
 class RegVehicleTarget extends VehicleTarget {

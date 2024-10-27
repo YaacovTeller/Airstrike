@@ -1,3 +1,14 @@
+const multiKillText = {
+    2: { size: 30, colour: 'yellow' },
+    3: { size: 40, colour: 'orange' },
+    4: { size: 50, colour: 'red' },
+    5: { size: 60, colour: 'green' },
+    6: { size: 70, colour: 'blue' },
+    7: { size: 80, colour: 'purple' },
+    8: { size: 90, colour: 'brown' },
+    9: { size: 100, colour: 'grey' },
+    10: { size: 110, colour: 'black' },
+};
 var ExplSizes;
 (function (ExplSizes) {
     ExplSizes[ExplSizes["small"] = 100] = "small";
@@ -25,6 +36,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     class: VehicleTarget,
     minSpeed: 4,
@@ -75,6 +87,13 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -340,3 +359,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

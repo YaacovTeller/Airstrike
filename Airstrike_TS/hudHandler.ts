@@ -16,6 +16,7 @@ class HudHandler {
     private hud: HTMLElement
     private selectedWep: Element
     private scoreBox: HTMLElement
+    public multiKillBox: HTMLElement
     public killStats: killStats
 
     constructor() {
@@ -72,6 +73,28 @@ class HudHandler {
             wepBox.appendChild(instBox);
         }
     }
+    public drawMultiKill() {
+        this.multiKillBox = document.createElement('div');
+        this.multiKillBox.classList.add('multiKillBox', 'hide');
+        ContentElHandler.addToContentEl(this.multiKillBox)
+    }
+    public updateMultiKillBox(num: number) {
+        if (num > 10) {
+            num = 10
+        }
+        let textOption = multiKillText[num];
+        this.multiKillBox.innerText = "x" + num;
+        this.multiKillBox.style.fontSize = textOption.size + "px";
+        this.multiKillBox.style.color = textOption.colour;
+        this.multiKillBox.classList.remove('hide');
+        let numberAnimTime = 500;
+        this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
+        setTimeout(() => {
+            this.multiKillBox.classList.add('hide');
+            this.multiKillBox.style.removeProperty('animation');
+        }, numberAnimTime)
+    }
+
     public drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');

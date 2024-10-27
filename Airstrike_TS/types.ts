@@ -1,4 +1,14 @@
-﻿
+﻿const multiKillText = {
+    2: { size: 30, colour: 'yellow'},
+    3: { size: 40, colour: 'orange'},
+    4: { size: 50, colour: 'red'},
+    5: { size: 60, colour: 'green'},
+    6: { size: 70, colour: 'blue'},
+    7: { size: 80, colour: 'purple'},
+    8: { size: 90, colour: 'brown'},
+    9: { size: 100, colour: 'grey'},
+    10: { size: 110, colour: 'black'},
+}
 enum ExplSizes {
     small = 100,
     large = 140,

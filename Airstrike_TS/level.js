@@ -18,6 +18,7 @@ class level {
     index = -1;
     frequency;
     waves;
+    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
@@ -33,6 +34,7 @@ class level {
             PopupHandler.addToArray("", "Sandbox", msgLength.short);
         }
     }
+    // Start // 
     winLimitCheck() {
         let spentWave = false;
         if (this.targets.length >= this.currentWave.number) {
@@ -44,10 +46,18 @@ class level {
                 console.log("HIT existing wincheck!");
                 return;
             }
+            let winCheckIndex = 0;
             this.winCheckTimer = setInterval(() => {
                 if (this.checkForNilActiveTargets()) {
                     this.resetWincheck();
                     this.endWave();
+                }
+                winCheckIndex++;
+                if (winCheckIndex >= 80) {
+                    winCheckIndex = 0;
+                    if (this.checkForDamagedActiveTargets()) {
+                        PopupHandler.addToArray("Press 'S' to scan for survivors...");
+                    }
                 }
             }, 100);
         }
@@ -66,6 +76,15 @@ class level {
             }
         }
     }
+    checkForDamagedActiveTargets() {
+        let warn = false;
+        for (let t of this.targets) {
+            if (t.damage != Damage.undamaged && t.status === Status.active) {
+                warn = true;
+            }
+        }
+        return warn;
+    }
     checkForNilActiveTargets() {
         let fin = true;
         for (let t of this.targets) {
@@ -77,11 +96,13 @@ class level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -113,10 +134,12 @@ class level {
             RandomSoundGen.playSequentialSound(revs);
         }
         console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number);
+        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == waveType.gradual) {
             freq = this.frequency;
@@ -159,7 +182,7 @@ class level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
-        game.redrawHudWithWepSelectionChecked();
+        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 class level_1 extends level {
@@ -342,3 +365,4 @@ class level_continuous extends level {
         return newTarget;
     }
 }
+//# sourceMappingURL=level.js.map

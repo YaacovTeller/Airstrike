@@ -9,6 +9,7 @@ class HudHandler {
     hud;
     selectedWep;
     scoreBox;
+    multiKillBox;
     killStats;
     constructor() {
         this.killStats = {
@@ -63,6 +64,27 @@ class HudHandler {
             wepBox.appendChild(instBox);
         }
     }
+    drawMultiKill() {
+        this.multiKillBox = document.createElement('div');
+        this.multiKillBox.classList.add('multiKillBox', 'hide');
+        ContentElHandler.addToContentEl(this.multiKillBox);
+    }
+    updateMultiKillBox(num) {
+        if (num > 10) {
+            num = 10;
+        }
+        let textOption = multiKillText[num];
+        this.multiKillBox.innerText = "x" + num;
+        this.multiKillBox.style.fontSize = textOption.size + "px";
+        this.multiKillBox.style.color = textOption.colour;
+        this.multiKillBox.classList.remove('hide');
+        let numberAnimTime = 500;
+        this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
+        setTimeout(() => {
+            this.multiKillBox.classList.add('hide');
+            this.multiKillBox.style.removeProperty('animation');
+        }, numberAnimTime);
+    }
     drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
@@ -96,6 +118,7 @@ class HudHandler {
                 span.classList.remove('red');
         }
         if (title === killStatsOptions.total) {
+            //  span.innerText += "/" + game.returnLevelLimit();
         }
     }
     updateScore(shots) {
@@ -115,7 +138,7 @@ class HudHandler {
         let weps = this.hud.getElementsByClassName('wepBox');
         let wepBox = null;
         for (let x of weps) {
-            select ? x.classList.remove("selected") : "";
+            select ? x.classList.remove("selected") : ""; // MESSY
             if (x.getAttribute('data-name') === wepName.toString()) {
                 wepBox = x;
                 if (select) {
@@ -144,3 +167,4 @@ class HudHandler {
         this.genericChangeClass(num, name, "remove", "instUnavailable");
     }
 }
+//# sourceMappingURL=hudHandler.js.map

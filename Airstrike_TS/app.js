@@ -4,3 +4,4 @@ window.onload = () => {
     loadSound();
     game = new GameHandler(contentEl);
 };
+//# sourceMappingURL=app.js.map

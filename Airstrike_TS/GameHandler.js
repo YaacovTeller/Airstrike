@@ -22,7 +22,8 @@ class GameHandler {
     difficulty;
     gameMode;
     masterTargets = [];
-    level;
+    sequentialHits = 0;
+    level; // messy, fix
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -38,6 +39,7 @@ class GameHandler {
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
@@ -118,6 +120,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -144,7 +147,8 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        this.weapon.fireFunc(allTargets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
         if (event.key === 'Escape') {
@@ -158,6 +162,7 @@ class GameHandler {
             if (int && allWeaponTypes[int - 1]) {
                 this.changeWeapon(allWeaponTypes[int - 1]);
             }
+            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
             else if (event.key === 's') {
                 this.level.showActiveTargets();
             }
@@ -211,7 +216,7 @@ class GameHandler {
                 x.switchFrom();
             }
         });
-        this.weapon.switchTo();
+        this.weapon.switchTo(); // Main weapon switch func
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -232,6 +237,15 @@ class GameHandler {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
             this.progressBar.style.width = this.progressNumber + '%';
         }
+    }
+    updateHudMultiKill() {
+        this.sequentialHits += 1;
+        setTimeout(() => {
+            if (this.sequentialHits >= 2) {
+                this.hud.updateMultiKillBox(this.sequentialHits);
+            }
+            this.sequentialHits = 0;
+        }, 400);
     }
     updateHudScore() {
         let targets = allTargets;
@@ -276,6 +290,7 @@ class GameHandler {
             }
             else {
                 this.start_unpause();
+                this.level.continueWave(); // UNPAUSE
             }
         }
     }
@@ -290,12 +305,16 @@ class GameHandler {
         }
     }
     reset() {
+        console.log("RAN RESET");
         this.level.resetTargets();
         this.level.pauseWave();
         this.level = null;
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -311,18 +330,16 @@ class GameHandler {
             this.addFullWeaponLoadout();
         }
         this.hud.drawHUD();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.drawMultiKill();
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
     start_unpause() {
-        if (this.gameInProgress == false) {
+        if (this.gameInProgress == false) { // NEW GAME
             this.gameInProgress = true;
             this.gameWasPlayed = true;
             this.redrawHudWithWepSelectionChecked();
-        }
-        else {
-            this.level.continueWave();
         }
         this.startAmbience();
         this.toggleModal();
@@ -336,3 +353,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

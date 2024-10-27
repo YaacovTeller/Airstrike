@@ -23,9 +23,9 @@ class GameHandler {
     public gameMode: GameMode;
     public masterTargets: Array<Target> = []
 
-
+    private sequentialHits: number = 0;
     public level: level;   // messy, fix
-    private gameTimer: number;
+    public gameTimer: number;
     private soundTimer: number;
     private gameInProgress: boolean = false;
     private gameWasPlayed: boolean = false;
@@ -259,6 +259,15 @@ class GameHandler {
             this.progressBar.style.width = this.progressNumber + '%';
         }
     }
+    public updateHudMultiKill() {
+        this.sequentialHits += 1;
+        setTimeout(() => {
+            if (this.sequentialHits >= 2) {
+                this.hud.updateMultiKillBox(this.sequentialHits);
+            }
+            this.sequentialHits = 0;
+        }, 400)
+    }
    
     private updateHudScore() {
         let targets = allTargets;
@@ -298,11 +307,11 @@ class GameHandler {
     public toggleGamePause() {
         if (this.gameInProgress) {
             if (this.gameTimer) {
-
                 this.pause();
             }
             else {
                 this.start_unpause();
+                this.level.continueWave(); // UNPAUSE
             }
         }
     }
@@ -320,6 +329,7 @@ class GameHandler {
         }
     }
     public reset() {
+        console.log("RAN RESET")
         this.level.resetTargets();
         this.level.pauseWave();
         this.level = null;
@@ -346,6 +356,7 @@ class GameHandler {
             this.addFullWeaponLoadout();
         }
         this.hud.drawHUD();
+        this.hud.drawMultiKill();
         this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
 
@@ -353,13 +364,10 @@ class GameHandler {
     }
 
     public start_unpause() {
-        if (this.gameInProgress == false) {
+        if (this.gameInProgress == false) { // NEW GAME
             this.gameInProgress = true;
             this.gameWasPlayed = true;
             this.redrawHudWithWepSelectionChecked();
-        }
-        else {
-            this.level.continueWave();
         }
         this.startAmbience();
         this.toggleModal();

@@ -49,10 +49,20 @@ abstract class level {
                 console.log("HIT existing wincheck!")
                 return
             }
+            let winCheckIndex = 0;
             this.winCheckTimer = setInterval(() => {
                 if (this.checkForNilActiveTargets()) {
                     this.resetWincheck();
                     this.endWave();
+                }
+                winCheckIndex++;
+                if (winCheckIndex >= 80) {
+                    winCheckIndex = 0;
+                    if (this.checkForDamagedActiveTargets()) {
+                        PopupHandler.addToArray(
+                            "Press 'S' to scan for survivors..."
+                        );
+                    }
                 }
             }, 100);
         }
@@ -71,6 +81,16 @@ abstract class level {
             }
         }
     }
+    protected checkForDamagedActiveTargets() {
+        let warn: boolean = false;
+        for (let t of this.targets) {
+            if (t.damage != Damage.undamaged && t.status === Status.active) {
+                warn = true;
+            }
+        }
+        return warn;
+    }
+
     protected checkForNilActiveTargets() {
         let fin: boolean = true;
         for (let t of this.targets) {
@@ -136,10 +156,10 @@ abstract class level {
         else if (this.currentWave.type == waveType.sudden) {
             freq = 50;
         }
-        this.targetTimer = setInterval(() => {
-            this.produceSingleTarget();
-        }, freq);
-    }
+            this.targetTimer = setInterval(() => {
+                this.produceSingleTarget();
+            }, freq);
+        }
     public produceSingleTarget(tgt?: Target) {
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
@@ -172,7 +192,7 @@ abstract class level {
                 PopupHandler.addToArray("New weapon:\n" + wepName)
             }
         }
-        game.redrawHudWithWepSelectionChecked();
+   //     game.redrawHudWithWepSelectionChecked();
     }
 }
 class level_1 extends level {
