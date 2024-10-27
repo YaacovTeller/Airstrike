@@ -529,6 +529,7 @@ class ExplosionHandler {
         explosion.style.visibility = "visible";
         crater.style.visibility = "visible";
         ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
+        ContentElHandler.fadeRemoveItem(explosion, 2000, 100);
     }
     private static setAndReturnExplosion(blastCenter, size, explSrc) {
         let explosion = this.returnNewImageEl("explosion");

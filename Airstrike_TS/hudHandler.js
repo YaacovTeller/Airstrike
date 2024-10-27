@@ -78,7 +78,7 @@ class HudHandler {
         this.multiKillBox.style.fontSize = textOption.size + "px";
         this.multiKillBox.style.color = textOption.colour;
         this.multiKillBox.classList.remove('hide');
-        let numberAnimTime = 500;
+        let numberAnimTime = 800;
         this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
         setTimeout(() => {
             this.multiKillBox.classList.add('hide');
