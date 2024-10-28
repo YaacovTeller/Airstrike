@@ -79,15 +79,19 @@ class HudHandler {
         ContentElHandler.addToContentEl(this.multiKillBox)
     }
     public updateMultiKillBox(num: number) {
-        if (num > 10) {
-            num = 10
+        let txt = ""
+        if (num > 6) {
+            txt = "!";
         }
-        let textOption = multiKillText[num];
-        this.multiKillBox.innerText = "x" + num;
+        if (num > 10) {
+            txt = "!!";
+        }
+        let textOption = multiKillText[num] ? multiKillText[num] : multiKillText[14];
+        this.multiKillBox.innerText = "x" + num + txt;
         this.multiKillBox.style.fontSize = textOption.size + "px";
         this.multiKillBox.style.color = textOption.colour;
         this.multiKillBox.classList.remove('hide');
-        let numberAnimTime = 800;
+        let numberAnimTime = 1000;
         this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
         setTimeout(() => {
             this.multiKillBox.classList.add('hide');

@@ -1,13 +1,17 @@
 ﻿const multiKillText = {
     2: { size: 30, colour: 'yellow'},
-    3: { size: 40, colour: 'orange'},
-    4: { size: 50, colour: 'red'},
-    5: { size: 60, colour: 'green'},
-    6: { size: 70, colour: 'blue'},
-    7: { size: 80, colour: 'purple'},
-    8: { size: 90, colour: 'brown'},
-    9: { size: 100, colour: 'grey'},
-    10: { size: 110, colour: 'black'},
+    3: { size: 45, colour: 'orange'},
+    4: { size: 60, colour: 'red'},
+    5: { size: 75, colour: 'green'},
+    6: { size: 90, colour: 'blue'},
+    7: { size: 105, colour: 'purple'},
+    8: { size: 120, colour: 'brown'},
+    9: { size: 135, colour: 'grey'},
+    10: { size: 150, colour: 'black' },
+    11: { size: 170, colour: 'black' },
+    12: { size: 190, colour: 'black' },
+    13: { size: 200, colour: 'black' },
+    14: { size: 200, colour: 'black' },
 }
 enum ExplSizes {
     small = 100,
@@ -22,6 +26,8 @@ enum Status {
 }
 enum Damage {
     undamaged,
+    dented,
+    badlyDented,
     damaged,
     moderateDamaged,
     heavyDamaged,

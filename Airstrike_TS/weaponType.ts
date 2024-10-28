@@ -270,14 +270,14 @@ class ExplosiveWeaponType extends WeaponType {
             }
         }
     }
-    protected targetStrike(target, collisionInfo) {
+    protected targetStrike(target, collisionInfo: vectorMoveObj) {
         let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity: strikeSeverity = this.determineSeverity(fraction);
 
-        if (this.determineExceptionsForArmour(target, severity)) {
-            return
-        };
         if (target.movesAtBlast) {
+            if (target.armour >= Armour.moderate) {
+                collisionInfo.radius /= 2; // hack to reduce punting armour about
+            }
             severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
         }
         let direc: direction = this.determineDirectionForFlip(collisionInfo);
@@ -286,33 +286,6 @@ class ExplosiveWeaponType extends WeaponType {
         }
     }
 
-    private ricochetChance() {
-        RandomNumberGen.randomNumBetween(1, 10) > 7 ? RandomSoundGen.playRandomSound(ricochet) : "";
-    }
-
-    private determineExceptionsForArmour(target: Target, severity: strikeSeverity) {
-        let exception: boolean = false;
-        if (target.armour == Armour.moderate) {
-            if (this.name < weaponNames.airstrike && severity < strikeSeverity.heavy ||
-                this.name < weaponNames.nuke && severity <= strikeSeverity.light) {
-                this.ricochetChance();
-                exception = true;
-            }
-        }
-        if (target.armour >= Armour.heavy) {
-            if (this.name < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
-                this.name < weaponNames.nuke && severity <= strikeSeverity.medium) {
-                this.ricochetChance();
-                exception = true;
-            }
-        }
-        if (target.movesAtBlast === false) {
-            if (this.name < weaponNames.airstrike) {
-                exception = true;
-            }
-        }
-        return exception
-    }
     private determineDirectionForFlip(collisionInfo: vectorMoveObj) {
         let angle = collisionInfo.angle;
 
@@ -418,7 +391,7 @@ class ChargeWeaponType extends WeaponType {
                 RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
                     let severity = this.determineSeverity();
-                    tunnel.hit(severity);       // TARGET - Main hit function
+                    tunnel.hit(severity, this.name);       // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed)

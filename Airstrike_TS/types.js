@@ -1,13 +1,17 @@
 const multiKillText = {
     2: { size: 30, colour: 'yellow' },
-    3: { size: 40, colour: 'orange' },
-    4: { size: 50, colour: 'red' },
-    5: { size: 60, colour: 'green' },
-    6: { size: 70, colour: 'blue' },
-    7: { size: 80, colour: 'purple' },
-    8: { size: 90, colour: 'brown' },
-    9: { size: 100, colour: 'grey' },
-    10: { size: 110, colour: 'black' },
+    3: { size: 45, colour: 'orange' },
+    4: { size: 60, colour: 'red' },
+    5: { size: 75, colour: 'green' },
+    6: { size: 90, colour: 'blue' },
+    7: { size: 105, colour: 'purple' },
+    8: { size: 120, colour: 'brown' },
+    9: { size: 135, colour: 'grey' },
+    10: { size: 150, colour: 'black' },
+    11: { size: 170, colour: 'black' },
+    12: { size: 190, colour: 'black' },
+    13: { size: 200, colour: 'black' },
+    14: { size: 200, colour: 'black' },
 };
 var ExplSizes;
 (function (ExplSizes) {
@@ -25,10 +29,12 @@ var Status;
 var Damage;
 (function (Damage) {
     Damage[Damage["undamaged"] = 0] = "undamaged";
-    Damage[Damage["damaged"] = 1] = "damaged";
-    Damage[Damage["moderateDamaged"] = 2] = "moderateDamaged";
-    Damage[Damage["heavyDamaged"] = 3] = "heavyDamaged";
-    Damage[Damage["destroyed"] = 4] = "destroyed";
+    Damage[Damage["dented"] = 1] = "dented";
+    Damage[Damage["badlyDented"] = 2] = "badlyDented";
+    Damage[Damage["damaged"] = 3] = "damaged";
+    Damage[Damage["moderateDamaged"] = 4] = "moderateDamaged";
+    Damage[Damage["heavyDamaged"] = 5] = "heavyDamaged";
+    Damage[Damage["destroyed"] = 6] = "destroyed";
 })(Damage || (Damage = {}));
 var Armour;
 (function (Armour) {
@@ -36,7 +42,6 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
-// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     class: VehicleTarget,
     minSpeed: 4,
@@ -87,13 +92,6 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
-//const easy: difficultyLevelInfo = {
-//    newTargetEvery: 3000,
-//    regTargetSpeed: { min: 2, max: 3 },
-//    modTargetSpeed: { min: 1, max: 2 },
-//    heavyTargetSpeed: { min: 1, max: 1 },
-//    tunnelTargetSpeed: { min: 1, max: 2 },
-//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -359,4 +357,3 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
-//# sourceMappingURL=types.js.map

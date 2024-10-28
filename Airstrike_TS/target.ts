@@ -130,9 +130,12 @@ class TunnelTarget extends Target {
         clearInterval(this.targetTimer);
     }
 
-    public hit(sev: strikeSeverity) {
+    public hit(severity: strikeSeverity, wepName: weaponNames) {
+        if (wepName < weaponNames.airstrike) {
+                return
+        }
         this.targetDisabled();
-        if (sev >= strikeSeverity.catastrophic) {
+        if (severity >= strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
             this.picEl.src = this.damagedSource;
             this.targetEl.classList.remove('tunnelHead');
@@ -141,12 +144,13 @@ class TunnelTarget extends Target {
         }
         else {
 
-                }
+        }
     }
     private removeTunnel(length) {
         this.trail.classList.add('hide');
    //     setTimeout(() => { this.trail.remove() }, length * 250)
-        setTimeout(() => { this.trail.remove() }, 8000)
+        setTimeout(() => { this.trail.remove() }, 8000);
+        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
     }
 
     private blowTunnel() {
@@ -177,6 +181,7 @@ class TunnelTarget extends Target {
         }
     }
 }
+
 class VehicleTarget extends Target {
     protected destroyedSource: string = assetsFolder + 'fire_3.gif';
     protected damagedSource: string = assetsFolder + 'smoke_3.gif';
@@ -187,53 +192,65 @@ class VehicleTarget extends Target {
     constructor(info: TargetInfo, position?: position) {
         super(info, position);
     }
+    private ricochetChance(num) {
+        RandomNumberGen.randomNumBetween(1, 10) > num ? RandomSoundGen.playRandomSound(ricochet) : "";
+    }
+    private incrementDamageForArmour() {
+        this.damage += 1;
+        this.ricochetChance(7);
+    }
 
-    public hit(sev: strikeSeverity, wepName: weaponNames, direc: direction) {
+    public hit(severity: strikeSeverity, wepName: weaponNames, direc: direction) {
         this.targetEl.classList.remove('smoothTransition');
-        if (wepName == weaponNames.gun) { // JUST FOR GUN
-            setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200,1200))
 
-            this.damage = Damage.damaged;
+            if (this.armour == Armour.none) {
+                if (wepName == weaponNames.gun) {
+                    setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200))
+                    this.lightDamage();
+                }
+                if (wepName >= weaponNames.mortar) {
+                     this.basicVehicleDamageModel(severity, direc);
+                }
+            }
 
-            this.damageEl.src = this.damagedSource;
-            this.damageEl.classList.add('lightDamaged');
+            if (this.armour == Armour.moderate) {
+                if (wepName == weaponNames.gun) {
+                    this.ricochetChance(0);
+                    return
+            }
+            if (wepName >= weaponNames.mortar) {
+                if (wepName < weaponNames.airstrike && severity < strikeSeverity.heavy ||
+                    wepName < weaponNames.nuke && severity <= strikeSeverity.light) {
+                    if (this.damage < Damage.badlyDented) {
+                        this.incrementDamageForArmour();
+                        return
+                    }
+                }
+                this.basicVehicleDamageModel(severity, direc);
+            }
         }
-        else {
 
-            if (sev > strikeSeverity.light) {
-                this.targetDisabled();
-                this.hitAcknowledge();                 /////// put with the other!!!
+        if (this.armour == Armour.heavy) {
+            if (wepName == weaponNames.gun) {
+                this.ricochetChance(0);
+                return
             }
-
-            if (sev == strikeSeverity.light) {
-                this.damage != Damage.undamaged ? sev = strikeSeverity.medium : "";
-                this.damage = Damage.damaged;
-
-                this.damageEl.src = this.damagedSource;
-                this.damageEl.classList.add('lightDamaged');
-                this.speed = this.speed / 3;
-            }
-            if (sev == strikeSeverity.medium) {
-                this.damage = Damage.moderateDamaged;
-                this.badDamage(direc);
-            }
-            if (sev == strikeSeverity.heavy) {
-                this.damage = Damage.heavyDamaged;
-                this.badDamage(direc);
-            }
-            if (sev == strikeSeverity.catastrophic) {
-                this.damage = Damage.destroyed;
-
-                this.removeFlip();
-
-                this.picEl.src = this.destroyedSource;
-                this.picEl.className = 'destroyed';
-                this.damageEl.style.visibility = "hidden";
-                this.targetEl.classList.add('show');
-                ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime)
+            if (wepName >= weaponNames.mortar) {
+                if (wepName < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
+                    wepName < weaponNames.nuke && severity <= strikeSeverity.medium) {
+                    if (this.damage < Damage.badlyDented) {
+                        this.incrementDamageForArmour();
+                        if (this.damage == Damage.badlyDented) {
+                            this.lightDamage();
+                        }
+                        return
+                    }
+                }
+                this.basicVehicleDamageModel(severity, direc);
             }
         }
     }
+
     private removeFlip() {
         this.picEl.classList.remove('flip');
         this.cssRotateAngle(0);
@@ -247,6 +264,13 @@ class VehicleTarget extends Target {
             }
         }
     }
+    private lightDamage() {
+        this.damage = Damage.damaged;
+
+        this.damageEl.src = this.damagedSource;
+        this.damageEl.classList.add('lightDamaged');
+        this.speed = this.speed / 3;
+    }
     private badDamage(direc) {
         this.damageEl.src = this.badDamagedSource;
         this.damageEl.classList.add('badDamaged');
@@ -254,6 +278,42 @@ class VehicleTarget extends Target {
 
         this.flip(direc);                               
     }
+    private completeDestruction() {
+        this.removeFlip();
+
+        this.picEl.src = this.destroyedSource;
+        this.picEl.className = 'destroyed';
+        this.damageEl.style.visibility = "hidden";
+        this.targetEl.classList.add('show');
+        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
+    }
+
+    private basicVehicleDamageModel(severity: strikeSeverity, direc: direction) {
+        if (severity == strikeSeverity.light) {
+            this.damage >= Damage.badlyDented ? severity = strikeSeverity.medium : "";
+            this.lightDamage();
+        }
+        if (severity >= strikeSeverity.medium) {
+            this.targetDisabled();
+            this.hitAcknowledge();                 /////// put with the other!!!
+        }
+        if (severity == strikeSeverity.medium) {
+            this.damage = Damage.moderateDamaged;
+            this.badDamage(direc);
+            return
+        }
+        if (severity == strikeSeverity.heavy) {
+            this.damage = Damage.heavyDamaged;
+            this.badDamage(direc);
+            return
+        }
+        if (severity == strikeSeverity.catastrophic) {
+            this.damage = Damage.destroyed;
+            this.completeDestruction();
+            return
+        }
+    }
+
     protected flip(direc: direction) {
         CollisionDetection.throw(this.targetEl, direc); // ARC
         this.rotate(direc);                             // ROTATION
