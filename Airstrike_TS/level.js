@@ -23,6 +23,7 @@ class level {
     winCheckTimer;
     targetTimer;
     waveDurationTimer;
+    allTargetsDeployed = false;
     constructor(levelendCallback) {
         this.nextLevelCallback = levelendCallback;
         this.frequency = game.difficulty.newTargetEvery;
@@ -34,31 +35,24 @@ class level {
         }
     }
     winLimitCheck() {
-        let spentWave = false;
-        if (this.targets.length >= this.currentWave.number) {
-            spentWave = true;
+        if (this.winCheckTimer != null) {
+            console.log("HIT existing wincheck!");
+            return;
         }
-        if (spentWave) {
-            this.pauseWave();
-            if (this.winCheckTimer) {
-                console.log("HIT existing wincheck!");
-                return;
+        let checkIndex = 0;
+        this.winCheckTimer = setInterval(() => {
+            if (this.checkForNilActiveTargets()) {
+                this.resetWincheck();
+                this.endWave();
             }
-            let winCheckIndex = 0;
-            this.winCheckTimer = setInterval(() => {
-                if (this.checkForNilActiveTargets()) {
-                    this.resetWincheck();
-                    this.endWave();
+            checkIndex++;
+            if (checkIndex >= 100) {
+                checkIndex = 0;
+                if (this.checkForDamagedActiveTargets()) {
+                    PopupHandler.addToArray("Press 'S' to scan for survivors...");
                 }
-                winCheckIndex++;
-                if (winCheckIndex >= 80) {
-                    winCheckIndex = 0;
-                    if (this.checkForDamagedActiveTargets()) {
-                        PopupHandler.addToArray("Press 'S' to scan for survivors...");
-                    }
-                }
-            }, 100);
-        }
+            }
+        }, 100);
     }
     resetWincheck() {
         clearInterval(this.winCheckTimer);
@@ -95,6 +89,7 @@ class level {
     }
     endWave() {
         PopupHandler.addToArray("Nice job!" + "\n");
+        this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
@@ -141,18 +136,27 @@ class level {
         else if (this.currentWave.type == waveType.sudden) {
             freq = 50;
         }
+        if (this.targetTimer != null)
+            console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!");
         this.targetTimer = setInterval(() => {
-            this.produceSingleTarget();
+            if (this.allTargetsDeployed == false) {
+                this.produceSingleTarget();
+            }
         }, freq);
     }
     produceSingleTarget(tgt) {
         let target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
-        this.winLimitCheck();
+        if (this.targets.length >= this.currentWave.number) {
+            this.allTargetsDeployed = true;
+            this.pauseWave();
+            this.winLimitCheck();
+        }
     }
     pauseWave() {
         clearInterval(this.targetTimer);
+        this.targetTimer = null;
     }
     resetTargets() {
         this.targets = [];
@@ -166,13 +170,13 @@ class level {
         let wepName = weaponNames[info.name];
         if (allWeaponTypes[info.name - 1]) {
             allWeaponTypes[info.name - 1].pushNewWeaponInstance();
-            if (showMsg) {
+            if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }
         }
         else {
             new info.class(info);
-            if (showMsg) {
+            if (showMsg != false) {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
@@ -190,11 +194,11 @@ class level_1 extends level {
         this.addNewWeapon(mortarInfo, false);
         this.addNewWeapon(mortarInfo, false);
     }
-    provideAvailTargets() {
-        return new RegVehicleTarget();
-    }
     finalStageArms() {
         this.addNewWeapon(mortarInfo);
+    }
+    provideAvailTargets() {
+        return new RegVehicleTarget();
     }
 }
 class level_2 extends level {
@@ -206,6 +210,9 @@ class level_2 extends level {
     armingUp() {
         this.addNewWeapon(howitzerInfo);
         this.addNewWeapon(mortarInfo);
+    }
+    finalStageArms() {
+        this.addNewWeapon(howitzerInfo);
     }
     provideAvailTargets() {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -220,9 +227,6 @@ class level_2 extends level {
         }
         return newTarget;
     }
-    finalStageArms() {
-        this.addNewWeapon(howitzerInfo);
-    }
 }
 class level_3 extends level {
     waves = [
@@ -230,6 +234,10 @@ class level_3 extends level {
         new wave(10, waveType.sudden),
     ];
     armingUp() {
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
+    }
+    finalStageArms() {
         this.addNewWeapon(airstrikeInfo);
         this.addNewWeapon(howitzerInfo);
     }
@@ -242,10 +250,6 @@ class level_3 extends level {
                 break;
         }
         return newTarget;
-    }
-    finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
-        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_4 extends level {
@@ -286,6 +290,9 @@ class level_5 extends level {
             this.addNewWeapon(nukeInfo);
         }
     }
+    finalStageArms() {
+        this.addNewWeapon(airstrikeInfo);
+    }
     provideAvailTargets() {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
         let newTarget;
@@ -304,9 +311,6 @@ class level_5 extends level {
                 break;
         }
         return newTarget;
-    }
-    finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
     }
 }
 class level_6 extends level_5 {

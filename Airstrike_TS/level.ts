@@ -24,6 +24,7 @@ abstract class level {
     public winCheckTimer: number;
     public targetTimer: number;
     public waveDurationTimer: number;
+    private allTargetsDeployed: boolean = false;
     abstract provideAvailTargets(): Target;
     abstract armingUp();
     abstract finalStageArms();
@@ -37,36 +38,30 @@ abstract class level {
             PopupHandler.addToArray("", "Sandbox", msgLength.short)
         }
     }
-    // Start // 
+
     public winLimitCheck() {
-        let spentWave = false;
-        if (this.targets.length >= this.currentWave.number) {
-            spentWave = true;
+        if (this.winCheckTimer != null) {
+            console.log("HIT existing wincheck!")
+            return
         }
-        if (spentWave) {
-            this.pauseWave();
-            if (this.winCheckTimer) {
-                console.log("HIT existing wincheck!")
-                return
+        let checkIndex = 0;
+        this.winCheckTimer = setInterval(() => {
+            if (this.checkForNilActiveTargets()) {
+                this.resetWincheck();
+                this.endWave();
             }
-            let winCheckIndex = 0;
-            this.winCheckTimer = setInterval(() => {
-                if (this.checkForNilActiveTargets()) {
-                    this.resetWincheck();
-                    this.endWave();
+            checkIndex++;
+            if (checkIndex >= 100) {
+                checkIndex = 0;
+                if (this.checkForDamagedActiveTargets()) {
+                    PopupHandler.addToArray(
+                        "Press 'S' to scan for survivors..."
+                    );
                 }
-                winCheckIndex++;
-                if (winCheckIndex >= 80) {
-                    winCheckIndex = 0;
-                    if (this.checkForDamagedActiveTargets()) {
-                        PopupHandler.addToArray(
-                            "Press 'S' to scan for survivors..."
-                        );
-                    }
-                }
-            }, 100);
-        }
+            }
+        }, 100);
     }
+
     private resetWincheck() {
         clearInterval(this.winCheckTimer);
         this.winCheckTimer = null;
@@ -105,6 +100,7 @@ abstract class level {
         PopupHandler.addToArray(
            "Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
         );
+        this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     protected nextWavePrepGap() {
@@ -156,18 +152,27 @@ abstract class level {
         else if (this.currentWave.type == waveType.sudden) {
             freq = 50;
         }
-            this.targetTimer = setInterval(() => {
+        if (this.targetTimer != null) console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!")
+        this.targetTimer = setInterval(() => {
+            if (this.allTargetsDeployed == false) {
                 this.produceSingleTarget();
+            }
             }, freq);
         }
     public produceSingleTarget(tgt?: Target) {
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
-        this.winLimitCheck();
+
+        if (this.targets.length >= this.currentWave.number) {
+            this.allTargetsDeployed = true;
+            this.pauseWave();
+            this.winLimitCheck();
+        }
     }
     public pauseWave() {
         clearInterval(this.targetTimer);
+        this.targetTimer = null;
     }
     public resetTargets() {
         this.targets = [];
@@ -182,13 +187,13 @@ abstract class level {
         let wepName = weaponNames[info.name]
         if (allWeaponTypes[info.name - 1]) {
             allWeaponTypes[info.name - 1].pushNewWeaponInstance();
-            if (showMsg) {
+            if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }
         }
         else {
             new info.class(info);
-            if (showMsg) {
+            if (showMsg != false) {
                 PopupHandler.addToArray("New weapon:\n" + wepName)
             }
         }
@@ -207,11 +212,11 @@ class level_1 extends level {
         this.addNewWeapon(mortarInfo, false);
         this.addNewWeapon(mortarInfo, false);
     }
-    public provideAvailTargets(): Target {
-        return new RegVehicleTarget();
-    }
     public finalStageArms() {
         this.addNewWeapon(mortarInfo);
+    }
+    public provideAvailTargets(): Target {
+        return new RegVehicleTarget();
     }
 }
 class level_2 extends level {
@@ -223,6 +228,9 @@ class level_2 extends level {
     public armingUp() {
         this.addNewWeapon(howitzerInfo);
         this.addNewWeapon(mortarInfo);
+    }
+    public finalStageArms() {
+        this.addNewWeapon(howitzerInfo);
     }
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -237,9 +245,6 @@ class level_2 extends level {
         }
         return newTarget;
     }
-    public finalStageArms() {
-        this.addNewWeapon(howitzerInfo);
-    }
 }
 class level_3 extends level {
     public waves: Array<wave> = [
@@ -247,6 +252,10 @@ class level_3 extends level {
         new wave(10, waveType.sudden),
     ];
     public armingUp() {
+        this.addNewWeapon(airstrikeInfo);
+        this.addNewWeapon(howitzerInfo);
+    }
+    public finalStageArms() {
         this.addNewWeapon(airstrikeInfo);
         this.addNewWeapon(howitzerInfo);
     }
@@ -259,10 +268,6 @@ class level_3 extends level {
                 break;
         }
         return newTarget;
-    }
-    public finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
-        this.addNewWeapon(howitzerInfo);
     }
 }
 class level_4 extends level {
@@ -303,6 +308,9 @@ class level_5 extends level {
             this.addNewWeapon(nukeInfo);
         }
     }
+    public finalStageArms() {
+        this.addNewWeapon(airstrikeInfo);
+    }
     public provideAvailTargets(): Target {
         let rand = RandomNumberGen.randomNumBetween(1, 100);
         let newTarget: Target;
@@ -321,9 +329,6 @@ class level_5 extends level {
                 break;
         }
         return newTarget;
-    }
-    public finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
     }
 }
 
@@ -352,7 +357,7 @@ class level_continuous extends level {
             }
             this.waves.push(
                 newWave
-            )
+             )
         }
         this.currentWave = this.waves[this.index];
     }
