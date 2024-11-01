@@ -18,6 +18,7 @@ class level {
     index = -1;
     frequency;
     waves;
+    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
@@ -88,12 +89,14 @@ class level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -125,10 +128,12 @@ class level {
             RandomSoundGen.playSequentialSound(revs);
         }
         console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number);
+        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == waveType.gradual) {
             freq = this.frequency;
@@ -180,6 +185,7 @@ class level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
+        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 class level_1 extends level {
@@ -315,10 +321,18 @@ class level_5 extends level {
 }
 class level_6 extends level_5 {
     armingUp() {
+        this.addNewWeapon(sniperInfo, false);
+        this.addNewWeapon(mortarInfo, false);
         this.addNewWeapon(droneInfo);
     }
     finalStageArms() {
         this.addNewWeapon(droneInfo);
+    }
+}
+class level_7 extends level_5 {
+    armingUp() {
+    }
+    finalStageArms() {
     }
 }
 class level_continuous extends level {
@@ -362,3 +376,4 @@ class level_continuous extends level {
         return newTarget;
     }
 }
+//# sourceMappingURL=level.js.map

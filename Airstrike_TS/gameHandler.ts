@@ -7,7 +7,8 @@ enum GameMode {
     'sandbox'
 }
 
-var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5, level_6]
+//var allLevelClassesArray: Array<any> = [level_6,level_7]
+var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5, level_6, level_7]
 var allWeaponTypes: Array<WeaponType> = []
 var allTargets: Array<Target> = []
 
@@ -53,9 +54,24 @@ class GameHandler {
 
         }
         let index = allLevelClassesArray.indexOf(LevelClass);
-        let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index]
-        this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
-        this.level.nextWave();
+    //    let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index] // STAY ON LEV 6 !!
+        let nextLevel = allLevelClassesArray[index + 1];
+        if (nextLevel) {
+            this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
+            this.level.nextWave();
+        }
+        else {
+            this.endGame();
+        }
+    }
+    private endGame() {
+        this.fireFunc = () => { };
+        PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
+        PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
+        PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
+        cheer.play();
+        this.stopAmbience();
+        this.gameInProgress = false // HACKY??
     }
 
     private setEventListeners() {
@@ -314,6 +330,15 @@ class GameHandler {
                 this.level.continueWave(); // UNPAUSE
             }
         }
+        if (this.gameWasPlayed) {
+            this.pause();
+        }
+    }
+    private stopAmbience() {
+        clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
+        }
     }
 
     public pause() {
@@ -322,11 +347,7 @@ class GameHandler {
         this.gameTimer = undefined;
 
         this.level.pauseWave();
-
-        clearInterval(this.soundTimer);
-        for (let a of ambience) {
-            a.stop();
-        }
+        this.stopAmbience();
     }
     public reset() {
         console.log("RAN RESET")
@@ -372,7 +393,6 @@ class GameHandler {
         this.startAmbience();
         this.toggleModal();
         
-
         this.gameTimer = window.setInterval(() => {
             this.checkEnd();
             this.updateHudScore();

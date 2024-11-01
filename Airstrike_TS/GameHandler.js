@@ -8,7 +8,8 @@ var GameMode;
     GameMode[GameMode["regular"] = 0] = "regular";
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
 })(GameMode || (GameMode = {}));
-var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5, level_6];
+//var allLevelClassesArray: Array<any> = [level_6,level_7]
+var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5, level_6, level_7];
 var allWeaponTypes = [];
 var allTargets = [];
 class GameHandler {
@@ -23,7 +24,7 @@ class GameHandler {
     gameMode;
     masterTargets = [];
     sequentialHits = 0;
-    level;
+    level; // messy, fix
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -39,6 +40,7 @@ class GameHandler {
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
@@ -46,9 +48,24 @@ class GameHandler {
         if (mode == GameMode.sandbox) {
         }
         let index = allLevelClassesArray.indexOf(LevelClass);
-        let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index];
-        this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
-        this.level.nextWave();
+        //    let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index] // STAY ON LEV 6 !!
+        let nextLevel = allLevelClassesArray[index + 1];
+        if (nextLevel) {
+            this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
+            this.level.nextWave();
+        }
+        else {
+            this.endGame();
+        }
+    }
+    endGame() {
+        this.fireFunc = () => { };
+        PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
+        PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
+        PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
+        cheer.play();
+        this.stopAmbience();
+        this.gameInProgress = false; // HACKY??
     }
     setEventListeners() {
         this.contentEl.addEventListener("click", () => this.fireFunc());
@@ -119,6 +136,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -145,7 +163,8 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        this.weapon.fireFunc(allTargets);
+        // this.weapon.fireFunc(this.level.targets);
+        this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
         if (event.key === 'Escape') {
@@ -159,6 +178,7 @@ class GameHandler {
             if (int && allWeaponTypes[int - 1]) {
                 this.changeWeapon(allWeaponTypes[int - 1]);
             }
+            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
             else if (event.key === 's') {
                 this.level.showActiveTargets();
             }
@@ -212,7 +232,7 @@ class GameHandler {
                 x.switchFrom();
             }
         });
-        this.weapon.switchTo();
+        this.weapon.switchTo(); // Main weapon switch func
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -286,8 +306,17 @@ class GameHandler {
             }
             else {
                 this.start_unpause();
-                this.level.continueWave();
+                this.level.continueWave(); // UNPAUSE
             }
+        }
+        if (this.gameWasPlayed) {
+            this.pause();
+        }
+    }
+    stopAmbience() {
+        clearInterval(this.soundTimer);
+        for (let a of ambience) {
+            a.stop();
         }
     }
     pause() {
@@ -295,10 +324,7 @@ class GameHandler {
         clearInterval(this.gameTimer);
         this.gameTimer = undefined;
         this.level.pauseWave();
-        clearInterval(this.soundTimer);
-        for (let a of ambience) {
-            a.stop();
-        }
+        this.stopAmbience();
     }
     reset() {
         console.log("RAN RESET");
@@ -308,6 +334,9 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -324,12 +353,12 @@ class GameHandler {
         }
         this.hud.drawHUD();
         this.hud.drawMultiKill();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
     start_unpause() {
-        if (this.gameInProgress == false) {
+        if (this.gameInProgress == false) { // NEW GAME
             this.gameInProgress = true;
             this.gameWasPlayed = true;
             this.redrawHudWithWepSelectionChecked();
@@ -346,3 +375,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

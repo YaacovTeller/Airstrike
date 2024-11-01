@@ -48,6 +48,7 @@ class RandomSoundGen {
 }
 const soundFolder = "./AS_assets/sound/";
 const aluak = new Sound(soundFolder + "aluAk.mp3");
+const cheer = new Sound(soundFolder + "cheers_gib.mp3");
 const pgia = new Sound(soundFolder + "pgia.mp3");
 const matara = new Sound(soundFolder + "matara_shmd.mp3");
 const meUle = new Sound(soundFolder + "MeUle.mp3");

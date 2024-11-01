@@ -158,7 +158,7 @@ abstract class level {
                 this.produceSingleTarget();
             }
             }, freq);
-        }
+    }
     public produceSingleTarget(tgt?: Target) {
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
@@ -334,10 +334,20 @@ class level_5 extends level {
 
 class level_6 extends level_5 {
     public armingUp() {
+        this.addNewWeapon(sniperInfo, false);
+        this.addNewWeapon(mortarInfo, false);
         this.addNewWeapon(droneInfo);    
     }
     public finalStageArms() {
         this.addNewWeapon(droneInfo);
+    }
+}
+class level_7 extends level_5 {
+    public armingUp() {
+   
+    }
+    public finalStageArms() {
+
     }
 }
 
