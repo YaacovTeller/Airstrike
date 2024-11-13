@@ -42,33 +42,31 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
-    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 8,
     armour: Armour.none,
-    picSources: ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png']
 };
 const modTarget = {
-    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 6,
     armour: Armour.moderate,
-    picSources: ['jeep_grey.png']
 };
 const heavyTarget = {
-    class: VehicleTarget,
     minSpeed: 1,
     maxSpeed: 3,
     armour: Armour.heavy,
-    picSources: ['jeep_grey_armour.png']
+};
+const rocketLauncher = {
+    minSpeed: 2,
+    maxSpeed: 4,
+    armour: Armour.heavy,
 };
 const regTunnelTarget = {
-    class: TunnelTarget,
     minSpeed: 1,
     maxSpeed: 2,
     armour: Armour.moderate,
-    picSources: ['trans.png']
 };
 var direction;
 (function (direction) {
@@ -92,6 +90,13 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -334,6 +339,7 @@ class ContentElHandler {
         document.getElementById("content").innerHTML = "";
     }
     static fadeRemoveItem(item, stayTime, fadeTime) {
+        item.classList.add('smoothFade');
         setTimeout(() => {
             item.classList.add("hide");
         }, stayTime);
@@ -357,3 +363,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

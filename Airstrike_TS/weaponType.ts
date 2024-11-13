@@ -402,6 +402,16 @@ class ChargeWeaponType extends WeaponType {
 
     }
 }
+function inNoStrikeZone(target: Target) {  // FOR TESTING
+    let noStrikeZones = document.querySelectorAll(".noStrikeZone");
+    if (noStrikeZones) {
+        for (let z of noStrikeZones) {
+            let zone = z as HTMLElement
+            console.log(CollisionDetection.checkCollisionWithCircle(zone, target.getTargetEl()))
+        }
+    }
+}
+
 class DroneWeaponType extends ExplosiveWeaponType {
     public attackLimit = 3;
     private lockedTargets: Array<Target> = [];
@@ -425,6 +435,13 @@ class DroneWeaponType extends ExplosiveWeaponType {
         bleep_pos.play();
         this.clearTargets();
         let activeTargets = game.level.targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false && t.movesAtBlast);
+        let noStrikeZones = document.querySelectorAll(".noStrikeZone");
+        if (noStrikeZones) {
+            for (let z of noStrikeZones) {
+                let zone = z as HTMLElement
+                activeTargets = activeTargets.filter(t => CollisionDetection.checkCollisionWithElement(t.getTargetEl(), zone) == false);
+            }
+        }
         //  let armouredTargets = activeTargets.filter(t => t.armour === Armour.heavy);
         let sortedByArmour = activeTargets.sort((a, b) => b.armour - a.armour);
 

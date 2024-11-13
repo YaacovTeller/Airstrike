@@ -8,8 +8,23 @@ var GameMode;
     GameMode[GameMode["regular"] = 0] = "regular";
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
 })(GameMode || (GameMode = {}));
-//var allLevelClassesArray: Array<any> = [level_6,level_7]
-var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5, level_6, level_7];
+function buildLevelBar() {
+    for (let lev of allLevelClassesArray) {
+        let l = lev;
+        let levDiv = document.createElement('div');
+        levDiv.className = 'levDiv';
+        ContentElHandler.addToContentEl(levDiv);
+        levDiv.innerText = lev.name;
+        for (let wav of l.waves) {
+            let wavDiv = document.createElement('div');
+            wavDiv.innerText = wav.type + "";
+            wavDiv.className = 'wavDiv';
+            levDiv.appendChild(wavDiv);
+        }
+    }
+}
+var allLevelClassesArray = [level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8];
+//var allLevelClassesArray: Array<any> = [ level_6, level_7]
 var allWeaponTypes = [];
 var allTargets = [];
 class GameHandler {
@@ -29,6 +44,7 @@ class GameHandler {
     soundTimer;
     gameInProgress = false;
     gameWasPlayed = false;
+    strikesRestricted = false;
     constructor(element) {
         this.contentEl = element;
         this.progressBar = document.getElementById('progress');
@@ -36,6 +52,7 @@ class GameHandler {
         if (userHandler.userName) {
             userHandler.displayName();
         }
+        //     buildLevelBar();
         this.progressNumber = 30;
         this.updateProgressBar();
         this.menuSetup();
@@ -45,13 +62,16 @@ class GameHandler {
         document.getElementById("loader").style.display = 'none';
     }
     newLevel(LevelClass, mode) {
-        if (mode == GameMode.sandbox) {
-        }
-        let index = allLevelClassesArray.indexOf(LevelClass);
-        //    let nextLevel = allLevelClassesArray[index + 1] ? allLevelClassesArray[index + 1] : allLevelClassesArray[index] // STAY ON LEV 6 !!
-        let nextLevel = allLevelClassesArray[index + 1];
-        if (nextLevel) {
-            this.level = new LevelClass(() => this.newLevel(nextLevel, mode));
+        if (LevelClass) {
+            let nextLevel;
+            if (mode == GameMode.sandbox) {
+                nextLevel = level_continuous;
+            }
+            else {
+                let index = allLevelClassesArray.indexOf(LevelClass);
+                nextLevel = allLevelClassesArray[index + 1];
+            }
+            this.level = new LevelClass(() => this.newLevel(nextLevel, mode)); // Allow following level to be called by this one
             this.level.nextWave();
         }
         else {
@@ -59,13 +79,16 @@ class GameHandler {
         }
     }
     endGame() {
-        this.fireFunc = () => { };
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
         PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
         cheer.play();
-        this.stopAmbience();
         this.gameInProgress = false; // HACKY??
+        this.fireFunc = () => { }; // HACKY??
+        this.cutGameFuncs();
+        setTimeout(() => {
+            this.toggleModal();
+        }, 10000);
     }
     setEventListeners() {
         this.contentEl.addEventListener("click", () => this.fireFunc());
@@ -163,7 +186,10 @@ class GameHandler {
         this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
-        // this.weapon.fireFunc(this.level.targets);
+        if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
+            bleep_neg.play();
+            return;
+        }
         this.weapon.fireFunc(allTargets); // MESSY??
     }
     handleKeyPress(event) {
@@ -190,7 +216,6 @@ class GameHandler {
     addFullWeaponLoadout() {
         this.addAllWeapons();
         this.addAllWeapons();
-        this.addAllWeapons();
         this.level.addNewWeapon(mortarInfo, false);
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
@@ -215,6 +240,15 @@ class GameHandler {
         if (this.weapon.activeInstance && this.weapon.activeInstance.blastRadElement) {
             let blast = this.weapon.activeInstance.blastRadElement;
             this.positionElem(blast, newMousePos);
+        }
+        if (event) {
+            const target = event.target; // FAILSAFE FOR REMOVING NO STRIKE ZONES
+            if (!target.classList.contains('noStrikeZone')) {
+                if (game.strikesRestricted == true) {
+                    console.log("hit residual strike zone");
+                    game.strikesRestricted = false;
+                }
+            }
         }
     }
     updateShotCounter() {
@@ -309,7 +343,7 @@ class GameHandler {
                 this.level.continueWave(); // UNPAUSE
             }
         }
-        if (this.gameWasPlayed) {
+        else if (this.gameWasPlayed) { // FOR WHAT SITU??
             this.pause();
         }
     }
@@ -319,15 +353,17 @@ class GameHandler {
             a.stop();
         }
     }
-    pause() {
-        this.toggleModal();
+    cutGameFuncs() {
         clearInterval(this.gameTimer);
         this.gameTimer = undefined;
         this.level.pauseWave();
         this.stopAmbience();
     }
+    pause() {
+        this.cutGameFuncs();
+        this.toggleModal();
+    }
     reset() {
-        console.log("RAN RESET");
         this.level.resetTargets();
         this.level.pauseWave();
         this.level = null;

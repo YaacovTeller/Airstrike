@@ -1,32 +1,46 @@
 class Target {
     targetEl;
     picEl;
+    baseImgEl;
     damageEl;
     lockonEl;
     speed;
     armour;
+    //    protected picSources: Array<string>;
     startPosition;
     status = Status.active;
+    health;
     damage = Damage.undamaged;
     movesAtBlast;
     info;
     constructor(info, position) {
         this.info = info;
         this.targetEl = document.createElement("div");
-        this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
-        let picSrc = assetsFolder + this.info.picSources[RandomNumberGen.randomNumBetween(0, this.info.picSources.length - 1)];
-        this.picEl = this.returnNewImageEl(this.targetEl, "", picSrc);
+        this.targetEl.classList.add('target', 'smallSquare', 'flexCenter', 'smoothTransition');
+        let picSrc = assetsFolder + this.picSources[RandomNumberGen.randomNumBetween(0, this.picSources.length - 1)];
+        this.picEl = this.returnNewEl(this.targetEl, "picEl");
+        this.baseImgEl = this.returnNewImageEl(this.picEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
         this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
         ContentElHandler.addToContentEl(this.targetEl);
         position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(this.info.minSpeed, this.info.maxSpeed);
         this.armour = this.info.armour;
+        //     this.health = this.info.health;
+    }
+    get picSources() {
+        return [];
     }
     returnNewImageEl(parent, classname, src) {
         let el = document.createElement('img');
         if (src)
             el.src = src;
+        el.className = classname;
+        parent.appendChild(el);
+        return el;
+    }
+    returnNewEl(parent, classname) {
+        let el = document.createElement('div');
         el.className = classname;
         parent.appendChild(el);
         return el;
@@ -38,12 +52,11 @@ class Target {
         this.targetEl.style.left = left + 'px';
     }
     hit(sev, wepName, direc) { }
-    move() {
-        let x = parseInt(this.targetEl.style.left);
-        if (x > ContentElHandler.contentElWidth()) {
+    move(posX) {
+        if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
         }
-        this.targetEl.style.left = x + this.speed + "px";
+        this.targetEl.style.left = posX + this.speed + "px";
     }
     targetDisabled() {
         this.status = Status.disabled;
@@ -69,7 +82,7 @@ class Target {
     }
     action() {
         if (this.status == Status.active) {
-            this.move();
+            this.move(parseInt(this.targetEl.style.left));
         }
     }
 }
@@ -85,12 +98,15 @@ class TunnelTarget extends Target {
         super(regTunnelTarget);
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
-        this.targetEl.classList.remove('flexCenter');
+        this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.picEl.classList.add('tunnelFocus');
         this.targetEl.append(this.trail);
         this.setTargetProduction();
+    }
+    get picSources() {
+        return ['trans.png'];
     }
     extendTunnel() {
         this.trail.style.width = this.targetEl.getBoundingClientRect().width + parseInt(this.targetEl.style.left) + 'px';
@@ -122,7 +138,7 @@ class TunnelTarget extends Target {
         this.targetDisabled();
         if (severity >= strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
-            this.picEl.src = this.damagedSource;
+            this.baseImgEl.src = this.damagedSource;
             this.targetEl.classList.remove('tunnelHead');
             this.stopTargetProduction();
             this.blowTunnel();
@@ -132,6 +148,7 @@ class TunnelTarget extends Target {
     }
     removeTunnel(length) {
         this.trail.classList.add('hide');
+        //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove(); }, 8000);
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
     }
@@ -146,7 +163,7 @@ class TunnelTarget extends Target {
         }
         for (let index in imgArr) {
             setTimeout(() => {
-                let mrtr = allWeaponTypes[weaponNames.mortar];
+                let mrtr = allWeaponTypes[weaponNames.mortar]; // MESSY
                 if (mrtr) {
                     let pos = CollisionDetection.getXYfromPoint(imgArr[index]);
                     mrtr.checkForTargets(pos, allTargets);
@@ -158,7 +175,7 @@ class TunnelTarget extends Target {
     }
     action() {
         if (this.status == Status.active) {
-            this.move();
+            this.move(parseInt(this.targetEl.style.left));
             this.extendTunnel();
         }
     }
@@ -181,6 +198,7 @@ class VehicleTarget extends Target {
     }
     hit(severity, wepName, direc) {
         this.targetEl.classList.remove('smoothTransition');
+        this.targetEl.classList.add('smoothFade');
         if (this.armour == Armour.none) {
             if (wepName == weaponNames.gun) {
                 setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200));
@@ -226,9 +244,9 @@ class VehicleTarget extends Target {
             }
         }
     }
-    removeFlip() {
-        this.picEl.classList.remove('flip');
-        this.cssRotateAngle(0);
+    removeFlip(elem) {
+        elem.classList.remove('flip');
+        this.cssRotateAngle(elem, 0);
     }
     hitAcknowledge() {
         if (this.damage <= Damage.damaged) {
@@ -248,12 +266,12 @@ class VehicleTarget extends Target {
         this.damageEl.src = this.badDamagedSource;
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
-        this.flip(direc);
+        this.flip(this.picEl, direc, this.targetEl);
     }
     completeDestruction() {
-        this.removeFlip();
-        this.picEl.src = this.destroyedSource;
-        this.picEl.className = 'destroyed';
+        this.removeFlip(this.picEl);
+        this.baseImgEl.src = this.destroyedSource;
+        this.baseImgEl.className = 'destroyed';
         this.damageEl.style.visibility = "hidden";
         this.targetEl.classList.add('show');
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
@@ -265,7 +283,7 @@ class VehicleTarget extends Target {
         }
         if (severity >= strikeSeverity.medium) {
             this.targetDisabled();
-            this.hitAcknowledge();
+            this.hitAcknowledge(); /////// put with the other!!!
         }
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
@@ -283,14 +301,15 @@ class VehicleTarget extends Target {
             return;
         }
     }
-    flip(direc) {
-        CollisionDetection.throw(this.targetEl, direc);
-        this.rotate(direc);
+    flip(elem, direc, parentElem) {
+        let thrownElem = parentElem ? parentElem : elem;
+        CollisionDetection.throw(thrownElem, direc); // ARC
+        this.rotate(elem, direc); // ROTATION
         setTimeout(() => {
             RandomSoundGen.playRandomSound(crashes);
         }, crashTimeout);
     }
-    rotate(direc) {
+    rotate(elem, direc) {
         const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
         const index = angles.indexOf(this.angle);
         let rand = RandomNumberGen.randomNumBetween(0, 20);
@@ -302,37 +321,155 @@ class VehicleTarget extends Target {
         if (deg == undefined) {
             deg = 0;
             this.angle = deg;
-            this.picEl.classList.remove('flip');
+            elem.classList.remove('flip');
             requestAnimationFrame(() => {
                 setTimeout(() => {
-                    this.cssRotateAngle(deg);
-                    this.picEl.offsetHeight;
-                    this.rotate(direc);
+                    this.cssRotateAngle(elem, deg);
+                    elem.offsetHeight; // forces reflow
+                    this.rotate(elem, direc);
                 }, 0);
             });
         }
         else {
             this.angle = deg;
-            this.picEl.classList.add('flip');
-            this.cssRotateAngle(deg);
+            elem.classList.add('flip');
+            this.cssRotateAngle(elem, deg);
         }
     }
-    cssRotateAngle(deg) {
-        this.picEl.style.transform = `rotate(${deg}deg)`;
+    cssRotateAngle(elem, deg) {
+        elem.style.transform = `rotate(${deg}deg)`;
     }
 }
 class RegVehicleTarget extends VehicleTarget {
     constructor(position) {
         super(regTarget, position);
     }
+    get picSources() {
+        return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
+    }
 }
 class ModVehicleTarget extends VehicleTarget {
     constructor(position) {
         super(modTarget, position);
+    }
+    get picSources() {
+        return ['jeep_grey.png'];
     }
 }
 class HeavyVehicleTarget extends VehicleTarget {
     constructor(position) {
         super(heavyTarget, position);
     }
+    get picSources() {
+        return ['jeep_grey_armour.png'];
+    }
 }
+class RocketLauncher extends VehicleTarget {
+    stopPos;
+    deployed = false;
+    launcherEl;
+    noStrikeZone;
+    constructor(position) {
+        super(rocketLauncher, position);
+        this.targetEl.classList.remove('smallSquare');
+        this.targetEl.classList.add('medRect');
+        this.stopPos = RandomNumberGen.randomNumBetween(50, 200);
+        this.launcherEl = this.returnNewImageEl(this.picEl, 'rocketPack', assetsFolder + "rockets.png");
+    }
+    get picSources() {
+        return ['launcher.png'];
+        // return ['rocketVehicle.jpg'];
+        //   picSources: ['rocketVehicle_undeployed.jpg']
+    }
+    move() {
+        let x = parseInt(this.targetEl.style.left);
+        this.targetEl.style.left = x + this.speed + "px";
+    }
+    hit(severity, wepName, direc) {
+        super.hit(severity, wepName, direc);
+        if (this.damage > Damage.badlyDented) {
+            if (this.noStrikeZone) {
+                this.noStrikeZone.remove();
+            }
+        }
+        if (this.damage > Damage.damaged) {
+            //this.flip(this.launcherEl, direc)
+            //this.launcherEl.remove();
+            this.throwRocketPack();
+        }
+    }
+    throwRocketPack() {
+        let pack = this.launcherEl;
+        const rect = pack.getBoundingClientRect();
+        const x = rect.left + window.scrollX;
+        const y = rect.top + window.scrollY;
+        pack.remove();
+        pack.style.position = "absolute";
+        pack.style.left = `${x}px`;
+        pack.style.top = `${y}px`;
+        ContentElHandler.addToContentEl(pack);
+        this.flip(pack, direction.backward); /////////////////////////////////////////////////////////////////
+        let packStay = 2000;
+        //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
+        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, packStay); // AWFUL !!!
+        ContentElHandler.fadeRemoveItem(pack, packStay, fadeAnimTime);
+    }
+    inNoStrikeZone(target) {
+        let noStrikeZones = document.querySelectorAll(".noStrikeZone");
+        if (noStrikeZones) {
+            for (let z of noStrikeZones) {
+                let zone = z;
+                //if (CollisionDetection.checkCollisionWithElement(target.getTargetEl(), zone)) {
+                if (CollisionDetection.checkCollisionWithCircle(zone, target.getTargetEl())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    action() {
+        if (this.status == Status.active) {
+            let posX = parseInt(this.targetEl.style.left);
+            if (posX < this.stopPos || this.inNoStrikeZone(this) && this.deployed == false) {
+                this.move();
+            }
+            else {
+                if (this.damage < Damage.badlyDented && this.deployed == false) {
+                    this.deploy();
+                    this.deployed = true;
+                }
+            }
+        }
+        else {
+            if (this.noStrikeZone) {
+                console.log("Hit ACTION nostrikezone remove");
+                this.noStrikeZone.remove();
+            }
+        }
+        //if (this.damage > Damage.badlyDented) {
+        //    this.noStrikeZone.remove();
+        //}
+    }
+    deploy() {
+        let delay = 500;
+        let _this = this;
+        setTimeout(() => {
+            _this.launcherEl.classList.add('raiseLauncher');
+        }, delay);
+        setTimeout(() => {
+            _this.setNoStrikeZone();
+        }, delay + 500);
+    }
+    setNoStrikeZone() {
+        this.noStrikeZone = this.returnNewEl(this.targetEl, 'noStrikeZone');
+        this.noStrikeZone.addEventListener('mouseover', this.overNoStrikeZone.bind(this));
+        this.noStrikeZone.addEventListener('mouseleave', this.leaveNoStrikeZone.bind(this));
+    }
+    overNoStrikeZone() {
+        game.strikesRestricted = true;
+    }
+    leaveNoStrikeZone() {
+        game.strikesRestricted = false;
+    }
+}
+//# sourceMappingURL=target.js.map

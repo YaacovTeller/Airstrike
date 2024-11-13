@@ -39,40 +39,35 @@ enum Armour {
     heavy,
 }
 type TargetInfo = {
-    class: typeof Target,
     maxSpeed: number,
     minSpeed: number,
     armour: Armour,
-    picSources: Array<string>,
 }
 // speeds are actually set with the difficulty settings. Nominal values here
 const regTarget: TargetInfo = {
-    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 8,
     armour: Armour.none,
-    picSources: ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png','jeep3.png', 'jeep3.png', 'jeep4_cres.png']
 }
 const modTarget: TargetInfo = {
-    class: VehicleTarget,
     minSpeed: 4,
     maxSpeed: 6,
     armour: Armour.moderate,
-    picSources: ['jeep_grey.png']
 }
 const heavyTarget: TargetInfo = {
-    class: VehicleTarget,
     minSpeed: 1,
     maxSpeed: 3,
     armour: Armour.heavy,
-    picSources: ['jeep_grey_armour.png']
+}
+const rocketLauncher: TargetInfo = {
+    minSpeed: 2,
+    maxSpeed: 4,
+    armour: Armour.heavy,
 }
 const regTunnelTarget: TargetInfo = {
-    class: TunnelTarget,
     minSpeed: 1,
     maxSpeed: 2,
     armour: Armour.moderate,
-    picSources: ['trans.png']
 }
 
 enum direction {
@@ -399,6 +394,7 @@ class ContentElHandler {
         document.getElementById("content").innerHTML = "";
     }
     static fadeRemoveItem(item: HTMLElement, stayTime, fadeTime) {
+        item.classList.add('smoothFade');
         setTimeout(() => {
             item.classList.add("hide");
         }, stayTime)

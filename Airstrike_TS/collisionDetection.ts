@@ -17,6 +17,37 @@ class CollisionDetection {
         }
         else return false
     }
+    public static checkCollisionWithElement(element: HTMLElement, targetEl: HTMLElement): boolean {
+        let targetRect = targetEl.getBoundingClientRect();
+        let elementRect = element.getBoundingClientRect();
+        if (elementRect.left >= targetRect.left &&
+            elementRect.left <= targetRect.left + targetRect.width &&
+            elementRect.top >= targetRect.top &&
+            elementRect.top <= targetRect.top + targetRect.height) {
+
+            return true
+        }
+        else return false
+    }
+    public static checkCollisionWithCircle(circleEl: HTMLElement, targetEl: HTMLElement): boolean {
+        const targetRect = targetEl.getBoundingClientRect();
+        const circleRect = circleEl.getBoundingClientRect();
+
+        const circleCenterX = circleRect.left + circleRect.width / 2;
+        const circleCenterY = circleRect.top + circleRect.height / 2;
+        const circleRadius = circleRect.width / 2;
+
+        //const closestX = Math.max(targetRect.left, Math.min(circleCenterX, targetRect.right));
+        //const closestY = Math.max(targetRect.top, Math.min(circleCenterY, targetRect.bottom));
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+
+        const distanceX = circleCenterX - targetCenterX;
+        const distanceY = circleCenterY - targetCenterY;
+        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+        return distanceSquared <= (circleRadius * circleRadius);
+    }
 
     public static checkCollisionFromPositionWithBlast(blastPos: position, targetEl: HTMLElement, radius: number): vectorMoveObj {
         let trgtPos: position = this.getXYfromPoint(targetEl);
@@ -38,29 +69,7 @@ class CollisionDetection {
         else
             return null;
     }
-    //public static checkCollisionFromElement(blastRadiusEl: HTMLElement, targetEl: HTMLElement): vectorMoveObj {
-    //    let blastPos: position = this.getXYfromPoint(blastRadiusEl);
-    //    let trgtPos: position = this.getXYfromPoint(targetEl);
-    //    let radius = blastRadiusEl.getBoundingClientRect().width / 2; //parseInt(blastRadiusEl.style.width) / 2;
 
-    //    if (trgtPos.X >= blastPos.X - radius &&
-    //        trgtPos.X <= blastPos.X + radius &&
-    //        trgtPos.Y >= blastPos.Y - radius &&
-    //        trgtPos.Y <= blastPos.Y + radius) {
-
-    //        let dist = this.distanceBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
-    //        let angle = this.angleBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
-    //        let obj: vectorMoveObj = {
-    //            elem: targetEl,
-    //            angle: angle,
-    //            dist: dist,
-    //            radius: radius
-    //        }
-    //        return obj;
-    //    }
-    //    else
-    //        return null;
-    //}
     public static getXYfromPoint(elem: HTMLElement): position {
         let rect = elem.getBoundingClientRect();
         var centerX = rect.left + rect.width / 2;

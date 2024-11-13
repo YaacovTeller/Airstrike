@@ -72,6 +72,7 @@
     <Content Include="AS_assets\sound\4_3.mp3" />
     <Content Include="AS_assets\sound\5sec.mp3" />
     <Content Include="AS_assets\sound\bleepbleep.mp3" />
+    <Content Include="AS_assets\sound\cheers_gib.mp3" />
     <Content Include="AS_assets\sound\gib_1.mp3" />
     <Content Include="AS_assets\sound\gib_2.mp3" />
     <Content Include="AS_assets\sound\gib_3.mp3" />

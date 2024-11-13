@@ -105,14 +105,25 @@
 .smoothTransition {
     transition: left 0.1s linear;
 }
+.smoothFade {
+    transition: opacity 8s ease-in-out;
+}
 
+.smallSquare {
+    height: 45px;
+    width: 45px;
+}
+.medRect {
+    height: 45px;
+    width: 75px;
+}
+.picEl > img {
+    width: 100%;
+}
 .target {
     position: absolute;
-    width: 45px;
-    height: 45px;
     user-select: none;
     z-index: 5;
-    transition: opacity 8s ease-in-out;
     /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
 
@@ -230,6 +241,47 @@ img#crater { /*to override the img[src]!*/
 
 .flip {
     transition: transform var(--crashTimeout) linear;
+}
+.noStrikeZone {
+    position: absolute;
+    background-color: orangered;
+    opacity: 0.2;
+    border-radius: 400px;
+    width: 700px;
+    height: 700px;
+}
+.picEl .rocketPack {
+    position: absolute;
+    top: 20%;
+    left: 1%;
+    width: 62%;
+}
+.rocketPack {
+    position: absolute;
+    width: 46px !important;
+}
+/*.picEl .rocketPack {
+    position: absolute;
+    top: 33%;
+    left: 5%;
+    width: 51%;
+}*/
+.raiseLauncher {
+    transform-origin: 20% 60%;
+    transform: rotate(-35deg);
+    transition: transform 3s ease;
+}
+
+.levDiv{
+    height: 30px;
+    width:fit-content;
+    padding: 2px;
+    background-color: forestgreen
+}
+.wavDiv {
+    padding: 2px 0px;
+    width: 20px;
+    background-color: orangered
 }
 
 .show {
