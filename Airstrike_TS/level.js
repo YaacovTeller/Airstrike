@@ -262,8 +262,8 @@ const allLevelInfo = [
         number: 1,
         messages: [],
         waves: [
-            //new Wave(8, WaveType.gradual),
-            //new Wave(8, WaveType.sudden),
+            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.sudden),
             new Wave(14, WaveType.sudden)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
