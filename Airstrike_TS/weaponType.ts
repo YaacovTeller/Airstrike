@@ -87,6 +87,7 @@ class WeaponType {
         }
 
         this.instances.push(inst);
+
         game.redrawHudWithWepSelectionChecked();
     }
     protected blastRadNum() {

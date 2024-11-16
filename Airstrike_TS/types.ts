@@ -385,7 +385,9 @@ class ContentElHandler {
     }
     static removeFromContentEl(elem: HTMLElement) {
         let contentEl: HTMLElement = this.returnContentEl();
-        contentEl.removeChild(elem);
+        if (elem && contentEl.contains(elem)) {
+            contentEl.removeChild(elem);
+        }
     }
     static contentElWidth() {
         return document.getElementById("content").clientWidth;
@@ -399,7 +401,9 @@ class ContentElHandler {
             item.classList.add("hide");
         }, stayTime)
         setTimeout(() => {
-            ContentElHandler.removeFromContentEl(item);
+            if (item) {
+                ContentElHandler.removeFromContentEl(item);
+            }
         }, stayTime + fadeTime)
     }
 }

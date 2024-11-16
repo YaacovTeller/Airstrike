@@ -263,14 +263,14 @@ class VehicleTarget extends Target {
         this.speed = this.speed / 3;
     }
     badDamage(direc) {
-        this.damageEl.src = this.badDamagedSource;
+        this.damageEl.src = this.badDamagedSource + loadNewImage();
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
         this.flip(this.picEl, direc, this.targetEl);
     }
     completeDestruction() {
         this.removeFlip(this.picEl);
-        this.baseImgEl.src = this.destroyedSource;
+        this.baseImgEl.src = this.destroyedSource + loadNewImage();
         this.baseImgEl.className = 'destroyed';
         this.damageEl.style.visibility = "hidden";
         this.targetEl.classList.add('show');

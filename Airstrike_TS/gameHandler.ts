@@ -6,26 +6,11 @@ enum GameMode {
     'regular',
     'sandbox'
 }
-function buildLevelBar() {
-    for (let lev of allLevelClassesArray) {
-        let l = lev as level;
-        let levDiv = document.createElement('div');
-        levDiv.className = 'levDiv';
-        ContentElHandler.addToContentEl(levDiv);
-        levDiv.innerText = lev.name;
-        for (let wav of l.waves) {
-            let wavDiv = document.createElement('div');
-            wavDiv.innerText = wav.type + ""
-            wavDiv.className = 'wavDiv';
-            levDiv.appendChild(wavDiv);
-        }
-    }
-}
 
-var allLevelClassesArray: Array<any> = [level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
-//var allLevelClassesArray: Array<any> = [ level_6, level_7]
 var allWeaponTypes: Array<WeaponType> = []
 var allTargets: Array<Target> = []
+var allLevelsArray: Array<Level> = []//[level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
+const level_continuous: Level = new Level(continuousInfo);
 
 class GameHandler {
     public hud = new HudHandler();
@@ -40,7 +25,7 @@ class GameHandler {
     public masterTargets: Array<Target> = []
 
     private sequentialHits: number = 0;
-    public level: level;   // messy, fix
+    public level: Level;   // messy, fix
     public gameTimer: number;
     private soundTimer: number;
     private gameInProgress: boolean = false;
@@ -54,29 +39,34 @@ class GameHandler {
         if (userHandler.userName) {
             userHandler.displayName();
         }
-   //     buildLevelBar();
 
         this.progressNumber = 30;
         this.updateProgressBar();
 
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-      //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
+        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
 
-    private newLevel(LevelClass, mode: GameMode) {
-        if (LevelClass) {
-            let nextLevel;
+    private addAllLevels() {
+        allLevelsArray = [];
+        for (let i of allLevelInfo) {
+            let lev = new Level(i)
+            allLevelsArray.push(lev);
+        }
+    }
+
+    public newLevel(level: Level, mode: GameMode) {
+        if (level) {
+            let nextLevel = level;
             if (mode == GameMode.sandbox) {
-                nextLevel = level_continuous;
+                nextLevel = level_continuous;   /// AWWKWARD? 
             }
-            else {
-                let index = allLevelClassesArray.indexOf(LevelClass);
-                nextLevel = allLevelClassesArray[index + 1];
-            }
-            this.level = new LevelClass(() => this.newLevel(nextLevel, mode)); // Allow following level to be called by this one
+            this.level = nextLevel;
+            this.level.setAsLevel(); // NEEDED?
+
             this.level.nextWave();
         }
         else {
@@ -196,7 +186,8 @@ class GameHandler {
     }
   
     public redrawHudWithWepSelectionChecked() {
-        this.hud.drawHUD(this.weapon ? this.weapon.name : "");
+        this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");
+     //   this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
 
     private fireFunc() {
@@ -389,6 +380,7 @@ class GameHandler {
         this.level.resetTargets();
         this.level.pauseWave();
         this.level = null;
+        ContentElHandler.clearContent();
 
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
@@ -404,14 +396,16 @@ class GameHandler {
         }
         this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
+        this.hud.drawHUD();
         if (mode == GameMode.regular) {
-            this.newLevel(allLevelClassesArray[0], mode)
+            this.addAllLevels();
+            this.hud.buildLevelBar();
+            this.newLevel(allLevelsArray[0], mode)
         }
         else if (mode = GameMode.sandbox) {
             this.newLevel(level_continuous, mode)
             this.addFullWeaponLoadout();
         }
-        this.hud.drawHUD();
         this.hud.drawMultiKill();
         this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);

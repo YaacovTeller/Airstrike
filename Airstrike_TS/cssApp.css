@@ -30,12 +30,44 @@
 .paddingBottom20 {
     padding-bottom: 20px;
 }
+.levDivContainer {
+    justify-self: center;
+    position: absolute;
+    border-radius: 10px;
+    display: flex;
+    text-align: center;
+}
+
+.levDiv {
+    /*display: flex;*/
+    text-align: center;
+    height: 20px;
+    width: fit-content;
+    padding: 2px;
+    background-color: var(--halfOpacGrey);
+}
+    .levDiv.selected {
+        background-color: var(--selected);
+    }
+
+.wavDiv {
+    line-height: 11px;
+    border-radius: 4px;
+    padding: 1px 0px;
+    height: 16px;
+    width: 16px;
+    background-color: lightgray;
+    opacity: 0.5;
+}
+    .wavDiv.selected {
+        background-color: var(--selected);
+    }
 
 .wepBox {
     border-radius: var(--borderRad);
     height: 80%;
     width: 100px;
-    background-color: rgba(224,255,255, 0.5);
+    background-color: var(--halfOpacGrey);
     display: flex;
     justify-content: flex-start;
     align-items: end;
@@ -45,7 +77,7 @@
 }
 
     .wepBox.selected {
-        background-color: #3ca3ff7a;
+        background-color: var(--selected);
     }
 
         .wepBox.selected .instBox {
@@ -272,17 +304,6 @@ img#crater { /*to override the img[src]!*/
     transition: transform 3s ease;
 }
 
-.levDiv{
-    height: 30px;
-    width:fit-content;
-    padding: 2px;
-    background-color: forestgreen
-}
-.wavDiv {
-    padding: 2px 0px;
-    width: 20px;
-    background-color: orangered
-}
 
 .show {
     opacity: 1;

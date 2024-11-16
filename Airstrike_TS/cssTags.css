@@ -4,6 +4,8 @@
     --chargeSelected: hidden;
     --hebDisplay: none;
     --engDisplay: block;
+    --halfOpacGrey: rgba(224,255,255, 0.5);
+    --selected: #3ca3ff7a;
 }
 .heb {
     display: var(--hebDisplay);
@@ -31,6 +33,7 @@ audio {
 }
 
 #content {
+    display: grid;
     position: absolute;
     width: 100%;
     height: 100%;

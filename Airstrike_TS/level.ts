@@ -1,43 +1,112 @@
-﻿enum waveType {
+﻿enum WaveType {
     gradual,
     sudden
 }
-class wave {
+class Wave {
     public number: number
-    public type: waveType
+    public type: WaveType
     public finished: boolean
-    constructor(num: number, type: waveType, finished: boolean = false) {
+    constructor(num: number, type: WaveType, finished: boolean = false) {
         this.number = num;
         this.type = type;
         this.finished = finished;
     }
 }
+type TargetProbability = {
+    type: Target;
+    prob: number;
+}
+type LevelInfo = {
+    number: number
+    messages: Array<popupMsg>
+    waves: Array<Wave>
+    startArms: Array<weaponInfo>
+    endArms: Array<weaponInfo>
+//    targetsAvail: Array<TargetProbability>
+    targetFunc: () => Target
+}
 
-abstract class level {
-    public nextLevelCallback: Function;
-    public index: number = -1;
+
+class Level {
+    //public nextLevelCallback: Function;
+    public waveIndex: number = -1;
     public frequency: number;
-    public waves: Array<wave>;
+ //   public waves: Array<Wave>;
  //   public winLimits: Array<number>;
-    public currentWave: wave;
+    public currentWave: Wave;
     public targets: Array<Target> = [];
     public winCheckTimer: number;
     public targetTimer: number;
     public waveDurationTimer: number;
     private allTargetsDeployed: boolean = false;
-    abstract provideAvailTargets(): Target;
-    abstract armingUp();
-    abstract finalStageArms();
-    constructor(levelendCallback) {
-        this.nextLevelCallback = levelendCallback;
+
+    private info: LevelInfo;
+    constructor(info: LevelInfo) {
+        this.info = info;
+        this.armingUp = () => {
+            this.addWeaponsFromArray(this.info.startArms);
+        }
+        this.finalStageArms = () => {
+            this.addWeaponsFromArray(this.info.endArms);
+        }
+        this.provideAvailTargets = this.info.targetFunc;
+    }
+
+    protected provideAvailTargets(): Target{ return } // FIX?
+    protected armingUp() { };
+    protected finalStageArms() { };
+
+    private addWeaponsFromArray(arr: Array<weaponInfo>) {
+        for (let wep of arr) {
+            this.addNewWeapon(wep);
+        }
+    }
+    private setLevelDisplay(num: number) {
+        let div = document.getElementById("levDiv_" + num);
+        let prevDiv = document.getElementById("levDiv_" + (num - 1));
+        if (prevDiv) {
+            prevDiv.classList.remove('selected')
+        }
+        div.classList.add("selected");
+    }
+    private setWaveDisplay(num: number) {
+        let levDiv = document.getElementById("levDiv_" + (this.info.number));
+        let div = levDiv.querySelector("#wavDiv_" + num) as HTMLElement;
+
+        let prevDiv = levDiv.querySelector("#wavDiv_" + (num - 1)) as HTMLElement;
+        if (prevDiv) {
+            prevDiv.classList.remove('selected')
+        }
+        else {
+            let prevLev = document.getElementById("levDiv_" + (this.info.number - 1)) as HTMLElement;
+            if (prevLev) {
+                let lastChild = prevLev.lastChild as HTMLElement;
+                lastChild.classList.remove('selected')
+            }
+        }
+        div.classList.add("selected");
+    }
+    public setAsLevel() {
+        let num = this.info.number;
+
         this.frequency = game.difficulty.newTargetEvery;
         if (game.gameMode == GameMode.regular) {
-            PopupHandler.addToArray("", this.constructor.name.replace("_", " "), msgLength.long)
+            PopupHandler.addToArray("", "Level " + num, msgLength.long)
+            this.setLevelDisplay(num);
         }
         else {
             PopupHandler.addToArray("", "Sandbox", msgLength.short)
         }
     }
+    public setCurrentWave() {
+        let num = this.waveIndex;
+        if (game.gameMode == GameMode.regular) {
+            this.setWaveDisplay(num);
+        }
+
+        this.currentWave = this.info.waves[num];
+    }
+
 
     public winLimitCheck() {
         if (this.winCheckTimer != null) {
@@ -109,32 +178,32 @@ abstract class level {
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
-                this.nextLevelCallback();
-                console.log("NEXT LEVEL callback")
+                let index = allLevelsArray.indexOf(this);
+                let nextLevel = allLevelsArray[index + 1];
+                game.newLevel(nextLevel, game.gameMode)
+              //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
-    public setCurrentWave() {
-        this.currentWave = this.waves[this.index];
 
-    }
     public nextWave() {
         this.targets = [];
-        this.index++;
-        switch (this.index) {
+        this.waveIndex++;
+        let length = this.info.waves.length;
+        switch (this.waveIndex) {
             case (0):
                 this.armingUp();
                 break;
-            case (this.waves.length - 1):
+            case (length - 1):
                 this.finalStageArms();
                 break;
-            case (this.waves.length):
-                this.index = -1;
+            case (length):
+                this.waveIndex = -1;
                 return false;
             default:
         }
         this.setCurrentWave();
-        if (this.currentWave.type == waveType.sudden) {
+        if (this.currentWave.type == WaveType.sudden) {
             RandomSoundGen.playSequentialSound(revs);
         }
       //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
@@ -146,10 +215,10 @@ abstract class level {
     public continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq: number;
-        if (this.currentWave.type == waveType.gradual) {
+        if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
         }
-        else if (this.currentWave.type == waveType.sudden) {
+        else if (this.currentWave.type == WaveType.sudden) {
             freq = 50;
         }
         if (this.targetTimer != null) console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!")
@@ -180,6 +249,7 @@ abstract class level {
             x.getTargetEl().remove();
         }
         allTargets = [];
+        this.allTargetsDeployed = false;
         this.resetWincheck();
     }
 
@@ -200,223 +270,189 @@ abstract class level {
    //     game.redrawHudWithWepSelectionChecked();
     }
 }
-class level_1 extends level {
-    public waves: Array<wave> = [
-        new wave(8, waveType.gradual),
-        new wave(8, waveType.sudden),
-        new wave(14, waveType.sudden),
-    ];
-    public armingUp() {
-        this.addNewWeapon(sniperInfo, false);
-        this.addNewWeapon(mortarInfo, false);
-        this.addNewWeapon(mortarInfo, false);
-    }
-    public finalStageArms() {
-        this.addNewWeapon(mortarInfo);
-    }
-    public provideAvailTargets(): Target {
-        return new RegVehicleTarget();
-    }
-}
-class level_2 extends level {
-    public waves: Array<wave> = [
-        new wave(8, waveType.sudden),
-        new wave(30, waveType.gradual),
-        new wave(20, waveType.sudden),
-    ];
-    public armingUp() {
-        this.addNewWeapon(howitzerInfo);
-        this.addNewWeapon(mortarInfo);
-    }
-    public finalStageArms() {
-        this.addNewWeapon(howitzerInfo);
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 90):
-                newTarget = new ModVehicleTarget();
-                break;
-            default:
-                newTarget = new RegVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-}
-class level_3 extends level {
-    public waves: Array<wave> = [
-        new wave(16, waveType.gradual),
-        new wave(10, waveType.sudden),
-    ];
-    public armingUp() {
-        this.addNewWeapon(airstrikeInfo);
-        this.addNewWeapon(howitzerInfo);
-    }
-    public finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
-        this.addNewWeapon(howitzerInfo);
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            default:
-                newTarget = new HeavyVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-}
-class level_4 extends level {
-    public waves: Array<wave> = [
-        new wave(6, waveType.gradual),
-        new wave(12, waveType.gradual),
-    ];
-    public armingUp() {
-        this.addNewWeapon(chargeInfo);
-        this.addNewWeapon(airstrikeInfo);
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 50):
-                newTarget = new TunnelTarget();
-                break;
-            default:
-                newTarget = new HeavyVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-    public finalStageArms() {
-        this.addNewWeapon(chargeInfo);
-    }
-}
-class level_5 extends level {
-    public waves: Array<wave> = [
-        new wave(16, waveType.sudden),
-        new wave(30, waveType.gradual),
-        new wave(70, waveType.gradual),
-        new wave(25, waveType.sudden),
-    ];
-    public armingUp() {
-        if (!allWeaponTypes[weaponNames.nuke - 1]) {
-            this.addNewWeapon(nukeInfo);
-        }
-    }
-    public finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 90):
-                newTarget = new TunnelTarget();
-                break;
-            case (rand >= 80):
-                newTarget = new HeavyVehicleTarget();
-                break;
-            case (rand >= 72):
-                newTarget = new ModVehicleTarget();
-                break;
-            default:
-                newTarget = new RegVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-}
-class level_6 extends level {
-    public waves: Array<wave> = [
-        new wave(30, waveType.gradual),
-        new wave(30, waveType.sudden),
-    ];
-    public armingUp() {
-        PopupHandler.addToArray("Missile trucks prevent aircraft strikes", "WARNING");
-    }
-    public finalStageArms() {
-        this.addNewWeapon(airstrikeInfo);
-        this.addNewWeapon(mortarInfo);
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 85):
-                newTarget = new RocketLauncher();
-                break;
-            default:
-                newTarget = new RegVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-}
-
-//class level_6 extends level_5 {
-//    public armingUp() {
-//        this.addNewWeapon(sniperInfo, false);
-//        this.addNewWeapon(mortarInfo, false);
-//        this.addNewWeapon(droneInfo);    
-//    }
-//    public finalStageArms() {
-//        this.addNewWeapon(droneInfo);
-//    }
-//}
-class level_7 extends level {
-    public waves: Array<wave> = [
-        new wave(16, waveType.sudden),
-        new wave(30, waveType.gradual),
-        new wave(70, waveType.gradual),
-        new wave(25, waveType.sudden),
-    ];
-    public armingUp() {
-
-    }
-    public finalStageArms() {
-
-    }
-    public provideAvailTargets(): Target {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 70):
-                newTarget = new RocketLauncher();
-                break;
-            case (rand >= 40):
-                newTarget = new HeavyVehicleTarget();
-                break;
-            default:
-                newTarget = new RegVehicleTarget();
-                break;
-        }
-        return newTarget;
-    }
-}
-
-class level_8 extends level {
-    public waves: Array<wave> = [
-        new wave(20, waveType.sudden),
-        new wave(30, waveType.gradual),
-        new wave(60, waveType.gradual),
-        new wave(40, waveType.sudden),
-    ];
-    public armingUp() {
-
-    }
-    public finalStageArms() {
-
-    }
-    public provideAvailTargets(): Target {
+const continuousInfo: LevelInfo = {
+    number: 0,
+    messages: [{ title: "Cont", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(16, WaveType.sudden),
+        new Wave(30, WaveType.gradual),
+        new Wave(70, WaveType.gradual),
+        new Wave(25, WaveType.sudden),
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => {
         return provideAllTargets();
     }
 }
 
-////////
+const allLevelInfo: Array<LevelInfo> = [
+    {
+        number: 1,
+        messages: [],
+        waves: [
+            //new Wave(8, WaveType.gradual),
+            //new Wave(8, WaveType.sudden),
+            new Wave(14, WaveType.sudden)
+        ],
+        startArms: [sniperInfo, mortarInfo, mortarInfo],
+        endArms: [mortarInfo],
+        targetFunc: () => { return new RegVehicleTarget(); }
+    },
+    {
+        number: 2,
+        messages: [],
+        waves: [
+            new Wave(8, WaveType.sudden),
+            new Wave(30, WaveType.gradual),
+            new Wave(20, WaveType.sudden),
+        ],
+        startArms: [mortarInfo, howitzerInfo],
+        endArms: [howitzerInfo],
+        targetFunc: () => {
+            let rand = RandomNumberGen.randomNumBetween(1, 100);
+            let newTarget: Target;
+            switch (true) {
+                case (rand >= 90):
+                    newTarget = new ModVehicleTarget();
+                    break;
+                default:
+                    newTarget = new RegVehicleTarget();
+                    break;
+            }
+            return newTarget;
+        }
+    },
+    {
+        number: 3,
+        messages: [],
+        waves: [
+            new Wave(16, WaveType.gradual),
+            new Wave(10, WaveType.sudden),
+        ],
+        startArms: [howitzerInfo, airstrikeInfo],
+        endArms: [howitzerInfo, airstrikeInfo],
+        targetFunc: () => {  return new HeavyVehicleTarget(); }
+    },
+    {
+        number: 4,
+        messages: [],
+        waves: [
+            new Wave(6, WaveType.gradual),
+            new Wave(12, WaveType.gradual),
+        ],
+        startArms: [chargeInfo, airstrikeInfo],
+        endArms: [chargeInfo],
+        targetFunc: () => {
+            let rand = RandomNumberGen.randomNumBetween(1, 100);
+            let newTarget: Target;
+            switch (true) {
+                case (rand >= 50):
+                    newTarget = new TunnelTarget();
+                    break;
+                default:
+                    newTarget = new HeavyVehicleTarget();
+                    break;
+            }
+            return newTarget; }
+    },
+    {
+        number: 5,
+        messages: [],
+        waves: [
+            new Wave(16, WaveType.sudden),
+            new Wave(30, WaveType.gradual),
+            new Wave(70, WaveType.gradual),
+            new Wave(25, WaveType.sudden),
+        ],
+        startArms: [nukeInfo],
+        endArms: [airstrikeInfo],
+        targetFunc: () => {
+            let rand = RandomNumberGen.randomNumBetween(1, 100);
+            let newTarget: Target;
+            switch (true) {
+                case (rand >= 90):
+                    newTarget = new TunnelTarget();
+                    break;
+                case (rand >= 80):
+                    newTarget = new HeavyVehicleTarget();
+                    break;
+                case (rand >= 72):
+                    newTarget = new ModVehicleTarget();
+                    break;
+                default:
+                    newTarget = new RegVehicleTarget();
+                    break;
+            }
+            return newTarget;
+        }
+    },
+    {
+        number: 6,
+        messages: [{ text: "Missile trucks prevent aircraft strikes", title: "WARNING" } as popupMsg],
+        waves: [
+            new Wave(30, WaveType.gradual),
+            new Wave(30, WaveType.sudden),
+        ],
+        startArms: [],
+        endArms: [mortarInfo, airstrikeInfo],
+        targetFunc: () => {
+            let rand = RandomNumberGen.randomNumBetween(1, 100);
+            let newTarget: Target;
+            switch (true) {
+                case (rand >= 85):
+                    newTarget = new RocketLauncher();
+                    break;
+                default:
+                    newTarget = new RegVehicleTarget();
+                    break;
+            }
+            return newTarget; }
+    },
+    {
+        number: 7,
+        messages: [],
+        waves: [
+            new Wave(16, WaveType.sudden),
+            new Wave(30, WaveType.gradual),
+            new Wave(70, WaveType.gradual),
+            new Wave(25, WaveType.sudden),
+        ],
+        startArms: [],
+        endArms: [],
+        targetFunc: () => {
+            let rand = RandomNumberGen.randomNumBetween(1, 100);
+            let newTarget: Target;
+            switch (true) {
+                case (rand >= 70):
+                    newTarget = new RocketLauncher();
+                    break;
+                case (rand >= 40):
+                    newTarget = new HeavyVehicleTarget();
+                    break;
+                default:
+                    newTarget = new RegVehicleTarget();
+                    break;
+            }
+            return newTarget; }
+    },
+    {
+        number: 8,
+        messages: [],
+        waves: [
+            new Wave(20, WaveType.sudden),
+            new Wave(30, WaveType.gradual),
+            new Wave(60, WaveType.gradual),
+            new Wave(40, WaveType.sudden),
+        ],
+        startArms: [],
+        endArms: [],
+        targetFunc: () => {
+            return provideAllTargets();
+ }
+    },
+
+]
 
 function provideAllTargets(): Target {
     let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -441,35 +477,34 @@ function provideAllTargets(): Target {
     return newTarget;
 }
 
+//class Level_continuous extends Level {
+//    public waves: Array<Wave> = [
+//        new Wave(14, WaveType.gradual),
+//        new Wave(14, WaveType.sudden),
+//        new Wave(30, WaveType.sudden),
+//        new Wave(40, WaveType.gradual),   /// CONFLICT!!
+//        ]
+//    public setCurrentWave() {  /// CONFLICT!!
+//        let newWave: Wave 
+//        if (this.waveIndex > 0) {
+//            if (this.waves[this.waveIndex - 1].type == WaveType.gradual) {
+//                newWave = new Wave(25, WaveType.sudden)
+//            }
+//            else {
+//                newWave = new Wave(50, WaveType.gradual)
+//            }
+//            this.waves.push(
+//                newWave
+//             )
+//        }
+//        this.currentWave = this.waves[this.waveIndex];
+//    }
 
-class level_continuous extends level {
-    public waves: Array<wave> = [
-        new wave(14, waveType.gradual),
-        new wave(14, waveType.sudden),
-        new wave(30, waveType.sudden),
-        new wave(40, waveType.gradual),   /// CONFLICT!!
-        ]
-    public setCurrentWave() {  /// CONFLICT!!
-        let newWave: wave 
-        if (this.index > 0) {
-            if (this.waves[this.index - 1].type == waveType.gradual) {
-                newWave = new wave(25, waveType.sudden)
-            }
-            else {
-                newWave = new wave(50, waveType.gradual)
-            }
-            this.waves.push(
-                newWave
-             )
-        }
-        this.currentWave = this.waves[this.index];
-    }
-
-    public armingUp() {
-    }
-    public finalStageArms() {
-    }
-    public provideAvailTargets(): Target {
-        return provideAllTargets();
-    }
-}
+//    public armingUp() {
+//    }
+//    public finalStageArms() {
+//    }
+//    public provideAvailTargets(): Target {
+//        return provideAllTargets();
+//    }
+//}

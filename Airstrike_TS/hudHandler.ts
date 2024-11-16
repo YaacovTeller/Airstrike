@@ -16,6 +16,8 @@ class HudHandler {
     private hud: HTMLElement
     private selectedWep: Element
     private scoreBox: HTMLElement
+    private levelBox: HTMLElement
+    private rightSideContainer: HTMLElement
     public multiKillBox: HTMLElement
     public killStats: killStats
 
@@ -43,9 +45,22 @@ class HudHandler {
         el.id = 'hud';
         ContentElHandler.addToContentEl(el)
         this.hud = el;
-        let wepBoxContainer = document.createElement('div');
+
+        this.drawWeaponDisplay(wepname);
+
+        this.rightSideContainer = document.createElement('div');
+        this.hud.appendChild(this.rightSideContainer);
+        this.drawScore();
+    }
+
+    public drawWeaponDisplay(wepname?) {
+        let wepBoxContainer = document.getElementById('wepBoxContainer');
+        if (wepBoxContainer) wepBoxContainer.remove();
+
+        wepBoxContainer = document.createElement('div');
         wepBoxContainer.classList.add('wepBoxContainer');
-        this.hud.appendChild(wepBoxContainer);
+        wepBoxContainer.id = 'wepBoxContainer';
+        this.hud.prepend(wepBoxContainer);
 
         for (let x in allWeaponTypes) {
             let wep = allWeaponTypes[x]
@@ -64,7 +79,6 @@ class HudHandler {
         if (wepname) {
             this.selectBox(wepname)
         }
-        this.drawScore();
     }
     public drawInstances(wep, wepBox) {
         for (let y of wep.instances) {
@@ -99,6 +113,27 @@ class HudHandler {
         }, numberAnimTime)
     }
 
+    public buildLevelBar() {
+        let levDivContainer = document.createElement('div');
+        levDivContainer.className = 'levDivContainer';
+        this.rightSideContainer.appendChild(levDivContainer)
+
+        for (let lev of allLevelInfo) {
+            let levDiv = document.createElement('div');
+            levDiv.className = 'levDiv';
+            levDivContainer.appendChild(levDiv);
+            levDiv.innerText = lev.number + "";
+            levDiv.id = "levDiv_" + lev.number;
+            for (let wav of lev.waves) {
+                let wavDiv = document.createElement('div');
+                wavDiv.innerText = WaveType[wav.type].charAt(0).toLocaleUpperCase();
+                wavDiv.id = "wavDiv_" + lev.waves.indexOf(wav);
+                wavDiv.className = 'wavDiv';
+                levDiv.appendChild(wavDiv);
+            }
+        }
+    }
+
     public drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
@@ -111,7 +146,7 @@ class HudHandler {
         span.id = "scoreCounter"
         this.scoreBox.appendChild(span);
 
-        this.hud.appendChild(this.scoreBox);
+        this.rightSideContainer.appendChild(this.scoreBox);
 
         this.updateScore();
     }
