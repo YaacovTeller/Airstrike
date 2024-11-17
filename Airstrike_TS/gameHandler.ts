@@ -182,7 +182,8 @@ class GameHandler {
     }
     private toggleElem(id: string) {
         var elem = document.getElementById(id);
-        elem.style.display = elem.style.display === "block" ? "none" : "block";
+        elem.classList.contains("displayNone") ? elem.classList.remove("displayNone") : elem.classList.add("displayNone");
+       // elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
   
     public redrawHudWithWepSelectionChecked() {

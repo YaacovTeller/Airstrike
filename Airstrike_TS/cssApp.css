@@ -304,7 +304,6 @@ img#crater { /*to override the img[src]!*/
     transition: transform 3s ease;
 }
 
-
 .show {
     opacity: 1;
 }

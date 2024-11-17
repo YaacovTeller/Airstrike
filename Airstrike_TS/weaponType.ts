@@ -499,14 +499,41 @@ class DroneWeaponType extends ExplosiveWeaponType {
         this.setActiveInstance();
     }
 }
+enum screenShakeTimeouts {
+    "shake_1" = 200,
+    "shake_2" = 300,
+    "shake_3" = 400,
+}
 
 class ExplosionHandler {
     private static craterDecalStay: number = 15000;
     private static craterFadingTillRemoval: number = fadeAnimTime;
-    public static basicExplosion(blastCenter, size, explSrc) {
+
+    public static basicExplosion(blastCenter: position, size: ExplSizes, explSrc: string) {
         let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
         let crater = this.setAndReturnCrater(blastCenter, size);
         this.explode(explosion, crater);
+
+        if (size == ExplSizes.large) {
+            this.shake(screenShakeTimeouts.shake_1);
+        }
+        else if (size == ExplSizes.XL) {
+            this.shake(screenShakeTimeouts.shake_2);
+        }
+        if (size >= ExplSizes.XXL) {
+            this.flash();
+            this.shake(screenShakeTimeouts.shake_3);
+        }
+    }
+    private static flash() {
+        let overlay = document.getElementById("overlay");
+        overlay.classList.add("flash");
+        setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
+    }
+    private static shake(shakeTimeout: screenShakeTimeouts) {
+        let content = document.getElementById("content");
+        content.classList.add(screenShakeTimeouts[shakeTimeout]);
+        setTimeout(() => { content.classList.remove(screenShakeTimeouts[shakeTimeout]); }, shakeTimeout)
     }
 
     private static returnNewImageEl(classname: string, src?: string) {

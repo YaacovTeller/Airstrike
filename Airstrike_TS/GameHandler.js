@@ -168,7 +168,8 @@ class GameHandler {
     }
     toggleElem(id) {
         var elem = document.getElementById(id);
-        elem.style.display = elem.style.display === "block" ? "none" : "block";
+        elem.classList.contains("displayNone") ? elem.classList.remove("displayNone") : elem.classList.add("displayNone");
+        // elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
     redrawHudWithWepSelectionChecked() {
         this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");

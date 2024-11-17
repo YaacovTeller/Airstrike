@@ -453,6 +453,12 @@ class DroneWeaponType extends ExplosiveWeaponType {
         this.setActiveInstance();
     }
 }
+var screenShakeTimeouts;
+(function (screenShakeTimeouts) {
+    screenShakeTimeouts[screenShakeTimeouts["shake_1"] = 200] = "shake_1";
+    screenShakeTimeouts[screenShakeTimeouts["shake_2"] = 300] = "shake_2";
+    screenShakeTimeouts[screenShakeTimeouts["shake_3"] = 400] = "shake_3";
+})(screenShakeTimeouts || (screenShakeTimeouts = {}));
 class ExplosionHandler {
     static craterDecalStay = 15000;
     static craterFadingTillRemoval = fadeAnimTime;
@@ -460,6 +466,26 @@ class ExplosionHandler {
         let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
         let crater = this.setAndReturnCrater(blastCenter, size);
         this.explode(explosion, crater);
+        if (size == ExplSizes.large) {
+            this.shake(screenShakeTimeouts.shake_1);
+        }
+        else if (size == ExplSizes.XL) {
+            this.shake(screenShakeTimeouts.shake_2);
+        }
+        if (size >= ExplSizes.XXL) {
+            this.flash();
+            this.shake(screenShakeTimeouts.shake_3);
+        }
+    }
+    static flash() {
+        let overlay = document.getElementById("overlay");
+        overlay.classList.add("flash");
+        setTimeout(() => { overlay.classList.remove("flash"); }, 2000);
+    }
+    static shake(shakeTimeout) {
+        let content = document.getElementById("content");
+        content.classList.add(screenShakeTimeouts[shakeTimeout]);
+        setTimeout(() => { content.classList.remove(screenShakeTimeouts[shakeTimeout]); }, shakeTimeout);
     }
     static returnNewImageEl(classname, src) {
         let el = document.createElement('img');
