@@ -14,11 +14,8 @@ class Wave {
     }
 }
 class Level {
-    //public nextLevelCallback: Function;
     waveIndex = -1;
     frequency;
-    //   public waves: Array<Wave>;
-    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
@@ -36,7 +33,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; } // FIX?
+    provideAvailTargets() { return; }
     armingUp() { }
     ;
     finalStageArms() { }
@@ -142,21 +139,18 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        PopupHandler.addToArray("Nice job!" + "\n");
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
-            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
-                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -180,13 +174,10 @@ class Level {
         if (this.currentWave.type == WaveType.sudden) {
             RandomSoundGen.playSequentialSound(revs);
         }
-        //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
-        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -239,7 +230,6 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
-        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo = {
@@ -250,6 +240,7 @@ const continuousInfo = {
         new Wave(30, WaveType.gradual),
         new Wave(70, WaveType.gradual),
         new Wave(25, WaveType.sudden),
+        new Wave(40, WaveType.sudden),
     ],
     startArms: [],
     endArms: [],
@@ -448,34 +439,3 @@ function provideAllTargets() {
     }
     return newTarget;
 }
-//class Level_continuous extends Level {
-//    public waves: Array<Wave> = [
-//        new Wave(14, WaveType.gradual),
-//        new Wave(14, WaveType.sudden),
-//        new Wave(30, WaveType.sudden),
-//        new Wave(40, WaveType.gradual),   /// CONFLICT!!
-//        ]
-//    public setCurrentWave() {  /// CONFLICT!!
-//        let newWave: Wave 
-//        if (this.waveIndex > 0) {
-//            if (this.waves[this.waveIndex - 1].type == WaveType.gradual) {
-//                newWave = new Wave(25, WaveType.sudden)
-//            }
-//            else {
-//                newWave = new Wave(50, WaveType.gradual)
-//            }
-//            this.waves.push(
-//                newWave
-//             )
-//        }
-//        this.currentWave = this.waves[this.waveIndex];
-//    }
-//    public armingUp() {
-//    }
-//    public finalStageArms() {
-//    }
-//    public provideAvailTargets(): Target {
-//        return provideAllTargets();
-//    }
-//}
-//# sourceMappingURL=level.js.map

@@ -278,6 +278,7 @@ const continuousInfo: LevelInfo = {
         new Wave(30, WaveType.gradual),
         new Wave(70, WaveType.gradual),
         new Wave(25, WaveType.sudden),
+        new Wave(40, WaveType.sudden),
     ],
     startArms: [],
     endArms: [],

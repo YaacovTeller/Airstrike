@@ -203,6 +203,7 @@ class VehicleTarget extends Target {
     protected destroyedSource: string = assetsFolder + 'fire_3.gif';
     protected damagedSource: string = assetsFolder + 'smoke_3.gif';
     protected badDamagedSource: string = assetsFolder + 'fire_1.gif';
+    protected wheelSource: string = assetsFolder + 'wheel.png';
     public movesAtBlast: boolean = true;
     public angle: number = 0;
 
@@ -273,6 +274,29 @@ class VehicleTarget extends Target {
         elem.classList.remove('flip');
         this.cssRotateAngle(elem, 0);
     }
+    private returnWheel(): HTMLImageElement{
+        let wheel = this.returnNewImageEl(ContentElHandler.returnContentEl(), 'wheel', this.wheelSource);
+        const rect = this.picEl.getBoundingClientRect();
+        const x = rect.left + window.scrollX;
+        const y = rect.top + window.scrollY;
+        wheel.style.position = "absolute";
+        wheel.style.left = `${x}px`;
+        wheel.style.top = `${y}px`;
+        return wheel;
+    }
+    private rollWheel() {
+        let wheel = this.returnWheel();
+        wheel.classList.add("rollWheel");
+        let stay = 8000;
+        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+    }
+    private throwWheel(direc: direction) {
+        let wheel = this.returnWheel();
+        wheel.classList.add("throwWheel");
+        this.flip(wheel, direc);
+        let stay = 8000;
+        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+    }
 
     private hitAcknowledge() {
         if (this.damage <= Damage.damaged) {
@@ -304,6 +328,10 @@ class VehicleTarget extends Target {
         this.damageEl.style.visibility = "hidden";
         this.targetEl.classList.add('show');
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
+
+        this.rollWheel();
+        this.throwWheel(direction.forward);
+        this.throwWheel(direction.backward);
     }
 
     private basicVehicleDamageModel(severity: strikeSeverity, direc: direction) {
@@ -426,7 +454,7 @@ class RocketLauncher extends VehicleTarget {
         super.hit(severity, wepName, direc);
         if (this.damage > Damage.badlyDented) {
             if (this.noStrikeZone) {
-                this.noStrikeZone.remove();
+                this.removeNoStrikeZone();
             }
         }
         if (this.damage > Damage.damaged) {
@@ -482,7 +510,7 @@ class RocketLauncher extends VehicleTarget {
         else {
             if (this.noStrikeZone) {
                 console.log("Hit ACTION nostrikezone remove")
-                this.noStrikeZone.remove();
+                this.removeNoStrikeZone();
             }
         }
         //if (this.damage > Damage.badlyDented) {
@@ -503,6 +531,10 @@ class RocketLauncher extends VehicleTarget {
         this.noStrikeZone = this.returnNewEl(this.targetEl, 'noStrikeZone');
         this.noStrikeZone.addEventListener('mouseover', this.overNoStrikeZone.bind(this));
         this.noStrikeZone.addEventListener('mouseleave', this.leaveNoStrikeZone.bind(this));
+    }
+    private removeNoStrikeZone() {
+        this.noStrikeZone.remove();
+        this.noStrikeZone = null;
     }
     private overNoStrikeZone() {
         game.strikesRestricted = true;

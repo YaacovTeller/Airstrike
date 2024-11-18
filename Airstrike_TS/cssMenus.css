@@ -337,6 +337,22 @@ input[type=radio]:checked ~ label {
     height: 250px;
     animation: rotate 2s linear infinite;
 }
+.wheel{
+    width: 10px;
+}
+.rollWheel {
+    animation: rotate 0.5s linear infinite, move-right 4s ease-out forwards;
+    transition: opacity 6s ease-in-out
+}
+.throwWheel {
+/*    animation: rotate 2s linear infinite, move-right 4s ease-out infinite;
+*/    transition: opacity 6s ease-in-out
+}
+@keyframes move-right{
+    100% {
+       transform: translateX(150px);
+    }
+}
 
 @keyframes slamNumber {
     0%, 100% {
@@ -378,6 +394,7 @@ input[type=radio]:checked ~ label {
         transform: scale(1.5) rotate(360deg);
     }
 }
+
 
 @keyframes rotate {
     from {

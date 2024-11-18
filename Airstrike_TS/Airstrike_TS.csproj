@@ -69,6 +69,8 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="AS_assets\launcher.png" />
+    <Content Include="AS_assets\rockets.png" />
     <Content Include="AS_assets\sound\4_3.mp3" />
     <Content Include="AS_assets\sound\5sec.mp3" />
     <Content Include="AS_assets\sound\bleepbleep.mp3" />
@@ -98,6 +100,7 @@
     <Content Include="AS_assets\SVG\drone.svg" />
     <Content Include="AS_assets\SVG\lock_red.svg" />
     <Content Include="AS_assets\SVG\target-box.svg" />
+    <Content Include="AS_assets\wheel.png" />
     <Content Include="icons\bomb.ico" />
     <Content Include="icons\jet.ico" />
     <Content Include="icons\missile.ico" />

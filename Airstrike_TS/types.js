@@ -42,7 +42,6 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
-// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -90,13 +89,6 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
-//const easy: difficultyLevelInfo = {
-//    newTargetEvery: 3000,
-//    regTargetSpeed: { min: 2, max: 3 },
-//    modTargetSpeed: { min: 1, max: 2 },
-//    heavyTargetSpeed: { min: 1, max: 1 },
-//    tunnelTargetSpeed: { min: 1, max: 2 },
-//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -367,4 +359,3 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
-//# sourceMappingURL=types.js.map

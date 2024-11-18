@@ -79,7 +79,6 @@ class GameHandler {
         PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false // HACKY??
-        this.fireFunc = () => { }; // HACKY??
         this.cutGameFuncs();
         setTimeout(() => {
             this.toggleModal();
@@ -192,6 +191,9 @@ class GameHandler {
     }
 
     private fireFunc() {
+        if (!game.gameInProgress) {
+            return;
+        }
         if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
             bleep_neg.play();
             return
