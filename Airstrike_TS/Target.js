@@ -244,7 +244,7 @@ class VehicleTarget extends Target {
     }
     removeFlip(elem) {
         elem.classList.remove('flip');
-        this.cssRotateAngle(elem, 0);
+        ThrowHandler.cssRotateAngle(elem, 0);
     }
     returnWheel() {
         let wheel = this.returnNewImageEl(ContentElHandler.returnContentEl(), 'wheel', this.wheelSource);
@@ -254,20 +254,20 @@ class VehicleTarget extends Target {
         wheel.style.position = "absolute";
         wheel.style.left = `${x}px`;
         wheel.style.top = `${y}px`;
+        allObjects.push(wheel);
+        return wheel;
+    }
+    castWheel(className) {
+        let wheel = this.returnWheel();
+        wheel.classList.add(className);
+        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
         return wheel;
     }
     rollWheel() {
-        let wheel = this.returnWheel();
-        wheel.classList.add("rollWheel");
-        let stay = 8000;
-        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+        this.castWheel("rollWheel");
     }
     throwWheel(direc) {
-        let wheel = this.returnWheel();
-        wheel.classList.add("throwWheel");
-        this.flip(wheel, direc);
-        let stay = 8000;
-        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+        ThrowHandler.flip(this.castWheel("throwWheel"), direc);
     }
     hitAcknowledge() {
         if (this.damage <= Damage.damaged) {
@@ -287,7 +287,7 @@ class VehicleTarget extends Target {
         this.damageEl.src = this.badDamagedSource + loadNewImage();
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
-        this.flip(this.picEl, direc, this.targetEl);
+        this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
     }
     completeDestruction() {
         this.removeFlip(this.picEl);
@@ -324,44 +324,6 @@ class VehicleTarget extends Target {
             this.completeDestruction();
             return;
         }
-    }
-    flip(elem, direc, parentElem) {
-        let thrownElem = parentElem ? parentElem : elem;
-        CollisionDetection.throw(thrownElem, direc);
-        this.rotate(elem, direc);
-        setTimeout(() => {
-            RandomSoundGen.playRandomSound(crashes);
-        }, crashTimeout);
-    }
-    rotate(elem, direc) {
-        const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
-        const index = angles.indexOf(this.angle);
-        let rand = RandomNumberGen.randomNumBetween(0, 20);
-        let increment = 1;
-        if (rand > 18) {
-            increment++;
-        }
-        let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
-        if (deg == undefined) {
-            deg = 0;
-            this.angle = deg;
-            elem.classList.remove('flip');
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight;
-                    this.rotate(elem, direc);
-                }, 0);
-            });
-        }
-        else {
-            this.angle = deg;
-            elem.classList.add('flip');
-            this.cssRotateAngle(elem, deg);
-        }
-    }
-    cssRotateAngle(elem, deg) {
-        elem.style.transform = `rotate(${deg}deg)`;
     }
 }
 class RegVehicleTarget extends VehicleTarget {
@@ -428,10 +390,10 @@ class RocketLauncher extends VehicleTarget {
         pack.style.left = `${x}px`;
         pack.style.top = `${y}px`;
         ContentElHandler.addToContentEl(pack);
-        this.flip(pack, direction.backward);
-        let packStay = 2000;
-        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, packStay);
-        ContentElHandler.fadeRemoveItem(pack, packStay, fadeAnimTime);
+        allObjects.push(pack);
+        ThrowHandler.flip(pack, direction.backward);
+        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, itemStay);
+        ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime);
     }
     inNoStrikeZone(target) {
         let noStrikeZones = document.querySelectorAll(".noStrikeZone");
@@ -469,6 +431,7 @@ class RocketLauncher extends VehicleTarget {
         let delay = 500;
         let _this = this;
         setTimeout(() => {
+            activate.play();
             _this.launcherEl.classList.add('raiseLauncher');
         }, delay);
         setTimeout(() => {

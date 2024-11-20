@@ -272,7 +272,7 @@ class VehicleTarget extends Target {
 
     private removeFlip(elem) {
         elem.classList.remove('flip');
-        this.cssRotateAngle(elem, 0);
+        ThrowHandler.cssRotateAngle(elem, 0);
     }
     private returnWheel(): HTMLImageElement{
         let wheel = this.returnNewImageEl(ContentElHandler.returnContentEl(), 'wheel', this.wheelSource);
@@ -282,20 +282,22 @@ class VehicleTarget extends Target {
         wheel.style.position = "absolute";
         wheel.style.left = `${x}px`;
         wheel.style.top = `${y}px`;
+
+        allObjects.push(wheel);
+
+        return wheel;
+    }
+    private castWheel(className: string) {
+        let wheel = this.returnWheel();
+        wheel.classList.add(className);
+        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
         return wheel;
     }
     private rollWheel() {
-        let wheel = this.returnWheel();
-        wheel.classList.add("rollWheel");
-        let stay = 8000;
-        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+        this.castWheel("rollWheel");
     }
     private throwWheel(direc: direction) {
-        let wheel = this.returnWheel();
-        wheel.classList.add("throwWheel");
-        this.flip(wheel, direc);
-        let stay = 8000;
-        ContentElHandler.fadeRemoveItem(wheel, stay, fadeAnimTime);
+        ThrowHandler.flip(this.castWheel("throwWheel"), direc);
     }
 
     private hitAcknowledge() {
@@ -318,7 +320,7 @@ class VehicleTarget extends Target {
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
 
-        this.flip(this.picEl, direc, this.targetEl);
+        this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
     }
     private completeDestruction() {
         this.removeFlip(this.picEl);
@@ -359,48 +361,6 @@ class VehicleTarget extends Target {
             return
         }
     }
-
-    protected flip(elem: HTMLElement, direc: direction, parentElem?: HTMLElement) { // ODD? HACKY?
-        let thrownElem = parentElem ? parentElem : elem;
-        CollisionDetection.throw(thrownElem, direc); // ARC
-        this.rotate(elem, direc);                             // ROTATION
-
-        setTimeout(() => {
-            RandomSoundGen.playRandomSound(crashes)
-        }, crashTimeout);
-    }
-
-    protected rotate(elem: HTMLElement, direc: direction) {
-        const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
-        const index = angles.indexOf(this.angle);
-        let rand = RandomNumberGen.randomNumBetween(0, 20)
-        let increment = 1;
-        if (rand > 18) {
-            increment++;
-        }
-        let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
-        if (deg == undefined) {
-            deg = 0;
-            this.angle = deg;
-            elem.classList.remove('flip');
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight;  // forces reflow
-                    this.rotate(elem, direc);
-                }, 0);
-            });
-        }
-        else {
-            this.angle = deg;
-            elem.classList.add('flip');
-            this.cssRotateAngle(elem, deg);
-        }
-    }
-    protected cssRotateAngle(elem: HTMLElement, deg: number) {
-        elem.style.transform = `rotate(${deg}deg)`;
-    }
-
 }
 
 class RegVehicleTarget extends VehicleTarget {
@@ -473,12 +433,12 @@ class RocketLauncher extends VehicleTarget {
         pack.style.left = `${x}px`;
         pack.style.top = `${y}px`;
         ContentElHandler.addToContentEl(pack);
+        allObjects.push(pack);
 
-        this.flip(pack, direction.backward); /////////////////////////////////////////////////////////////////
-        let packStay = 2000;
+        ThrowHandler.flip(pack, direction.backward); /////////////////////////////////////////////////////////////////
         //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
-        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out' }, packStay)   // AWFUL !!!
-        ContentElHandler.fadeRemoveItem(pack, packStay, fadeAnimTime);
+        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out' }, itemStay)   // AWFUL !!!
+        ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime);
     }
 
     public inNoStrikeZone(target: Target) {
@@ -521,6 +481,7 @@ class RocketLauncher extends VehicleTarget {
         let delay = 500;
         let _this = this;
         setTimeout(() => {
+             activate.play();
             _this.launcherEl.classList.add('raiseLauncher');
         }, delay);
         setTimeout(() => {

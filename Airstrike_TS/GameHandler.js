@@ -10,6 +10,7 @@ var GameMode;
 })(GameMode || (GameMode = {}));
 var allWeaponTypes = [];
 var allTargets = [];
+var allObjects = [];
 var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
 class GameHandler {
@@ -22,7 +23,6 @@ class GameHandler {
     language = Languages.eng;
     difficulty;
     gameMode;
-    masterTargets = [];
     sequentialHits = 0;
     level;
     gameTimer;

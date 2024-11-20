@@ -235,6 +235,16 @@ class ExplosiveWeaponType extends WeaponType {
                 this.targetStrike(target, collisionInfo);
             }
         }
+        for (let item of allObjects) {
+            let collisionInfo = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, item, this.explosionInfo.size / 2);
+            if (collisionInfo) {
+                this.itemStrike(item, collisionInfo);
+            }
+        }
+    }
+    itemStrike(item, collisionInfo) {
+        let direc = this.determineDirectionForFlip(collisionInfo);
+        ThrowHandler.flip(item, direc);
     }
     targetStrike(target, collisionInfo) {
         let fraction = collisionInfo.dist / collisionInfo.radius;

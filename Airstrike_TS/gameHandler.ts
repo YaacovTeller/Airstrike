@@ -8,7 +8,8 @@ enum GameMode {
 }
 
 var allWeaponTypes: Array<WeaponType> = []
-var allTargets: Array<Target> = []
+var allTargets: Array<Target> = [];
+var allObjects: Array<HTMLElement> = [];
 var allLevelsArray: Array<Level> = []//[level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
 const level_continuous: Level = new Level(continuousInfo);
 
@@ -22,7 +23,8 @@ class GameHandler {
     private language: Languages = Languages.eng;
     public difficulty: difficultyLevelInfo;
     public gameMode: GameMode;
-    public masterTargets: Array<Target> = []
+   // public masterTargets: Array<Target> = [];
+    //public masterObjects: Array<HTMLElement> = [];
 
     private sequentialHits: number = 0;
     public level: Level;   // messy, fix

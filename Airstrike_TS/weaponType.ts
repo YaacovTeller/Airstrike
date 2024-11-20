@@ -270,7 +270,18 @@ class ExplosiveWeaponType extends WeaponType {
                 this.targetStrike(target, collisionInfo)
             }
         }
+        for (let item of allObjects) {
+            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, item, this.explosionInfo.size / 2);
+            if (collisionInfo) {
+                this.itemStrike(item, collisionInfo)
+            }
+        }
     }
+    protected itemStrike(item, collisionInfo: vectorMoveObj) {
+        let direc: direction = this.determineDirectionForFlip(collisionInfo);
+        ThrowHandler.flip(item, direc);
+    }
+
     protected targetStrike(target, collisionInfo: vectorMoveObj) {
         let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity: strikeSeverity = this.determineSeverity(fraction);

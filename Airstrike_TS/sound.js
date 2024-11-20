@@ -57,6 +57,7 @@ const bleep_pos = new Sound(soundFolder + "target_lock.wav");
 const click_1 = new Sound(soundFolder + "click_1.mp3");
 const click_2 = new Sound(soundFolder + "click_2.mp3");
 const pop = new Sound(soundFolder + "pop_click.wav");
+const activate = new Sound(soundFolder + "cannonActivate.wav");
 const radio_1 = new Sound(soundFolder + "radio_1.mp3");
 const radio_2 = new Sound(soundFolder + "radio_2.mp3");
 const bleepbleep = new Sound(soundFolder + "bleepbleep.mp3");
