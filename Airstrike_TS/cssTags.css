@@ -6,6 +6,9 @@
     --engDisplay: block;
     --halfOpacGrey: rgba(224,255,255, 0.5);
     --selected: #3ca3ff7a;
+    --shake_small: 5px;
+    --shake_med: 10px;
+    --shake_heavy: 15px;
 }
 .heb {
     display: var(--hebDisplay);

@@ -42,6 +42,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -89,6 +90,13 @@ var weaponNames;
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -208,7 +216,7 @@ const airstrikeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        imageSource: assetsFolder + 'expl_big.gif',
+        imageSource: assetsFolder + strikeExplosion,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -227,7 +235,7 @@ const nukeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        imageSource: assetsFolder + 'mushroom_1.gif',
+        imageSource: assetsFolder + mushroomExplosion,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -312,47 +320,6 @@ class PopupHandler {
         }, currentMsg.length + 200);
     }
 }
-class ThrowHandler {
-    static flip(elem, direc, parentElem, angle) {
-        let thrownElem = parentElem ? parentElem : elem;
-        CollisionDetection.throw(thrownElem, direc);
-        let deg = this.rotate(elem, direc, angle);
-        setTimeout(() => {
-            RandomSoundGen.playRandomSound(crashes);
-        }, crashTimeout);
-        return deg;
-    }
-    static rotate(elem, direc, angle) {
-        const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
-        const index = angles.indexOf(angle);
-        let rand = RandomNumberGen.randomNumBetween(0, 20);
-        let increment = 1;
-        if (rand > 18) {
-            increment++;
-        }
-        let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
-        if (deg == undefined) {
-            deg = 0;
-            elem.classList.remove('flip');
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight;
-                    this.rotate(elem, direc);
-                }, 0);
-            });
-            return deg;
-        }
-        else {
-            elem.classList.add('flip');
-            this.cssRotateAngle(elem, deg);
-            return deg;
-        }
-    }
-    static cssRotateAngle(elem, deg) {
-        elem.style.transform = `rotate(${deg}deg)`;
-    }
-}
 class ContentElHandler {
     static returnContentEl() {
         return document.getElementById("content");
@@ -404,3 +371,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

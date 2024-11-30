@@ -1,6 +1,4 @@
-﻿
-
-class Target {
+﻿class Target {
     protected targetEl: HTMLElement;
     protected picEl: HTMLElement;
     protected baseImgEl: HTMLImageElement;
@@ -9,8 +7,6 @@ class Target {
 
     protected speed: number;
     public armour: Armour;
-
-//    protected picSources: Array<string>;
 
     protected startPosition: number;
     public status: number = Status.active;
@@ -39,17 +35,18 @@ class Target {
     protected get picSources(): Array<string> {
         return [];
     }
-    protected returnNewImageEl(parent: HTMLElement, classname: string, src?: string) {
+    protected returnNewImageEl(parent: HTMLElement, classname: string, src?: string, prep?: boolean) {
         let el = document.createElement('img');
         if (src) el.src = src;
         el.className = classname;
-        parent.appendChild(el);
+        prep ? parent.prepend(el) : parent.appendChild(el);
         return el;
     }
     protected returnNewEl(parent: HTMLElement, classname: string) {
         let el = document.createElement('div');
         el.className = classname;
-        parent.appendChild(el);
+    //    parent.appendChild(el);
+        parent.prepend(el);
         return el;
     }
     protected setStartPos(left: number, top?: number) {
@@ -59,7 +56,16 @@ class Target {
         this.targetEl.style.left = left + 'px';
     }
 
-    public hit(sev: strikeSeverity, wepName: weaponNames, direc: direction) { }
+    protected moveFromBlast(severity: strikeSeverity, collisionInfo: vectorMoveObj) {
+        if (this.movesAtBlast) {
+            if (this.armour >= Armour.moderate) {
+                collisionInfo.radius /= 2; // hack to reduce punting armour about
+            }
+            severity > strikeSeverity.light ? ThrowHandler.moveAtAngle(collisionInfo) : "";
+        }
+    }
+
+    public hit(sev: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) { }
 
     protected move(posX: number) {
         if (posX > ContentElHandler.contentElWidth()) {
@@ -99,7 +105,7 @@ class Target {
     }
 }
 class TunnelTarget extends Target {
-    protected trailBlast: string = assetsFolder + 'expl1.gif';
+    protected trailBlast: string = assetsFolder + classicExplosion;
     protected damagedSource: string = assetsFolder + 'smoke_3.gif';
     protected destroyedSource: string = assetsFolder + 'fire_1.gif';
     public movesAtBlast: boolean = false;
@@ -163,15 +169,9 @@ class TunnelTarget extends Target {
 
         }
     }
-    private removeTunnel(length) {
-        this.trail.classList.add('hide');
-   //     setTimeout(() => { this.trail.remove() }, length * 250)
-        setTimeout(() => { this.trail.remove() }, 8000);
-        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
-    }
 
     private blowTunnel() {
-        let numOfimgs: number = parseInt(this.trail.style.width) / 100;
+        let numOfimgs: number = parseInt(this.trail.style.width) / 175;
         let imgArr: Array<HTMLImageElement> = [];
         for (let x = 0; x <= numOfimgs; x++) {
             let img = document.createElement('img');
@@ -179,17 +179,28 @@ class TunnelTarget extends Target {
             img.style.width = this.targetEl.getBoundingClientRect().width + 'px';
             imgArr.unshift(img);
         }
-        for (let index in imgArr) {
+        for (let img in imgArr) {
+            let indexNum = parseInt(img);
             setTimeout(() => {
-                let mrtr: ExplosiveWeaponType = allWeaponTypes[weaponNames.mortar] as ExplosiveWeaponType // MESSY
-                if (mrtr) {
-                    let pos: position = CollisionDetection.getXYfromPoint(imgArr[index])
-                    mrtr.checkForTargets(pos, allTargets)
+                let blastCenter: position = CollisionDetection.getXYfromPoint(imgArr[img])
+                if (indexNum == 0) {
+                    ExplosionHandler.basicExplosion(blastCenter, ExplSizes.XL, assetsFolder + strikeExplosion + loadNewImage(), weaponNames.airstrike)
                 }
-                imgArr[index].src = this.trailBlast + loadNewImage();
-            }, (parseInt(index) + 1) * 150)
+                ExplosionHandler.basicExplosion(blastCenter, ExplSizes.small, this.trailBlast + loadNewImage(), weaponNames.mortar)
+                //let mrtr: ExplosiveWeaponType = allWeaponTypes[weaponNames.mortar] as ExplosiveWeaponType // MESSY
+                //if (mrtr) {
+                //    mrtr.checkForTargets(pos, allTargets)
+                //}
+                //imgArr[index].src = 
+            }, (indexNum + 1) * 150)
         }
         this.removeTunnel(imgArr.length);
+    }
+    private removeTunnel(length) {
+        this.trail.classList.add('hide');
+   //     setTimeout(() => { this.trail.remove() }, length * 250)
+        setTimeout(() => { this.trail.remove() }, 8000);
+        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
     }
     public action() {
         if (this.status == Status.active) {
@@ -201,8 +212,8 @@ class TunnelTarget extends Target {
 
 class VehicleTarget extends Target {
     protected destroyedSource: string = assetsFolder + 'fire_3.gif';
-    protected damagedSource: string = assetsFolder + 'smoke_3.gif';
-    protected badDamagedSource: string = assetsFolder + 'fire_1.gif';
+    protected smokingSource: string = assetsFolder + 'smoke_3.gif';
+    protected onFireSource: string = assetsFolder + 'fire_1.gif';
     protected wheelSource: string = assetsFolder + 'wheel.png';
     public movesAtBlast: boolean = true;
     public angle: number = 0;
@@ -218,17 +229,24 @@ class VehicleTarget extends Target {
         this.ricochetChance(7);
     }
 
-    public hit(severity: strikeSeverity, wepName: weaponNames, direc: direction) {
-        this.targetEl.classList.remove('smoothTransition');
-        this.targetEl.classList.add('smoothFade');
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        let direc: direction;
+        if (collisionInfo) {
+            direc = ThrowHandler.determineDirectionForFlip(collisionInfo);
+            this.moveFromBlast(severity, collisionInfo)
+        }
 
             if (this.armour == Armour.none) {
                 if (wepName == weaponNames.gun) {
-                    setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200))
-                    this.lightDamage();
+                    if (this.damage > Damage.undamaged) {
+                        setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200))
+                    }
+                    else {               
+                         this.lightDamage();
+                    }
                 }
                 if (wepName >= weaponNames.mortar) {
-                     this.basicVehicleDamageModel(severity, direc);
+                    this.basicVehicleDamageModel(severity, direc, collisionInfo);
                 }
             }
 
@@ -245,7 +263,7 @@ class VehicleTarget extends Target {
                         return
                     }
                 }
-                this.basicVehicleDamageModel(severity, direc);
+                this.basicVehicleDamageModel(severity, direc, collisionInfo);
             }
         }
 
@@ -265,7 +283,7 @@ class VehicleTarget extends Target {
                         return
                     }
                 }
-                this.basicVehicleDamageModel(severity, direc);
+                this.basicVehicleDamageModel(severity, direc, collisionInfo);
             }
         }
     }
@@ -273,31 +291,6 @@ class VehicleTarget extends Target {
     private removeFlip(elem) {
         elem.classList.remove('flip');
         ThrowHandler.cssRotateAngle(elem, 0);
-    }
-    private returnWheel(): HTMLImageElement{
-        let wheel = this.returnNewImageEl(ContentElHandler.returnContentEl(), 'wheel', this.wheelSource);
-        const rect = this.picEl.getBoundingClientRect();
-        const x = rect.left + window.scrollX;
-        const y = rect.top + window.scrollY;
-        wheel.style.position = "absolute";
-        wheel.style.left = `${x}px`;
-        wheel.style.top = `${y}px`;
-
-        allObjects.push(wheel);
-
-        return wheel;
-    }
-    private castWheel(className: string) {
-        let wheel = this.returnWheel();
-        wheel.classList.add(className);
-        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
-        return wheel;
-    }
-    private rollWheel() {
-        this.castWheel("rollWheel");
-    }
-    private throwWheel(direc: direction) {
-        ThrowHandler.flip(this.castWheel("throwWheel"), direc);
     }
 
     private hitAcknowledge() {
@@ -308,35 +301,7 @@ class VehicleTarget extends Target {
             }
         }
     }
-    private lightDamage() {
-        this.damage = Damage.damaged;
-
-        this.damageEl.src = this.damagedSource;
-        this.damageEl.classList.add('lightDamaged');
-        this.speed = this.speed / 3;
-    }
-    private badDamage(direc) {
-        this.damageEl.src = this.badDamagedSource + loadNewImage();
-        this.damageEl.classList.add('badDamaged');
-        this.damageEl.classList.remove('lightDamaged');
-
-        this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
-    }
-    private completeDestruction() {
-        this.removeFlip(this.picEl);
-
-        this.baseImgEl.src = this.destroyedSource + loadNewImage();
-        this.baseImgEl.className = 'destroyed';
-        this.damageEl.style.visibility = "hidden";
-        this.targetEl.classList.add('show');
-        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
-
-        this.rollWheel();
-        this.throwWheel(direction.forward);
-        this.throwWheel(direction.backward);
-    }
-
-    private basicVehicleDamageModel(severity: strikeSeverity, direc: direction) {
+    private basicVehicleDamageModel(severity: strikeSeverity, direc: direction, collisionInfo?: vectorMoveObj) {
         if (severity == strikeSeverity.light) {
             this.damage >= Damage.badlyDented ? severity = strikeSeverity.medium : "";
             this.lightDamage();
@@ -357,9 +322,73 @@ class VehicleTarget extends Target {
         }
         if (severity == strikeSeverity.catastrophic) {
             this.damage = Damage.destroyed;
-            this.completeDestruction();
+            this.completeDestruction(collisionInfo);
             return
         }
+    }
+    private lightDamage() {
+        this.damage = Damage.damaged;
+
+        this.damageEl.src = this.smokingSource;
+        this.damageEl.classList.add('lightDamaged');
+        this.speed = this.speed / 3;
+    }
+
+    private badDamage(direc) {
+        this.damageEl.src = this.onFireSource + loadNewImage();
+        this.damageEl.classList.add('badDamaged');
+        this.damageEl.classList.remove('lightDamaged');
+
+        this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
+    }
+
+    private completeDestruction(collisionInfo?: vectorMoveObj) {
+        this.targetEl.classList.remove('smoothTransition');
+        this.targetEl.classList.add('smoothFade');
+        this.removeFlip(this.picEl);
+
+        this.baseImgEl.src = this.destroyedSource + loadNewImage();
+        this.baseImgEl.className = 'destroyed';
+        this.damageEl.style.visibility = "hidden";
+        this.targetEl.classList.add('show');
+        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
+
+
+        this.rollWheel();
+        this.throwWheel(direction.forward);
+        this.throwWheel(direction.backward);
+    }
+    private returnWheel(): HTMLElement {
+        let wheel = this.returnNewEl(ContentElHandler.returnContentEl(), 'wheel');
+        this.returnNewImageEl(wheel, 'wheelPic', this.wheelSource);
+        const rect = this.picEl.getBoundingClientRect();
+        const x = rect.left + window.scrollX;
+        const y = rect.top + window.scrollY;
+        wheel.style.position = "absolute";
+        wheel.style.left = `${x}px`;
+        wheel.style.top = `${y}px`;
+
+        allObjects.push(wheel);
+
+        return wheel;
+    }
+    private lightOnFire(elem) {
+        this.returnNewImageEl(elem, 'wheelFire', this.onFireSource, true);
+    }
+    private castWheel(className: string) {
+        let wheel = this.returnWheel();
+        wheel.classList.add(className);
+        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
+        return wheel;
+    }
+    private rollWheel() {
+        this.castWheel("rollWheel");
+    }
+    private throwWheel(direc: direction) {
+        let wheel = this.castWheel("throwWheel");
+        this.lightOnFire(wheel);
+        let wheelPic = wheel.querySelector(".wheelPic") as HTMLElement;
+        ThrowHandler.flip(wheelPic, direc, wheel);
     }
 }
 
@@ -368,7 +397,8 @@ class RegVehicleTarget extends VehicleTarget {
         super(regTarget, position);
     }
     protected get picSources(): Array<string> {
-        return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
+        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'jeep2__grey.png', 'jeep2__tan.png',];
+      //  return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
     }
 }
 class ModVehicleTarget extends VehicleTarget {
@@ -376,7 +406,7 @@ class ModVehicleTarget extends VehicleTarget {
         super(modTarget, position);
     }
     protected get picSources(): Array<string> {
-        return ['jeep_grey.png'];
+        return ['truck__tan2.png', 'truck__green.png'];
     }
 }
 class HeavyVehicleTarget extends VehicleTarget {
@@ -384,7 +414,7 @@ class HeavyVehicleTarget extends VehicleTarget {
         super(heavyTarget, position);
     }
     protected get picSources(): Array<string> {
-        return ['jeep_grey_armour.png'];
+        return ['truck__grey.png'];
     }
 }
 
@@ -397,7 +427,7 @@ class RocketLauncher extends VehicleTarget {
     constructor(position?: position) {
         super(rocketLauncher, position);
         this.targetEl.classList.remove('smallSquare');
-        this.targetEl.classList.add('medRect');
+        this.targetEl.classList.add('medRectTarget');
         this.stopPos = RandomNumberGen.randomNumBetween(50, 200);
         this.launcherEl = this.returnNewImageEl(this.picEl, 'rocketPack', assetsFolder + "rockets.png");
     }
@@ -410,8 +440,8 @@ class RocketLauncher extends VehicleTarget {
         let x = parseInt(this.targetEl.style.left);
         this.targetEl.style.left = x + this.speed + "px";
     }
-    public hit(severity: strikeSeverity, wepName: weaponNames, direc: direction) {
-        super.hit(severity, wepName, direc);
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo: vectorMoveObj) {
+        super.hit(severity, wepName, collisionInfo);
         if (this.damage > Damage.badlyDented) {
             if (this.noStrikeZone) {
                 this.removeNoStrikeZone();

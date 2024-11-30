@@ -2,6 +2,7 @@ var WaveType;
 (function (WaveType) {
     WaveType[WaveType["gradual"] = 0] = "gradual";
     WaveType[WaveType["sudden"] = 1] = "sudden";
+    WaveType[WaveType["double"] = 2] = "double";
 })(WaveType || (WaveType = {}));
 class Wave {
     number;
@@ -14,14 +15,21 @@ class Wave {
     }
 }
 class Level {
+    //public nextLevelCallback: Function;
     waveIndex = -1;
     frequency;
+    //   public waves: Array<Wave>;
+    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
     targetTimer;
     waveDurationTimer;
     allTargetsDeployed = false;
+    pauseTargetProduction = false;
+    passedHalfTargetProduction = false;
+    pauseLength = 6000;
+    suddenTargetFreq = 100;
     info;
     constructor(info) {
         this.info = info;
@@ -33,7 +41,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; }
+    provideAvailTargets() { return; } // FIX?
     armingUp() { }
     ;
     finalStageArms() { }
@@ -139,18 +147,21 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
+                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -171,19 +182,22 @@ class Level {
             default:
         }
         this.setCurrentWave();
-        if (this.currentWave.type == WaveType.sudden) {
+        if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             RandomSoundGen.playSequentialSound(revs);
         }
+        //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
+        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
         }
-        else if (this.currentWave.type == WaveType.sudden) {
-            freq = 50;
+        else if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
+            freq = this.suddenTargetFreq;
         }
         if (this.targetTimer != null)
             console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!");
@@ -194,9 +208,20 @@ class Level {
         }, freq);
     }
     produceSingleTarget(tgt) {
+        if (this.pauseTargetProduction == true) {
+            return;
+        }
         let target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
+        if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
+            this.pauseTargetProduction = this.passedHalfTargetProduction = true;
+            let this_ = this;
+            setTimeout(() => {
+                this_.pauseTargetProduction = false;
+                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+            }, this_.pauseLength);
+        }
         if (this.targets.length >= this.currentWave.number) {
             this.allTargetsDeployed = true;
             this.pauseWave();
@@ -230,6 +255,7 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
+        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo = {
@@ -253,6 +279,7 @@ const allLevelInfo = [
         number: 1,
         messages: [],
         waves: [
+            new Wave(8, WaveType.double),
             new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
             new Wave(14, WaveType.sudden)
@@ -430,7 +457,7 @@ function provideAllTargets() {
         case (rand >= 78):
             newTarget = new ModVehicleTarget();
             break;
-        case (rand >= 70):
+        case (rand >= 68):
             newTarget = new RocketLauncher();
             break;
         default:
@@ -439,3 +466,34 @@ function provideAllTargets() {
     }
     return newTarget;
 }
+//class Level_continuous extends Level {
+//    public waves: Array<Wave> = [
+//        new Wave(14, WaveType.gradual),
+//        new Wave(14, WaveType.sudden),
+//        new Wave(30, WaveType.sudden),
+//        new Wave(40, WaveType.gradual),   /// CONFLICT!!
+//        ]
+//    public setCurrentWave() {  /// CONFLICT!!
+//        let newWave: Wave 
+//        if (this.waveIndex > 0) {
+//            if (this.waves[this.waveIndex - 1].type == WaveType.gradual) {
+//                newWave = new Wave(25, WaveType.sudden)
+//            }
+//            else {
+//                newWave = new Wave(50, WaveType.gradual)
+//            }
+//            this.waves.push(
+//                newWave
+//             )
+//        }
+//        this.currentWave = this.waves[this.waveIndex];
+//    }
+//    public armingUp() {
+//    }
+//    public finalStageArms() {
+//    }
+//    public provideAvailTargets(): Target {
+//        return provideAllTargets();
+//    }
+//}
+//# sourceMappingURL=level.js.map

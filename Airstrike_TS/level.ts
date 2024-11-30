@@ -1,6 +1,7 @@
 ﻿enum WaveType {
     gradual,
-    sudden
+    sudden,
+    double
 }
 class Wave {
     public number: number
@@ -22,7 +23,7 @@ type LevelInfo = {
     waves: Array<Wave>
     startArms: Array<weaponInfo>
     endArms: Array<weaponInfo>
-//    targetsAvail: Array<TargetProbability>
+    //    targetsAvail: Array<TargetProbability>
     targetFunc: () => Target
 }
 
@@ -31,14 +32,18 @@ class Level {
     //public nextLevelCallback: Function;
     public waveIndex: number = -1;
     public frequency: number;
- //   public waves: Array<Wave>;
- //   public winLimits: Array<number>;
+    //   public waves: Array<Wave>;
+    //   public winLimits: Array<number>;
     public currentWave: Wave;
     public targets: Array<Target> = [];
     public winCheckTimer: number;
     public targetTimer: number;
     public waveDurationTimer: number;
     private allTargetsDeployed: boolean = false;
+    private pauseTargetProduction: boolean = false;
+    private passedHalfTargetProduction: boolean = false;
+    private pauseLength: number = 6000;
+    private suddenTargetFreq: number = 100;
 
     private info: LevelInfo;
     constructor(info: LevelInfo) {
@@ -52,7 +57,7 @@ class Level {
         this.provideAvailTargets = this.info.targetFunc;
     }
 
-    protected provideAvailTargets(): Target{ return } // FIX?
+    protected provideAvailTargets(): Target { return } // FIX?
     protected armingUp() { };
     protected finalStageArms() { };
 
@@ -167,21 +172,21 @@ class Level {
     }
     protected endWave() {
         PopupHandler.addToArray(
-           "Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+            "Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
         );
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     protected nextWavePrepGap() {
         setTimeout(() => {
-        //    PopupHandler.addToArray("Get ready, more coming!");
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode)
-              //  console.log("NEXT LEVEL callback")
+                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -203,11 +208,11 @@ class Level {
             default:
         }
         this.setCurrentWave();
-        if (this.currentWave.type == WaveType.sudden) {
+        if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             RandomSoundGen.playSequentialSound(revs);
         }
-      //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
-      //  this.currentLimit = this.waves[this.index].;
+        //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
+        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
@@ -218,20 +223,32 @@ class Level {
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
         }
-        else if (this.currentWave.type == WaveType.sudden) {
-            freq = 50;
+        else if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
+            freq = this.suddenTargetFreq;
         }
         if (this.targetTimer != null) console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!")
         this.targetTimer = setInterval(() => {
             if (this.allTargetsDeployed == false) {
                 this.produceSingleTarget();
             }
-            }, freq);
+        }, freq);
     }
     public produceSingleTarget(tgt?: Target) {
+        if (this.pauseTargetProduction == true) {
+            return
+        }
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
+
+        if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
+            this.pauseTargetProduction = this.passedHalfTargetProduction = true;
+            let this_ = this;
+            setTimeout(() => {
+                this_.pauseTargetProduction = false;
+                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+            }, this_.pauseLength)
+        }
 
         if (this.targets.length >= this.currentWave.number) {
             this.allTargetsDeployed = true;
@@ -267,7 +284,7 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName)
             }
         }
-   //     game.redrawHudWithWepSelectionChecked();
+        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo: LevelInfo = {
@@ -292,6 +309,7 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 1,
         messages: [],
         waves: [
+            new Wave(8, WaveType.double),
             new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
             new Wave(14, WaveType.sudden)
@@ -333,7 +351,7 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         endArms: [howitzerInfo, airstrikeInfo],
-        targetFunc: () => {  return new HeavyVehicleTarget(); }
+        targetFunc: () => { return new HeavyVehicleTarget(); }
     },
     {
         number: 4,
@@ -355,7 +373,8 @@ const allLevelInfo: Array<LevelInfo> = [
                     newTarget = new HeavyVehicleTarget();
                     break;
             }
-            return newTarget; }
+            return newTarget;
+        }
     },
     {
         number: 5,
@@ -408,7 +427,8 @@ const allLevelInfo: Array<LevelInfo> = [
                     newTarget = new RegVehicleTarget();
                     break;
             }
-            return newTarget; }
+            return newTarget;
+        }
     },
     {
         number: 7,
@@ -435,7 +455,8 @@ const allLevelInfo: Array<LevelInfo> = [
                     newTarget = new RegVehicleTarget();
                     break;
             }
-            return newTarget; }
+            return newTarget;
+        }
     },
     {
         number: 8,
@@ -450,7 +471,7 @@ const allLevelInfo: Array<LevelInfo> = [
         endArms: [],
         targetFunc: () => {
             return provideAllTargets();
- }
+        }
     },
 
 ]
@@ -468,7 +489,7 @@ function provideAllTargets(): Target {
         case (rand >= 78):
             newTarget = new ModVehicleTarget();
             break;
-        case (rand >= 70):
+        case (rand >= 68):
             newTarget = new RocketLauncher();
             break;
         default:

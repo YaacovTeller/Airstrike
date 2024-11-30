@@ -1,5 +1,6 @@
 class CollisionDetection {
     static checkCollisionFromPosition(mousePos, targetEl) {
+        //let trgtPos: position = this.getXYfromPoint(targetEl);
         let targetRect = targetEl.getBoundingClientRect();
         if (mousePos.X >= targetRect.left &&
             mousePos.X <= targetRect.left + targetRect.width &&
@@ -28,6 +29,8 @@ class CollisionDetection {
         const circleCenterX = circleRect.left + circleRect.width / 2;
         const circleCenterY = circleRect.top + circleRect.height / 2;
         const circleRadius = circleRect.width / 2;
+        //const closestX = Math.max(targetRect.left, Math.min(circleCenterX, targetRect.right));
+        //const closestY = Math.max(targetRect.top, Math.min(circleCenterY, targetRect.bottom));
         const targetCenterX = targetRect.left + targetRect.width / 2;
         const targetCenterY = targetRect.top + targetRect.height / 2;
         const distanceX = circleCenterX - targetCenterX;
@@ -41,18 +44,20 @@ class CollisionDetection {
             trgtPos.X <= blastPos.X + radius &&
             trgtPos.Y >= blastPos.Y - radius &&
             trgtPos.Y <= blastPos.Y + radius) {
-            let dist = this.distanceBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
-            let angle = this.angleBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
-            let obj = {
-                elem: targetEl,
-                angle: angle,
-                dist: dist,
-                radius: radius
-            };
-            return obj;
+            return true;
         }
-        else
-            return null;
+    }
+    static getVectorMove(blastPos, targetEl, radius) {
+        let trgtPos = this.getXYfromPoint(targetEl);
+        let dist = this.distanceBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+        let angle = this.angleBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+        let obj = {
+            elem: targetEl,
+            angle: angle,
+            dist: dist,
+            radius: radius
+        };
+        return obj;
     }
     static getXYfromPoint(elem) {
         let rect = elem.getBoundingClientRect();
@@ -71,68 +76,5 @@ class CollisionDetection {
         angleDegrees < 0 ? angleDegrees += 360 : "";
         return angleDegrees;
     }
-    static moveAtAngle(vectorMove) {
-        let elem = vectorMove.elem;
-        let angle = vectorMove.angle;
-        let dist = vectorMove.dist;
-        let radius = vectorMove.radius;
-        var currentLeft = parseInt(elem.style.left) || 0;
-        var currentTop = parseInt(elem.style.top) || 0;
-        var angleRad = angle * (Math.PI / 180);
-        var deltaX = Math.cos(angleRad) * 1;
-        var deltaY = Math.sin(angleRad) * 1;
-        var start = null;
-        function step(timestamp) {
-            if (!start)
-                start = timestamp;
-            var progress = timestamp - start;
-            var mult = (500 / radius) - 3;
-            elem.style.left = (currentLeft + progress / mult * deltaX) + "px";
-            elem.style.top = (currentTop + progress / mult * deltaY) + "px";
-            if (progress < 200) {
-                requestAnimationFrame(step);
-            }
-        }
-        requestAnimationFrame(step);
-    }
-    static throw(elem, direc) {
-        var currentLeft = parseInt(elem.style.left) || 0;
-        var currentTop = parseInt(elem.style.top) || 0;
-        let distance = RandomNumberGen.randomNumBetween(10, 40);
-        let height = 50 - distance;
-        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100);
-        var start = null;
-        function step(timestamp) {
-            if (!start)
-                start = timestamp;
-            var progress = timestamp - start;
-            var x, y;
-            if (progress < crashTimeout) {
-                var a = progress / 200;
-                if (direc == direction.forward) {
-                    x = currentLeft + distance - Math.cos(a) * distance;
-                }
-                else if (direc == direction.backward) {
-                    x = currentLeft - distance + Math.cos(a) * distance;
-                }
-                y = currentTop - Math.sin(a) * height;
-                elem.style.left = x + "px";
-                elem.style.top = y + "px";
-            }
-            else {
-                let left = parseInt(elem.style.left);
-                if (direc == direction.forward) {
-                    x = left + 2;
-                }
-                else if (direc == direction.backward) {
-                    x = left - 2;
-                }
-                elem.style.left = x + "px";
-            }
-            if (progress < maxProgress) {
-                requestAnimationFrame(step);
-            }
-        }
-        requestAnimationFrame(step);
-    }
 }
+//# sourceMappingURL=collisionDetection.js.map

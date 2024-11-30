@@ -11,7 +11,7 @@ var GameMode;
 var allWeaponTypes = [];
 var allTargets = [];
 var allObjects = [];
-var allLevelsArray = [];
+var allLevelsArray = []; //[level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
 const level_continuous = new Level(continuousInfo);
 class GameHandler {
     hud = new HudHandler();
@@ -23,8 +23,10 @@ class GameHandler {
     language = Languages.eng;
     difficulty;
     gameMode;
+    // public masterTargets: Array<Target> = [];
+    //public masterObjects: Array<HTMLElement> = [];
     sequentialHits = 0;
-    level;
+    level; // messy, fix
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -41,6 +43,7 @@ class GameHandler {
         this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
+        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
     }
@@ -55,10 +58,10 @@ class GameHandler {
         if (level) {
             let nextLevel = level;
             if (mode == GameMode.sandbox) {
-                nextLevel = level_continuous;
+                nextLevel = level_continuous; /// AWWKWARD? 
             }
             this.level = nextLevel;
-            this.level.setAsLevel();
+            this.level.setAsLevel(); // NEEDED?
             this.level.nextWave();
         }
         else {
@@ -70,7 +73,7 @@ class GameHandler {
         PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
         PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
         cheer.play();
-        this.gameInProgress = false;
+        this.gameInProgress = false; // HACKY??
         this.cutGameFuncs();
         setTimeout(() => {
             this.toggleModal();
@@ -145,6 +148,7 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
+    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -166,9 +170,11 @@ class GameHandler {
     toggleElem(id) {
         var elem = document.getElementById(id);
         elem.classList.contains("displayNone") ? elem.classList.remove("displayNone") : elem.classList.add("displayNone");
+        // elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
     redrawHudWithWepSelectionChecked() {
         this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");
+        //   this.hud.drawHUD(this.weapon ? this.weapon.name : "");
     }
     fireFunc() {
         if (!game.gameInProgress) {
@@ -178,7 +184,7 @@ class GameHandler {
             bleep_neg.play();
             return;
         }
-        this.weapon.fireFunc(allTargets);
+        this.weapon.fireFunc(); // MESSY??
     }
     handleKeyPress(event) {
         if (event.key === 'Escape') {
@@ -192,7 +198,8 @@ class GameHandler {
             if (int && allWeaponTypes[int - 1]) {
                 this.changeWeapon(allWeaponTypes[int - 1]);
             }
-            else if (event.key === 's') {
+            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
+            else if (event.key.toLowerCase() === 's') {
                 this.level.showActiveTargets();
             }
             else if (event.shiftKey && event.key === 'A') {
@@ -229,7 +236,7 @@ class GameHandler {
             this.positionElem(blast, newMousePos);
         }
         if (event) {
-            const target = event.target;
+            const target = event.target; // FAILSAFE FOR REMOVING NO STRIKE ZONES
             if (!target.classList.contains('noStrikeZone')) {
                 if (game.strikesRestricted == true) {
                     console.log("hit residual strike zone");
@@ -253,7 +260,7 @@ class GameHandler {
                 x.switchFrom();
             }
         });
-        this.weapon.switchTo();
+        this.weapon.switchTo(); // Main weapon switch func
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -327,10 +334,10 @@ class GameHandler {
             }
             else {
                 this.start_unpause();
-                this.level.continueWave();
+                this.level.continueWave(); // UNPAUSE
             }
         }
-        else if (this.gameWasPlayed) {
+        else if (this.gameWasPlayed) { // FOR WHAT SITU??
             this.pause();
         }
     }
@@ -358,6 +365,9 @@ class GameHandler {
         allWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
+        //if (this.weapon) {
+        //    this.hud.selectBox(this.weapon.name);
+        //}
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -376,12 +386,12 @@ class GameHandler {
             this.addFullWeaponLoadout();
         }
         this.hud.drawMultiKill();
-        this.hud.killStats.failLimit = this.difficulty.failLimit;
+        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
         this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
         this.start_unpause();
     }
     start_unpause() {
-        if (this.gameInProgress == false) {
+        if (this.gameInProgress == false) { // NEW GAME
             this.gameInProgress = true;
             this.gameWasPlayed = true;
             this.redrawHudWithWepSelectionChecked();
@@ -398,3 +408,4 @@ class GameHandler {
         }, 100);
     }
 }
+//# sourceMappingURL=gameHandler.js.map

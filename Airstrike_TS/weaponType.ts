@@ -108,7 +108,7 @@ class WeaponType {
         return el;
     }
 
-    public fireFunc(targets: Array<Target>) {
+    public fireFunc() {
 
     }
 
@@ -138,14 +138,6 @@ class WeaponType {
         else return true
     }
 
-    protected determineSeverity(fraction?: number) {
-        let severity: strikeSeverity;
-        if (this.name === weaponNames.tunnelcharge || this.name === weaponNames.drone) {
-            severity = strikeSeverity.catastrophic;
-        }
-        return severity;
-    }
-
     //protected bonusHitSound() {
     //    RandomNumberGen.randomNumBetween(1, 8) == 8 ? pgia.play() : "";
     //}
@@ -158,7 +150,7 @@ class BulletWeaponType extends WeaponType {
 
     }
 
-    public fireFunc(targets: Array<Target>) {
+    public fireFunc() {
         if (this.ammoCheck() === false) { return }
 
         this.playSound();
@@ -167,7 +159,7 @@ class BulletWeaponType extends WeaponType {
         this.shotCounter();
 
         setTimeout(() => {
-            this.checkForTargets(inst.blastRadElement, targets)
+            this.checkForTargets_instantHit()
         }, this.speed);
 
         this.cooldownTimeout(inst);
@@ -177,8 +169,9 @@ class BulletWeaponType extends WeaponType {
         let severity: strikeSeverity = strikeSeverity.light
         return severity
     }
-    public checkForTargets(elem: HTMLElement, targets: Array<Target>) {
-        for (let target of targets) {
+    public checkForTargets_instantHit() {
+        
+        for (let target of allTargets) {
             
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, target.getPicEl())) {
                 let severity: strikeSeverity = this.determineSeverity();
@@ -187,10 +180,7 @@ class BulletWeaponType extends WeaponType {
                 };
 
                 if (target.damage != Damage.destroyed) {
-                    target.hit(severity, this.name, direction.forward); // TARGET - Main hit function
-                    //if (target.status == Status.active) {
-                    //    this.bonusHitSound();
-                    //}
+                    target.hit(severity, this.name); // TARGET - Main hit function
                 }
             }
         }
@@ -234,7 +224,7 @@ class ExplosiveWeaponType extends WeaponType {
         return nextReady;
     }
 
-    public fireFunc(targets: Array<Target>) {
+    public fireFunc() {
         if (this.ammoCheck() === false) { return }
         this.playSound();
         this.shotCounter();
@@ -250,10 +240,10 @@ class ExplosiveWeaponType extends WeaponType {
         }
 
         setTimeout(() => {
-            let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource);
-            let blastPos: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
-            this.checkForTargets(blastPos, targets);
+            let blastCenter: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+
+            //this.checkForTargets(blastCenter, targets);
 
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
@@ -261,79 +251,6 @@ class ExplosiveWeaponType extends WeaponType {
 
         this.cooldownTimeout(inst);
         this.setActiveInstance();
-    }
-
-    public checkForTargets(blastPos: position, targets: Array<Target>) {
-        for (let target of targets) {
-            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, target.getTargetEl(), this.explosionInfo.size /2); // MESSY!
-            if (collisionInfo) {
-                this.targetStrike(target, collisionInfo)
-            }
-        }
-        for (let item of allObjects) {
-            let collisionInfo: vectorMoveObj = CollisionDetection.checkCollisionFromPositionWithBlast(blastPos, item, this.explosionInfo.size / 2);
-            if (collisionInfo) {
-                this.itemStrike(item, collisionInfo)
-            }
-        }
-    }
-    protected itemStrike(item, collisionInfo: vectorMoveObj) {
-        let direc: direction = this.determineDirectionForFlip(collisionInfo);
-        ThrowHandler.flip(item, direc);
-    }
-
-    protected targetStrike(target, collisionInfo: vectorMoveObj) {
-        let fraction = collisionInfo.dist / collisionInfo.radius;
-        let severity: strikeSeverity = this.determineSeverity(fraction);
-
-        if (target.movesAtBlast) {
-            if (target.armour >= Armour.moderate) {
-                collisionInfo.radius /= 2; // hack to reduce punting armour about
-            }
-            severity > strikeSeverity.light ? CollisionDetection.moveAtAngle(collisionInfo) : "";
-        }
-        let direc: direction = this.determineDirectionForFlip(collisionInfo);
-        if (target.damage != Damage.destroyed) {
-            target.hit(severity, this.name, direc); // TARGET - Main hit function
-        }
-    }
-
-    private determineDirectionForFlip(collisionInfo: vectorMoveObj) {
-        let angle = collisionInfo.angle;
-
-        let direc: direction = null;
-        if (angle > 300 && angle <= 360 || angle > 0 && angle <= 60) {
-            direc = direction.forward;
-        }
-        else if (angle > 150 && angle <= 210) {
-            direc = direction.backward;
-        }
-        return direc
-    }
-    protected determineSeverity(fraction: number) {
-        let severity: strikeSeverity;
-        if (this.name === weaponNames.gun) {
-            severity = strikeSeverity.light;
-        }
-        else {
-            switch (true) {
-                case (fraction > 0.9):
-                    severity = strikeSeverity.light;
-                    break;
-                case (fraction <= 0.9 && fraction >= 0.6):
-                    severity = strikeSeverity.medium;
-                    break;
-                case (fraction < 0.6 && fraction >= 0.3):
-                    severity = strikeSeverity.heavy;
-                    break;
-                case (fraction < 0.3):
-                    severity = strikeSeverity.catastrophic;
-                    break;
-                default:
-                    severity = strikeSeverity.light;
-            }
-        }
-        return severity
     }
 
     public switchBlastIndicatorStyle(bool: boolean, inst: weaponInstance) {
@@ -381,13 +298,13 @@ class ChargeWeaponType extends WeaponType {
             root.style.setProperty('--chargeSelected', 'visible'); // :D change root css to get 'lockon' svg!
     }
 
-    public fireFunc(targets: Array<Target>) {
+    public fireFunc() {
         if (this.ammoCheck() === false) { return }
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
 
-        let tunnels: Array<TunnelTarget> = targets.filter((element): element is TunnelTarget => {
-            return element.constructor.name === TunnelTarget.name;
+        let tunnels: Array<TunnelTarget> = allTargets.filter((trgt): trgt is TunnelTarget => {
+            return trgt.constructor.name === TunnelTarget.name && trgt.getLockOnStatus() == false;
         });
         let hit: boolean = false;
         for (let tunnel of tunnels) {
@@ -402,8 +319,8 @@ class ChargeWeaponType extends WeaponType {
                 RandomSoundGen.playSequentialSound(beeps);
                 RandomSoundGen.playSequentialSound(ticks);
                 setTimeout(() => {
-                    let severity = this.determineSeverity();
-                    tunnel.hit(severity, this.name);       // TARGET - Main hit function
+
+                    tunnel.hit(strikeSeverity.catastrophic, this.name);       // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
                     RandomSoundGen.playSequentialSound(multiExplosions);
                 }, this.speed)
@@ -473,7 +390,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
         }, 300)
     }
 
-    public fireFunc(targets: Array<Target>) {
+    public fireFunc() {
         if (this.lockedTargets.length < this.attackLimit) {
             this.findTargets();
             return
@@ -502,81 +419,10 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
-                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource);
-                this.checkForTargets(blastCenter, allTargets);
+                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+            //    this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer)
         })
-      //  this.switchFrom();
         this.setActiveInstance();
-    }
-}
-enum screenShakeTimeouts {
-    "shake_1" = 200,
-    "shake_2" = 300,
-    "shake_3" = 400,
-}
-
-class ExplosionHandler {
-    private static craterDecalStay: number = 15000;
-    private static craterFadingTillRemoval: number = fadeAnimTime;
-
-    public static basicExplosion(blastCenter: position, size: ExplSizes, explSrc: string) {
-        let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
-        let crater = this.setAndReturnCrater(blastCenter, size);
-        this.explode(explosion, crater);
-
-        if (size == ExplSizes.large) {
-            this.shake(screenShakeTimeouts.shake_1);
-        }
-        else if (size == ExplSizes.XL) {
-            this.shake(screenShakeTimeouts.shake_2);
-        }
-        if (size >= ExplSizes.XXL) {
-            this.flash();
-            this.shake(screenShakeTimeouts.shake_3);
-        }
-    }
-    private static flash() {
-        let overlay = document.getElementById("overlay");
-        overlay.classList.add("flash");
-        setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
-    }
-    private static shake(shakeTimeout: screenShakeTimeouts) {
-        let content = document.getElementById("content");
-        content.classList.add(screenShakeTimeouts[shakeTimeout]);
-        setTimeout(() => { content.classList.remove(screenShakeTimeouts[shakeTimeout]); }, shakeTimeout)
-    }
-
-    private static returnNewImageEl(classname: string, src?: string) {
-        let el = document.createElement('img');
-        if (src) el.src = src;
-        el.className = classname;
-        ContentElHandler.addToContentEl(el);
-        return el;
-    }
-    private static explode(explosion: HTMLImageElement, crater: HTMLImageElement) {
-        explosion.style.visibility = "visible";
-        crater.style.visibility = "visible";
-        ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
-        ContentElHandler.fadeRemoveItem(explosion, 2000, 100);
-    }
-    private static setAndReturnExplosion(blastCenter, size, explSrc) {
-        let explosion = this.returnNewImageEl("explosion");
-        explosion.src = explSrc + loadNewImage();
-        explosion.style.width = size + 'px';
-        explosion.style.height = size + 'px';
-        explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
-        explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
-        return explosion
-    }
-    private static setAndReturnCrater(blastCenter, size) {
-        let craterSrc = assetsFolder + "crater.png"
-        let crater = this.returnNewImageEl("crater", craterSrc);
-        crater.id = "crater";
-        crater.style.width = size / 1.5 + 'px';
-        crater.style.height = size / 3 + 'px';
-        crater.style.left = blastCenter.X - crater.clientWidth / 2 + 'px';
-        crater.style.top = blastCenter.Y - crater.clientHeight / 2 + 'px';
-        return crater;
     }
 }

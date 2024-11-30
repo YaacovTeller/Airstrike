@@ -200,7 +200,7 @@ class GameHandler {
             bleep_neg.play();
             return
         }
-        this.weapon.fireFunc(allTargets); // MESSY??
+        this.weapon.fireFunc(); // MESSY??
     }
 
     private handleKeyPress(event) {
@@ -216,7 +216,7 @@ class GameHandler {
                 this.changeWeapon(allWeaponTypes[int - 1]);
             }
             //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
-            else if (event.key === 's') { this.level.showActiveTargets(); }
+            else if (event.key.toLowerCase() === 's') { this.level.showActiveTargets(); }
             else if (event.shiftKey && event.key === 'A') {
                 this.addAllWeapons();
             }

@@ -267,7 +267,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        imageSource: assetsFolder + 'expl_big.gif',
+        imageSource: assetsFolder + strikeExplosion,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -286,7 +286,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        imageSource: assetsFolder + 'mushroom_1.gif',
+        imageSource: assetsFolder + mushroomExplosion,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -375,52 +375,7 @@ class PopupHandler {
         }, currentMsg.length + 200);
     }
 }
-class ThrowHandler {
-    static flip(elem: HTMLElement, direc: direction, parentElem?: HTMLElement, angle?: number) { // ODD? HACKY?
-        let thrownElem = parentElem ? parentElem : elem;
-        CollisionDetection.throw(thrownElem, direc); // ARC
-        let deg = this.rotate(elem, direc, angle);                             // ROTATION
 
-        setTimeout(() => {
-            RandomSoundGen.playRandomSound(crashes)
-        }, crashTimeout);
-
-        return deg;
-    }
-
-    static rotate(elem: HTMLElement, direc: direction, angle?: number) {
-        const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
-        const index = angles.indexOf(angle);
-        let rand = RandomNumberGen.randomNumBetween(0, 20)
-        let increment = 1;
-        if (rand > 18) {
-            increment++;
-        }
-        let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
-        if (deg == undefined) {
-            deg = 0;
-            //this.angle = deg;
-            elem.classList.remove('flip');
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight;  // forces reflow
-                    this.rotate(elem, direc);
-                }, 0);
-            });
-            return deg
-        }
-        else {
-           // this.angle = deg;
-            elem.classList.add('flip');
-            this.cssRotateAngle(elem, deg);
-            return deg
-        }
-    }
-    static cssRotateAngle(elem: HTMLElement, deg: number) {
-        elem.style.transform = `rotate(${deg}deg)`;
-    }
-}
 class ContentElHandler {
     static returnContentEl() {
         return document.getElementById("content")!;

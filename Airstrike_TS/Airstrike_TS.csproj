@@ -69,6 +69,13 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="AS_assets\Jeep2__.png" />
+    <Content Include="AS_assets\Jeep2__grey.png" />
+    <Content Include="AS_assets\Jeep2__light.png" />
+    <Content Include="AS_assets\Jeep2__tan.png" />
+    <Content Include="AS_assets\Jeep__.png" />
+    <Content Include="AS_assets\Jeep__grey.png" />
+    <Content Include="AS_assets\Jeep__light.png" />
     <Content Include="AS_assets\launcher.png" />
     <Content Include="AS_assets\rockets.png" />
     <Content Include="AS_assets\sound\4_3.mp3" />
@@ -101,7 +108,11 @@
     <Content Include="AS_assets\SVG\drone.svg" />
     <Content Include="AS_assets\SVG\lock_red.svg" />
     <Content Include="AS_assets\SVG\target-box.svg" />
+    <Content Include="AS_assets\truck__green.png" />
+    <Content Include="AS_assets\truck__grey.png" />
+    <Content Include="AS_assets\truck__tan2.png" />
     <Content Include="AS_assets\wheel.png" />
+    <Content Include="cssAnims.css" />
     <Content Include="icons\bomb.ico" />
     <Content Include="icons\jet.ico" />
     <Content Include="icons\missile.ico" />
@@ -132,12 +143,6 @@
     <Content Include="AS_assets\expl_big_fast.gif" />
     <Content Include="AS_assets\fire_1.gif" />
     <Content Include="AS_assets\fire_3.gif" />
-    <Content Include="AS_assets\jeep2.png" />
-    <Content Include="AS_assets\jeep3.png" />
-    <Content Include="AS_assets\jeep4_cres.png" />
-    <Content Include="AS_assets\jeep4_dark.png" />
-    <Content Include="AS_assets\jeep_grey.png" />
-    <Content Include="AS_assets\jeep_grey_armour.png" />
     <Content Include="AS_assets\mushroom_1.gif" />
     <Content Include="AS_assets\smoke_1.gif" />
     <Content Include="AS_assets\smoke_2.gif" />
@@ -214,7 +219,6 @@
     <Content Include="AS_assets\trans.png" />
     <Content Include="cssMenus.css" />
     <Content Include="cssApp.css" />
-    <Content Include="AS_assets\jeep.png" />
     <Content Include="cssTags.css" />
     <Content Include="index.html" />
     <Content Include="Web.config" />
@@ -223,6 +227,8 @@
     <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="collisionDetection.ts" />
     <TypeScriptCompile Include="const.ts" />
+    <TypeScriptCompile Include="explosionHandler.ts" />
+    <TypeScriptCompile Include="throwHandler.ts" />
     <TypeScriptCompile Include="gameHandler.ts" />
     <TypeScriptCompile Include="hudHandler.ts" />
     <TypeScriptCompile Include="level.ts" />

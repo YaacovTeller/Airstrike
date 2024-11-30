@@ -1,0 +1,151 @@
+﻿@keyframes move-right {
+    100% {
+        transform: translateX(150px);
+    }
+}
+
+@keyframes slamNumber {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes expandContract {
+    0%, 100% {
+        transform: scale(1.5);
+    }
+
+    50% {
+        transform: scale(2);
+    }
+}
+
+@keyframes expandContractRotate {
+    0% {
+        transform: scale(1.5) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(2) rotate(180deg);
+    }
+
+    100% {
+        transform: scale(1.5) rotate(360deg);
+    }
+}
+
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes flash {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes shake_1 {
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(var(--shake_small));
+    }
+
+    50% {
+        transform: translateX(calc(var(--shake_small)*-1));
+    }
+
+    75% {
+        transform: translateX(var(--shake_small));
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes shake_2 {
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(var(--shake_med));
+    }
+
+    50% {
+        transform: translateX(calc(var(--shake_med)*-1));
+    }
+
+    75% {
+        transform: translateX(var(--shake_med));
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes shake_3 {
+    0% {
+        transform: translateX(0);
+    }
+
+    15% {
+        transform: translateX(calc(var(--shake_heavy)*-1));
+    }
+
+    30% {
+        transform: translateX(var(--shake_heavy));
+    }
+
+    45% {
+        transform: translateX(calc(var(--shake_heavy)*-1));
+    }
+
+    60% {
+        transform: translateX(var(--shake_heavy));
+    }
+
+    75% {
+        transform: translateX(calc(var(--shake_heavy)*-1));
+    }
+
+    90% {
+        transform: translateX(var(--shake_heavy));
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}

@@ -24,10 +24,6 @@
         this.sound.cloneNode(true).play();
     }
 }
-type soundIndex = {
-    title,
-    index
-}
 
 class RandomSoundGen {
     static soundIndexes: Object = {};

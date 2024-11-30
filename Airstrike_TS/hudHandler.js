@@ -152,6 +152,7 @@ class HudHandler {
                 span.classList.remove('red');
         }
         if (title === killStatsOptions.total) {
+            //  span.innerText += "/" + game.returnLevelLimit();
         }
     }
     updateScore(shots) {
@@ -171,7 +172,7 @@ class HudHandler {
         let weps = this.hud.getElementsByClassName('wepBox');
         let wepBox = null;
         for (let x of weps) {
-            select ? x.classList.remove("selected") : "";
+            select ? x.classList.remove("selected") : ""; // MESSY
             if (x.getAttribute('data-name') === wepName.toString()) {
                 wepBox = x;
                 if (select) {
@@ -200,3 +201,4 @@ class HudHandler {
         this.genericChangeClass(num, name, "remove", "instUnavailable");
     }
 }
+//# sourceMappingURL=hudHandler.js.map
