@@ -198,14 +198,20 @@
     transition: opacity 3s ease-in-out;
 }
 .wheel {
-    width: 10px;
-    display: flex;
+/*    width: 10px;
+*/    display: flex;
     flex-direction:column;
     justify-content: center;
 }
 .wheelPic {
     position: absolute;
+    width: inherit;
+}
+.smallWheel {
     width: 10px;
+}
+.medWheel {
+    width: 15px;
 }
 .wheelFire {
     position: absolute;

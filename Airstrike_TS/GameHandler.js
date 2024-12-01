@@ -191,7 +191,7 @@ class GameHandler {
             this.toggleGamePause();
         }
         if (game.gameInProgress) {
-            if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') {
+            if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') {
                 this.fireFunc();
             }
             let int = parseInt(event.key);

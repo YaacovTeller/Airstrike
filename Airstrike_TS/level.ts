@@ -165,6 +165,7 @@ class Level {
         for (let t of this.targets) {
             if (t.status === Status.active) {
                 fin = false;
+                break
             }
         }
         console.log("FIN?: " + fin)
@@ -292,10 +293,11 @@ const continuousInfo: LevelInfo = {
     messages: [{ title: "Cont", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.gradual),
-        new Wave(70, WaveType.gradual),
+        new Wave(30, WaveType.double),
+        new Wave(70, WaveType.double),
         new Wave(25, WaveType.sudden),
         new Wave(40, WaveType.sudden),
+        new Wave(100, WaveType.double),
     ],
     startArms: [],
     endArms: [],
@@ -355,10 +357,10 @@ const allLevelInfo: Array<LevelInfo> = [
     },
     {
         number: 4,
-        messages: [],
+        messages: [{ text: "Watch out for tunnels", title: "WARNING" } as popupMsg],
         waves: [
-            new Wave(6, WaveType.gradual),
-            new Wave(12, WaveType.gradual),
+            new Wave(8, WaveType.gradual),
+            new Wave(12, WaveType.sudden),
         ],
         startArms: [chargeInfo, airstrikeInfo],
         endArms: [chargeInfo],
@@ -382,8 +384,8 @@ const allLevelInfo: Array<LevelInfo> = [
         waves: [
             new Wave(16, WaveType.sudden),
             new Wave(30, WaveType.gradual),
-            new Wave(70, WaveType.gradual),
-            new Wave(25, WaveType.sudden),
+            new Wave(50, WaveType.gradual),
+            new Wave(40, WaveType.double),
         ],
         startArms: [nukeInfo],
         endArms: [airstrikeInfo],
@@ -412,7 +414,8 @@ const allLevelInfo: Array<LevelInfo> = [
         messages: [{ text: "Missile trucks prevent aircraft strikes", title: "WARNING" } as popupMsg],
         waves: [
             new Wave(30, WaveType.gradual),
-            new Wave(30, WaveType.sudden),
+            new Wave(20, WaveType.sudden),
+            new Wave(35, WaveType.double),
         ],
         startArms: [],
         endArms: [mortarInfo, airstrikeInfo],
@@ -434,10 +437,10 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 7,
         messages: [],
         waves: [
-            new Wave(16, WaveType.sudden),
+            new Wave(20, WaveType.double),
             new Wave(30, WaveType.gradual),
-            new Wave(70, WaveType.gradual),
-            new Wave(25, WaveType.sudden),
+            new Wave(35, WaveType.gradual),
+            new Wave(40, WaveType.double),
         ],
         startArms: [],
         endArms: [],
@@ -462,10 +465,10 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 8,
         messages: [],
         waves: [
-            new Wave(20, WaveType.sudden),
+            new Wave(25, WaveType.double),
             new Wave(30, WaveType.gradual),
-            new Wave(60, WaveType.gradual),
-            new Wave(40, WaveType.sudden),
+            new Wave(55, WaveType.double),
+            new Wave(80, WaveType.double),
         ],
         startArms: [],
         endArms: [],

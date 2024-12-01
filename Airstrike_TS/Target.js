@@ -15,14 +15,16 @@ class Target {
     constructor(info, position) {
         this.info = info;
         this.targetEl = document.createElement("div");
-        this.targetEl.classList.add('target', 'smallSquare', 'flexCenter', 'smoothTransition');
+        this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
         let picSrc = assetsFolder + this.picSources[RandomNumberGen.randomNumBetween(0, this.picSources.length - 1)];
         this.picEl = this.returnNewEl(this.targetEl, "picEl");
         this.baseImgEl = this.returnNewImageEl(this.picEl, "", picSrc);
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
         this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
         ContentElHandler.addToContentEl(this.targetEl);
-        position ? this.setStartPos(position.X, position.Y) : this.setStartPos(this.getTargetEl().clientWidth * -1);
+        let offsetX = 50 * -1; //this.getTargetEl().clientWidth * -1;
+        position ? this.setStartPos(position.X, position.Y) : this.setStartPos(offsetX);
+        //        console.log("POS_X: " + this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(this.info.minSpeed, this.info.maxSpeed);
         this.armour = this.info.armour;
         //     this.health = this.info.health;
@@ -104,6 +106,7 @@ class TunnelTarget extends Target {
     trail;
     constructor() {
         super(regTunnelTarget);
+        this.targetEl.classList.add('smallSquare');
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
         this.targetEl.classList.remove('flexCenter'); // MESSY
@@ -198,6 +201,7 @@ class VehicleTarget extends Target {
     smokingSource = assetsFolder + 'smoke_3.gif';
     onFireSource = assetsFolder + 'fire_1.gif';
     wheelSource = assetsFolder + 'wheel.png';
+    wheelSize;
     movesAtBlast = true;
     angle = 0;
     constructor(info, position) {
@@ -329,6 +333,7 @@ class VehicleTarget extends Target {
     }
     returnWheel() {
         let wheel = this.returnNewEl(ContentElHandler.returnContentEl(), 'wheel');
+        wheel.classList.add(this.wheelSize);
         this.returnNewImageEl(wheel, 'wheelPic', this.wheelSource);
         const rect = this.picEl.getBoundingClientRect();
         const x = rect.left + window.scrollX;
@@ -345,7 +350,7 @@ class VehicleTarget extends Target {
     castWheel(className) {
         let wheel = this.returnWheel();
         wheel.classList.add(className);
-        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
+        //     ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
         return wheel;
     }
     rollWheel() {
@@ -359,38 +364,44 @@ class VehicleTarget extends Target {
     }
 }
 class RegVehicleTarget extends VehicleTarget {
+    wheelSize = "smallWheel";
     constructor(position) {
         super(regTarget, position);
+        this.targetEl.classList.add('smallSquare');
     }
     get picSources() {
-        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'jeep2__grey.png', 'jeep2__tan.png',];
+        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'Jeep2__lightgrey.png', 'jeep2__tan.png']; // 'jeep2__grey.png', 
         //  return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
     }
 }
 class ModVehicleTarget extends VehicleTarget {
+    wheelSize = "medWheel";
     constructor(position) {
         super(modTarget, position);
+        this.targetEl.classList.add('medRectTarget');
     }
     get picSources() {
         return ['truck__tan2.png', 'truck__green.png'];
     }
 }
 class HeavyVehicleTarget extends VehicleTarget {
+    wheelSize = "medWheel";
     constructor(position) {
         super(heavyTarget, position);
+        this.targetEl.classList.add('medRectTarget');
     }
     get picSources() {
         return ['truck__grey.png'];
     }
 }
 class RocketLauncher extends VehicleTarget {
+    wheelSize = "medWheel";
     stopPos;
     deployed = false;
     launcherEl;
     noStrikeZone;
     constructor(position) {
         super(rocketLauncher, position);
-        this.targetEl.classList.remove('smallSquare');
         this.targetEl.classList.add('medRectTarget');
         this.stopPos = RandomNumberGen.randomNumBetween(50, 200);
         this.launcherEl = this.returnNewImageEl(this.picEl, 'rocketPack', assetsFolder + "rockets.png");

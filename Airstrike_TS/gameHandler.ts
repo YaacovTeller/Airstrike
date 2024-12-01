@@ -209,7 +209,7 @@ class GameHandler {
         }
         if (game.gameInProgress) {
 
-            if (event.code === 'Space' || event.key === 'z' || event.key === 'Control') { this.fireFunc(); }
+            if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') { this.fireFunc(); }
 
             let int = parseInt(event.key);
             if (int && allWeaponTypes[int - 1]) {

@@ -72,6 +72,7 @@
     <Content Include="AS_assets\Jeep2__.png" />
     <Content Include="AS_assets\Jeep2__grey.png" />
     <Content Include="AS_assets\Jeep2__light.png" />
+    <Content Include="AS_assets\Jeep2__lightgrey.png" />
     <Content Include="AS_assets\Jeep2__tan.png" />
     <Content Include="AS_assets\Jeep__.png" />
     <Content Include="AS_assets\Jeep__grey.png" />
