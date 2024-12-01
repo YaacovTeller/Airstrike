@@ -148,7 +148,7 @@
 }
 .medRectTarget {
     height: 45px;
-    width: 75px;
+    width: 65px;
 }
 .picEl > img {
     width: 100%;
@@ -211,7 +211,7 @@
     width: 10px;
 }
 .medWheel {
-    width: 15px;
+    width: 14px;
 }
 .wheelFire {
     position: absolute;

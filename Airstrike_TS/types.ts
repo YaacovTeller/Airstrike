@@ -151,8 +151,8 @@ type ExplosionInfo = {
 const normal: difficultyLevelInfo = {
     newTargetEvery: 3500,
     failLimit: 15,
-    regTargetSpeed: { min: 3, max: 6 },
-    modTargetSpeed: { min: 3, max: 4 },
+    regTargetSpeed: { min: 2, max: 5 },
+    modTargetSpeed: { min: 2, max: 4 },
     heavyTargetSpeed: { min: 1, max: 3 },
     tunnelTargetSpeed: { min: 1, max: 2 },
     eng: {

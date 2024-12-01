@@ -190,11 +190,6 @@ class TunnelTarget extends Target {
                     ExplosionHandler.basicExplosion(blastCenter, ExplSizes.XL, assetsFolder + strikeExplosion + loadNewImage(), weaponNames.airstrike)
                 }
                 ExplosionHandler.basicExplosion(blastCenter, ExplSizes.small, this.trailBlast + loadNewImage(), weaponNames.mortar)
-                //let mrtr: ExplosiveWeaponType = allWeaponTypes[weaponNames.mortar] as ExplosiveWeaponType // MESSY
-                //if (mrtr) {
-                //    mrtr.checkForTargets(pos, allTargets)
-                //}
-                //imgArr[index].src = 
             }, (indexNum + 1) * 150)
         }
         this.removeTunnel(imgArr.length);
@@ -384,7 +379,7 @@ class VehicleTarget extends Target {
     private castWheel(className: string) {
         let wheel = this.returnWheel();
         wheel.classList.add(className);
-   //     ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
+        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
         return wheel;
     }
     private rollWheel() {
