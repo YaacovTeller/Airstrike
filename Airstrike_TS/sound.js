@@ -93,7 +93,8 @@ const crashes = [];
 const beeps = [];
 const ticks = [];
 const clicks = [];
-const ambience = [];
+const ambience_1 = [];
+const ambience_2 = [];
 const ricochet = [];
 const strikePrep = [];
 const acknowledge = [];
@@ -111,7 +112,8 @@ function loadSound() {
     //new Sound(soundFolder + "ricochet_4.mp3"),
     new Sound(soundFolder + "ricochet_5.mp3"));
     ticks.push(new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"));
-    ambience.push(new Sound(soundFolder + "ambient_1_q.mp3"), new Sound(soundFolder + "ambient_2_q.mp3"), new Sound(soundFolder + "ambient_4_q.mp3"), new Sound(soundFolder + "ambient_5_q.mp3"));
+    ambience_1.push(new Sound(soundFolder + "ambient_1_q.mp3"), new Sound(soundFolder + "ambient_2_q.mp3"), new Sound(soundFolder + "ambient_4_q.mp3"), new Sound(soundFolder + "ambient_5_q.mp3"));
+    ambience_2.push(new Sound(soundFolder + "crickets.mp3"), new Sound(soundFolder + "crickets.mp3"));
     beeps.push(new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"));
     multiExplosions.push(new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"));
     bigExplosions.push(new Sound(soundFolder + "messy_bomb_grander.mp3"), new Sound(soundFolder + "bigExpl.mp3"));

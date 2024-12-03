@@ -1,6 +1,5 @@
 ﻿
 body {
-    background-image: url(./AS_assets/DS_sand.png);
 }
 #overlay {
  z-index: 10;
@@ -18,9 +17,11 @@ body {
         display: block;
         background: white;
     }
-#content{
-    top: 0;
+#contentWrapper {
+    height: 100vh;
+    background-image: url(./AS_assets/DS_sand.png);
 }
+
     #content.shake_1 {
         animation: shake_1 0.2s ease-out forwards;
     }
@@ -30,7 +31,20 @@ body {
     #content.shake_3 {
         animation: shake_3 0.4s ease-out forwards;
     }
-
+.darkOverlay {
+    transition: opacity 2s linear;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0;
+    background-color: rgb(0,0,0);
+    /*background-color: rgba(0,0,0,0.9);*/
+    pointer-events: none;
+    z-index: 8;
+    mix-blend-mode: multiply; /* Enhances the effect on lighter backgrounds */
+}
 #modal {
     user-select: none;
     z-index: 10;

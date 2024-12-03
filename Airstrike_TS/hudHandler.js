@@ -35,7 +35,7 @@ class HudHandler {
         let el = document.createElement('div');
         el.classList.add("hud");
         el.id = 'hud';
-        ContentElHandler.addToContentEl(el);
+        ContentElHandler.addToContentWrapper(el);
         this.hud = el;
         this.drawWeaponDisplay(wepname);
         this.rightSideContainer = document.createElement('div');
@@ -78,7 +78,7 @@ class HudHandler {
     drawMultiKill() {
         this.multiKillBox = document.createElement('div');
         this.multiKillBox.classList.add('multiKillBox', 'hide');
-        ContentElHandler.addToContentEl(this.multiKillBox);
+        ContentElHandler.addToContentWrapper(this.multiKillBox);
     }
     updateMultiKillBox(num) {
         let txt = "";

@@ -3,6 +3,13 @@
     "shake_2" = 300,
     "shake_3" = 400,
 }
+type light = {
+    pos: position,
+    opac: number,
+    size: ExplSizes,
+    fading: boolean
+}
+var lights: Array<light> = [];
 
 class ExplosionHandler {
     private static craterDecalStay: number = 15000;
@@ -23,7 +30,7 @@ class ExplosionHandler {
             this.flash();
             this.shake(screenShakeTimeouts.shake_3);
         }
-
+        this.illuminateDark(blastCenter, size);
         this.checkForTargets(blastCenter, size, weaponName)
     }
     private static checkForTargets(blastCenter: position, size: ExplSizes, weaponName: weaponNames) {
@@ -82,6 +89,23 @@ class ExplosionHandler {
         overlay.classList.add("flash");
         setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
     }
+    private static illuminateDark(blastCenter: position, explSize: ExplSizes) {
+        lights.push({ pos: blastCenter, opac: 1, size: explSize, fading: false })
+
+        //let darkness = 0.95;
+        //let brightRange = 10;
+        //let featherRange = 30;
+        //let light = `circle at ${blastCenter.X}px ${blastCenter.Y}px, rgba(0, 0, 0, 0) ${brightRange}%, rgba(0, 0, 0, ${darkness}) ${featherRange}%`;
+
+        //let flashFadeTime = 1000;
+        //let overlay = ContentElHandler.returnContentEl().querySelector('.darkOverlay') as HTMLElement;
+        //overlay.style.background = `radial-gradient(${light})`;
+        //setTimeout(() => {
+        //    const root: HTMLElement = document.querySelector(':root');
+        //    overlay.style.background = root.style.getPropertyValue('--lightGrad_small');
+        //}, flashFadeTime)
+    }
+
     private static shake(shakeTimeout: screenShakeTimeouts) {
         let content = document.getElementById("content");
         content.classList.add(screenShakeTimeouts[shakeTimeout]);
@@ -99,7 +123,7 @@ class ExplosionHandler {
         explosion.style.visibility = "visible";
         crater.style.visibility = "visible";
         ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
-        ContentElHandler.fadeRemoveItem(explosion, 2000, 100);
+        ContentElHandler.fadeRemoveItem(explosion, 4000, 100);
     }
     private static setAndReturnExplosion(blastCenter, size, explSrc) {
         let explosion = this.returnNewImageEl("explosion");

@@ -9,6 +9,7 @@
     --shake_small: 5px;
     --shake_med: 10px;
     --shake_heavy: 15px;
+    --lightGrad_small: radial-gradient(circle, rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 0.90) 40%);
 }
 .heb {
     display: var(--hebDisplay);
@@ -43,5 +44,5 @@ audio {
     overflow: hidden;
     background-image: url(./AS_assets/DS_sand.png);
     background-repeat: round;
-    z-index: -2;
+    z-index: 0;
 }

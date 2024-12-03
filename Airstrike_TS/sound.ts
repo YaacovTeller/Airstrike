@@ -103,7 +103,8 @@ const crashes: Array<Sound> = [];
 const beeps: Array<Sound> = [];
 const ticks: Array<Sound> = [];
 const clicks: Array<Sound> = [];
-const ambience: Array<Sound> = [];
+const ambience_1: Array<Sound> = [];
+const ambience_2: Array<Sound> = [];
 const ricochet: Array<Sound> = [];
 const strikePrep: Array<Sound> = [];
 const acknowledge: Array<Sound> = [];
@@ -150,11 +151,15 @@ function loadSound() {
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3")
     )
-    ambience.push(
+    ambience_1.push(
         new Sound(soundFolder + "ambient_1_q.mp3"),
         new Sound(soundFolder + "ambient_2_q.mp3"),
         new Sound(soundFolder + "ambient_4_q.mp3"),
         new Sound(soundFolder + "ambient_5_q.mp3")
+    )
+    ambience_2.push(
+        new Sound(soundFolder + "crickets.mp3"),
+        new Sound(soundFolder + "crickets.mp3"),
         )
     beeps.push(
         new Sound(soundFolder + "beep_tiny.mp3"),

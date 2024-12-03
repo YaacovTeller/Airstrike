@@ -321,12 +321,17 @@ class PopupHandler {
     }
 }
 class ContentElHandler {
+    static returnContentWrapper() {
+        return document.getElementById("contentWrapper");
+    }
+    static addToContentWrapper(elem) {
+        this.returnContentWrapper().appendChild(elem);
+    }
     static returnContentEl() {
         return document.getElementById("content");
     }
     static addToContentEl(elem) {
-        let contentEl = this.returnContentEl();
-        contentEl.appendChild(elem);
+        this.returnContentEl().appendChild(elem);
     }
     static removeFromContentEl(elem) {
         let contentEl = this.returnContentEl();

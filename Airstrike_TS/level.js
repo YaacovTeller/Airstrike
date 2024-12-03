@@ -4,6 +4,12 @@ var WaveType;
     WaveType[WaveType["sudden"] = 1] = "sudden";
     WaveType[WaveType["double"] = 2] = "double";
 })(WaveType || (WaveType = {}));
+var Time;
+(function (Time) {
+    Time[Time["day"] = 0] = "day";
+    Time[Time["dusk"] = 1] = "dusk";
+    Time[Time["night"] = 2] = "night";
+})(Time || (Time = {}));
 class Wave {
     number;
     type;
@@ -29,7 +35,7 @@ class Level {
     pauseTargetProduction = false;
     passedHalfTargetProduction = false;
     pauseLength = 6000;
-    suddenTargetFreq = 100;
+    suddenTargetFreq = 150;
     info;
     constructor(info) {
         this.info = info;
@@ -77,6 +83,7 @@ class Level {
     }
     setAsLevel() {
         let num = this.info.number;
+        game.changeTime(this.info.timeOfDay);
         this.frequency = game.difficulty.newTargetEvery;
         if (game.gameMode == GameMode.regular) {
             PopupHandler.addToArray("", "Level " + num, msgLength.long);
@@ -84,6 +91,9 @@ class Level {
         }
         else {
             PopupHandler.addToArray("", "Sandbox", msgLength.short);
+        }
+        for (let msg of this.info.messages) {
+            PopupHandler.addToArray(msg.text, msg.title, msg.length);
         }
     }
     setCurrentWave() {
@@ -186,8 +196,6 @@ class Level {
         if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             RandomSoundGen.playSequentialSound(revs);
         }
-        //  console.log("WAVE TYPE: " + this.currentWave.type + " " + "NUMBER: " + this.currentWave.number)
-        //  this.currentLimit = this.waves[this.index].;
         this.continueWave();
         return true;
     }
@@ -261,7 +269,8 @@ class Level {
 }
 const continuousInfo = {
     number: 0,
-    messages: [{ title: "Cont", text: "", length: msgLength.short }],
+    timeOfDay: Time.day,
+    messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
         new Wave(30, WaveType.double),
@@ -274,29 +283,31 @@ const continuousInfo = {
     endArms: [],
     targetFunc: () => {
         return provideAllTargets();
-    }
+    },
 };
 const allLevelInfo = [
     {
         number: 1,
+        timeOfDay: Time.night,
         messages: [],
         waves: [
             new Wave(8, WaveType.double),
-            new Wave(8, WaveType.gradual),
-            new Wave(8, WaveType.sudden),
-            new Wave(14, WaveType.sudden)
+            //new Wave(8, WaveType.gradual),
+            //new Wave(8, WaveType.sudden),
+            //new Wave(14, WaveType.sudden)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
-        targetFunc: () => { return new RegVehicleTarget(); }
+        targetFunc: () => { return new RegVehicleTarget(); },
     },
     {
         number: 2,
+        timeOfDay: Time.dusk,
         messages: [],
         waves: [
             new Wave(8, WaveType.sudden),
-            new Wave(30, WaveType.gradual),
-            new Wave(20, WaveType.sudden),
+            //new Wave(30, WaveType.gradual),
+            //new Wave(20, WaveType.sudden),
         ],
         startArms: [mortarInfo, howitzerInfo],
         endArms: [howitzerInfo],
@@ -312,24 +323,26 @@ const allLevelInfo = [
                     break;
             }
             return newTarget;
-        }
+        },
     },
     {
         number: 3,
+        timeOfDay: Time.night,
         messages: [],
         waves: [
-            new Wave(16, WaveType.gradual),
+            //      new Wave(16, WaveType.gradual),
             new Wave(10, WaveType.sudden),
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         endArms: [howitzerInfo, airstrikeInfo],
-        targetFunc: () => { return new HeavyVehicleTarget(); }
+        targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {
         number: 4,
+        timeOfDay: Time.dusk,
         messages: [{ text: "Watch out for tunnels", title: "WARNING" }],
         waves: [
-            new Wave(8, WaveType.gradual),
+            //        new Wave(8, WaveType.gradual),
             new Wave(12, WaveType.sudden),
         ],
         startArms: [chargeInfo, airstrikeInfo],
@@ -346,15 +359,16 @@ const allLevelInfo = [
                     break;
             }
             return newTarget;
-        }
+        },
     },
     {
         number: 5,
+        timeOfDay: Time.day,
         messages: [],
         waves: [
-            new Wave(16, WaveType.sudden),
-            new Wave(30, WaveType.gradual),
-            new Wave(50, WaveType.gradual),
+            //new Wave(16, WaveType.sudden),
+            //new Wave(30, WaveType.gradual),
+            //new Wave(50, WaveType.gradual),
             new Wave(40, WaveType.double),
         ],
         startArms: [nukeInfo],
@@ -381,6 +395,7 @@ const allLevelInfo = [
     },
     {
         number: 6,
+        timeOfDay: Time.day,
         messages: [{ text: "Missile trucks prevent aircraft strikes", title: "WARNING" }],
         waves: [
             new Wave(30, WaveType.gradual),
@@ -405,6 +420,7 @@ const allLevelInfo = [
     },
     {
         number: 7,
+        timeOfDay: Time.day,
         messages: [],
         waves: [
             new Wave(20, WaveType.double),
@@ -433,7 +449,8 @@ const allLevelInfo = [
     },
     {
         number: 8,
-        messages: [],
+        timeOfDay: Time.day,
+        messages: [{ text: "Almost there!", title: "" }],
         waves: [
             new Wave(25, WaveType.double),
             new Wave(30, WaveType.gradual),
@@ -469,34 +486,4 @@ function provideAllTargets() {
     }
     return newTarget;
 }
-//class Level_continuous extends Level {
-//    public waves: Array<Wave> = [
-//        new Wave(14, WaveType.gradual),
-//        new Wave(14, WaveType.sudden),
-//        new Wave(30, WaveType.sudden),
-//        new Wave(40, WaveType.gradual),   /// CONFLICT!!
-//        ]
-//    public setCurrentWave() {  /// CONFLICT!!
-//        let newWave: Wave 
-//        if (this.waveIndex > 0) {
-//            if (this.waves[this.waveIndex - 1].type == WaveType.gradual) {
-//                newWave = new Wave(25, WaveType.sudden)
-//            }
-//            else {
-//                newWave = new Wave(50, WaveType.gradual)
-//            }
-//            this.waves.push(
-//                newWave
-//             )
-//        }
-//        this.currentWave = this.waves[this.waveIndex];
-//    }
-//    public armingUp() {
-//    }
-//    public finalStageArms() {
-//    }
-//    public provideAvailTargets(): Target {
-//        return provideAllTargets();
-//    }
-//}
 //# sourceMappingURL=level.js.map

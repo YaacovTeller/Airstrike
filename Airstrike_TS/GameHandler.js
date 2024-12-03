@@ -18,11 +18,13 @@ class GameHandler {
     weapon;
     contentEl;
     progressBar;
+    darkOverlay;
     progressNumber;
     shotCount = 0;
     language = Languages.eng;
     difficulty;
     gameMode;
+    ambience = [];
     // public masterTargets: Array<Target> = [];
     //public masterObjects: Array<HTMLElement> = [];
     sequentialHits = 0;
@@ -46,6 +48,29 @@ class GameHandler {
         //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
+        this.addDark();
+    }
+    addDark() {
+        this.darkOverlay = document.createElement('div');
+        this.darkOverlay.classList.add('darkOverlay');
+        ContentElHandler.addToContentWrapper(this.darkOverlay);
+    }
+    changeTime(time) {
+        if (time == Time.day) {
+            //     this.darkOverlay.classList.add('displayNone');
+            this.darkOverlay.style.opacity = '0';
+            this.ambience = ambience_1;
+        }
+        else {
+            //    this.darkOverlay.classList.remove('displayNone');
+            this.ambience = ambience_2;
+        }
+        if (time == Time.dusk) {
+            this.darkOverlay.style.opacity = '0.5';
+        }
+        else if (time == Time.night) {
+            this.darkOverlay.style.opacity = '0.98';
+        }
     }
     addAllLevels() {
         allLevelsArray = [];
@@ -62,6 +87,7 @@ class GameHandler {
             }
             this.level = nextLevel;
             this.level.setAsLevel(); // NEEDED?
+            //    this.changeTime(this.level.ti)
             this.level.nextWave();
         }
         else {
@@ -272,9 +298,9 @@ class GameHandler {
         this.level.produceSingleTarget(newTarget);
     }
     startAmbience() {
-        RandomSoundGen.playRandomSound(ambience);
+        RandomSoundGen.playRandomSound(this.ambience);
         this.soundTimer = setInterval(() => {
-            RandomSoundGen.playRandomSound(ambience);
+            RandomSoundGen.playRandomSound(this.ambience);
         }, 35000);
     }
     updateProgressBar() {
@@ -317,6 +343,39 @@ class GameHandler {
         }, 0);
         stats.total = targets.length || 0;
         this.hud.updateScore();
+        //  this.updateLights();
+    }
+    updateLights() {
+        let darkness = 0;
+        var gradients = lights
+            .filter(light => light.opac > 0) // Only include lights that are still visible    //            - light.opac
+            .map(light => {
+            let brightRange = light.size / 12;
+            let featherRange = light.size / 12 + 30;
+            return `radial-gradient(circle at ${light.pos.X}px ${light.pos.Y}px, rgba(255, 255, 255, ${light.opac}) ${brightRange}%, rgba(0, 0, 0, ${darkness}) ${featherRange}%)`;
+        })
+            .join(', ');
+        let overlay = document.querySelector('.darkOverlay');
+        overlay.style.background = gradients ? gradients : 'rgb(0, 0, 0)'; // Fallback to full darkness if no lights
+        overlay.style.backgroundColor = 'rgb(0, 0, 0)';
+    }
+    fadeLights() {
+        if (!lights.length)
+            return;
+        lights.forEach(light => {
+            if (light.fading === false) {
+                light.fading = null;
+                setTimeout(() => { light.fading = true; }, 200 + light.size);
+            }
+            if (light.opac > 0 && light.fading) {
+                light.opac -= 0.15; // Reduce opacity
+            }
+            else if (light.opac == 0) {
+                let index = lights.indexOf(light);
+                lights.splice(index, 1);
+            }
+        });
+        this.updateLights();
     }
     checkEnd() {
         let stats = this.hud.killStats;
@@ -343,7 +402,7 @@ class GameHandler {
     }
     stopAmbience() {
         clearInterval(this.soundTimer);
-        for (let a of ambience) {
+        for (let a of this.ambience) {
             a.stop();
         }
     }
@@ -402,6 +461,7 @@ class GameHandler {
             this.checkEnd();
             this.updateHudScore();
             this.updateProgressBar();
+            this.fadeLights();
             this.level.targets.forEach((trg) => {
                 trg.action();
             });
