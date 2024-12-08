@@ -271,8 +271,8 @@ const continuousInfo = {
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        //new Wave(30, WaveType.double),
-        //new Wave(50, WaveType.double),
+        new Wave(30, WaveType.double),
+        new Wave(50, WaveType.double),
         new Wave(10, WaveType.gradual, Time.dusk),
         new Wave(10, WaveType.gradual, Time.night),
         new Wave(25, WaveType.sudden, Time.dusk),
