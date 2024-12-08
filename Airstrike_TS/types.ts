@@ -88,6 +88,7 @@ enum weaponNames {
     tunnelcharge = 5,
     nuke = 6,
     drone = 7,
+    flare = 8
 }
 type position = {
     X,
@@ -328,6 +329,25 @@ const droneInfo: ExplosiveWeaponInfo = {
     select: [jet]
 }
 
+const flareInfo: ExplosiveWeaponInfo = {
+    name: weaponNames.flare,
+    class: Flare,
+    cursor: "cursor4",
+    blastRadius: 300,
+    explosionInfo: {
+        size: ExplSizes.small,
+        imageSource: assetsFolder + classicExplosion,
+        sound: explosions,
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'flame5.svg',
+    sound: mortarSounds,
+    speed: 2000,
+    cooldown: 12000,
+    noAmmo: click_2,
+    select: gib
+}
+
 function loadNewImage() {
     return '?' + new Date().getTime();
 }
@@ -394,6 +414,13 @@ class ContentElHandler {
         if (elem && contentEl.contains(elem)) {
             contentEl.removeChild(elem);
         }
+    }
+    static returnNewEl(parent: HTMLElement, classname: string) {
+        let el = document.createElement('div');
+        el.className = classname;
+        //    parent.appendChild(el);
+        parent.prepend(el);
+        return el;
     }
     static contentElWidth() {
         return document.getElementById("content").clientWidth;

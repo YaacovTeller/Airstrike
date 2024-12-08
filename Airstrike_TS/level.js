@@ -13,19 +13,17 @@ var Time;
 class Wave {
     number;
     type;
-    finished;
-    constructor(num, type, finished = false) {
+    finished = false;
+    timeOfDay;
+    constructor(num, type, timeOfDay) {
+        this.timeOfDay = timeOfDay ? timeOfDay : Time.day;
         this.number = num;
         this.type = type;
-        this.finished = finished;
     }
 }
 class Level {
-    //public nextLevelCallback: Function;
     waveIndex = -1;
     frequency;
-    //   public waves: Array<Wave>;
-    //   public winLimits: Array<number>;
     currentWave;
     targets = [];
     winCheckTimer;
@@ -83,7 +81,6 @@ class Level {
     }
     setAsLevel() {
         let num = this.info.number;
-        game.changeTime(this.info.timeOfDay);
         this.frequency = game.difficulty.newTargetEvery;
         if (game.gameMode == GameMode.regular) {
             PopupHandler.addToArray("", "Level " + num, msgLength.long);
@@ -102,6 +99,7 @@ class Level {
             this.setWaveDisplay(num);
         }
         this.currentWave = this.info.waves[num];
+        game.changeTime(this.currentWave.timeOfDay);
     }
     winLimitCheck() {
         if (this.winCheckTimer != null) {
@@ -252,8 +250,9 @@ class Level {
     }
     addNewWeapon(info, showMsg) {
         let wepName = weaponNames[info.name];
-        if (allWeaponTypes[info.name - 1]) {
-            allWeaponTypes[info.name - 1].pushNewWeaponInstance();
+        let wepArr = info.name <= weaponNames.flare ? allWeaponTypes : extraWeaponTypes;
+        if (wepArr[info.name - 1]) {
+            wepArr[info.name - 1].pushNewWeaponInstance();
             if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }
@@ -269,15 +268,16 @@ class Level {
 }
 const continuousInfo = {
     number: 0,
-    timeOfDay: Time.day,
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
         new Wave(30, WaveType.double),
-        new Wave(70, WaveType.double),
-        new Wave(25, WaveType.sudden),
-        new Wave(40, WaveType.sudden),
-        new Wave(100, WaveType.double),
+        new Wave(50, WaveType.double),
+        new Wave(10, WaveType.gradual),
+        new Wave(10, WaveType.gradual, Time.dusk),
+        new Wave(25, WaveType.sudden, Time.night),
+        new Wave(40, WaveType.sudden, Time.dusk),
+        new Wave(90, WaveType.double),
     ],
     startArms: [],
     endArms: [],
@@ -288,13 +288,12 @@ const continuousInfo = {
 const allLevelInfo = [
     {
         number: 1,
-        timeOfDay: Time.night,
         messages: [],
         waves: [
             new Wave(8, WaveType.double),
-            //new Wave(8, WaveType.gradual),
-            //new Wave(8, WaveType.sudden),
-            //new Wave(14, WaveType.sudden)
+            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.sudden),
+            new Wave(14, WaveType.sudden)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
@@ -302,12 +301,11 @@ const allLevelInfo = [
     },
     {
         number: 2,
-        timeOfDay: Time.dusk,
-        messages: [],
+        messages: [{ text: "It's getting dark...", title: "NOTE" }],
         waves: [
-            new Wave(8, WaveType.sudden),
-            //new Wave(30, WaveType.gradual),
-            //new Wave(20, WaveType.sudden),
+            new Wave(8, WaveType.sudden, Time.dusk),
+            new Wave(25, WaveType.gradual, Time.night),
+            new Wave(20, WaveType.sudden, Time.dusk),
         ],
         startArms: [mortarInfo, howitzerInfo],
         endArms: [howitzerInfo],
@@ -327,10 +325,9 @@ const allLevelInfo = [
     },
     {
         number: 3,
-        timeOfDay: Time.night,
         messages: [],
         waves: [
-            //      new Wave(16, WaveType.gradual),
+            new Wave(16, WaveType.gradual),
             new Wave(10, WaveType.sudden),
         ],
         startArms: [howitzerInfo, airstrikeInfo],
@@ -339,10 +336,9 @@ const allLevelInfo = [
     },
     {
         number: 4,
-        timeOfDay: Time.dusk,
         messages: [{ text: "Watch out for tunnels", title: "WARNING" }],
         waves: [
-            //        new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.gradual),
             new Wave(12, WaveType.sudden),
         ],
         startArms: [chargeInfo, airstrikeInfo],
@@ -363,15 +359,14 @@ const allLevelInfo = [
     },
     {
         number: 5,
-        timeOfDay: Time.day,
-        messages: [],
+        messages: [{ text: "Mortar team positioning to provide flare rounds...", title: "NOTE" }],
         waves: [
-            //new Wave(16, WaveType.sudden),
-            //new Wave(30, WaveType.gradual),
-            //new Wave(50, WaveType.gradual),
-            new Wave(40, WaveType.double),
+            new Wave(16, WaveType.sudden),
+            new Wave(30, WaveType.gradual, Time.dusk),
+            new Wave(30, WaveType.gradual, Time.night),
+            new Wave(40, WaveType.double, Time.dusk),
         ],
-        startArms: [nukeInfo],
+        startArms: [flareInfo],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -395,7 +390,6 @@ const allLevelInfo = [
     },
     {
         number: 6,
-        timeOfDay: Time.day,
         messages: [{ text: "Missile trucks prevent aircraft strikes", title: "WARNING" }],
         waves: [
             new Wave(30, WaveType.gradual),
@@ -420,7 +414,6 @@ const allLevelInfo = [
     },
     {
         number: 7,
-        timeOfDay: Time.day,
         messages: [],
         waves: [
             new Wave(20, WaveType.double),
@@ -449,15 +442,14 @@ const allLevelInfo = [
     },
     {
         number: 8,
-        timeOfDay: Time.day,
         messages: [{ text: "Almost there!", title: "" }],
         waves: [
-            new Wave(25, WaveType.double),
-            new Wave(30, WaveType.gradual),
-            new Wave(55, WaveType.double),
+            new Wave(25, WaveType.double, Time.dusk),
+            new Wave(30, WaveType.gradual, Time.night),
+            new Wave(55, WaveType.double, Time.dusk),
             new Wave(80, WaveType.double),
         ],
-        startArms: [],
+        startArms: [flareInfo],
         endArms: [],
         targetFunc: () => {
             return provideAllTargets();

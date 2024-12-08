@@ -18,7 +18,12 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
-        allWeaponTypes[this.name - 1] = this;
+        if (this.name < weaponNames.flare) {
+            allWeaponTypes[this.name - 1] = this;
+        }
+        else {
+            extraWeaponTypes[this.name - 1] = this;
+        }
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -117,6 +122,8 @@ class WeaponType {
         }, _this.cooldown);
     }
     ammoCheck() {
+        if (this.name == weaponNames.flare && game.level.currentWave.timeOfDay != Time.day)
+            return false; // VERY MESSY
         if (this.activeInstance == null || this.activeInstance.ready === false) {
             this.noAmmo.play();
             return false;
@@ -210,15 +217,17 @@ class ExplosiveWeaponType extends WeaponType {
         if (this.explosionInfo.sound.length) {
             setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
         }
+        this.fireResultsTimeout(inst);
+        this.cooldownTimeout(inst);
+        this.setActiveInstance();
+    }
+    fireResultsTimeout(inst) {
         setTimeout(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
-            //this.checkForTargets(blastCenter, targets);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
-        this.cooldownTimeout(inst);
-        this.setActiveInstance();
     }
     switchBlastIndicatorStyle(bool, inst) {
         if (inst == null)
@@ -244,6 +253,19 @@ class ExplosiveWeaponType extends WeaponType {
         const ripple = blastRadiusEl.getElementsByClassName("ripple")[0];
         ripple ? ripple.remove() : () => { };
         blastRadiusEl.appendChild(circle);
+    }
+}
+class Flare extends ExplosiveWeaponType {
+    constructor(info) {
+        super(info);
+    }
+    fireResultsTimeout(inst) {
+        setTimeout(() => {
+            let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            ExplosionHandler.createFlare(blastCenter, this.explosionInfo.size);
+            this.switchBlastIndicatorStyle(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
+        }, this.speed);
     }
 }
 class ChargeWeaponType extends WeaponType {

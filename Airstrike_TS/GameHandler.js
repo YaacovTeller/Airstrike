@@ -9,6 +9,7 @@ var GameMode;
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
 })(GameMode || (GameMode = {}));
 var allWeaponTypes = [];
+var extraWeaponTypes = [];
 var allTargets = [];
 var allObjects = [];
 var allLevelsArray = []; //[level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
@@ -62,6 +63,7 @@ class GameHandler {
             this.ambience = ambience_1;
         }
         else {
+            this.level.addNewWeapon(flareInfo, true);
             //    this.darkOverlay.classList.remove('displayNone');
             this.ambience = ambience_2;
         }
@@ -69,7 +71,7 @@ class GameHandler {
             this.darkOverlay.style.opacity = '0.5';
         }
         else if (time == Time.night) {
-            this.darkOverlay.style.opacity = '0.98';
+            this.darkOverlay.style.opacity = '0.92';
         }
     }
     addAllLevels() {
@@ -221,8 +223,13 @@ class GameHandler {
                 this.fireFunc();
             }
             let int = parseInt(event.key);
-            if (int && allWeaponTypes[int - 1]) {
-                this.changeWeapon(allWeaponTypes[int - 1]);
+            if (int) {
+                if (allWeaponTypes[int - 1]) {
+                    this.changeWeapon(allWeaponTypes[int - 1]);
+                }
+                else if (extraWeaponTypes[int - 1]) {
+                    this.changeWeapon(extraWeaponTypes[int - 1]);
+                }
             }
             //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
             else if (event.key.toLowerCase() === 's') {
@@ -247,6 +254,7 @@ class GameHandler {
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
+        this.level.addNewWeapon(flareInfo, false);
         if (!allWeaponTypes[weaponNames.nuke - 1]) {
             this.level.addNewWeapon(nukeInfo, false);
         }
@@ -275,13 +283,16 @@ class GameHandler {
         this.hud.updateScore(this.shotCount);
     }
     changeWeapon(wep) {
-        if (!allWeaponTypes.includes(wep))
+        let wepArr = allWeaponTypes.includes(wep) ? allWeaponTypes : extraWeaponTypes;
+        if (!wepArr.includes(wep))
             return;
+        //if (!allWeaponTypes.includes(wep))
+        //    return;
         this.weapon = wep;
         this.hud.selectBox(wep.name);
         this.switchCursor();
         this.updateCursorPosition();
-        allWeaponTypes.forEach((x) => {
+        wepArr.forEach((x) => {
             if (x !== wep) {
                 x.switchFrom();
             }
@@ -346,36 +357,48 @@ class GameHandler {
         //  this.updateLights();
     }
     updateLights() {
-        let darkness = 0;
-        var gradients = lights
-            .filter(light => light.opac > 0) // Only include lights that are still visible    //            - light.opac
+        const darkBlueVal = 40;
+        let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
+        let overlay = document.querySelector('.darkOverlay');
+        var lightsString = this.returnLightString(lights, "255, 255, 255");
+        var flaresString = this.returnLightString(flares, "255, 255, 50");
+        var gradientsString = [lightsString, flaresString]
+            .filter(str => str)
+            .join(', ');
+        overlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
+        overlay.style.backgroundColor = defaultRGB;
+    }
+    returnLightString(arr, rbgString) {
+        return arr
+            .filter(light => light.opac > 0)
             .map(light => {
             let brightRange = light.size / 12;
             let featherRange = light.size / 12 + 30;
-            return `radial-gradient(circle at ${light.pos.X}px ${light.pos.Y}px, rgba(255, 255, 255, ${light.opac}) ${brightRange}%, rgba(0, 0, 0, ${darkness}) ${featherRange}%)`;
+            return `radial-gradient(circle at ${light.pos.X}px ${light.pos.Y}px, rgba(${rbgString}, ${light.opac}) ${brightRange}%, rgba(0, 0, 0, 0) ${featherRange}%)`;
         })
             .join(', ');
-        let overlay = document.querySelector('.darkOverlay');
-        overlay.style.background = gradients ? gradients : 'rgb(0, 0, 0)'; // Fallback to full darkness if no lights
-        overlay.style.backgroundColor = 'rgb(0, 0, 0)';
     }
-    fadeLights() {
-        if (!lights.length)
+    fadeAllLights() {
+        this.fadeLights(lights, 200);
+        this.fadeLights(flares, flareFade);
+        lights.length || flares.length ? this.updateLights() : "";
+    }
+    fadeLights(arr, baseFadeDelay) {
+        if (!arr.length)
             return;
-        lights.forEach(light => {
+        arr.forEach(light => {
             if (light.fading === false) {
                 light.fading = null;
-                setTimeout(() => { light.fading = true; }, 200 + light.size);
+                setTimeout(() => { light.fading = true; }, baseFadeDelay + light.size);
             }
             if (light.opac > 0 && light.fading) {
                 light.opac -= 0.15; // Reduce opacity
             }
             else if (light.opac == 0) {
-                let index = lights.indexOf(light);
-                lights.splice(index, 1);
+                let index = arr.indexOf(light);
+                arr.splice(index, 1);
             }
         });
-        this.updateLights();
     }
     checkEnd() {
         let stats = this.hud.killStats;
@@ -422,6 +445,7 @@ class GameHandler {
         this.level = null;
         ContentElHandler.clearContent();
         allWeaponTypes = [];
+        extraWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
         //if (this.weapon) {
@@ -461,7 +485,7 @@ class GameHandler {
             this.checkEnd();
             this.updateHudScore();
             this.updateProgressBar();
-            this.fadeLights();
+            this.fadeAllLights();
             this.level.targets.forEach((trg) => {
                 trg.action();
             });

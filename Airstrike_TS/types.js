@@ -89,6 +89,7 @@ var weaponNames;
     weaponNames[weaponNames["tunnelcharge"] = 5] = "tunnelcharge";
     weaponNames[weaponNames["nuke"] = 6] = "nuke";
     weaponNames[weaponNames["drone"] = 7] = "drone";
+    weaponNames[weaponNames["flare"] = 8] = "flare";
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -276,6 +277,24 @@ const droneInfo = {
     noAmmo: bleep_neg,
     select: [jet]
 };
+const flareInfo = {
+    name: weaponNames.flare,
+    class: Flare,
+    cursor: "cursor4",
+    blastRadius: 300,
+    explosionInfo: {
+        size: ExplSizes.small,
+        imageSource: assetsFolder + classicExplosion,
+        sound: explosions,
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'flame5.svg',
+    sound: mortarSounds,
+    speed: 2000,
+    cooldown: 12000,
+    noAmmo: click_2,
+    select: gib
+};
 function loadNewImage() {
     return '?' + new Date().getTime();
 }
@@ -338,6 +357,13 @@ class ContentElHandler {
         if (elem && contentEl.contains(elem)) {
             contentEl.removeChild(elem);
         }
+    }
+    static returnNewEl(parent, classname) {
+        let el = document.createElement('div');
+        el.className = classname;
+        //    parent.appendChild(el);
+        parent.prepend(el);
+        return el;
     }
     static contentElWidth() {
         return document.getElementById("content").clientWidth;

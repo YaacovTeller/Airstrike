@@ -10,11 +10,22 @@ type light = {
     fading: boolean
 }
 var lights: Array<light> = [];
+var flares: Array<light> = [];
+
+const flareFade = 10000;
 
 class ExplosionHandler {
     private static craterDecalStay: number = 15000;
     private static craterFadingTillRemoval: number = fadeAnimTime;
 
+    public static createFlare(blastCenter: position, size: ExplSizes) {
+        this.pushLight(flares, blastCenter, size);
+        let fallingFlare = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), 'flare');
+        fallingFlare.style.left = blastCenter.X + 'px';
+        fallingFlare.style.top = blastCenter.Y + 'px';
+        ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
+
+    }
     public static basicExplosion(blastCenter: position, size: ExplSizes, explSrc: string, weaponName: weaponNames) {
         let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
         let crater = this.setAndReturnCrater(blastCenter, size);
@@ -30,7 +41,7 @@ class ExplosionHandler {
             this.flash();
             this.shake(screenShakeTimeouts.shake_3);
         }
-        this.illuminateDark(blastCenter, size);
+        this.pushLight(lights, blastCenter, size);
         this.checkForTargets(blastCenter, size, weaponName)
     }
     private static checkForTargets(blastCenter: position, size: ExplSizes, weaponName: weaponNames) {
@@ -89,21 +100,9 @@ class ExplosionHandler {
         overlay.classList.add("flash");
         setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
     }
-    private static illuminateDark(blastCenter: position, explSize: ExplSizes) {
-        lights.push({ pos: blastCenter, opac: 1, size: explSize, fading: false })
-
-        //let darkness = 0.95;
-        //let brightRange = 10;
-        //let featherRange = 30;
-        //let light = `circle at ${blastCenter.X}px ${blastCenter.Y}px, rgba(0, 0, 0, 0) ${brightRange}%, rgba(0, 0, 0, ${darkness}) ${featherRange}%`;
-
-        //let flashFadeTime = 1000;
-        //let overlay = ContentElHandler.returnContentEl().querySelector('.darkOverlay') as HTMLElement;
-        //overlay.style.background = `radial-gradient(${light})`;
-        //setTimeout(() => {
-        //    const root: HTMLElement = document.querySelector(':root');
-        //    overlay.style.background = root.style.getPropertyValue('--lightGrad_small');
-        //}, flashFadeTime)
+    private static pushLight(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
+        let light: light = { pos: blastCenter, opac: 1, size: explSize, fading: false }
+        lightArr.push(light);
     }
 
     private static shake(shakeTimeout: screenShakeTimeouts) {

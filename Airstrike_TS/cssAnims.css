@@ -149,3 +149,23 @@
         transform: translateX(0);
     }
 }
+@keyframes moveDown {
+    from {
+        transform: translate(0%, -300px);
+    }
+
+    to {
+        transform: translate(0%, 0);
+    }
+}
+@keyframes pulsate {
+    0%, 100% {
+        transform: translateX(-50%) scale(1); /* Normal size */
+        box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.6);
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.2); /* Grow slightly */
+        box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.8); /* Brighter and bigger glow */
+    }
+}

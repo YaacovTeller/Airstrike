@@ -52,18 +52,18 @@ class HudHandler {
         this.hud.appendChild(this.rightSideContainer);
         this.drawScore();
     }
+ 
+    private drawBoxes(wepBoxId, wepArray) {
+        let container = document.getElementById(wepBoxId);
+        if (container) container.remove();
 
-    public drawWeaponDisplay(wepname?) {
-        let wepBoxContainer = document.getElementById('wepBoxContainer');
-        if (wepBoxContainer) wepBoxContainer.remove();
+        container = document.createElement('div');
+        container.classList.add('wepBoxContainer');
+        container.id = wepBoxId;
+        this.hud.prepend(container);
 
-        wepBoxContainer = document.createElement('div');
-        wepBoxContainer.classList.add('wepBoxContainer');
-        wepBoxContainer.id = 'wepBoxContainer';
-        this.hud.prepend(wepBoxContainer);
-
-        for (let x in allWeaponTypes) {
-            let wep = allWeaponTypes[x]
+        for (let x in wepArray) {
+            let wep = wepArray[x]
             let wepBox = document.createElement('div');
             let num = document.createElement('span');
             num.className = "wepNum";
@@ -73,9 +73,14 @@ class HudHandler {
             wepBox.dataset.name = wep.name.toString();
             wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
             wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
-            wepBoxContainer.appendChild(wepBox);
-            this.drawInstances(wep, wepBox)
+            container.appendChild(wepBox);
+            this.drawInstances(wep, wepBox);
         }
+    }
+    public drawWeaponDisplay(wepname?) {
+        this.drawBoxes("centerContainer", extraWeaponTypes);
+        this.drawBoxes("wepBoxContainer", allWeaponTypes);
+
         if (wepname) {
             this.selectBox(wepname)
         }

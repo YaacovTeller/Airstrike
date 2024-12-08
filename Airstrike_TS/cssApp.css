@@ -337,3 +337,14 @@ img#crater { /*to override the img[src]!*/
 .displayNone {
     display: none;
 }
+
+.flare {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    opacity: 1;
+    animation: pulsate 1.5s ease infinite, moveDown 10s linear;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.3) 60%, rgba(255, 255, 255, 0) 100%);
+/*    box-shadow: 0 0 25px 10px rgba(255, 255, 255, 0.6);
+*/}
