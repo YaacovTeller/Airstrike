@@ -278,7 +278,7 @@ class Level {
 
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
         let wepName = weaponNames[info.name];
-        let wepArr = info.name < weaponNames.flare ? allWeaponTypes : extraWeaponTypes;
+        let wepArr = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
         if (wepArr[info.name - 1]) {
             wepArr[info.name - 1].pushNewWeaponInstance();
             if (showMsg != false) {
@@ -299,12 +299,12 @@ const continuousInfo: LevelInfo = {
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double),
-        new Wave(50, WaveType.double),
-        new Wave(10, WaveType.gradual),
+        //new Wave(30, WaveType.double),
+        //new Wave(50, WaveType.double),
         new Wave(10, WaveType.gradual, Time.dusk),
-        new Wave(25, WaveType.sudden, Time.night),
-        new Wave(40, WaveType.sudden, Time.dusk),
+        new Wave(10, WaveType.gradual, Time.night),
+        new Wave(25, WaveType.sudden, Time.dusk),
+        new Wave(40, WaveType.sudden),
         new Wave(90, WaveType.double),
     ],
     startArms: [],

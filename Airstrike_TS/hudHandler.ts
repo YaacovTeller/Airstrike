@@ -13,7 +13,7 @@ enum killStatsOptions {
 }
 
 class HudHandler {
-    private hud: HTMLElement
+    private hudElem: HTMLElement
     private selectedWep: Element
     private scoreBox: HTMLElement
     private levelBox: HTMLElement
@@ -44,12 +44,12 @@ class HudHandler {
         el.classList.add("hud")
         el.id = 'hud';
         ContentElHandler.addToContentWrapper(el)
-        this.hud = el;
+        this.hudElem = el;
 
         this.drawWeaponDisplay(wepname);
 
         this.rightSideContainer = document.createElement('div');
-        this.hud.appendChild(this.rightSideContainer);
+        this.hudElem.appendChild(this.rightSideContainer);
         this.drawScore();
     }
  
@@ -60,7 +60,7 @@ class HudHandler {
         container = document.createElement('div');
         container.classList.add('wepBoxContainer');
         container.id = wepBoxId;
-        this.hud.prepend(container);
+        this.hudElem.prepend(container);
 
         for (let x in wepArray) {
             let wep = wepArray[x]
@@ -75,8 +75,16 @@ class HudHandler {
             wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
             container.appendChild(wepBox);
             this.drawInstances(wep, wepBox);
+
+            if (wep.name.toString() == weaponNames.flare) {
+                game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone");  // DOUBLED with setWave in Levels. For all weps start.
+            }
+            if (wep.name.toString() == weaponNames.nuke) {
+                wepBox.classList.add('specialWeapon')
+            }
         }
     }
+
     public drawWeaponDisplay(wepname?) {
         this.drawBoxes("centerContainer", extraWeaponTypes);
         this.drawBoxes("wepBoxContainer", allWeaponTypes);
@@ -92,6 +100,7 @@ class HudHandler {
             wepBox.appendChild(instBox);
         }
     }
+
     public drawMultiKill() {
         this.multiKillBox = document.createElement('div');
         this.multiKillBox.classList.add('multiKillBox', 'hide');
@@ -192,8 +201,11 @@ class HudHandler {
     public selectBox(wepName: weaponNames) {
         this.getWepboxByName(wepName, true)      
     }
+    public returnWepBox(wepName: weaponNames) {
+        return this.hudElem.querySelector(`[data-name="${wepName}"]`); // DOUBLED --V
+    }
     private getWepboxByName(wepName: weaponNames, select?: boolean) {
-        let weps: HTMLCollectionOf<Element> = this.hud.getElementsByClassName('wepBox');
+        let weps: HTMLCollectionOf<Element> = this.hudElem.getElementsByClassName('wepBox');
         let wepBox: Element = null;
         for (let x of weps) {
             select ? x.classList.remove("selected"): "";   // MESSY

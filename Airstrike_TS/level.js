@@ -45,7 +45,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; }
+    provideAvailTargets() { return; } // FIX?
     armingUp() { }
     ;
     finalStageArms() { }
@@ -156,18 +156,21 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n");
+        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+        );
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
+            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
+                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -195,6 +198,7 @@ class Level {
         return true;
     }
     continueWave() {
+        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -222,7 +226,7 @@ class Level {
             let this_ = this;
             setTimeout(() => {
                 this_.pauseTargetProduction = false;
-                RandomSoundGen.playSequentialSound(revs);
+                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
             }, this_.pauseLength);
         }
         if (this.targets.length >= this.currentWave.number) {
@@ -246,7 +250,7 @@ class Level {
     }
     addNewWeapon(info, showMsg) {
         let wepName = weaponNames[info.name];
-        let wepArr = info.name < weaponNames.flare ? allWeaponTypes : extraWeaponTypes;
+        let wepArr = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
         if (wepArr[info.name - 1]) {
             wepArr[info.name - 1].pushNewWeaponInstance();
             if (showMsg != false) {
@@ -259,6 +263,7 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
+        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo = {
@@ -266,12 +271,12 @@ const continuousInfo = {
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double),
-        new Wave(50, WaveType.double),
-        new Wave(10, WaveType.gradual),
+        //new Wave(30, WaveType.double),
+        //new Wave(50, WaveType.double),
         new Wave(10, WaveType.gradual, Time.dusk),
-        new Wave(25, WaveType.sudden, Time.night),
-        new Wave(40, WaveType.sudden, Time.dusk),
+        new Wave(10, WaveType.gradual, Time.night),
+        new Wave(25, WaveType.sudden, Time.dusk),
+        new Wave(40, WaveType.sudden),
         new Wave(90, WaveType.double),
     ],
     startArms: [],
@@ -473,3 +478,4 @@ function provideAllTargets() {
     }
     return newTarget;
 }
+//# sourceMappingURL=level.js.map

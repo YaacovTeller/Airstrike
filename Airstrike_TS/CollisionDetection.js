@@ -1,5 +1,6 @@
 class CollisionDetection {
     static checkCollisionFromPosition(mousePos, targetEl) {
+        //let trgtPos: position = this.getXYfromPoint(targetEl);
         let targetRect = targetEl.getBoundingClientRect();
         if (mousePos.X >= targetRect.left &&
             mousePos.X <= targetRect.left + targetRect.width &&
@@ -28,6 +29,8 @@ class CollisionDetection {
         const circleCenterX = circleRect.left + circleRect.width / 2;
         const circleCenterY = circleRect.top + circleRect.height / 2;
         const circleRadius = circleRect.width / 2;
+        //const closestX = Math.max(targetRect.left, Math.min(circleCenterX, targetRect.right));
+        //const closestY = Math.max(targetRect.top, Math.min(circleCenterY, targetRect.bottom));
         const targetCenterX = targetRect.left + targetRect.width / 2;
         const targetCenterY = targetRect.top + targetRect.height / 2;
         const distanceX = circleCenterX - targetCenterX;
@@ -74,3 +77,4 @@ class CollisionDetection {
         return angleDegrees;
     }
 }
+//# sourceMappingURL=collisionDetection.js.map

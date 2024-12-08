@@ -18,7 +18,7 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
-        if (this.name < weaponNames.flare) {
+        if (this.name < weaponNames.tunnelcharge) {
             allWeaponTypes[this.name - 1] = this;
         }
         else {

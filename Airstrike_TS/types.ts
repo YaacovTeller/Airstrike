@@ -85,9 +85,13 @@ enum weaponNames {
     mortar = 2,
     tank = 3,
     airstrike = 4,
-    tunnelcharge = 5,
-    nuke = 6,
-    drone = 7,
+    //tunnelcharge = 5,
+    //nuke = 6,
+    //drone = 7,
+
+    drone = 5,
+    tunnelcharge = 6,
+    nuke = 7,
     flare = 8
 }
 type position = {
@@ -337,7 +341,7 @@ const flareInfo: ExplosiveWeaponInfo = {
     explosionInfo: {
         size: ExplSizes.small,
         imageSource: assetsFolder + classicExplosion,
-        sound: explosions,
+        sound: [],
         length: 1000,
     },
     imageSource: assetsSVGFolder + 'flame5.svg',
@@ -374,7 +378,8 @@ class PopupHandler {
         }
     }
     private static showPopup() {
-        pop.play();
+        //pop.play();
+        bleepbleep.play();
         if (!this.popUpArray.length) return
         let popup = document.getElementById("popupBox");
         let currentMsg = this.popUpArray[0]

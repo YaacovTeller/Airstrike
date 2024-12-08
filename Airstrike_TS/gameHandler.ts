@@ -61,14 +61,12 @@ class GameHandler {
         ContentElHandler.addToContentWrapper(this.darkOverlay);
     }
     public changeTime(time: Time) {
+        this.hideFlare(time);
         if (time == Time.day) {
-       //     this.darkOverlay.classList.add('displayNone');
             this.darkOverlay.style.opacity = '0';
             this.ambience = ambience_1;
         }
         else {
-            this.level.addNewWeapon(flareInfo, true);
-        //    this.darkOverlay.classList.remove('displayNone');
             this.ambience = ambience_2;
         }
         if (time == Time.dusk) {
@@ -76,6 +74,17 @@ class GameHandler {
         }
         else if (time == Time.night) {
             this.darkOverlay.style.opacity = '0.92';
+        }
+    }
+    private hideFlare(time: Time) {
+        let flareBox = this.hud.returnWepBox(weaponNames.flare) as HTMLElement
+        if (flareBox) {
+            if (time == Time.day) {
+                flareBox.classList.add("displayNone");
+            }
+            else {
+                flareBox.classList.remove("displayNone");
+            }
         }
     }
 
@@ -95,8 +104,6 @@ class GameHandler {
             }
             this.level = nextLevel;
             this.level.setAsLevel(); // NEEDED?
-        //    this.changeTime(this.level.ti)
-
             this.level.nextWave();
         }
         else {
@@ -480,11 +487,8 @@ class GameHandler {
         extraWeaponTypes = [];
         this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
-
-        //if (this.weapon) {
-        //    this.hud.selectBox(this.weapon.name);
-        //}
     }
+
     public newGame(mode: GameMode) {
         if (this.gameWasPlayed) {
             this.reset();

@@ -22,10 +22,12 @@ class Target {
         this.damageEl = this.returnNewImageEl(this.targetEl, "");
         this.lockonEl = this.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
         ContentElHandler.addToContentEl(this.targetEl);
-        let offsetX = 50 * -1;
+        let offsetX = 50 * -1; //this.getTargetEl().clientWidth * -1;
         position ? this.setStartPos(position.X, position.Y) : this.setStartPos(offsetX);
+        //        console.log("POS_X: " + this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(this.info.minSpeed, this.info.maxSpeed);
         this.armour = this.info.armour;
+        //     this.health = this.info.health;
     }
     get picSources() {
         return [];
@@ -41,6 +43,7 @@ class Target {
     returnNewEl(parent, classname) {
         let el = document.createElement('div');
         el.className = classname;
+        //    parent.appendChild(el);
         parent.prepend(el);
         return el;
     }
@@ -53,7 +56,7 @@ class Target {
     moveFromBlast(severity, collisionInfo) {
         if (this.movesAtBlast) {
             if (this.armour >= Armour.moderate) {
-                collisionInfo.radius /= 2;
+                collisionInfo.radius /= 2; // hack to reduce punting armour about
             }
             severity > strikeSeverity.light ? ThrowHandler.moveAtAngle(collisionInfo) : "";
         }
@@ -106,7 +109,7 @@ class TunnelTarget extends Target {
         this.targetEl.classList.add('smallSquare');
         this.trail = document.createElement('div');
         this.trail.className = 'trail';
-        this.targetEl.classList.remove('flexCenter');
+        this.targetEl.classList.remove('flexCenter'); // MESSY
         this.targetEl.classList.add('flexEnd');
         this.targetEl.classList.add('tunnelHead');
         this.picEl.classList.add('tunnelFocus');
@@ -177,6 +180,7 @@ class TunnelTarget extends Target {
     }
     removeTunnel(length) {
         this.trail.classList.add('hide');
+        //     setTimeout(() => { this.trail.remove() }, length * 250)
         setTimeout(() => { this.trail.remove(); }, 8000);
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
     }
@@ -279,7 +283,7 @@ class VehicleTarget extends Target {
         }
         if (severity >= strikeSeverity.medium) {
             this.targetDisabled();
-            this.hitAcknowledge();
+            this.hitAcknowledge(); /////// put with the other!!!
         }
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
@@ -361,7 +365,8 @@ class RegVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('smallSquare');
     }
     get picSources() {
-        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'Jeep2__lightgrey.png', 'jeep2__tan.png'];
+        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'Jeep2__lightgrey.png', 'jeep2__tan.png']; // 'jeep2__grey.png', 
+        //  return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
     }
 }
 class ModVehicleTarget extends VehicleTarget {
@@ -398,6 +403,8 @@ class RocketLauncher extends VehicleTarget {
     }
     get picSources() {
         return ['launcher.png'];
+        // return ['rocketVehicle.jpg'];
+        //   picSources: ['rocketVehicle_undeployed.jpg']
     }
     move() {
         let x = parseInt(this.targetEl.style.left);
@@ -411,6 +418,8 @@ class RocketLauncher extends VehicleTarget {
             }
         }
         if (this.damage > Damage.damaged) {
+            //this.flip(this.launcherEl, direc)
+            //this.launcherEl.remove();
             this.throwRocketPack();
         }
     }
@@ -425,8 +434,9 @@ class RocketLauncher extends VehicleTarget {
         pack.style.top = `${y}px`;
         ContentElHandler.addToContentEl(pack);
         allObjects.push(pack);
-        ThrowHandler.flip(pack, direction.backward);
-        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, itemStay);
+        ThrowHandler.flip(pack, direction.backward); /////////////////////////////////////////////////////////////////
+        //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
+        setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, itemStay); // AWFUL !!!
         ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime);
     }
     inNoStrikeZone(target) {
@@ -434,6 +444,7 @@ class RocketLauncher extends VehicleTarget {
         if (noStrikeZones) {
             for (let z of noStrikeZones) {
                 let zone = z;
+                //if (CollisionDetection.checkCollisionWithElement(target.getTargetEl(), zone)) {
                 if (CollisionDetection.checkCollisionWithCircle(zone, target.getTargetEl())) {
                     return true;
                 }
@@ -460,6 +471,9 @@ class RocketLauncher extends VehicleTarget {
                 this.removeNoStrikeZone();
             }
         }
+        //if (this.damage > Damage.badlyDented) {
+        //    this.noStrikeZone.remove();
+        //}
     }
     deploy() {
         let delay = 500;
@@ -488,3 +502,4 @@ class RocketLauncher extends VehicleTarget {
         game.strikesRestricted = false;
     }
 }
+//# sourceMappingURL=target.js.map

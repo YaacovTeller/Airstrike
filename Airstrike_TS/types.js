@@ -42,6 +42,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -85,11 +86,21 @@ var weaponNames;
     weaponNames[weaponNames["mortar"] = 2] = "mortar";
     weaponNames[weaponNames["tank"] = 3] = "tank";
     weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
-    weaponNames[weaponNames["tunnelcharge"] = 5] = "tunnelcharge";
-    weaponNames[weaponNames["nuke"] = 6] = "nuke";
-    weaponNames[weaponNames["drone"] = 7] = "drone";
+    //tunnelcharge = 5,
+    //nuke = 6,
+    //drone = 7,
+    weaponNames[weaponNames["drone"] = 5] = "drone";
+    weaponNames[weaponNames["tunnelcharge"] = 6] = "tunnelcharge";
+    weaponNames[weaponNames["nuke"] = 7] = "nuke";
     weaponNames[weaponNames["flare"] = 8] = "flare";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -277,7 +288,7 @@ const flareInfo = {
     explosionInfo: {
         size: ExplSizes.small,
         imageSource: assetsFolder + classicExplosion,
-        sound: explosions,
+        sound: [],
         length: 1000,
     },
     imageSource: assetsSVGFolder + 'flame5.svg',
@@ -309,7 +320,8 @@ class PopupHandler {
         }
     }
     static showPopup() {
-        pop.play();
+        //pop.play();
+        bleepbleep.play();
         if (!this.popUpArray.length)
             return;
         let popup = document.getElementById("popupBox");
@@ -353,6 +365,7 @@ class ContentElHandler {
     static returnNewEl(parent, classname) {
         let el = document.createElement('div');
         el.className = classname;
+        //    parent.appendChild(el);
         parent.prepend(el);
         return el;
     }
@@ -393,3 +406,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map
