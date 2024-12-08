@@ -306,7 +306,7 @@ class GameHandler {
     }
     public changeWeapon(wep: WeaponType) {
         let wepArr = allWeaponTypes.includes(wep) ? allWeaponTypes : extraWeaponTypes;
-        if (!wepArr.includes(wep))
+        if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return
         //if (!allWeaponTypes.includes(wep))
         //    return;

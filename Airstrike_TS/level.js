@@ -45,7 +45,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; } // FIX?
+    provideAvailTargets() { return; }
     armingUp() { }
     ;
     finalStageArms() { }
@@ -156,21 +156,18 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        PopupHandler.addToArray("Nice job!" + "\n");
         this.allTargetsDeployed = false;
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
-            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
-                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -198,7 +195,6 @@ class Level {
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -226,7 +222,7 @@ class Level {
             let this_ = this;
             setTimeout(() => {
                 this_.pauseTargetProduction = false;
-                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+                RandomSoundGen.playSequentialSound(revs);
             }, this_.pauseLength);
         }
         if (this.targets.length >= this.currentWave.number) {
@@ -263,7 +259,6 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
-        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo = {
@@ -478,4 +473,3 @@ function provideAllTargets() {
     }
     return newTarget;
 }
-//# sourceMappingURL=level.js.map

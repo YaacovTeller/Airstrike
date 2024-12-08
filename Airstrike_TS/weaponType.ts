@@ -136,7 +136,6 @@ class WeaponType {
     }
 
     protected ammoCheck() {
-        if (this.name == weaponNames.flare && game.level.currentWave.timeOfDay === Time.day) return false   // VERY MESSY
         if (this.activeInstance == null || this.activeInstance.ready === false) {
             this.noAmmo.play();
             return false;
