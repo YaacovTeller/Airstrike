@@ -108,7 +108,9 @@
     <Content Include="AS_assets\sound\WaitBitzua.mp3" />
     <Content Include="AS_assets\SVG\bomb_nuke.svg" />
     <Content Include="AS_assets\SVG\drone.svg" />
+    <Content Include="AS_assets\SVG\flame5.svg" />
     <Content Include="AS_assets\SVG\lock_red.svg" />
+    <Content Include="AS_assets\SVG\Mediamodifier-Design-Template.png" />
     <Content Include="AS_assets\SVG\target-box.svg" />
     <Content Include="AS_assets\truck__green.png" />
     <Content Include="AS_assets\truck__grey.png" />

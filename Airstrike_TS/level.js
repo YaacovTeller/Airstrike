@@ -250,7 +250,7 @@ class Level {
     }
     addNewWeapon(info, showMsg) {
         let wepName = weaponNames[info.name];
-        let wepArr = info.name <= weaponNames.flare ? allWeaponTypes : extraWeaponTypes;
+        let wepArr = info.name < weaponNames.flare ? allWeaponTypes : extraWeaponTypes;
         if (wepArr[info.name - 1]) {
             wepArr[info.name - 1].pushNewWeaponInstance();
             if (showMsg != false) {

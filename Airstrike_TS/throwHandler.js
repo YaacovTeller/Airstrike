@@ -1,8 +1,8 @@
 class ThrowHandler {
     static flip(elem, direc, parentElem, angle) {
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc); // ARC
-        let deg = this.rotate(elem, direc, angle); // ROTATION
+        this.throwArc(thrownElem, direc);
+        let deg = this.rotate(elem, direc, angle);
         this.carCrashSound();
         return deg;
     }
@@ -37,8 +37,7 @@ class ThrowHandler {
             if (!start)
                 start = timestamp;
             var progress = timestamp - start;
-            var mult = (500 / radius) - 3; // MESSY?
-            //            console.log("radius: " + radius + " - mult: " + mult)
+            var mult = (500 / radius) - 3;
             elem.style.left = (currentLeft + progress / mult * deltaX) + "px";
             elem.style.top = (currentTop + progress / mult * deltaY) + "px";
             if (progress < 200) {
@@ -50,9 +49,9 @@ class ThrowHandler {
     static throwArc(elem, direc) {
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
-        let distance = RandomNumberGen.randomNumBetween(10, 40); //20
-        let height = 50 - distance; //RandomNumberGen.randomNumBetween(20, 80) //30
-        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100); //1000;
+        let distance = RandomNumberGen.randomNumBetween(10, 40);
+        let height = 50 - distance;
+        const maxProgress = RandomNumberGen.randomNumBetween(crashTimeout, 1100);
         var start = null;
         function step(timestamp) {
             if (!start)
@@ -98,19 +97,17 @@ class ThrowHandler {
         let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
         if (deg == undefined) {
             deg = 0;
-            //this.angle = deg;
             elem.classList.remove('flip');
             requestAnimationFrame(() => {
                 setTimeout(() => {
                     this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight; // forces reflow
+                    elem.offsetHeight;
                     this.rotate(elem, direc);
                 }, 0);
             });
             return deg;
         }
         else {
-            // this.angle = deg;
             elem.classList.add('flip');
             this.cssRotateAngle(elem, deg);
             return deg;
@@ -120,4 +117,3 @@ class ThrowHandler {
         elem.style.transform = `rotate(${deg}deg)`;
     }
 }
-//# sourceMappingURL=throwHandler.js.map
