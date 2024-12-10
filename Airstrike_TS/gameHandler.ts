@@ -54,6 +54,9 @@ class GameHandler {
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
         this.addDark();
+      //  this.changeTime(Time.dusk); // TEMP
+        this.darkOverlay.style.opacity = '0.5';
+
     }
     private addDark() {
         this.darkOverlay = document.createElement('div');
@@ -62,6 +65,7 @@ class GameHandler {
     }
     public changeTime(time: Time) {
         this.hideFlare(time);
+        this.stopAmbience();
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
             this.ambience = ambience_1;
@@ -69,6 +73,8 @@ class GameHandler {
         else {
             this.ambience = ambience_2;
         }
+        this.startAmbience();
+
         if (time == Time.dusk) {
             this.darkOverlay.style.opacity = '0.5';
         }
@@ -221,11 +227,16 @@ class GameHandler {
         elem.classList.contains("displayNone") ? elem.classList.remove("displayNone") : elem.classList.add("displayNone");
        // elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
-  
-    public redrawHudWithWepSelectionChecked() {
-        this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");
-     //   this.hud.drawHUD(this.weapon ? this.weapon.name : "");
+
+    public addHudInstance(wep: WeaponType) {
+        this.hud.addInstanceByWeapon(wep);
     }
+    public addHudWeapon(wep: WeaponType) {
+        this.hud.addWeapon(wep);
+    }
+    //public redrawHudWithWepSelectionChecked() {
+    //    this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");
+    //}
 
     private fireFunc() {
         if (!game.gameInProgress) {
@@ -293,6 +304,9 @@ class GameHandler {
 
     public updateCursorPosition(event?: MouseEvent) {
         let newMousePos = MouseHandler.updateMousePos(event);
+        if (!this.weapon) {                     // NEEDED? FROM SHIFTING ARMING LATER IN WAVE SETUP
+            return
+        }
         if (this.weapon.activeInstance && this.weapon.activeInstance.blastRadElement) {
             let blast = this.weapon.activeInstance.blastRadElement;
             this.positionElem(blast, newMousePos);
@@ -312,21 +326,20 @@ class GameHandler {
         this.hud.updateScore(this.shotCount);
     }
     public changeWeapon(wep: WeaponType) {
-        let wepArr = allWeaponTypes.includes(wep) ? allWeaponTypes : extraWeaponTypes;
+        if (wep == null) {
+            debugger
+        }
+        let wepArr = wep.getWeaponArray();
         if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return
-        //if (!allWeaponTypes.includes(wep))
-        //    return;
+        if (this.weapon) {
+            this.weapon.switchFrom();
+        }
         this.weapon = wep;
         this.hud.selectBox(wep.name);
 
         this.switchCursor();
         this.updateCursorPosition();
-        wepArr.forEach((x) => {
-            if (x !== wep) {
-                x.switchFrom();
-            }
-        });
         this.weapon.switchTo(); // Main weapon switch func
     }
 
@@ -341,12 +354,6 @@ class GameHandler {
         this.level.produceSingleTarget(newTarget);
     }
 
-    private startAmbience() {
-        RandomSoundGen.playRandomSound(this.ambience);
-        this.soundTimer = setInterval(() => {
-            RandomSoundGen.playRandomSound(this.ambience);
-        }, 35000);
-    }
     private updateProgressBar() {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
             this.progressBar.style.width = this.progressNumber + '%';
@@ -460,6 +467,12 @@ class GameHandler {
             this.pause();
         }
     }
+    private startAmbience() {
+        RandomSoundGen.playRandomSound(this.ambience);
+        this.soundTimer = setInterval(() => {
+            RandomSoundGen.playRandomSound(this.ambience);
+        }, 35000);
+    }
     private stopAmbience() {
         clearInterval(this.soundTimer);
         for (let a of this.ambience) {
@@ -485,7 +498,6 @@ class GameHandler {
 
         allWeaponTypes = [];
         extraWeaponTypes = [];
-        this.redrawHudWithWepSelectionChecked();
         this.hud.resetStats();
     }
 
@@ -507,7 +519,17 @@ class GameHandler {
         }
         this.hud.drawMultiKill();
         this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
-        this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
+        let startWeapon;
+        for (let w of allWeaponTypes) {
+            if (w == undefined) continue
+            if (!startWeapon || w.name == weaponNames.mortar) {
+                startWeapon = w;
+            }
+        }
+        //if (allWeaponTypes[weaponNames.mortar - 1]) {
+        //    this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
+        //}
+        this.changeWeapon(startWeapon);
 
         this.start_unpause();
     }
@@ -516,7 +538,6 @@ class GameHandler {
         if (this.gameInProgress == false) { // NEW GAME
             this.gameInProgress = true;
             this.gameWasPlayed = true;
-            this.redrawHudWithWepSelectionChecked();
         }
         this.startAmbience();
         this.toggleModal();

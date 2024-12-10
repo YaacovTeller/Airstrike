@@ -22,12 +22,12 @@ class WeaponType {
         this.noAmmo = info.noAmmo;
         this.select = info.select;
 
-        if (this.name < weaponNames.tunnelcharge) {
-            allWeaponTypes[this.name - 1] = this
-        }
-        else {
-            extraWeaponTypes[this.name - 1] = this
-        }
+        let wepArr: Array<WeaponType> = this.getWeaponArray();
+        wepArr[this.name - 1] = this
+        game.addHudWeapon(this)
+    }
+    public getWeaponArray() {
+        return this.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
     }
 
     public switchFrom() {
@@ -92,8 +92,7 @@ class WeaponType {
         }
 
         this.instances.push(inst);
-
-        game.redrawHudWithWepSelectionChecked();
+        game.addHudInstance(this);
     }
     protected blastRadNum() {
         return 0

@@ -203,12 +203,13 @@ class Level {
         this.targets = [];
         this.waveIndex++;
         let length = this.info.waves.length;
+        let funcToExecute: Function;
         switch (this.waveIndex) {
             case (0):
-                this.armingUp();
+                funcToExecute = ()=>this.armingUp();
                 break;
             case (length - 1):
-                this.finalStageArms();
+                funcToExecute = () =>this.finalStageArms();
                 break;
             case (length):
                 this.waveIndex = -1;
@@ -216,6 +217,7 @@ class Level {
             default:
         }
         this.setCurrentWave();
+        funcToExecute ? funcToExecute(): "";
         if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             RandomSoundGen.playSequentialSound(revs);
         }
@@ -278,7 +280,7 @@ class Level {
 
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
         let wepName = weaponNames[info.name];
-        let wepArr = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
+        let wepArr: Array<WeaponType> = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
         if (wepArr[info.name - 1]) {
             wepArr[info.name - 1].pushNewWeaponInstance();
             if (showMsg != false) {
@@ -291,7 +293,6 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName)
             }
         }
-        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo: LevelInfo = {
@@ -317,12 +318,12 @@ const continuousInfo: LevelInfo = {
 const allLevelInfo: Array<LevelInfo> = [
     {
         number: 1,
-        messages: [],
+        messages: [{ text: "", title: "WAKE UP!" } as popupMsg],
         waves: [
-            new Wave(8, WaveType.double),
+            new Wave(8, WaveType.double, Time.dusk),
             new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
-            new Wave(14, WaveType.sudden)
+            new Wave(14, WaveType.sudden,)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
@@ -395,7 +396,8 @@ const allLevelInfo: Array<LevelInfo> = [
             new Wave(30, WaveType.gradual, Time.night),
             new Wave(40, WaveType.double, Time.dusk),
         ],
-        startArms: [flareInfo],
+        startArms: [flareInfo, mortarInfo],
+     //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);

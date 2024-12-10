@@ -178,12 +178,13 @@ class Level {
         this.targets = [];
         this.waveIndex++;
         let length = this.info.waves.length;
+        let funcToExecute;
         switch (this.waveIndex) {
             case (0):
-                this.armingUp();
+                funcToExecute = () => this.armingUp();
                 break;
             case (length - 1):
-                this.finalStageArms();
+                funcToExecute = () => this.finalStageArms();
                 break;
             case (length):
                 this.waveIndex = -1;
@@ -191,6 +192,7 @@ class Level {
             default:
         }
         this.setCurrentWave();
+        funcToExecute ? funcToExecute() : "";
         if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             RandomSoundGen.playSequentialSound(revs);
         }
@@ -263,7 +265,6 @@ class Level {
                 PopupHandler.addToArray("New weapon:\n" + wepName);
             }
         }
-        //     game.redrawHudWithWepSelectionChecked();
     }
 }
 const continuousInfo = {
@@ -288,9 +289,9 @@ const continuousInfo = {
 const allLevelInfo = [
     {
         number: 1,
-        messages: [],
+        messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
-            new Wave(8, WaveType.double),
+            new Wave(8, WaveType.double, Time.dusk),
             new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
             new Wave(14, WaveType.sudden)
@@ -366,7 +367,8 @@ const allLevelInfo = [
             new Wave(30, WaveType.gradual, Time.night),
             new Wave(40, WaveType.double, Time.dusk),
         ],
-        startArms: [flareInfo],
+        startArms: [flareInfo, mortarInfo],
+        //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);

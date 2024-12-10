@@ -14,10 +14,9 @@ enum killStatsOptions {
 
 class HudHandler {
     private hudElem: HTMLElement
-    private selectedWep: Element
     private scoreBox: HTMLElement
-    private levelBox: HTMLElement
     private rightSideContainer: HTMLElement
+    private leftSideContainer: HTMLElement
     public multiKillBox: HTMLElement
     public killStats: killStats
 
@@ -36,7 +35,7 @@ class HudHandler {
         this.killStats.destroyed = 0;
         this.killStats.escaped = 0;
     }
-    public drawHUD(wepname?) {
+    public drawHUD() {
         let hud = document.getElementById('hud');
         if (hud) hud.remove();
 
@@ -46,58 +45,93 @@ class HudHandler {
         ContentElHandler.addToContentWrapper(el)
         this.hudElem = el;
 
-        this.drawWeaponDisplay(wepname);
+        this.leftSideContainer = document.createElement('div');
+        this.leftSideContainer.style.display = "flex"
+        this.hudElem.prepend(this.leftSideContainer);
+        this.drawWeaponDisplay();
 
         this.rightSideContainer = document.createElement('div');
         this.hudElem.appendChild(this.rightSideContainer);
         this.drawScore();
     }
- 
-    private drawBoxes(wepBoxId, wepArray) {
-        let container = document.getElementById(wepBoxId);
-        if (container) container.remove();
 
-        container = document.createElement('div');
+    public drawWeaponDisplay() {
+        this.createWeaponContainers(allWeaponTypes, "leftContainer")
+        this.createWeaponContainers(extraWeaponTypes, "centerContainer")
+    }
+
+    private createWeaponContainers(wepArray, contId) {
+        let container = document.createElement('div');
+        this.leftSideContainer.appendChild(container);
         container.classList.add('wepBoxContainer');
-        container.id = wepBoxId;
-        this.hudElem.prepend(container);
+        container.id = contId;
+        this.drawBoxes(container, wepArray);
+    }
 
+    private drawBoxes(wepBoxContainerElem: HTMLElement, wepArray) {
         for (let x in wepArray) {
             let wep = wepArray[x]
-            let wepBox = document.createElement('div');
-            let num = document.createElement('span');
-            num.className = "wepNum";
-            num.innerText = (parseInt(x) + 1).toString();
-            wepBox.appendChild(num);
-            wepBox.classList.add("wepBox");
-            wepBox.dataset.name = wep.name.toString();
-            wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
-            wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
-            container.appendChild(wepBox);
-            this.drawInstances(wep, wepBox);
-
-            if (wep.name.toString() == weaponNames.flare) {
-                game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone");  // DOUBLED with setWave in Levels. For all weps start.
-            }
-            if (wep.name.toString() == weaponNames.nuke) {
-                wepBox.classList.add('specialWeapon')
-            }
+            this.addWeapon(wep);
         }
     }
+    private getCorrectWepboxContainer(wep: WeaponType) {
+        let boxId: string = wep.name <= weaponNames.drone ? "leftContainer" : "centerContainer";
+        return document.getElementById(boxId);
+    }
 
-    public drawWeaponDisplay(wepname?) {
-        this.drawBoxes("centerContainer", extraWeaponTypes);
-        this.drawBoxes("wepBoxContainer", allWeaponTypes);
-
-        if (wepname) {
-            this.selectBox(wepname)
+    private orderWeaponBoxes() {
+        const containers = Array.from(this.leftSideContainer.getElementsByClassName("wepBoxContainer"));
+        for (let c of containers) {
+            this.orderBox(c);
         }
     }
-    public drawInstances(wep, wepBox) {
+    private orderBox(container: Element) {
+        const divs: Array<HTMLDivElement> = Array.from(container.children) as Array<HTMLDivElement>;
+        divs.sort((a, b) => {
+            const nameA = parseInt(a.dataset.name, 10);
+            const nameB = parseInt(b.dataset.name, 10);
+            return nameA - nameB;
+        });
+        divs.forEach(div => container.appendChild(div));
+    }
+    public addWeapon(wep: WeaponType) {
+        let wepBox = document.createElement('div');
+        let numBox = document.createElement('span');
+        let num = wep.name.toString();
+        numBox.className = "wepNum";
+        numBox.innerText = num;
+        wepBox.appendChild(numBox);
+        wepBox.classList.add("wepBox");
+        wepBox.dataset.name = num;
+        wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
+        wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
+
+        let wepBoxContainerElem = this.getCorrectWepboxContainer(wep);
+        wepBoxContainerElem.appendChild(wepBox);
+        this.drawInstances(wep, wepBox);
+
+        if (wep.name == weaponNames.flare) {
+            game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone");  // DOUBLED with setWave in Levels. For all weps start.
+        }
+        if (wep.name == weaponNames.nuke) {
+            wepBox.classList.add('specialWeapon')
+        }
+
+        this.orderWeaponBoxes();
+    }
+    public addInstanceByWeapon(wep: WeaponType) {
+        let wepBoxes: Array<HTMLDivElement> = Array.from(this.leftSideContainer.querySelectorAll(".wepBox"));
+        let wepBox = wepBoxes.find(wepBox => wepBox.dataset.name === wep.name.toString());
+        this.addInstance(wepBox);
+    }
+    private addInstance(wepBox: HTMLElement) {
+        let instBox = document.createElement('div');
+        instBox.classList.add("instBox");
+        wepBox.appendChild(instBox);
+    }
+    private drawInstances(wep, wepBox) {
         for (let y of wep.instances) {
-            let instBox = document.createElement('div');
-            instBox.classList.add("instBox");
-            wepBox.appendChild(instBox);
+            this.addInstance(wepBox);
         }
     }
 
@@ -213,7 +247,6 @@ class HudHandler {
                 wepBox = x;
                 if (select) {
                     wepBox.classList.add("selected");
-                    this.selectedWep = wepBox;
                 }
             }
         }

@@ -2,6 +2,7 @@
 .wepBoxContainer {
     display: flex;
     justify-content: flex-start;
+    margin-right: 50px;
 }
 
 .hud {

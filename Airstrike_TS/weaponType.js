@@ -18,12 +18,12 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
-        if (this.name < weaponNames.tunnelcharge) {
-            allWeaponTypes[this.name - 1] = this;
-        }
-        else {
-            extraWeaponTypes[this.name - 1] = this;
-        }
+        let wepArr = this.getWeaponArray();
+        wepArr[this.name - 1] = this;
+        game.addHudWeapon(this);
+    }
+    getWeaponArray() {
+        return this.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -84,7 +84,7 @@ class WeaponType {
             inst.blastRadElement = el;
         }
         this.instances.push(inst);
-        game.redrawHudWithWepSelectionChecked();
+        game.addHudInstance(this);
     }
     blastRadNum() {
         return 0;
