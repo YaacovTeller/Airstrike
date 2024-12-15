@@ -357,6 +357,38 @@ function inNoStrikeZone(target: Target) {  // FOR TESTING
         }
     }
 }
+class Chopper extends ExplosiveWeaponType {
+    private shotDelay = 1000;
+    constructor(info: ExplosiveWeaponInfo) {
+        super(info);
+    }
+    public fireFunc() {
+        if (this.ammoCheck() === false) { return }
+        this.shotCounter();
+
+        RandomSoundGen.playRandomSound(this.sound);
+        setTimeout(() => this.fireInterval(), this.shotDelay);
+    }
+    private fireInterval() {
+        let inst: weaponInstance = this.activeInstance as weaponInstance;
+        let shotGap = 200;
+        let shots = 30;
+        let side = true;
+        let fireTimer = setInterval(() => {
+            let blastCenter: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
+            //     RandomSoundGen.playSequentialSound(this.explosionInfo.sound);
+            RandomSoundGen.playSequentialSound(cannonSounds);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+            //    side = side === left ? right : left;
+            side = !side;
+            shots--
+            if (shots <= 0) {
+                clearInterval(fireTimer);
+            }
+        }, shotGap)
+    }
+}
 
 class DroneWeaponType extends ExplosiveWeaponType {
     public attackLimit = 3;

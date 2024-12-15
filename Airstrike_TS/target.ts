@@ -339,6 +339,8 @@ class VehicleTarget extends Target {
         this.damageEl.classList.remove('lightDamaged');
 
         this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
+        ContentElHandler.fadeRemoveItem(this.targetEl, damagedTargetStay, fadeAnimTime); // FADE UN-DESTROYED??
+        this.removeFromArray();
     }
 
     private completeDestruction(collisionInfo?: vectorMoveObj) {
@@ -351,12 +353,22 @@ class VehicleTarget extends Target {
         this.damageEl.style.visibility = "hidden";
         this.targetEl.classList.add('show');
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
-
+        this.removeFromArray();
 
         this.rollWheel();
         this.throwWheel(direction.forward);
         this.throwWheel(direction.backward);
     }
+    private removeFromArray() {
+        setTimeout(() => {
+        let arr = allTargets;
+        let index = arr.indexOf(this);
+            if (index >= 0) {
+                arr.splice(index, 1);
+            }
+        }, damagedTargetStay + fadeAnimTime);
+    }
+
     private returnWheel(): HTMLElement {
         let wheel = this.returnNewEl(ContentElHandler.returnContentEl(), 'wheel');
         wheel.classList.add(this.wheelSize);
@@ -379,7 +391,7 @@ class VehicleTarget extends Target {
     private castWheel(className: string) {
         let wheel = this.returnWheel();
         wheel.classList.add(className);
-        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime);
+        ContentElHandler.fadeRemoveItem(wheel, itemStay, fadeAnimTime, allObjects);
         return wheel;
     }
     private rollWheel() {
@@ -475,7 +487,7 @@ class RocketLauncher extends VehicleTarget {
         ThrowHandler.flip(pack, direction.backward); /////////////////////////////////////////////////////////////////
         //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
         setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out' }, itemStay)   // AWFUL !!!
-        ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime);
+        ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime, allObjects);
     }
 
     public inNoStrikeZone(target: Target) {

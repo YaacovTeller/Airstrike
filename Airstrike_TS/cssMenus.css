@@ -44,6 +44,49 @@ body {
     z-index: 8;
     mix-blend-mode: multiply; /* Enhances the effect on lighter backgrounds */
 }
+.rain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    pointer-events: none;
+    z-index: 3;
+    transform-origin: center center;
+    transition: transform 1s linear, top 1s linear, left 1s linear;
+}
+    .rain.lightRain {
+        top: 0%;
+        left: 0%;
+        transform: rotate(0deg);
+    }
+    .rain.mediumRain {
+        top: -10%;
+        left: -10%;
+        transform: rotate(-15deg);
+    }
+    .rain.heavyRain {
+        top: -18%;
+        left: -18%;
+        transform: rotate(-30deg); 
+    }
+
+.raindrop {
+    position: absolute;
+    top: -10px;
+    width: 2px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.5);
+    animation: rainfall linear infinite;
+}
+
+@keyframes rainfall {
+    to {
+        transform: translateY(var(--rainFallHeight));
+    }
+}
+
 #modal {
     user-select: none;
     z-index: 10;

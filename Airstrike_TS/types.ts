@@ -1,4 +1,46 @@
-﻿const multiKillText = {
+﻿enum RainTypes {
+    none = 'none',
+    light = 'lightRain',
+    medium = 'mediumRain',
+    heavy = 'heavyRain'
+}
+
+type Rain = {
+    className: string,
+    drops: number,
+    angle: number,
+    height: string,
+    ambience?: AmbienceSet
+}
+const noRain: Rain = {
+    className: RainTypes.none,
+    drops: 0,
+    angle: 0,
+    height: '100vh',
+}
+const lightRain: Rain = {
+    className: RainTypes.light,
+    drops: 30,
+    angle: 0,
+    height: '100vh',
+    ambience: rain_amb
+}
+const medRain: Rain = {
+    className: RainTypes.medium,
+    drops: 100,
+    angle: 15,
+    height: '140vh',
+    ambience: heavyRain_amb
+}
+const heavyRain: Rain = {
+    className: RainTypes.heavy,
+    drops: 150,
+    angle: 35,
+    height: '190vh',
+    ambience: storm_amb
+}
+
+const multiKillText = {
     2: { size: 30, colour: 'yellow'},
     3: { size: 45, colour: 'orange'},
     4: { size: 60, colour: 'red'},
@@ -14,6 +56,7 @@
     14: { size: 200, colour: 'black' },
 }
 enum ExplSizes {
+    tiny = 60,
     small = 100,
     large = 140,
     XL = 200,
@@ -85,14 +128,12 @@ enum weaponNames {
     mortar = 2,
     tank = 3,
     airstrike = 4,
-    //tunnelcharge = 5,
-    //nuke = 6,
-    //drone = 7,
 
     drone = 5,
     tunnelcharge = 6,
     nuke = 7,
-    flare = 8
+    flare = 8,
+    chopper = 9
 }
 type position = {
     X,
@@ -332,6 +373,24 @@ const droneInfo: ExplosiveWeaponInfo = {
     noAmmo: bleep_neg,
     select: [jet]
 }
+const chopperInfo: ExplosiveWeaponInfo = {
+    name: weaponNames.chopper,
+    class: Chopper,
+    cursor: "cursor4",
+    blastRadius: 20,
+    explosionInfo: {
+        size: ExplSizes.tiny,
+        imageSource: assetsFolder + classicExplosion,
+        sound: explosions,
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'chopper.svg',
+    sound: chopper,
+    speed: 3000,
+    cooldown: 15000,
+    noAmmo: bleep_neg,
+    select: chopper
+}
 
 const flareInfo: ExplosiveWeaponInfo = {
     name: weaponNames.flare,
@@ -433,7 +492,7 @@ class ContentElHandler {
     static clearContent() {
         document.getElementById("content").innerHTML = "";
     }
-    static fadeRemoveItem(item: HTMLElement, stayTime, fadeTime) {
+    static fadeRemoveItem(item: HTMLElement, stayTime, fadeTime, array?) {
         item.classList.add('smoothFade');
         setTimeout(() => {
             item.classList.add("hide");
@@ -441,9 +500,11 @@ class ContentElHandler {
         setTimeout(() => {
             if (item) {
                 ContentElHandler.removeFromContentEl(item);
-                let index = allObjects.indexOf(item);
-                if (index >= 0) {
-                    allObjects.splice(index, 1);
+                if (array) {
+                    let index = array.indexOf(item);
+                    if (index >= 0) {
+                        array.splice(index, 1);
+                    }
                 }
             }
         }, stayTime + fadeTime)

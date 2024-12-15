@@ -11,6 +11,8 @@
     --shake_med: 10px;
     --shake_heavy: 15px;
     --lightGrad_small: radial-gradient(circle, rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 0.90) 40%);
+
+    --rainFallHeight: 100vh;
 }
 .heb {
     display: var(--hebDisplay);

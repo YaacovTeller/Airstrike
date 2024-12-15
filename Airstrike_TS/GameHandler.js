@@ -11,8 +11,9 @@ var GameMode;
 var allWeaponTypes = [];
 var extraWeaponTypes = [];
 var allTargets = [];
+var allTargetsCount = 0;
 var allObjects = [];
-var allLevelsArray = []; //[level_1, level_2, level_3, level_4, level_5, level_6, level_7, level_8]
+var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
 class GameHandler {
     hud = new HudHandler();
@@ -25,7 +26,7 @@ class GameHandler {
     language = Languages.eng;
     difficulty;
     gameMode;
-    ambience = [];
+    ambience;
     // public masterTargets: Array<Target> = [];
     //public masterObjects: Array<HTMLElement> = [];
     sequentialHits = 0;
@@ -49,24 +50,31 @@ class GameHandler {
         //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
-        this.addDark();
-        //  this.changeTime(Time.dusk); // TEMP
+        this.addWeather();
+        //        WeatherHandler.weatherTest();
         this.darkOverlay.style.opacity = '0.5';
     }
-    addDark() {
+    addWeather() {
         this.darkOverlay = document.createElement('div');
         this.darkOverlay.classList.add('darkOverlay');
         ContentElHandler.addToContentWrapper(this.darkOverlay);
+        let rain = document.createElement('div');
+        rain.classList.add('rain');
+        ContentElHandler.addToContentWrapper(rain);
+    }
+    setRain(rain) {
+        this.ambience = rain.ambience ? rain.ambience : this.ambience;
+        WeatherHandler.createRain(rain);
     }
     changeTime(time) {
         this.hideFlare(time);
         this.stopAmbience();
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
-            this.ambience = ambience_1;
+            this.ambience = regular_amb;
         }
         else {
-            this.ambience = ambience_2;
+            this.ambience = night;
         }
         this.startAmbience();
         if (time == Time.dusk) {
@@ -210,7 +218,6 @@ class GameHandler {
     toggleElem(id) {
         var elem = document.getElementById(id);
         elem.classList.contains("displayNone") ? elem.classList.remove("displayNone") : elem.classList.add("displayNone");
-        // elem.style.display = elem.style.display === "block" ? "none" : "block";
     }
     addHudInstance(wep) {
         this.hud.addInstanceByWeapon(wep);
@@ -264,6 +271,16 @@ class GameHandler {
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
     }
+    returnOneSuperWeapon() {
+        let rand = RandomNumberGen.randomNumBetween(1, 2);
+        switch (rand) {
+            case (1):
+                return chopperInfo;
+            case (2):
+                return nukeInfo;
+            default:
+        }
+    }
     addAllWeapons() {
         this.level.addNewWeapon(sniperInfo, false);
         this.level.addNewWeapon(chargeInfo, false);
@@ -272,8 +289,10 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
-        if (!allWeaponTypes[weaponNames.nuke - 1]) {
-            this.level.addNewWeapon(nukeInfo, false);
+        let special = this.returnOneSuperWeapon();
+        //   this.level.addNewWeapon(chopperInfo, false);
+        if (!extraWeaponTypes[special.name - 1]) {
+            this.level.addNewWeapon(special, false);
         }
     }
     positionElem(elem, pos) {
@@ -345,7 +364,7 @@ class GameHandler {
         let targets = allTargets;
         let stats = this.hud.killStats;
         stats.disabled = targets.reduce((acc, target) => {
-            if (target.status === Status.disabled && target.damage === Damage.damaged) {
+            if (target.status === Status.disabled) {
                 return acc + 1;
             }
             else
@@ -365,21 +384,21 @@ class GameHandler {
             else
                 return acc;
         }, 0);
-        stats.total = targets.length || 0;
+        stats.total = allTargetsCount || 0;
+        //    stats.total = targets.length || 0;
         this.hud.updateScore();
         //  this.updateLights();
     }
     updateLights() {
         const darkBlueVal = 40;
         let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
-        let overlay = document.querySelector('.darkOverlay');
         var lightsString = this.returnLightString(lights, "255, 255, 255");
         var flaresString = this.returnLightString(flares, "255, 255, 50");
         var gradientsString = [lightsString, flaresString]
             .filter(str => str)
             .join(', ');
-        overlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
-        overlay.style.backgroundColor = defaultRGB;
+        this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
+        this.darkOverlay.style.backgroundColor = defaultRGB;
     }
     returnLightString(arr, rbgString) {
         return arr
@@ -437,15 +456,21 @@ class GameHandler {
         }
     }
     startAmbience() {
-        RandomSoundGen.playRandomSound(this.ambience);
-        this.soundTimer = setInterval(() => {
-            RandomSoundGen.playRandomSound(this.ambience);
-        }, 35000);
+        RandomSoundGen.playThroughArray(this.ambience.primary);
+        if (this.ambience.secondary.length) {
+            this.soundTimer = setInterval(() => {
+                if (!this.ambience.secondary.length)
+                    return;
+                RandomSoundGen.playRandomSound(this.ambience.secondary);
+            }, 10000);
+        }
     }
     stopAmbience() {
         clearInterval(this.soundTimer);
-        for (let a of this.ambience) {
-            a.stop();
+        if (this.ambience) {
+            for (let a of this.ambience.primary) {
+                a.stop();
+            }
         }
     }
     cutGameFuncs() {
@@ -515,6 +540,69 @@ class GameHandler {
                 trg.action();
             });
         }, 100);
+    }
+}
+//function heavyRain(300,) {
+//    createRain(300, )
+//}
+class WeatherHandler {
+    static rains = [noRain, lightRain, medRain, heavyRain];
+    static weatherTest() {
+        this.createRain(lightRain);
+        let index = 0;
+        //setTimeout(() => {
+        //    this.createRain(this.rains[index])
+        //    index++
+        //    index == this.rains.length ? index = 0 : "";
+        //}, 2000)
+        setTimeout(() => {
+            this.createRain(this.rains[0]);
+        }, 2000);
+        setTimeout(() => {
+            this.createRain(this.rains[3]);
+        }, 4000);
+        setTimeout(() => {
+            this.createRain(this.rains[0]);
+        }, 6000);
+        //setTimeout(() => {
+        //    this.createRain(this.rains[0])
+        //}, 8000)
+        //setTimeout(() => {
+        //    this.createRain(this.rains[3])
+        //}, 12000)
+        //setTimeout(() => {
+        //    this.createRain(this.rains[0])
+        //}, 15000)
+    }
+    static createRain(rainType) {
+        const rainContainer = document.querySelector(".rain");
+        rainContainer.className = "rain";
+        const excess = Array.from(rainContainer.children).slice(0, rainContainer.children.length - rainType.drops);
+        excess.forEach(node => rainContainer.removeChild(node));
+        rainContainer.classList.add(rainType.className);
+        var dropArray = [];
+        const root = document.querySelector(':root');
+        root.style.setProperty('--rainFallHeight', rainType.height);
+        if (rainType.drops) {
+            this.createRaindrop(rainContainer, dropArray, rainType.drops);
+        }
+    }
+    static createRaindrop(rainContainer, dropArray, limit) {
+        const raindrop = document.createElement("div");
+        raindrop.className = "raindrop";
+        raindrop.style.left = Math.random() * 100 + "vw";
+        let duration = Math.random() * 0.5 + 0.5;
+        raindrop.style.animationDuration = duration + "s";
+        rainContainer.appendChild(raindrop);
+        dropArray.push(raindrop);
+        if (dropArray.length < limit) {
+            setTimeout(() => {
+                this.createRaindrop(rainContainer, dropArray, limit);
+            }, 10);
+        }
+        else {
+            //    PopupHandler.addToArray("finished rain create")
+        }
     }
 }
 //# sourceMappingURL=gameHandler.js.map

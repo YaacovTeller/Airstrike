@@ -23,6 +23,10 @@
     public playClone() {
         this.sound.cloneNode(true).play();
     }
+    public addEndEvent(func: Function) {
+        this.sound.onended = null;
+        this.sound.onended = () => func();
+    }
 }
 
 class RandomSoundGen {
@@ -47,9 +51,26 @@ class RandomSoundGen {
         }
         sounds[this.soundIndexes[title]].play();
     }
+    static playThroughArray(sounds: Array<Sound>) {
+        let index = 0;
+        this.playWithEndEvent(sounds, index);
+    }
+    private static playWithEndEvent(sounds: Array<Sound>, index) {
+        let sound = sounds[index];
+        sound.play();
+        sound.addEndEvent (() => {
+            index++;
+            index == sounds.length ? index = 0 : "";
+            if (index < sounds.length) {
+                sound = sounds[index];
+                this.playWithEndEvent(sounds, index);
+            }
+        });
+    }
 }
 
 const soundFolder: string = "./AS_assets/sound/"
+const ambienceFolder: string = soundFolder + "ambience/"
 
 const aluak = new Sound(soundFolder + "aluAk.mp3");
 const cheer = new Sound(soundFolder + "cheers_gib.mp3");
@@ -90,9 +111,9 @@ const jet = new Sound(soundFolder + "jet_fly.mp3");
 const jet_pass = new Sound(soundFolder + "jet_pass.mp3");
 const strike_4 = new Sound(soundFolder + "strike_4.mp3");
 
-//const chopper = new Sound(soundFolder + "chopper.mp3");
-
 const gunSounds: Array<Sound> = [];
+const chopper: Array<Sound> = [];
+const cannonSounds: Array<Sound> = [];
 const mortarSounds: Array<Sound> = [];
 const howitzerSounds: Array<Sound> = [];
 const airstrikeSounds: Array<Sound> = [];
@@ -105,13 +126,41 @@ const crashes: Array<Sound> = [];
 const beeps: Array<Sound> = [];
 const ticks: Array<Sound> = [];
 const clicks: Array<Sound> = [];
-const ambience_1: Array<Sound> = [];
-const ambience_2: Array<Sound> = [];
 const ricochet: Array<Sound> = [];
 const strikePrep: Array<Sound> = [];
 const acknowledge: Array<Sound> = [];
 const revs: Array<Sound> = [];
 const gib: Array<Sound> = [];
+
+const ambience_1: Array<Sound> = [];
+const thunder: Array<Sound> = [];
+//const ambience_2: Array<Sound> = [];
+//const rain: Array<Sound> = [];
+
+type AmbienceSet = {
+    primary: Array<Sound>,
+    secondary: Array<Sound>,
+}
+const regular_amb: AmbienceSet = {
+    primary: ambience_1,
+    secondary: []
+}
+const night: AmbienceSet = {
+    primary: [new Sound(ambienceFolder + "crickets.mp3")],
+    secondary: [new Sound(ambienceFolder + "owl.mp3")]
+}
+const rain_amb: AmbienceSet = {
+    primary: [new Sound(ambienceFolder + "rain.mp3")],
+    secondary: []
+}
+const heavyRain_amb: AmbienceSet = {
+    primary: [new Sound(ambienceFolder + "rain_heavy.mp3")],
+    secondary: []
+}
+const storm_amb: AmbienceSet = {
+    primary: [new Sound(ambienceFolder + "rain_pouring.mp3")],
+    secondary: thunder
+}
 
 function loadSound() {
     strikePrep.push(
@@ -128,6 +177,21 @@ function loadSound() {
     acknowledge.push(
         pgia, matara, meUle, pgia, aluak
     )
+    thunder.push(
+        new Sound(ambienceFolder + "thunder_big.mp3"),
+        new Sound(ambienceFolder + "thunder_small.mp3"),
+    )
+    ambience_1.push(
+        new Sound(ambienceFolder + "ambient_1_q.mp3"),
+        new Sound(ambienceFolder + "ambient_2_q.mp3"),
+        new Sound(ambienceFolder + "ambient_4_q.mp3"),
+        new Sound(ambienceFolder + "ambient_5_q.mp3")
+    )
+    //rain.push(
+    //    new Sound(ambienceFolder + "rain.mp3"),
+    //    new Sound(ambienceFolder + "rain_heavy.mp3"),
+    //    new Sound(ambienceFolder + "rain_pouring.mp3"),
+    //)
     gib.push(
         new Sound(soundFolder + "gib_1.mp3"),
         new Sound(soundFolder + "gib_2.mp3"),
@@ -153,16 +217,6 @@ function loadSound() {
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3")
     )
-    ambience_1.push(
-        new Sound(soundFolder + "ambient_1_q.mp3"),
-        new Sound(soundFolder + "ambient_2_q.mp3"),
-        new Sound(soundFolder + "ambient_4_q.mp3"),
-        new Sound(soundFolder + "ambient_5_q.mp3")
-    )
-    ambience_2.push(
-        new Sound(soundFolder + "crickets.mp3"),
-        new Sound(soundFolder + "crickets.mp3"),
-        )
     beeps.push(
         new Sound(soundFolder + "beep_tiny.mp3"),
         new Sound(soundFolder + "beep_tiny.mp3"),
@@ -230,5 +284,20 @@ function loadSound() {
         new Sound(soundFolder + "expl_dull.mp3"),
         new Sound(soundFolder + "expl_dull2.mp3"),
         new Sound(soundFolder + "messy_bomb_3.mp3"),
+    )
+    cannonSounds.push(
+        //new Sound(soundFolder + "hshot.wav"),
+        //new Sound(soundFolder + "hshot.wav"),
+        new Sound(soundFolder + "hshot_small.mp3"),
+        new Sound(soundFolder + "hshot_small.mp3"),
+    )
+    //cannonSounds.push(
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //)
+    chopper.push(
+        new Sound(soundFolder + "chopper.mp3"),
+        new Sound(soundFolder + "chopper.mp3"),
     )
 }

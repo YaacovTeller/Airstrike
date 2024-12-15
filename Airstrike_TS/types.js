@@ -1,3 +1,37 @@
+var RainTypes;
+(function (RainTypes) {
+    RainTypes["none"] = "none";
+    RainTypes["light"] = "lightRain";
+    RainTypes["medium"] = "mediumRain";
+    RainTypes["heavy"] = "heavyRain";
+})(RainTypes || (RainTypes = {}));
+const noRain = {
+    className: RainTypes.none,
+    drops: 0,
+    angle: 0,
+    height: '100vh',
+};
+const lightRain = {
+    className: RainTypes.light,
+    drops: 30,
+    angle: 0,
+    height: '100vh',
+    ambience: rain_amb
+};
+const medRain = {
+    className: RainTypes.medium,
+    drops: 100,
+    angle: 15,
+    height: '140vh',
+    ambience: heavyRain_amb
+};
+const heavyRain = {
+    className: RainTypes.heavy,
+    drops: 150,
+    angle: 35,
+    height: '190vh',
+    ambience: storm_amb
+};
 const multiKillText = {
     2: { size: 30, colour: 'yellow' },
     3: { size: 45, colour: 'orange' },
@@ -15,6 +49,7 @@ const multiKillText = {
 };
 var ExplSizes;
 (function (ExplSizes) {
+    ExplSizes[ExplSizes["tiny"] = 60] = "tiny";
     ExplSizes[ExplSizes["small"] = 100] = "small";
     ExplSizes[ExplSizes["large"] = 140] = "large";
     ExplSizes[ExplSizes["XL"] = 200] = "XL";
@@ -86,13 +121,11 @@ var weaponNames;
     weaponNames[weaponNames["mortar"] = 2] = "mortar";
     weaponNames[weaponNames["tank"] = 3] = "tank";
     weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
-    //tunnelcharge = 5,
-    //nuke = 6,
-    //drone = 7,
     weaponNames[weaponNames["drone"] = 5] = "drone";
     weaponNames[weaponNames["tunnelcharge"] = 6] = "tunnelcharge";
     weaponNames[weaponNames["nuke"] = 7] = "nuke";
     weaponNames[weaponNames["flare"] = 8] = "flare";
+    weaponNames[weaponNames["chopper"] = 9] = "chopper";
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -280,6 +313,24 @@ const droneInfo = {
     noAmmo: bleep_neg,
     select: [jet]
 };
+const chopperInfo = {
+    name: weaponNames.chopper,
+    class: Chopper,
+    cursor: "cursor4",
+    blastRadius: 20,
+    explosionInfo: {
+        size: ExplSizes.tiny,
+        imageSource: assetsFolder + classicExplosion,
+        sound: explosions,
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'chopper.svg',
+    sound: chopper,
+    speed: 3000,
+    cooldown: 15000,
+    noAmmo: bleep_neg,
+    select: chopper
+};
 const flareInfo = {
     name: weaponNames.flare,
     class: Flare,
@@ -375,7 +426,7 @@ class ContentElHandler {
     static clearContent() {
         document.getElementById("content").innerHTML = "";
     }
-    static fadeRemoveItem(item, stayTime, fadeTime) {
+    static fadeRemoveItem(item, stayTime, fadeTime, array) {
         item.classList.add('smoothFade');
         setTimeout(() => {
             item.classList.add("hide");
@@ -383,9 +434,11 @@ class ContentElHandler {
         setTimeout(() => {
             if (item) {
                 ContentElHandler.removeFromContentEl(item);
-                let index = allObjects.indexOf(item);
-                if (index >= 0) {
-                    allObjects.splice(index, 1);
+                if (array) {
+                    let index = array.indexOf(item);
+                    if (index >= 0) {
+                        array.splice(index, 1);
+                    }
                 }
             }
         }, stayTime + fadeTime);

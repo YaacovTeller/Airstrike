@@ -22,6 +22,10 @@ class Sound {
     playClone() {
         this.sound.cloneNode(true).play();
     }
+    addEndEvent(func) {
+        this.sound.onended = null;
+        this.sound.onended = () => func();
+    }
 }
 class RandomSoundGen {
     static soundIndexes = {};
@@ -45,8 +49,25 @@ class RandomSoundGen {
         }
         sounds[this.soundIndexes[title]].play();
     }
+    static playThroughArray(sounds) {
+        let index = 0;
+        this.playWithEndEvent(sounds, index);
+    }
+    static playWithEndEvent(sounds, index) {
+        let sound = sounds[index];
+        sound.play();
+        sound.addEndEvent(() => {
+            index++;
+            index == sounds.length ? index = 0 : "";
+            if (index < sounds.length) {
+                sound = sounds[index];
+                this.playWithEndEvent(sounds, index);
+            }
+        });
+    }
 }
 const soundFolder = "./AS_assets/sound/";
+const ambienceFolder = soundFolder + "ambience/";
 const aluak = new Sound(soundFolder + "aluAk.mp3");
 const cheer = new Sound(soundFolder + "cheers_gib.mp3");
 const pgia = new Sound(soundFolder + "pgia.mp3");
@@ -80,8 +101,9 @@ const alarm3 = new Sound(soundFolder + "alarm3.wav");
 const jet = new Sound(soundFolder + "jet_fly.mp3");
 const jet_pass = new Sound(soundFolder + "jet_pass.mp3");
 const strike_4 = new Sound(soundFolder + "strike_4.mp3");
-//const chopper = new Sound(soundFolder + "chopper.mp3");
 const gunSounds = [];
+const chopper = [];
+const cannonSounds = [];
 const mortarSounds = [];
 const howitzerSounds = [];
 const airstrikeSounds = [];
@@ -94,18 +116,45 @@ const crashes = [];
 const beeps = [];
 const ticks = [];
 const clicks = [];
-const ambience_1 = [];
-const ambience_2 = [];
 const ricochet = [];
 const strikePrep = [];
 const acknowledge = [];
 const revs = [];
 const gib = [];
+const ambience_1 = [];
+const thunder = [];
+const regular_amb = {
+    primary: ambience_1,
+    secondary: []
+};
+const night = {
+    primary: [new Sound(ambienceFolder + "crickets.mp3")],
+    secondary: [new Sound(ambienceFolder + "owl.mp3")]
+};
+const rain_amb = {
+    primary: [new Sound(ambienceFolder + "rain.mp3")],
+    secondary: []
+};
+const heavyRain_amb = {
+    primary: [new Sound(ambienceFolder + "rain_heavy.mp3")],
+    secondary: []
+};
+const storm_amb = {
+    primary: [new Sound(ambienceFolder + "rain_pouring.mp3")],
+    secondary: thunder
+};
 function loadSound() {
     strikePrep.push(
     //     rashai,  replace rashai?
     kibalti_1, kibalti_2, nachon, meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
     acknowledge.push(pgia, matara, meUle, pgia, aluak);
+    thunder.push(new Sound(ambienceFolder + "thunder_big.mp3"), new Sound(ambienceFolder + "thunder_small.mp3"));
+    ambience_1.push(new Sound(ambienceFolder + "ambient_1_q.mp3"), new Sound(ambienceFolder + "ambient_2_q.mp3"), new Sound(ambienceFolder + "ambient_4_q.mp3"), new Sound(ambienceFolder + "ambient_5_q.mp3"));
+    //rain.push(
+    //    new Sound(ambienceFolder + "rain.mp3"),
+    //    new Sound(ambienceFolder + "rain_heavy.mp3"),
+    //    new Sound(ambienceFolder + "rain_pouring.mp3"),
+    //)
     gib.push(new Sound(soundFolder + "gib_1.mp3"), new Sound(soundFolder + "gib_2.mp3"), new Sound(soundFolder + "gib_3.mp3"), new Sound(soundFolder + "gib_4.mp3"), new Sound(soundFolder + "gib_5.mp3"), new Sound(soundFolder + "gib_6.mp3"));
     revs.push(new Sound(soundFolder + "rev_1.mp3"), new Sound(soundFolder + "rev_2.mp3"), new Sound(soundFolder + "rev_3.mp3"));
     ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 
@@ -113,8 +162,6 @@ function loadSound() {
     //new Sound(soundFolder + "ricochet_4.mp3"),
     new Sound(soundFolder + "ricochet_5.mp3"));
     ticks.push(new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"), new Sound(soundFolder + "stopwatch_3.mp3"));
-    ambience_1.push(new Sound(soundFolder + "ambient_1_q.mp3"), new Sound(soundFolder + "ambient_2_q.mp3"), new Sound(soundFolder + "ambient_4_q.mp3"), new Sound(soundFolder + "ambient_5_q.mp3"));
-    ambience_2.push(new Sound(soundFolder + "crickets.mp3"), new Sound(soundFolder + "crickets.mp3"));
     beeps.push(new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"), new Sound(soundFolder + "beep_tiny.mp3"));
     multiExplosions.push(new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"), new Sound(soundFolder + "expl_many.mp3"));
     bigExplosions.push(new Sound(soundFolder + "messy_bomb_grander.mp3"), new Sound(soundFolder + "bigExpl.mp3"));
@@ -130,5 +177,15 @@ function loadSound() {
     airstrikeSounds.push(new Sound(soundFolder + "shager_1.mp3"), new Sound(soundFolder + "shager_2.mp3"), new Sound(soundFolder + "shager_3.mp3"), new Sound(soundFolder + "shager_4.mp3"), new Sound(soundFolder + "shager_5.mp3"));
     nukeSounds.push(new Sound(soundFolder + "redAlert7.mp3"));
     explosions.push(new Sound(soundFolder + "expl_dull.mp3"), new Sound(soundFolder + "expl_dull2.mp3"), new Sound(soundFolder + "messy_bomb_3.mp3"));
+    cannonSounds.push(
+    //new Sound(soundFolder + "hshot.wav"),
+    //new Sound(soundFolder + "hshot.wav"),
+    new Sound(soundFolder + "hshot_small.mp3"), new Sound(soundFolder + "hshot_small.mp3"));
+    //cannonSounds.push(
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //    new Sound(soundFolder + "chaingun_loop.wav"),
+    //)
+    chopper.push(new Sound(soundFolder + "chopper.mp3"), new Sound(soundFolder + "chopper.mp3"));
 }
 //# sourceMappingURL=sound.js.map

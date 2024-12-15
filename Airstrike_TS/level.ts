@@ -13,8 +13,10 @@ class Wave {
     public type: WaveType
     public finished: boolean = false
     public timeOfDay: Time
-    constructor(num: number, type: WaveType, timeOfDay?: Time) {
+    public weather: Rain
+    constructor(num: number, type: WaveType, timeOfDay?: Time, rain?: Rain) {
         this.timeOfDay = timeOfDay ? timeOfDay : Time.day;
+        this.weather = rain ? rain : noRain;
         this.number = num;
         this.type = type;
     }
@@ -117,6 +119,7 @@ class Level {
         }
         this.currentWave = this.info.waves[num];
         game.changeTime(this.currentWave.timeOfDay);
+        game.setRain(this.currentWave.weather);
     }
 
 
@@ -248,6 +251,7 @@ class Level {
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
+        allTargetsCount++;
 
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
@@ -274,6 +278,7 @@ class Level {
             x.getTargetEl().remove();
         }
         allTargets = [];
+        allTargetsCount = 0;
         this.allTargetsDeployed = false;
         this.resetWincheck();
     }
@@ -320,10 +325,10 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 1,
         messages: [{ text: "", title: "WAKE UP!" } as popupMsg],
         waves: [
-            new Wave(8, WaveType.double, Time.dusk),
-            new Wave(8, WaveType.gradual),
-            new Wave(8, WaveType.sudden),
-            new Wave(14, WaveType.sudden,)
+            new Wave(8, WaveType.double, Time.dusk, lightRain),
+            new Wave(8, WaveType.sudden, null, heavyRain), //GRAD
+            new Wave(8, WaveType.sudden, null, medRain),
+            new Wave(14, WaveType.sudden, Time.night, heavyRain)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
