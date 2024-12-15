@@ -123,13 +123,14 @@ const revs = [];
 const gib = [];
 const ambience_1 = [];
 const thunder = [];
+const nightSounds = [];
 const regular_amb = {
     primary: ambience_1,
     secondary: []
 };
 const night = {
     primary: [new Sound(ambienceFolder + "crickets.mp3")],
-    secondary: [new Sound(ambienceFolder + "owl.mp3")]
+    secondary: nightSounds
 };
 const rain_amb = {
     primary: [new Sound(ambienceFolder + "rain.mp3")],
@@ -150,11 +151,7 @@ function loadSound() {
     acknowledge.push(pgia, matara, meUle, pgia, aluak);
     thunder.push(new Sound(ambienceFolder + "thunder_big.mp3"), new Sound(ambienceFolder + "thunder_small.mp3"));
     ambience_1.push(new Sound(ambienceFolder + "ambient_1_q.mp3"), new Sound(ambienceFolder + "ambient_2_q.mp3"), new Sound(ambienceFolder + "ambient_4_q.mp3"), new Sound(ambienceFolder + "ambient_5_q.mp3"));
-    //rain.push(
-    //    new Sound(ambienceFolder + "rain.mp3"),
-    //    new Sound(ambienceFolder + "rain_heavy.mp3"),
-    //    new Sound(ambienceFolder + "rain_pouring.mp3"),
-    //)
+    nightSounds.push(new Sound(ambienceFolder + "owl.mp3"), new Sound(ambienceFolder + "owl_2.mp3"), new Sound(ambienceFolder + "jackal_1.mp3"), new Sound(ambienceFolder + "owl_3.mp3"), new Sound(ambienceFolder + "owl_4.mp3"), new Sound(ambienceFolder + "jackal_2.mp3"));
     gib.push(new Sound(soundFolder + "gib_1.mp3"), new Sound(soundFolder + "gib_2.mp3"), new Sound(soundFolder + "gib_3.mp3"), new Sound(soundFolder + "gib_4.mp3"), new Sound(soundFolder + "gib_5.mp3"), new Sound(soundFolder + "gib_6.mp3"));
     revs.push(new Sound(soundFolder + "rev_1.mp3"), new Sound(soundFolder + "rev_2.mp3"), new Sound(soundFolder + "rev_3.mp3"));
     ricochet.push(new Sound(soundFolder + "ricochet_1.mp3"), new Sound(soundFolder + "ricochet_2.mp3"), 

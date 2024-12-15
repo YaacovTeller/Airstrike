@@ -1,31 +1,18 @@
-var killStatsOptions;
-(function (killStatsOptions) {
-    killStatsOptions["total"] = "Total";
-    killStatsOptions["disabled"] = "Disabled";
-    killStatsOptions["destroyed"] = "Destroyed";
-    killStatsOptions["escaped"] = "Escaped";
-})(killStatsOptions || (killStatsOptions = {}));
+var killStatDisplayOptions;
+(function (killStatDisplayOptions) {
+    killStatDisplayOptions["total"] = "Total";
+    killStatDisplayOptions["disabled"] = "Disabled";
+    killStatDisplayOptions["destroyed"] = "Destroyed";
+    killStatDisplayOptions["escaped"] = "Escaped";
+    killStatDisplayOptions["shots"] = "Shots";
+})(killStatDisplayOptions || (killStatDisplayOptions = {}));
 class HudHandler {
     hudElem;
     scoreBox;
     rightSideContainer;
     leftSideContainer;
     multiKillBox;
-    killStats;
     constructor() {
-        this.killStats = {
-            total: 0,
-            disabled: 0,
-            destroyed: 0,
-            escaped: 0,
-            failLimit: 1
-        };
-    }
-    resetStats() {
-        this.killStats.total = 0;
-        this.killStats.disabled = 0;
-        this.killStats.destroyed = 0;
-        this.killStats.escaped = 0;
     }
     drawHUD() {
         let hud = document.getElementById('hud');
@@ -161,10 +148,13 @@ class HudHandler {
             }
         }
     }
+    returnkillStatDisplayOptions() {
+        return Object.values(killStatDisplayOptions);
+    }
     drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
-        const optionsArray = Object.values(killStatsOptions);
+        const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
             this.drawScoreSpans(option, this.scoreBox);
         }
@@ -172,7 +162,7 @@ class HudHandler {
         span.id = "scoreCounter";
         this.scoreBox.appendChild(span);
         this.rightSideContainer.appendChild(this.scoreBox);
-        this.updateScore();
+        this.updateScore(game.killStats);
     }
     drawScoreSpans(title, scoreBox) {
         let span = document.createElement('span');
@@ -181,30 +171,28 @@ class HudHandler {
         let br = document.createElement('br');
         scoreBox.appendChild(br);
     }
-    updateScoreSpans(title) {
+    updateScoreSpans(stats, title) {
         let span = document.getElementById(title);
-        let num = this.killStats[title.toLowerCase()];
+        let num = stats[title.toLowerCase()];
         span.innerText = title + ": " + num;
-        if (title === killStatsOptions.escaped) {
-            span.innerText += "/" + this.killStats.failLimit;
+        if (title === killStatDisplayOptions.escaped) {
+            span.innerText += "/" + stats.failLimit;
             if (num > 0) {
                 span.classList.add('red');
             }
             else
                 span.classList.remove('red');
         }
-        if (title === killStatsOptions.total) {
-            //  span.innerText += "/" + game.returnLevelLimit();
+        if (title === killStatDisplayOptions.total) {
         }
     }
-    updateScore(shots) {
-        if (shots) {
-            let span = document.getElementById('scoreCounter');
-            span.innerText = "Shots: " + shots;
-        }
-        const optionsArray = Object.values(killStatsOptions);
+    updateScore(stats) {
+        //let span = document.getElementById('scoreCounter')
+        //span.innerText = "Shots: " + stats.shots
+        //    const optionsArray = this.returnkillStatDisplayOptions ();
+        const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
-            this.updateScoreSpans(option);
+            this.updateScoreSpans(stats, option);
         }
     }
     selectBox(wepName) {

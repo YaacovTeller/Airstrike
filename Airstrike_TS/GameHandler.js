@@ -11,7 +11,6 @@ var GameMode;
 var allWeaponTypes = [];
 var extraWeaponTypes = [];
 var allTargets = [];
-var allTargetsCount = 0;
 var allObjects = [];
 var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
@@ -27,8 +26,7 @@ class GameHandler {
     difficulty;
     gameMode;
     ambience;
-    // public masterTargets: Array<Target> = [];
-    //public masterObjects: Array<HTMLElement> = [];
+    killStats;
     sequentialHits = 0;
     level; // messy, fix
     gameTimer;
@@ -53,6 +51,21 @@ class GameHandler {
         this.addWeather();
         //        WeatherHandler.weatherTest();
         this.darkOverlay.style.opacity = '0.5';
+        this.killStats = {
+            total: 0,
+            disabled: 0,
+            destroyed: 0,
+            escaped: 0,
+            shots: 0,
+            failLimit: 1,
+        };
+    }
+    resetStats() {
+        this.killStats.total = 0;
+        this.killStats.disabled = 0;
+        this.killStats.destroyed = 0;
+        this.killStats.escaped = 0;
+        this.killStats.shots = 0;
     }
     addWeather() {
         this.darkOverlay = document.createElement('div');
@@ -63,20 +76,20 @@ class GameHandler {
         ContentElHandler.addToContentWrapper(rain);
     }
     setRain(rain) {
-        this.ambience = rain.ambience ? rain.ambience : this.ambience;
+        if (rain.ambience) {
+            this.switchAmbience(rain.ambience);
+        }
         WeatherHandler.createRain(rain);
     }
     changeTime(time) {
         this.hideFlare(time);
-        this.stopAmbience();
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
-            this.ambience = regular_amb;
+            this.switchAmbience(regular_amb);
         }
         else {
-            this.ambience = night;
+            this.switchAmbience(night);
         }
-        this.startAmbience();
         if (time == Time.dusk) {
             this.darkOverlay.style.opacity = '0.5';
         }
@@ -119,7 +132,7 @@ class GameHandler {
     endGame() {
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
-        PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.hud.killStats.destroyed} kills!`, "", msgLength.long);
+        PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false; // HACKY??
         this.cutGameFuncs();
@@ -318,9 +331,6 @@ class GameHandler {
             }
         }
     }
-    updateShotCounter() {
-        this.hud.updateScore(this.shotCount);
-    }
     changeWeapon(wep) {
         if (wep == null) {
             debugger;
@@ -345,6 +355,7 @@ class GameHandler {
     }
     targetCreation(newTarget) {
         this.level.produceSingleTarget(newTarget);
+        this.killStats.total++;
     }
     updateProgressBar() {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
@@ -360,35 +371,35 @@ class GameHandler {
             this.sequentialHits = 0;
         }, 400);
     }
-    updateHudScore() {
-        let targets = allTargets;
-        let stats = this.hud.killStats;
-        stats.disabled = targets.reduce((acc, target) => {
-            if (target.status === Status.disabled) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.destroyed = targets.reduce((acc, target) => {
-            if (target.damage >= Damage.moderateDamaged) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.escaped = this.level.targets.reduce((acc, target) => {
-            if (target.status === Status.escaped) {
-                return acc + 1;
-            }
-            else
-                return acc;
-        }, 0);
-        stats.total = allTargetsCount || 0;
-        //    stats.total = targets.length || 0;
-        this.hud.updateScore();
-        //  this.updateLights();
+    updateKillStats(stat, num) {
+        if (stat) {
+            num = num ? num : 1;
+            this.killStats[stat.toLowerCase()] += num;
+        }
+        this.hud.updateScore(this.killStats);
     }
+    //private updateHudScore() {
+    //    //stats.disabled = targets.reduce((acc, target) => {
+    //    //    if (target.status === Status.disabled) {
+    //    //        return acc + 1;
+    //    //    } else
+    //    //        return acc;
+    //    //}, 0);
+    //    //stats.destroyed = targets.reduce((acc, target) => {
+    //    //    if (target.damage >= Damage.moderateDamaged) {
+    //    //        return acc + 1;
+    //    //    } else
+    //    //        return acc;
+    //    //}, 0);
+    //    //stats.escaped = this.level.targets.reduce((acc, target) => {
+    //    //    if (target.status === Status.escaped) {
+    //    //        return acc + 1;
+    //    //    } else
+    //    //        return acc;    
+    //    //}, 0);
+    ////    stats.total = targets.length || 0;
+    //  //  this.updateLights();
+    //}
     updateLights() {
         const darkBlueVal = 40;
         let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
@@ -433,7 +444,7 @@ class GameHandler {
         });
     }
     checkEnd() {
-        let stats = this.hud.killStats;
+        let stats = this.killStats;
         if (stats.escaped >= stats.failLimit) {
             this.pause();
             this.gameInProgress = false;
@@ -455,6 +466,11 @@ class GameHandler {
             this.pause();
         }
     }
+    switchAmbience(amb) {
+        this.stopAmbience();
+        this.ambience = amb;
+        this.startAmbience();
+    }
     startAmbience() {
         RandomSoundGen.playThroughArray(this.ambience.primary);
         if (this.ambience.secondary.length) {
@@ -462,7 +478,7 @@ class GameHandler {
                 if (!this.ambience.secondary.length)
                     return;
                 RandomSoundGen.playRandomSound(this.ambience.secondary);
-            }, 10000);
+            }, 15000);
         }
     }
     stopAmbience() {
@@ -490,7 +506,7 @@ class GameHandler {
         ContentElHandler.clearContent();
         allWeaponTypes = [];
         extraWeaponTypes = [];
-        this.hud.resetStats();
+        this.resetStats();
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -499,6 +515,7 @@ class GameHandler {
         this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.hud.drawHUD();
+        this.updateKillStats();
         if (mode == GameMode.regular) {
             this.addAllLevels();
             this.hud.buildLevelBar();
@@ -509,7 +526,7 @@ class GameHandler {
             this.addFullWeaponLoadout();
         }
         this.hud.drawMultiKill();
-        this.hud.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.killStats.failLimit = this.difficulty.failLimit; /// put with level
         let startWeapon;
         for (let w of allWeaponTypes) {
             if (w == undefined)
@@ -533,7 +550,6 @@ class GameHandler {
         this.toggleModal();
         this.gameTimer = window.setInterval(() => {
             this.checkEnd();
-            this.updateHudScore();
             this.updateProgressBar();
             this.fadeAllLights();
             this.level.targets.forEach((trg) => {

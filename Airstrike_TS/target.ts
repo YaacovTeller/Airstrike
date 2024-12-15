@@ -71,17 +71,39 @@
     protected move(posX: number) {
         if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
+            game.updateKillStats(killStatDisplayOptions.escaped)
         }
         this.targetEl.style.left = posX + this.speed + "px";
     }
 
     protected targetDisabled() {
-        this.status = Status.disabled;
-        this.transmitDestruction();
-    }
-    protected transmitDestruction() {
+        if (this.status != Status.disabled) {
+            this.status = Status.disabled;
+            game.updateKillStats(killStatDisplayOptions.disabled)
+        }
         game.updateHudMultiKill();
     }
+    protected targetDestroyed(priorStatus: Status) {
+        this.damage = Damage.destroyed;
+        game.updateKillStats(killStatDisplayOptions.destroyed)
+        if (priorStatus == Status.disabled) {
+            game.updateKillStats(killStatDisplayOptions.disabled, -1)
+        }
+
+        this.removeFromArray();
+        game.updateHudMultiKill();
+    }
+
+    protected removeFromArray() {
+        setTimeout(() => {
+            let arr = allTargets;
+            let index = arr.indexOf(this);
+            if (index >= 0) {
+                arr.splice(index, 1);
+            }
+        }, damagedTargetStay + fadeAnimTime);
+    }
+
 
     public toggleLockOnStrike(bool) {
         bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg"
@@ -160,9 +182,10 @@ class TunnelTarget extends Target {
         if (wepName < weaponNames.airstrike) {
                 return
         }
+        let priorStatus = this.status;
         this.targetDisabled();
         if (severity >= strikeSeverity.catastrophic) {
-            this.damage = Damage.destroyed;
+            this.targetDestroyed(priorStatus);
             this.baseImgEl.src = this.damagedSource;
             this.targetEl.classList.remove('tunnelHead');
             this.stopTargetProduction();
@@ -238,7 +261,7 @@ class VehicleTarget extends Target {
             if (this.armour == Armour.none) {
                 if (wepName == weaponNames.gun) {
                     if (this.damage > Damage.undamaged) {
-                        setTimeout(() => this.status = Status.disabled, RandomNumberGen.randomNumBetween(200, 1200))
+                        setTimeout(() => this.targetDisabled(), RandomNumberGen.randomNumBetween(200, 1200))
                     }
                     else {               
                          this.lightDamage();
@@ -301,6 +324,7 @@ class VehicleTarget extends Target {
         }
     }
     private basicVehicleDamageModel(severity: strikeSeverity, direc: direction, collisionInfo?: vectorMoveObj) {
+        let priorStatus = this.status;
         if (severity == strikeSeverity.light) {
             this.damage >= Damage.badlyDented ? severity = strikeSeverity.medium : "";
             this.lightDamage();
@@ -320,7 +344,7 @@ class VehicleTarget extends Target {
             return
         }
         if (severity == strikeSeverity.catastrophic) {
-            this.damage = Damage.destroyed;
+            this.targetDestroyed(priorStatus);
             this.completeDestruction(collisionInfo);
             return
         }
@@ -339,7 +363,7 @@ class VehicleTarget extends Target {
         this.damageEl.classList.remove('lightDamaged');
 
         this.angle = ThrowHandler.flip(this.picEl, direc, this.targetEl, this.angle);
-        ContentElHandler.fadeRemoveItem(this.targetEl, damagedTargetStay, fadeAnimTime); // FADE UN-DESTROYED??
+        ContentElHandler.fadeRemoveItem(this.targetEl, damagedTargetStay, fadeAnimTime);
         this.removeFromArray();
     }
 
@@ -353,20 +377,10 @@ class VehicleTarget extends Target {
         this.damageEl.style.visibility = "hidden";
         this.targetEl.classList.add('show');
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
-        this.removeFromArray();
 
         this.rollWheel();
         this.throwWheel(direction.forward);
         this.throwWheel(direction.backward);
-    }
-    private removeFromArray() {
-        setTimeout(() => {
-        let arr = allTargets;
-        let index = arr.indexOf(this);
-            if (index >= 0) {
-                arr.splice(index, 1);
-            }
-        }, damagedTargetStay + fadeAnimTime);
     }
 
     private returnWheel(): HTMLElement {

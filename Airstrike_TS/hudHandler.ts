@@ -3,13 +3,15 @@
     disabled: number;
     destroyed: number;
     escaped: number;
+    shots: number;
     failLimit: number;
 }
-enum killStatsOptions {
+enum killStatDisplayOptions {
     total = 'Total',
     disabled = 'Disabled',
     destroyed = 'Destroyed',
-    escaped = 'Escaped'
+    escaped = 'Escaped',
+    shots = 'Shots',
 }
 
 class HudHandler {
@@ -18,23 +20,11 @@ class HudHandler {
     private rightSideContainer: HTMLElement
     private leftSideContainer: HTMLElement
     public multiKillBox: HTMLElement
-    public killStats: killStats
 
     constructor() {
-        this.killStats = {
-            total: 0,
-            disabled: 0,
-            destroyed: 0,
-            escaped: 0,
-            failLimit: 1
-        }
+
     }
-    public resetStats() {
-        this.killStats.total = 0;
-        this.killStats.disabled = 0;
-        this.killStats.destroyed = 0;
-        this.killStats.escaped = 0;
-    }
+
     public drawHUD() {
         let hud = document.getElementById('hud');
         if (hud) hud.remove();
@@ -181,12 +171,15 @@ class HudHandler {
             }
         }
     }
+    private returnkillStatDisplayOptions() {
+        return Object.values(killStatDisplayOptions);
+    }
 
     public drawScore() {
         this.scoreBox = document.createElement('div');
         this.scoreBox.classList.add('score');
 
-        const optionsArray = Object.values(killStatsOptions);
+        const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
             this.drawScoreSpans(option, this.scoreBox);
         }
@@ -196,7 +189,7 @@ class HudHandler {
 
         this.rightSideContainer.appendChild(this.scoreBox);
 
-        this.updateScore();
+        this.updateScore(game.killStats);
     }
     private drawScoreSpans(title, scoreBox: HTMLElement) {
         let span = document.createElement('span');
@@ -205,31 +198,30 @@ class HudHandler {
         let br = document.createElement('br');
         scoreBox.appendChild(br);
     }
-    private updateScoreSpans(title) {
+    private updateScoreSpans(stats, title) {
         let span = document.getElementById(title);
-        let num = this.killStats[title.toLowerCase()]
+        let num = stats[title.toLowerCase()]
         span.innerText = title + ": " + num;
-        if (title === killStatsOptions.escaped) {
-            span.innerText += "/" + this.killStats.failLimit;
+
+        if (title === killStatDisplayOptions.escaped) {
+            span.innerText += "/" + stats.failLimit;
             if (num > 0) {
                 span.classList.add('red');
             }
             else span.classList.remove('red');
         }
-        if (title === killStatsOptions.total) {
+        if (title === killStatDisplayOptions.total) {
 
-          //  span.innerText += "/" + game.returnLevelLimit();
         }
     }
-    public updateScore(shots?) {
-        if (shots) {
-            let span = document.getElementById('scoreCounter')
-            span.innerText = "Shots: " + shots
-        }
+    public updateScore(stats: killStats) {
+            //let span = document.getElementById('scoreCounter')
+            //span.innerText = "Shots: " + stats.shots
 
-        const optionsArray = Object.values(killStatsOptions);
+        //    const optionsArray = this.returnkillStatDisplayOptions ();
+          const optionsArray = this.returnkillStatDisplayOptions ();
         for (let option of optionsArray) {
-            this.updateScoreSpans(option);
+            this.updateScoreSpans(stats, option);
         }
     }
     public selectBox(wepName: weaponNames) {

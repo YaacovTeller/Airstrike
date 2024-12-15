@@ -134,6 +134,7 @@ const gib: Array<Sound> = [];
 
 const ambience_1: Array<Sound> = [];
 const thunder: Array<Sound> = [];
+const nightSounds: Array<Sound> = [];
 //const ambience_2: Array<Sound> = [];
 //const rain: Array<Sound> = [];
 
@@ -147,7 +148,7 @@ const regular_amb: AmbienceSet = {
 }
 const night: AmbienceSet = {
     primary: [new Sound(ambienceFolder + "crickets.mp3")],
-    secondary: [new Sound(ambienceFolder + "owl.mp3")]
+    secondary: nightSounds
 }
 const rain_amb: AmbienceSet = {
     primary: [new Sound(ambienceFolder + "rain.mp3")],
@@ -187,11 +188,14 @@ function loadSound() {
         new Sound(ambienceFolder + "ambient_4_q.mp3"),
         new Sound(ambienceFolder + "ambient_5_q.mp3")
     )
-    //rain.push(
-    //    new Sound(ambienceFolder + "rain.mp3"),
-    //    new Sound(ambienceFolder + "rain_heavy.mp3"),
-    //    new Sound(ambienceFolder + "rain_pouring.mp3"),
-    //)
+    nightSounds.push(
+        new Sound(ambienceFolder + "owl.mp3"),
+        new Sound(ambienceFolder + "owl_2.mp3"),
+        new Sound(ambienceFolder + "jackal_1.mp3"),
+        new Sound(ambienceFolder + "owl_3.mp3"),
+        new Sound(ambienceFolder + "owl_4.mp3"),
+        new Sound(ambienceFolder + "jackal_2.mp3"),
+    )
     gib.push(
         new Sound(soundFolder + "gib_1.mp3"),
         new Sound(soundFolder + "gib_2.mp3"),

@@ -98,7 +98,6 @@ class Level {
     public setAsLevel() {
         let num = this.info.number;
         
-
         this.frequency = game.difficulty.newTargetEvery;
         if (game.gameMode == GameMode.regular) {
             PopupHandler.addToArray("", "Level " + num, msgLength.long)
@@ -197,7 +196,6 @@ class Level {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode)
-                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -251,7 +249,7 @@ class Level {
         let target: Target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
-        allTargetsCount++;
+        game.updateKillStats(killStatDisplayOptions.total)
 
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
@@ -278,7 +276,6 @@ class Level {
             x.getTargetEl().remove();
         }
         allTargets = [];
-        allTargetsCount = 0;
         this.allTargetsDeployed = false;
         this.resetWincheck();
     }
@@ -305,8 +302,8 @@ const continuousInfo: LevelInfo = {
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double),
-        new Wave(50, WaveType.double),
+        new Wave(30, WaveType.double, null, lightRain),
+        new Wave(50, WaveType.double, null, heavyRain),
         new Wave(10, WaveType.gradual, Time.dusk),
         new Wave(10, WaveType.gradual, Time.night),
         new Wave(25, WaveType.sudden, Time.dusk),
@@ -325,10 +322,10 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 1,
         messages: [{ text: "", title: "WAKE UP!" } as popupMsg],
         waves: [
-            new Wave(8, WaveType.double, Time.dusk, lightRain),
-            new Wave(8, WaveType.sudden, null, heavyRain), //GRAD
-            new Wave(8, WaveType.sudden, null, medRain),
-            new Wave(14, WaveType.sudden, Time.night, heavyRain)
+            new Wave(8, WaveType.double, Time.dusk),
+            new Wave(8, WaveType.gradual), //GRAD
+            new Wave(8, WaveType.sudden),
+            new Wave(14, WaveType.sudden)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
@@ -362,8 +359,8 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 3,
         messages: [],
         waves: [
-            new Wave(16, WaveType.gradual),
-            new Wave(10, WaveType.sudden),
+            new Wave(16, WaveType.gradual, null, medRain),
+            new Wave(10, WaveType.sudden, null, heavyRain),
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         endArms: [howitzerInfo, airstrikeInfo],
@@ -373,7 +370,7 @@ const allLevelInfo: Array<LevelInfo> = [
         number: 4,
         messages: [{ text: "Watch out for tunnels", title: "WARNING" } as popupMsg],
         waves: [
-            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.gradual, null, lightRain),
             new Wave(12, WaveType.sudden),
         ],
         startArms: [chargeInfo, airstrikeInfo],

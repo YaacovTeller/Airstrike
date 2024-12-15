@@ -173,7 +173,6 @@ class Level {
                 let index = allLevelsArray.indexOf(this);
                 let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
-                //  console.log("NEXT LEVEL callback")
             }
         }, 5000);
     }
@@ -226,7 +225,7 @@ class Level {
         let target = tgt ? tgt : this.provideAvailTargets();
         this.targets.push(target);
         allTargets.push(target);
-        allTargetsCount++;
+        game.updateKillStats(killStatDisplayOptions.total);
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
             let this_ = this;
@@ -251,7 +250,6 @@ class Level {
             x.getTargetEl().remove();
         }
         allTargets = [];
-        allTargetsCount = 0;
         this.allTargetsDeployed = false;
         this.resetWincheck();
     }
@@ -277,8 +275,8 @@ const continuousInfo = {
     messages: [{ title: "Dev_", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double),
-        new Wave(50, WaveType.double),
+        new Wave(30, WaveType.double, null, lightRain),
+        new Wave(50, WaveType.double, null, heavyRain),
         new Wave(10, WaveType.gradual, Time.dusk),
         new Wave(10, WaveType.gradual, Time.night),
         new Wave(25, WaveType.sudden, Time.dusk),
@@ -296,10 +294,10 @@ const allLevelInfo = [
         number: 1,
         messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
-            new Wave(8, WaveType.double, Time.dusk, lightRain),
-            new Wave(8, WaveType.sudden, null, heavyRain),
-            new Wave(8, WaveType.sudden, null, medRain),
-            new Wave(14, WaveType.sudden, Time.night, heavyRain)
+            new Wave(8, WaveType.double, Time.dusk),
+            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.sudden),
+            new Wave(14, WaveType.sudden)
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
@@ -333,8 +331,8 @@ const allLevelInfo = [
         number: 3,
         messages: [],
         waves: [
-            new Wave(16, WaveType.gradual),
-            new Wave(10, WaveType.sudden),
+            new Wave(16, WaveType.gradual, null, medRain),
+            new Wave(10, WaveType.sudden, null, heavyRain),
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         endArms: [howitzerInfo, airstrikeInfo],
@@ -344,7 +342,7 @@ const allLevelInfo = [
         number: 4,
         messages: [{ text: "Watch out for tunnels", title: "WARNING" }],
         waves: [
-            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.gradual, null, lightRain),
             new Wave(12, WaveType.sudden),
         ],
         startArms: [chargeInfo, airstrikeInfo],
