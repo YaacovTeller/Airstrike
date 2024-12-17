@@ -80,7 +80,7 @@ class WeaponType {
         };
         if (this.blastRadNum()) {
             let el = this.returnBlastRadiusDiv(this.blastRadNum());
-            this.name == weaponNames.nuke ? el.classList.add('nukeIndicator') : "";
+            this.name == weaponNames.tactical_Nuke ? el.classList.add('nukeIndicator') : "";
             inst.blastRadElement = el;
         }
         this.instances.push(inst);
@@ -178,10 +178,14 @@ class BulletWeaponType extends WeaponType {
 class ExplosiveWeaponType extends WeaponType {
     blastRadius;
     explosionInfo;
+    flyoverInfo;
     constructor(info) {
         super(info);
         this.explosionInfo = info.explosionInfo;
         this.blastRadius = info.blastRadius;
+        if (info.flyover) {
+            this.flyoverInfo = info.flyover;
+        }
         this.pushNewWeaponInstance();
     }
     additionalSwitchFunc() {
@@ -211,12 +215,39 @@ class ExplosiveWeaponType extends WeaponType {
         inst.ready = false;
         this.rippleEffect(inst);
         this.switchBlastIndicatorStyle(true, inst);
+        if (this.flyoverInfo) {
+            this.createFlyover(inst);
+        }
         if (this.explosionInfo.sound.length) {
             setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
         }
         this.fireResultsTimeout(inst);
         this.cooldownTimeout(inst);
         this.setActiveInstance();
+    }
+    createFlyover(inst) {
+        let div = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), "flyover");
+        let img = document.createElement('img');
+        div.appendChild(img);
+        img.src = this.flyoverInfo.imageSource;
+        div.style.left = '100vw';
+        div.style.top = inst.blastRadElement ? inst.blastRadElement.style.top : '50vh';
+        const pause = this.flyoverInfo.delay;
+        const duration = this.flyoverInfo.duration;
+        setTimeout(() => this.beginMoveInterval(div, this.flyoverInfo.speed, duration), pause);
+        ContentElHandler.fadeRemoveItem(div, pause + duration, 10);
+    }
+    beginMoveInterval(div, speed, duration) {
+        let interval = setInterval(() => {
+            this.move(div, direction.backward, speed);
+        }, 100);
+        setTimeout(() => clearInterval(interval), duration);
+    }
+    move(elem, direc, speed) {
+        if (direc == direction.backward) {
+            speed = speed * -1;
+        }
+        elem.style.left = parseInt(elem.style.left) + speed + 'vw';
     }
     fireResultsTimeout(inst) {
         setTimeout(() => {
@@ -322,6 +353,7 @@ class Chopper extends ExplosiveWeaponType {
     shotDelay = 1000;
     constructor(info) {
         super(info);
+        this.flyoverInfo = info.flyover;
     }
     fireFunc() {
         if (this.ammoCheck() === false) {
@@ -336,13 +368,12 @@ class Chopper extends ExplosiveWeaponType {
         let shotGap = 200;
         let shots = 30;
         let side = true;
+        this.createFlyover(inst);
         let fireTimer = setInterval(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
-            //     RandomSoundGen.playSequentialSound(this.explosionInfo.sound);
             RandomSoundGen.playSequentialSound(cannonSounds);
             ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
-            //    side = side === left ? right : left;
             side = !side;
             shots--;
             if (shots <= 0) {
@@ -410,6 +441,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
         let inst = this.activeInstance;
         inst.ready = false;
         this.cooldownTimeout(inst);
+        this.createFlyover(inst);
         let speedInc = 150;
         let currentSpeedBuffer = 0;
         let strikingTargets = this.lockedTargets;

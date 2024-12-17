@@ -236,7 +236,7 @@ class VehicleTarget extends Target {
             this.moveFromBlast(severity, collisionInfo);
         }
         if (this.armour == Armour.none) {
-            if (wepName == weaponNames.gun) {
+            if (wepName == weaponNames.sniper) {
                 if (this.damage > Damage.undamaged) {
                     setTimeout(() => this.targetDisabled(), RandomNumberGen.randomNumBetween(200, 1200));
                 }
@@ -249,13 +249,13 @@ class VehicleTarget extends Target {
             }
         }
         if (this.armour == Armour.moderate) {
-            if (wepName == weaponNames.gun) {
+            if (wepName == weaponNames.sniper) {
                 this.ricochetChance(0);
                 return;
             }
             if (wepName >= weaponNames.mortar) {
                 if (wepName < weaponNames.airstrike && severity < strikeSeverity.heavy ||
-                    wepName < weaponNames.nuke && severity <= strikeSeverity.light) {
+                    wepName < weaponNames.tactical_Nuke && severity <= strikeSeverity.light) {
                     if (this.damage < Damage.badlyDented) {
                         this.incrementDamageForArmour();
                         return;
@@ -265,13 +265,13 @@ class VehicleTarget extends Target {
             }
         }
         if (this.armour == Armour.heavy) {
-            if (wepName == weaponNames.gun) {
+            if (wepName == weaponNames.sniper) {
                 this.ricochetChance(0);
                 return;
             }
             if (wepName >= weaponNames.mortar) {
                 if (wepName < weaponNames.airstrike && severity < strikeSeverity.catastrophic ||
-                    wepName < weaponNames.nuke && severity <= strikeSeverity.medium) {
+                    wepName < weaponNames.tactical_Nuke && severity <= strikeSeverity.medium) {
                     if (this.damage < Damage.badlyDented) {
                         this.incrementDamageForArmour();
                         if (this.damage == Damage.badlyDented) {

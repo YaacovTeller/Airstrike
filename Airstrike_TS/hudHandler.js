@@ -71,11 +71,14 @@ class HudHandler {
         let wepBox = document.createElement('div');
         let numBox = document.createElement('span');
         let num = wep.name.toString();
+        let name = weaponNames[num];
         numBox.className = "wepNum";
         numBox.innerText = num;
         wepBox.appendChild(numBox);
         wepBox.classList.add("wepBox");
         wepBox.dataset.name = num;
+        let wepName = name.charAt(0).toUpperCase() + String(name).slice(1);
+        wepBox.title = wepName;
         wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
         wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation(); };
         let wepBoxContainerElem = this.getCorrectWepboxContainer(wep);
@@ -84,7 +87,7 @@ class HudHandler {
         if (wep.name == weaponNames.flare) {
             game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone"); // DOUBLED with setWave in Levels. For all weps start.
         }
-        if (wep.name == weaponNames.nuke || wep.name == weaponNames.chopper) {
+        if (wep.name == weaponNames.tactical_Nuke || wep.name == weaponNames.chopper) {
             wepBox.classList.add('specialWeapon');
         }
         this.orderWeaponBoxes();

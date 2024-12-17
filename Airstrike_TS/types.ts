@@ -124,14 +124,14 @@ enum strikeSeverity {
     catastrophic
 }
 enum weaponNames {
-    gun = 1,
+    sniper = 1,
     mortar = 2,
     tank = 3,
     airstrike = 4,
 
     drone = 5,
-    tunnelcharge = 6,
-    nuke = 7,
+    tunnel_Charge = 6,
+    tactical_Nuke = 7,
     flare = 8,
     chopper = 9
 }
@@ -178,6 +178,7 @@ type weaponInfo = {
 type ExplosiveWeaponInfo = weaponInfo & {
     blastRadius: number,
     explosionInfo: ExplosionInfo,
+    flyover?: FlyOver
 }
 type ExplosionInfo = {
     imageSource: string,
@@ -185,6 +186,12 @@ type ExplosionInfo = {
     length: number,
     sound: Array<Sound>,
     soundDelay?: number,
+}
+type FlyOver = {
+    imageSource: string,
+    speed: number,
+    delay: number,
+    duration: number
 }
 
 //const easy: difficultyLevelInfo = {
@@ -259,7 +266,7 @@ const dev: difficultyLevelInfo = {
     }
 }
 const sniperInfo: weaponInfo = {
-    name: weaponNames.gun,
+    name: weaponNames.sniper,
     class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
@@ -323,10 +330,16 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: [jet_pass]
+    select: [jet_pass],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg',
+        speed: 40,
+        duration: 2000,
+        delay: 2000
+    }
 }
 const nukeInfo: ExplosiveWeaponInfo = {
-    name: weaponNames.nuke,
+    name: weaponNames.tactical_Nuke,
     class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
@@ -342,10 +355,15 @@ const nukeInfo: ExplosiveWeaponInfo = {
     speed: 6000,
     cooldown: 30000,
     noAmmo: bleep_neg,
-    select: [redeemerpickup]
-}
+    select: [redeemerpickup],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg',
+        speed: 15,
+        duration: 2000,
+        delay: 2500
+    }}
 const chargeInfo: weaponInfo = {
-    name: weaponNames.tunnelcharge,
+    name: weaponNames.tunnel_Charge,
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -365,13 +383,20 @@ const droneInfo: ExplosiveWeaponInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         length: 1000,
+        soundDelay: 2000
     },
     imageSource: assetsSVGFolder + 'drone.svg',
     sound: [jet],
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: [jet]
+    select: [jet],
+    flyover: {
+        imageSource: assetsSVGFolder + 'reaper3.svg',
+        speed: 15,
+        duration: 2000,
+        delay: 2000
+    }
 }
 const chopperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.chopper,
@@ -383,13 +408,20 @@ const chopperInfo: ExplosiveWeaponInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         length: 1000,
+        soundDelay: 1000
     },
     imageSource: assetsSVGFolder + 'chopper.svg',
     sound: chopper,
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: chopper
+    select: chopper,
+    flyover: {
+        imageSource: assetsSVGFolder + 'chopper.png',
+        speed: 5,
+        duration: 4000,
+        delay: 500
+    }
 }
 
 const flareInfo: ExplosiveWeaponInfo = {
@@ -477,6 +509,7 @@ class ContentElHandler {
         let contentEl: HTMLElement = this.returnContentEl();
         if (elem && contentEl.contains(elem)) {
             contentEl.removeChild(elem);
+            elem = null
         }
     }
     static returnNewEl(parent: HTMLElement, classname: string) {
@@ -499,13 +532,13 @@ class ContentElHandler {
         }, stayTime)
         setTimeout(() => {
             if (item) {
-                ContentElHandler.removeFromContentEl(item);
                 if (array) {
                     let index = array.indexOf(item);
                     if (index >= 0) {
                         array.splice(index, 1);
                     }
                 }
+                ContentElHandler.removeFromContentEl(item);
             }
         }, stayTime + fadeTime)
     }

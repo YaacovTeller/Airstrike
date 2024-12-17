@@ -117,13 +117,13 @@ var strikeSeverity;
 })(strikeSeverity || (strikeSeverity = {}));
 var weaponNames;
 (function (weaponNames) {
-    weaponNames[weaponNames["gun"] = 1] = "gun";
+    weaponNames[weaponNames["sniper"] = 1] = "sniper";
     weaponNames[weaponNames["mortar"] = 2] = "mortar";
     weaponNames[weaponNames["tank"] = 3] = "tank";
     weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
     weaponNames[weaponNames["drone"] = 5] = "drone";
-    weaponNames[weaponNames["tunnelcharge"] = 6] = "tunnelcharge";
-    weaponNames[weaponNames["nuke"] = 7] = "nuke";
+    weaponNames[weaponNames["tunnel_Charge"] = 6] = "tunnel_Charge";
+    weaponNames[weaponNames["tactical_Nuke"] = 7] = "tactical_Nuke";
     weaponNames[weaponNames["flare"] = 8] = "flare";
     weaponNames[weaponNames["chopper"] = 9] = "chopper";
 })(weaponNames || (weaponNames = {}));
@@ -199,7 +199,7 @@ const dev = {
     }
 };
 const sniperInfo = {
-    name: weaponNames.gun,
+    name: weaponNames.sniper,
     class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
@@ -263,10 +263,16 @@ const airstrikeInfo = {
     speed: 4000,
     cooldown: 10000,
     noAmmo: bleep_neg,
-    select: [jet_pass]
+    select: [jet_pass],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg',
+        speed: 40,
+        duration: 2000,
+        delay: 2000
+    }
 };
 const nukeInfo = {
-    name: weaponNames.nuke,
+    name: weaponNames.tactical_Nuke,
     class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
@@ -282,10 +288,16 @@ const nukeInfo = {
     speed: 6000,
     cooldown: 30000,
     noAmmo: bleep_neg,
-    select: [redeemerpickup]
+    select: [redeemerpickup],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg',
+        speed: 15,
+        duration: 2000,
+        delay: 2500
+    }
 };
 const chargeInfo = {
-    name: weaponNames.tunnelcharge,
+    name: weaponNames.tunnel_Charge,
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -305,13 +317,20 @@ const droneInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         length: 1000,
+        soundDelay: 2000
     },
     imageSource: assetsSVGFolder + 'drone.svg',
     sound: [jet],
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: [jet]
+    select: [jet],
+    flyover: {
+        imageSource: assetsSVGFolder + 'reaper3.svg',
+        speed: 15,
+        duration: 2000,
+        delay: 2000
+    }
 };
 const chopperInfo = {
     name: weaponNames.chopper,
@@ -323,13 +342,20 @@ const chopperInfo = {
         imageSource: assetsFolder + classicExplosion,
         sound: explosions,
         length: 1000,
+        soundDelay: 1000
     },
     imageSource: assetsSVGFolder + 'chopper.svg',
     sound: chopper,
     speed: 3000,
     cooldown: 15000,
     noAmmo: bleep_neg,
-    select: chopper
+    select: chopper,
+    flyover: {
+        imageSource: assetsSVGFolder + 'chopper.png',
+        speed: 5,
+        duration: 4000,
+        delay: 500
+    }
 };
 const flareInfo = {
     name: weaponNames.flare,
@@ -411,6 +437,7 @@ class ContentElHandler {
         let contentEl = this.returnContentEl();
         if (elem && contentEl.contains(elem)) {
             contentEl.removeChild(elem);
+            elem = null;
         }
     }
     static returnNewEl(parent, classname) {
@@ -433,13 +460,13 @@ class ContentElHandler {
         }, stayTime);
         setTimeout(() => {
             if (item) {
-                ContentElHandler.removeFromContentEl(item);
                 if (array) {
                     let index = array.indexOf(item);
                     if (index >= 0) {
                         array.splice(index, 1);
                     }
                 }
+                ContentElHandler.removeFromContentEl(item);
             }
         }, stayTime + fadeTime);
     }
