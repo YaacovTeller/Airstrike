@@ -421,6 +421,27 @@ class Chopper extends ExplosiveWeaponType {
             }
         }, shotGap)
     }
+    protected createFlyover(inst: weaponInstance) {
+        let div = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), "flyover");
+        div.classList.add("chopper")
+        let img = document.createElement('img') as HTMLImageElement;
+        let img2 = document.createElement('img') as HTMLImageElement;
+        div.appendChild(img);
+        div.appendChild(img2);
+        img.src = assetsSVGFolder + "chopper_base.png";
+        img2.src = assetsSVGFolder + "chopper_blades.png";
+        img2.className = "rotors"
+        div.style.left = '100vw';
+        div.style.top = inst.blastRadElement ? inst.blastRadElement.style.top : '50vh';
+
+        const pause = this.flyoverInfo.delay;
+        const duration = this.flyoverInfo.duration;
+        const startSpeed = 1;
+        const leaveSpeed = startSpeed + 5;
+        setTimeout(() => this.beginMoveInterval(div, startSpeed, duration), 0)
+        setTimeout(() => { this.beginMoveInterval(div, leaveSpeed, duration), RandomSoundGen.playRandomSound(this.sound); }, duration)
+        ContentElHandler.fadeRemoveItem(div, pause + duration * 2, 10);
+    }
 }
 
 class DroneWeaponType extends ExplosiveWeaponType {

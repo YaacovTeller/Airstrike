@@ -419,7 +419,7 @@ const chopperInfo: ExplosiveWeaponInfo = {
     flyover: {
         imageSource: assetsSVGFolder + 'chopper.png',
         speed: 5,
-        duration: 4000,
+        duration: 7000,
         delay: 500
     }
 }

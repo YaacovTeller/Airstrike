@@ -339,19 +339,40 @@ img#crater { /*to override the img[src]!*/
     background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.3) 60%, rgba(255, 255, 255, 0) 100%);
 }
 
-.flyover{
+.flyover {
     position: absolute;
     height: 200px;
     width: 200px;
     transition: transform 3s ease, left 100ms linear;
     opacity: 0.6;
 }
+
+    .flyover.chopper {
+        height: 250px;
+        width: 250px;
+    }
+
     .flyover img {
+        position: absolute;
         height: inherit;
         width: inherit;
         transform: scaleX(-1);
     }
-
+    .flyover .rotors {
+        height: 60%;
+        margin: 20% 8%;
+        width: 60%;
+        /*        margin-left: -20px;*/
+        animation: rotate 0.5s linear infinite
+    }
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
 .show {
     opacity: 1;
 }
