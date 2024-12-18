@@ -102,30 +102,25 @@
         requestAnimationFrame(step);
     }
 
-    static rotate(elem: HTMLElement, direc: direction, angle?: number) {
+    static rotate(elem: HTMLElement, direc: direction, angle?: number, iterations = 0, maxIterations = 1) {
+            if (iterations >= maxIterations) return; // Termination condition
+
         const angles = [-720, -560, -360, -200, 0, 160, 360, 520, 720];
         const index = angles.indexOf(angle);
         let rand = RandomNumberGen.randomNumBetween(0, 20)
-        let increment = 1;
-        if (rand > 18) {
-            increment++;
-        }
+        let increment = rand > 18 ? 2 : 1;
+
         let deg = direc == direction.forward ? angles[index + increment] : angles[index - increment];
         if (deg == undefined) {
             deg = 0;
-            //this.angle = deg;
             elem.classList.remove('flip');
             requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.cssRotateAngle(elem, deg);
-                    elem.offsetHeight;  // forces reflow
-                    this.rotate(elem, direc);
-                }, 0);
+                this.cssRotateAngle(elem, deg);
+                this.rotate(elem, direc, iterations + 1, maxIterations);
             });
             return deg
         }
         else {
-            // this.angle = deg;
             elem.classList.add('flip');
             this.cssRotateAngle(elem, deg);
             return deg

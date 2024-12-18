@@ -162,6 +162,7 @@ class Level {
         PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
         );
         this.allTargetsDeployed = false;
+        this.targets = [];
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
@@ -177,7 +178,6 @@ class Level {
         }, 5000);
     }
     nextWave() {
-        this.targets = [];
         this.waveIndex++;
         let length = this.info.waves.length;
         let funcToExecute;
@@ -234,7 +234,7 @@ class Level {
                 RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
             }, this_.pauseLength);
         }
-        if (this.targets.length >= this.currentWave.number) {
+        if (this.targets.length >= this.currentWave.number && this.allTargetsDeployed === false) {
             this.allTargetsDeployed = true;
             this.pauseWave();
             this.winLimitCheck();
@@ -272,7 +272,7 @@ class Level {
 }
 const continuousInfo = {
     number: 0,
-    messages: [{ title: "Dev_", text: "", length: msgLength.short }],
+    messages: [{ title: "Weapons Test", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden),
         new Wave(30, WaveType.double, null, lightRain),
@@ -287,6 +287,37 @@ const continuousInfo = {
     endArms: [],
     targetFunc: () => {
         return provideAllTargets();
+    },
+};
+const weatherTestInfo = {
+    number: 0,
+    messages: [{ title: "Weather Test", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(8, WaveType.double),
+        new Wave(8, WaveType.double, Time.dusk),
+        new Wave(8, WaveType.double, Time.night),
+        new Wave(8, WaveType.double, Time.dusk, lightRain),
+        new Wave(8, WaveType.double, null, medRain),
+        new Wave(8, WaveType.double, null, heavyRain),
+        new Wave(8, WaveType.double, Time.dusk, lightRain),
+        new Wave(8, WaveType.double, Time.night, heavyRain),
+        new Wave(8, WaveType.double, Time.dusk),
+        new Wave(8, WaveType.double),
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => {
+        let rand = RandomNumberGen.randomNumBetween(1, 100);
+        let newTarget;
+        switch (true) {
+            case (rand >= 90):
+                newTarget = new ModVehicleTarget();
+                break;
+            default:
+                newTarget = new RegVehicleTarget();
+                break;
+        }
+        return newTarget;
     },
 };
 const allLevelInfo = [

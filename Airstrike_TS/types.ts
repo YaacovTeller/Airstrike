@@ -476,16 +476,18 @@ class PopupHandler {
         let currentMsg = this.popUpArray[0]
         let titlebox = document.getElementById("popupTitle")
         let textbox = document.getElementById("popupText")
-        titlebox.innerText = currentMsg.title;
-        textbox.innerText = currentMsg.text;
+        //titlebox.innerText = currentMsg.title;
+        //textbox.innerText = currentMsg.text;
+        titlebox.innerHTML = currentMsg.title;
+        textbox.innerHTML = currentMsg.text;
         popup.classList.remove("hide");
         let this_ = this;
         setTimeout(function () {
             popup.classList.add("hide");
         }, currentMsg.length);
         setTimeout(function () {
-            titlebox.innerText = "";
-            textbox.innerText = "";
+            titlebox.innerHTML = "";
+            textbox.innerHTML = "";
             this_.popUpArray.shift();
             this_.showPopup();
         }, currentMsg.length + 200);
@@ -509,8 +511,8 @@ class ContentElHandler {
         let contentEl: HTMLElement = this.returnContentEl();
         if (elem && contentEl.contains(elem)) {
             contentEl.removeChild(elem);
-            elem = null
         }
+        elem = null
     }
     static returnNewEl(parent: HTMLElement, classname: string) {
         let el = document.createElement('div');

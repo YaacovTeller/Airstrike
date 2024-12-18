@@ -154,6 +154,7 @@ class TunnelTarget extends Target {
     setTargetProduction() {
         this.targetTimer = window.setInterval(() => {
             if (game.gameTimer) {
+                console.log("PASSED gameTimer check, it was: " + game.gameTimer);
                 this.produceTargetCheck();
             }
         }, this.newTargetFrequency);

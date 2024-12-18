@@ -7,6 +7,8 @@ var GameMode;
 (function (GameMode) {
     GameMode[GameMode["regular"] = 0] = "regular";
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
+    GameMode[GameMode["test_1"] = 2] = "test_1";
+    GameMode[GameMode["test_2"] = 3] = "test_2";
 })(GameMode || (GameMode = {}));
 var allWeaponTypes = [];
 var extraWeaponTypes = [];
@@ -14,6 +16,7 @@ var allTargets = [];
 var allObjects = [];
 var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
+const level_weather = new Level(weatherTestInfo);
 class GameHandler {
     hud = new HudHandler();
     weapon;
@@ -132,7 +135,7 @@ class GameHandler {
     endGame() {
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
-        PopupHandler.addToArray(`Finished on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
+        PopupHandler.addToArray(`Finished <strong>${GameMode[this.gameMode]}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false; // HACKY??
         this.cutGameFuncs();
@@ -147,7 +150,9 @@ class GameHandler {
     menuSetup() {
         let arr = this.getMenuLis();
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
-        document.getElementById("startbuttonSandbox").onclick = () => this.newGame(GameMode.sandbox);
+        document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
+        document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
+        //document.getElementById("startbutton_WeaponTest").onclick = () => this.newGame(GameMode.test_2);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr);
@@ -268,7 +273,6 @@ class GameHandler {
                     this.changeWeapon(extraWeaponTypes[int - 1]);
                 }
             }
-            //else if (event.shiftKey && event.key === 'N') { this.level.addNewWeapon(nukeInfo); }
             else if (event.key.toLowerCase() === 's') {
                 this.level.showActiveTargets();
             }
@@ -277,12 +281,19 @@ class GameHandler {
             }
         }
     }
+    addStarterWeapons() {
+        this.level.addNewWeapon(sniperInfo, false);
+        this.level.addNewWeapon(mortarInfo, false);
+        this.level.addNewWeapon(mortarInfo, false);
+    }
     addFullWeaponLoadout() {
         this.addAllWeapons();
         this.addAllWeapons();
         this.level.addNewWeapon(mortarInfo, false);
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
+        this.level.addNewWeapon(chopperInfo, true);
+        this.level.addNewWeapon(nukeInfo, true);
     }
     returnOneSuperWeapon() {
         let rand = RandomNumberGen.randomNumBetween(1, 2);
@@ -302,11 +313,11 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
-        let special = this.returnOneSuperWeapon();
-        //   this.level.addNewWeapon(chopperInfo, false);
-        if (!extraWeaponTypes[special.name - 1]) {
-            this.level.addNewWeapon(special, false);
-        }
+        //   let special = this.returnOneSuperWeapon();
+        ////   this.level.addNewWeapon(chopperInfo, false);
+        //   if (!extraWeaponTypes[special.name - 1]) {
+        //       this.level.addNewWeapon(special, false);
+        //   }
     }
     positionElem(elem, pos) {
         elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
@@ -355,7 +366,6 @@ class GameHandler {
     }
     targetCreation(newTarget) {
         this.level.produceSingleTarget(newTarget);
-        this.killStats.total++;
     }
     updateProgressBar() {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
@@ -521,9 +531,21 @@ class GameHandler {
             this.hud.buildLevelBar();
             this.newLevel(allLevelsArray[0], mode);
         }
-        else if (mode = GameMode.sandbox) {
+        else if (mode == GameMode.sandbox) {
             this.newLevel(level_continuous, mode);
             this.addFullWeaponLoadout();
+        }
+        else if (mode == GameMode.test_1) {
+            this.newLevel(level_weather, mode);
+            this.addStarterWeapons();
+            this.level.addNewWeapon(mortarInfo, false);
+            this.level.addNewWeapon(mortarInfo, false);
+            this.level.addNewWeapon(airstrikeInfo, true);
+            this.level.addNewWeapon(airstrikeInfo, false);
+            this.level.addNewWeapon(airstrikeInfo, false);
+            this.level.addNewWeapon(flareInfo, true);
+            this.level.addNewWeapon(flareInfo, false);
+            this.level.addNewWeapon(flareInfo, false);
         }
         this.hud.drawMultiKill();
         this.killStats.failLimit = this.difficulty.failLimit; /// put with level
@@ -535,9 +557,6 @@ class GameHandler {
                 startWeapon = w;
             }
         }
-        //if (allWeaponTypes[weaponNames.mortar - 1]) {
-        //    this.changeWeapon(allWeaponTypes[weaponNames.mortar - 1]);
-        //}
         this.changeWeapon(startWeapon);
         this.start_unpause();
     }
@@ -558,19 +577,10 @@ class GameHandler {
         }, 100);
     }
 }
-//function heavyRain(300,) {
-//    createRain(300, )
-//}
 class WeatherHandler {
     static rains = [noRain, lightRain, medRain, heavyRain];
     static weatherTest() {
         this.createRain(lightRain);
-        let index = 0;
-        //setTimeout(() => {
-        //    this.createRain(this.rains[index])
-        //    index++
-        //    index == this.rains.length ? index = 0 : "";
-        //}, 2000)
         setTimeout(() => {
             this.createRain(this.rains[0]);
         }, 2000);
@@ -615,9 +625,6 @@ class WeatherHandler {
             setTimeout(() => {
                 this.createRaindrop(rainContainer, dropArray, limit);
             }, 10);
-        }
-        else {
-            //    PopupHandler.addToArray("finished rain create")
         }
     }
 }
