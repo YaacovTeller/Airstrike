@@ -279,7 +279,6 @@ class GameHandler {
             this.toggleGamePause();
         }
         if (game.gameInProgress) {
-
             if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') { this.fireFunc(); }
 
             let int = parseInt(event.key);
@@ -300,6 +299,9 @@ class GameHandler {
             }
             else if (event.shiftKey && event.key === 'A') {
                 this.addAllWeapons();
+            }
+            else if (event.shiftKey && event.key === 'Q') {
+                this.progressNumber += 32;
             }
         }
     }

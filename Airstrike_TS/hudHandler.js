@@ -43,11 +43,14 @@ class HudHandler {
     drawProgressBar() {
         let cont = document.createElement('div');
         cont.classList.add("container");
+        let span = document.createElement('span');
+        span.innerText = "UN disapproval";
         let progCont = document.createElement('div');
         progCont.classList.add("progress-container");
         let bar = document.createElement('div');
         bar.classList.add("progress-bar");
         bar.id = "progress";
+        //     this.centerContainer.prepend(span);
         this.centerContainer.appendChild(cont);
         cont.appendChild(progCont);
         progCont.appendChild(bar);

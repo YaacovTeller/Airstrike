@@ -283,6 +283,9 @@ class GameHandler {
             else if (event.shiftKey && event.key === 'A') {
                 this.addAllWeapons();
             }
+            else if (event.shiftKey && event.key === 'Q') {
+                this.progressNumber += 32;
+            }
         }
     }
     addStarterWeapons() {
