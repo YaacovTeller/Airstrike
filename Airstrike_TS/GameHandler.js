@@ -10,8 +10,8 @@ var GameMode;
     GameMode[GameMode["test_1"] = 2] = "test_1";
     GameMode[GameMode["test_2"] = 3] = "test_2";
 })(GameMode || (GameMode = {}));
-var allWeaponTypes = [];
-var extraWeaponTypes = [];
+var conventionalWeapons = [];
+var extraWeapons = [];
 var allTargets = [];
 var allObjects = [];
 var allLevelsArray = [];
@@ -23,7 +23,7 @@ class GameHandler {
     contentEl;
     progressBar;
     darkOverlay;
-    progressNumber;
+    progressNumber = 0;
     shotCount = 0;
     language = Languages.eng;
     difficulty;
@@ -36,16 +36,14 @@ class GameHandler {
     soundTimer;
     gameInProgress = false;
     gameWasPlayed = false;
+    fullProgress = false;
     strikesRestricted = false;
     constructor(element) {
         this.contentEl = element;
-        this.progressBar = document.getElementById('progress');
         userHandler.getUserInfo();
         if (userHandler.userName) {
             userHandler.displayName();
         }
-        this.progressNumber = 30;
-        this.updateProgressBar();
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
         //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
@@ -101,14 +99,17 @@ class GameHandler {
         }
     }
     hideFlare(time) {
-        let flareBox = this.hud.returnWepBox(weaponNames.flare);
+        let name = weaponNames.flare;
+        let hide;
+        let flareBox = this.hud.returnWepBox(name);
         if (flareBox) {
             if (time == Time.day) {
-                flareBox.classList.add("displayNone");
+                hide = true;
             }
             else {
-                flareBox.classList.remove("displayNone");
+                hide = false;
             }
+            this.hud.hideWeapon(name, hide);
         }
     }
     addAllLevels() {
@@ -243,9 +244,6 @@ class GameHandler {
     addHudWeapon(wep) {
         this.hud.addWeapon(wep);
     }
-    //public redrawHudWithWepSelectionChecked() {
-    //    this.hud.drawWeaponDisplay(this.weapon ? this.weapon.name : "");
-    //}
     fireFunc() {
         if (!game.gameInProgress) {
             return;
@@ -266,15 +264,21 @@ class GameHandler {
             }
             let int = parseInt(event.key);
             if (int) {
-                if (allWeaponTypes[int - 1]) {
-                    this.changeWeapon(allWeaponTypes[int - 1]);
+                if (conventionalWeapons[int]) {
+                    this.changeWeapon(conventionalWeapons[int]);
                 }
-                else if (extraWeaponTypes[int - 1]) {
-                    this.changeWeapon(extraWeaponTypes[int - 1]);
+                else if (extraWeapons[int]) {
+                    this.changeWeapon(extraWeapons[int]);
                 }
             }
             else if (event.key.toLowerCase() === 's') {
                 this.level.showActiveTargets();
+            }
+            else if (event.key.toLowerCase() === 't') {
+                game.changeTime(RandomNumberGen.randomNumBetween(0, 2));
+            }
+            else if (event.key.toLowerCase() === 'w') {
+                WeatherHandler.createRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]);
             }
             else if (event.shiftKey && event.key === 'A') {
                 this.addAllWeapons();
@@ -292,8 +296,6 @@ class GameHandler {
         this.level.addNewWeapon(mortarInfo, false);
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
-        this.level.addNewWeapon(chopperInfo, true);
-        this.level.addNewWeapon(nukeInfo, true);
     }
     returnOneSuperWeapon() {
         let rand = RandomNumberGen.randomNumBetween(1, 2);
@@ -313,9 +315,11 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
+        this.level.addNewWeapon(chopperInfo, true);
+        this.level.addNewWeapon(nukeInfo, true);
         //   let special = this.returnOneSuperWeapon();
         ////   this.level.addNewWeapon(chopperInfo, false);
-        //   if (!extraWeaponTypes[special.name - 1]) {
+        //   if (!extraWeaponTypes[special.name]) {
         //       this.level.addNewWeapon(special, false);
         //   }
     }
@@ -368,18 +372,66 @@ class GameHandler {
         this.level.produceSingleTarget(newTarget);
     }
     updateProgressBar() {
+        if (this.progressNumber >= 100) {
+            this.progressNumber = 100;
+            if (this.fullProgress === false) {
+                this.fullProgressBar();
+                this.fullProgress = true;
+            }
+        }
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
             this.progressBar.style.width = this.progressNumber + '%';
         }
     }
-    updateHudMultiKill() {
+    fullProgressBar() {
+        this.progressBar.classList.add("full");
+        let special = this.returnOneSuperWeapon();
+        if (!extraWeapons[special.name]) {
+            this.level.addNewWeapon(special, false);
+        }
+    }
+    drainProgressBar() {
+        this.progressNumber = 0;
+        this.updateProgressBar();
+        this.progressBar.classList.remove("full");
+    }
+    assessKillPoints(priorStatus, damage) {
         this.sequentialHits += 1;
+        if (this.sequentialHits === 1) {
+            this.timeOutForMoreHits(this.sequentialHits);
+        }
+        this.calcScore(priorStatus, damage);
+    }
+    timeOutForMoreHits(prevSequentialHits) {
         setTimeout(() => {
-            if (this.sequentialHits >= 2) {
-                this.hud.updateMultiKillBox(this.sequentialHits);
+            if (this.sequentialHits > prevSequentialHits) {
+                this.timeOutForMoreHits(this.sequentialHits);
             }
-            this.sequentialHits = 0;
-        }, 400);
+            else {
+                this.sequentialHits > 1 ? this.hud.updateMultiKillBox(this.sequentialHits) : "";
+                this.calcScore(this.sequentialHits);
+                this.sequentialHits = 0;
+            }
+        }, 500);
+    }
+    calcScore(arg1, arg2) {
+        let directHitReward = 3;
+        let destroyReward = 2;
+        let prog = 1;
+        if (typeof arg1 === 'number') {
+            prog = arg1;
+        }
+        else {
+            if (arg1 === Status.active && arg2 === Damage.destroyed) {
+                PopupHandler.addToArray("Direct Hit!", "", msgLength.short);
+                prog = directHitReward;
+            }
+            else if (arg2 === Damage.destroyed) {
+                prog = destroyReward;
+            }
+        }
+        this.progressNumber += prog;
+        this.updateProgressBar();
     }
     updateKillStats(stat, num) {
         if (stat) {
@@ -388,28 +440,6 @@ class GameHandler {
         }
         this.hud.updateScore(this.killStats);
     }
-    //private updateHudScore() {
-    //    //stats.disabled = targets.reduce((acc, target) => {
-    //    //    if (target.status === Status.disabled) {
-    //    //        return acc + 1;
-    //    //    } else
-    //    //        return acc;
-    //    //}, 0);
-    //    //stats.destroyed = targets.reduce((acc, target) => {
-    //    //    if (target.damage >= Damage.moderateDamaged) {
-    //    //        return acc + 1;
-    //    //    } else
-    //    //        return acc;
-    //    //}, 0);
-    //    //stats.escaped = this.level.targets.reduce((acc, target) => {
-    //    //    if (target.status === Status.escaped) {
-    //    //        return acc + 1;
-    //    //    } else
-    //    //        return acc;    
-    //    //}, 0);
-    ////    stats.total = targets.length || 0;
-    //  //  this.updateLights();
-    //}
     updateLights() {
         const darkBlueVal = 40;
         let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
@@ -514,8 +544,8 @@ class GameHandler {
         this.level.pauseWave();
         this.level = null;
         ContentElHandler.clearContent();
-        allWeaponTypes = [];
-        extraWeaponTypes = [];
+        conventionalWeapons = [];
+        extraWeapons = [];
         this.resetStats();
     }
     newGame(mode) {
@@ -525,6 +555,9 @@ class GameHandler {
         this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.hud.drawHUD();
+        this.progressBar = document.getElementById('progress');
+        this.progressNumber = 96;
+        this.updateProgressBar();
         this.updateKillStats();
         if (mode == GameMode.regular) {
             this.addAllLevels();
@@ -550,7 +583,7 @@ class GameHandler {
         this.hud.drawMultiKill();
         this.killStats.failLimit = this.difficulty.failLimit; /// put with level
         let startWeapon;
-        for (let w of allWeaponTypes) {
+        for (let w of conventionalWeapons) {
             if (w == undefined)
                 continue;
             if (!startWeapon || w.name == weaponNames.mortar) {

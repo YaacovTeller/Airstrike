@@ -32,6 +32,7 @@ const heavyRain = {
     height: '190vh',
     ambience: storm_amb
 };
+const allRains = [noRain, lightRain, medRain, heavyRain];
 const multiKillText = {
     2: { size: 30, colour: 'yellow' },
     3: { size: 45, colour: 'orange' },
@@ -123,8 +124,8 @@ var weaponNames;
     weaponNames[weaponNames["airstrike"] = 4] = "airstrike";
     weaponNames[weaponNames["drone"] = 5] = "drone";
     weaponNames[weaponNames["tunnel_Charge"] = 6] = "tunnel_Charge";
-    weaponNames[weaponNames["tactical_Nuke"] = 7] = "tactical_Nuke";
-    weaponNames[weaponNames["flare"] = 8] = "flare";
+    weaponNames[weaponNames["flare"] = 7] = "flare";
+    weaponNames[weaponNames["tactical_Nuke"] = 8] = "tactical_Nuke";
     weaponNames[weaponNames["chopper"] = 9] = "chopper";
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {

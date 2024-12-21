@@ -155,7 +155,6 @@ class Level {
                 break;
             }
         }
-        console.log("FIN?: " + fin);
         return fin;
     }
     endWave() {
@@ -255,9 +254,9 @@ class Level {
     }
     addNewWeapon(info, showMsg) {
         let wepName = weaponNames[info.name];
-        let wepArr = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
-        if (wepArr[info.name - 1]) {
-            wepArr[info.name - 1].pushNewWeaponInstance();
+        let wepArr = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        if (wepArr[info.name]) {
+            wepArr[info.name].pushNewWeaponInstance();
             if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }

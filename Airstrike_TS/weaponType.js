@@ -19,11 +19,11 @@ class WeaponType {
         this.noAmmo = info.noAmmo;
         this.select = info.select;
         let wepArr = this.getWeaponArray();
-        wepArr[this.name - 1] = this;
+        wepArr[this.name] = this;
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
+        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -128,6 +128,20 @@ class WeaponType {
         else
             return true;
     }
+    removeWeapon() {
+        if ([weaponNames.tactical_Nuke, weaponNames.chopper].includes(this.name)) {
+            let arr = this.getWeaponArray();
+            let index = arr.indexOf(this);
+            arr[index] = null;
+            for (let i = weaponNames.airstrike; i >= 0; i--) {
+                if (conventionalWeapons[i]) {
+                    game.changeWeapon(conventionalWeapons[i]);
+                    break;
+                }
+            }
+            game.hud.removeWeapon(this.name);
+        }
+    }
 }
 class BulletWeaponType extends WeaponType {
     constructor(info) {
@@ -224,6 +238,13 @@ class ExplosiveWeaponType extends WeaponType {
         this.fireResultsTimeout(inst);
         this.cooldownTimeout(inst);
         this.setActiveInstance();
+        if (this.name === weaponNames.tactical_Nuke) {
+            this.resetProgress();
+        }
+    }
+    resetProgress() {
+        this.removeWeapon();
+        game.drainProgressBar();
     }
     createFlyover(inst) {
         let div = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), "flyover");
@@ -231,11 +252,23 @@ class ExplosiveWeaponType extends WeaponType {
         div.appendChild(img);
         img.src = this.flyoverInfo.imageSource;
         div.style.left = '100vw';
-        div.style.top = inst.blastRadElement ? inst.blastRadElement.style.top : '50vh';
+        div.style.top = this.getFlyoverTopValue(inst);
         const pause = this.flyoverInfo.delay;
         const duration = this.flyoverInfo.duration;
         setTimeout(() => this.beginMoveInterval(div, this.flyoverInfo.speed, duration), pause);
         ContentElHandler.fadeRemoveItem(div, pause + duration, 10);
+    }
+    getFlyoverTopValue(inst) {
+        let returnVal;
+        let maxTop = window.innerHeight - 180;
+        let minTop = 0;
+        if (inst.blastRadElement) {
+            const topValue = parseFloat(inst.blastRadElement.style.top) || 0;
+            returnVal = `${Math.max(minTop, Math.min(topValue, maxTop))}px`;
+        }
+        else
+            returnVal = '50vh';
+        return returnVal;
     }
     beginMoveInterval(div, speed, duration) {
         let interval = setInterval(() => {
@@ -351,15 +384,17 @@ function inNoStrikeZone(target) {
 }
 class Chopper extends ExplosiveWeaponType {
     shotDelay = 1000;
+    firing = false;
     constructor(info) {
         super(info);
         this.flyoverInfo = info.flyover;
     }
     fireFunc() {
-        if (this.ammoCheck() === false) {
+        if (this.ammoCheck() === false || this.firing === true) {
             return;
         }
         this.shotCounter();
+        this.firing = true;
         RandomSoundGen.playRandomSound(this.sound);
         setTimeout(() => this.fireInterval(), this.shotDelay);
     }
@@ -377,7 +412,9 @@ class Chopper extends ExplosiveWeaponType {
             side = !side;
             shots--;
             if (shots <= 0) {
+                this.resetProgress();
                 clearInterval(fireTimer);
+                this.firing = false;
             }
         }, shotGap);
     }
@@ -392,12 +429,14 @@ class Chopper extends ExplosiveWeaponType {
         img2.src = assetsSVGFolder + "chopper_blades.png";
         img2.className = "rotors";
         div.style.left = '100vw';
-        div.style.top = inst.blastRadElement ? inst.blastRadElement.style.top : '50vh';
+        div.style.top = this.getFlyoverTopValue(inst);
         const pause = this.flyoverInfo.delay;
         const duration = this.flyoverInfo.duration;
+        const enterTime = 300;
         const startSpeed = 1;
         const leaveSpeed = startSpeed + 5;
-        setTimeout(() => this.beginMoveInterval(div, startSpeed, duration), 0);
+        setTimeout(() => this.beginMoveInterval(div, leaveSpeed, enterTime), 0);
+        setTimeout(() => this.beginMoveInterval(div, startSpeed, duration), enterTime);
         setTimeout(() => { this.beginMoveInterval(div, leaveSpeed, duration), RandomSoundGen.playRandomSound(this.sound); }, duration);
         ContentElHandler.fadeRemoveItem(div, pause + duration * 2, 10);
     }

@@ -324,37 +324,84 @@ input[type=radio]:checked ~ label {
     }*/
 }
 
-    .container {
-        display: none;
-        pointer-events: none;
-        margin-left: 40%;
-        position: absolute;
-        width: 30%;
-        background-color: rgba(255, 255, 255, 0.3); /* slightly transparent white */
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* shadow effect */
-    }
+.container {
+    pointer-events: none;
+    position: absolute;
+    width: inherit;
+    background-color: rgba(255, 255, 255, 0.3); /* slightly transparent white */
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* shadow effect */
+    z-index: 1;
+}
 
     .progress-container {
         width: 100%;
         background-color: rgba(255, 255, 255, 0);
         /*background-color: #f0f0f0;*/
         border-radius: 5px;
-        margin-bottom: -8px;
+/*        margin-bottom: -8px;*/
+    }
+.leftContainer {
+    display: flex;
+    width: 50%;
+}
+.centerContainer {
+    display: flex;
+     width: 20%;
+}
+.progress-bar {
+    width: 0%;
+    height: 20px;
+    /*    background-color: #4caf50;    */
+    opacity: 0.8;
+    background-color: red;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+}
+
+    .progress-bar.full {
+        width: 100%;
+        background-color: gold;
+        box-shadow: 0 0 15px 5px rgba(255, 223, 0, 0.6), 0 0 30px 10px rgba(255, 223, 0, 0.4);
+        animation: pulse 1.5s infinite, shine 2s linear infinite;
+        position: relative;
+        overflow: hidden;
     }
 
-    .progress-bar {
-        width: 0%;
-        height: 20px;
-        /*    background-color: #4caf50;    */
-        opacity: 0.8;
-        background-color: red;
-        border-radius: 5px;
-        transition: width 1s ease-in-out;
-    }
+        .progress-bar.full::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 200%;
+            background: linear-gradient( to right, rgba(255, 223, 0, 0.2), rgba(255, 255, 255, 0.5), rgba(255, 223, 0, 0.2) );
+            animation: shine 2s linear infinite;
+            pointer-events: none;
+        }
 
-    .progress-markers {
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px 5px rgba(255, 223, 0, 0.6), 0 0 30px 10px rgba(255, 223, 0, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px 7px rgba(255, 223, 0, 0.8), 0 0 40px 15px rgba(255, 223, 0, 0.6);
+    }
+}
+
+@keyframes shine {
+    0% {
+        background-position: -200%;
+    }
+    100% {
+        background-position: 200%;
+    }
+}
+
+/*    .progress-markers {
         display: flex;
         justify-content: space-between;
         margin-top: 10px;
@@ -373,7 +420,7 @@ input[type=radio]:checked ~ label {
             width: 1px;
             height: 5px;
             background-color: black;
-        }
+        }*/
 .loader-container {
     pointer-events: none;
     position: absolute;

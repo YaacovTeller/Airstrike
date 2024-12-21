@@ -177,7 +177,6 @@ class Level {
                 break
             }
         }
-        console.log("FIN?: " + fin)
         return fin;
     }
     protected endWave() {
@@ -282,9 +281,9 @@ class Level {
 
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
         let wepName = weaponNames[info.name];
-        let wepArr: Array<WeaponType> = info.name <= weaponNames.drone ? allWeaponTypes : extraWeaponTypes;
-        if (wepArr[info.name - 1]) {
-            wepArr[info.name - 1].pushNewWeaponInstance();
+        let wepArr: Array<WeaponType> = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        if (wepArr[info.name]) {
+            wepArr[info.name].pushNewWeaponInstance();
             if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }
@@ -347,6 +346,8 @@ const weatherTestInfo: LevelInfo = {
         return newTarget;
     },
 }
+
+
 
 const allLevelInfo: Array<LevelInfo> = [
     {

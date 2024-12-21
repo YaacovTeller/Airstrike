@@ -17,8 +17,9 @@ enum killStatDisplayOptions {
 class HudHandler {
     private hudElem: HTMLElement
     private scoreBox: HTMLElement
-    private rightSideContainer: HTMLElement
     private leftSideContainer: HTMLElement
+    private centerContainer: HTMLElement
+    private rightSideContainer: HTMLElement
     public multiKillBox: HTMLElement
 
     constructor() {
@@ -36,21 +37,39 @@ class HudHandler {
         this.hudElem = el;
 
         this.leftSideContainer = document.createElement('div');
-        this.leftSideContainer.style.display = "flex"
-        this.hudElem.prepend(this.leftSideContainer);
+        this.leftSideContainer.classList.add('leftContainer')
+        this.hudElem.append(this.leftSideContainer);
         this.drawWeaponDisplay();
 
+        this.centerContainer = document.createElement('div');
+        this.centerContainer.classList.add('centerContainer');
+        this.hudElem.append(this.centerContainer);
+        this.drawProgressBar();
+
         this.rightSideContainer = document.createElement('div');
-        this.hudElem.appendChild(this.rightSideContainer);
+        this.hudElem.append(this.rightSideContainer);
         this.drawScore();
     }
 
-    public drawWeaponDisplay() {
-        this.createWeaponContainers(allWeaponTypes, "leftContainer")
-        this.createWeaponContainers(extraWeaponTypes, "centerContainer")
+    private drawWeaponDisplay() {
+        this.createWeaponContainers(conventionalWeapons, "firstWepContainer")
+        this.createWeaponContainers(extraWeapons, "secondWepContainer")
+    }
+    private drawProgressBar() {
+        let cont = document.createElement('div');
+        cont.classList.add("container");
+        let progCont = document.createElement('div');
+        progCont.classList.add("progress-container");
+        let bar = document.createElement('div');
+        bar.classList.add("progress-bar");
+        bar.id = "progress";
+
+        this.centerContainer.appendChild(cont);
+        cont.appendChild(progCont);
+        progCont.appendChild(bar);
     }
 
-    private createWeaponContainers(wepArray, contId) {
+    private createWeaponContainers(wepArray, contId: string) {
         let container = document.createElement('div');
         this.leftSideContainer.appendChild(container);
         container.classList.add('wepBoxContainer');
@@ -65,7 +84,7 @@ class HudHandler {
         }
     }
     private getCorrectWepboxContainer(wep: WeaponType) {
-        let boxId: string = wep.name <= weaponNames.drone ? "leftContainer" : "centerContainer";
+        let boxId: string = wep.name <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
         return document.getElementById(boxId);
     }
 
@@ -146,7 +165,7 @@ class HudHandler {
         this.multiKillBox.style.fontSize = textOption.size + "px";
         this.multiKillBox.style.color = textOption.colour;
         this.multiKillBox.classList.remove('hide');
-        let numberAnimTime = 1000;
+        let numberAnimTime = 500;
         this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
         setTimeout(() => {
             this.multiKillBox.classList.add('hide');
@@ -227,6 +246,20 @@ class HudHandler {
             this.updateScoreSpans(stats, option);
         }
     }
+    public hideWeapon(name: weaponNames, hide: boolean) {
+        let box = this.returnWepBox(name) as HTMLElement
+        if (box) {
+            hide ? box.classList.add("displayNone") : box.classList.remove("displayNone");
+        }
+    }
+    public removeWeapon(name: weaponNames) {
+        let box = this.returnWepBox(name) as HTMLElement
+        if (box) {
+            box.remove();
+        }
+    }
+
+
     public selectBox(wepName: weaponNames) {
         this.getWepboxByName(wepName, true)      
     }

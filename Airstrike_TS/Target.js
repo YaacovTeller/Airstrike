@@ -74,7 +74,6 @@ class Target {
             this.status = Status.disabled;
             game.updateKillStats(killStatDisplayOptions.disabled);
         }
-        game.updateHudMultiKill();
     }
     targetDestroyed(priorStatus) {
         this.damage = Damage.destroyed;
@@ -83,7 +82,6 @@ class Target {
             game.updateKillStats(killStatDisplayOptions.disabled, -1);
         }
         this.removeFromArray();
-        game.updateHudMultiKill();
     }
     removeFromArray() {
         setTimeout(() => {
@@ -154,7 +152,6 @@ class TunnelTarget extends Target {
     setTargetProduction() {
         this.targetTimer = window.setInterval(() => {
             if (game.gameTimer) {
-                console.log("PASSED gameTimer check, it was: " + game.gameTimer);
                 this.produceTargetCheck();
             }
         }, this.newTargetFrequency);
@@ -310,16 +307,19 @@ class VehicleTarget extends Target {
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
             this.badDamage(direc);
+            game.assessKillPoints(priorStatus, this.damage);
             return;
         }
         if (severity == strikeSeverity.heavy) {
             this.damage = Damage.heavyDamaged;
             this.badDamage(direc);
+            game.assessKillPoints(priorStatus, this.damage);
             return;
         }
         if (severity == strikeSeverity.catastrophic) {
             this.targetDestroyed(priorStatus);
             this.completeDestruction(collisionInfo);
+            game.assessKillPoints(priorStatus, this.damage);
             return;
         }
     }

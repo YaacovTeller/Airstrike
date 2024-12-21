@@ -1,11 +1,13 @@
 ﻿
 .wepBoxContainer {
+    pointer-events:all;
     display: flex;
     justify-content: flex-start;
-    margin-right: 50px;
+    margin-right: 25px;
 }
 
 .hud {
+    pointer-events: none;
     width: 100%;
     border-radius: var(--borderRad);
     position: absolute;
@@ -68,7 +70,7 @@
 .wepBox {
     border-radius: var(--borderRad);
     height: 80%;
-    width: 100px;
+    width: 85px;
     background-color: var(--halfOpacGrey);
     display: flex;
     justify-content: flex-start;

@@ -39,6 +39,7 @@ const heavyRain: Rain = {
     height: '190vh',
     ambience: storm_amb
 }
+const allRains = [noRain, lightRain, medRain, heavyRain];
 
 const multiKillText = {
     2: { size: 30, colour: 'yellow'},
@@ -131,8 +132,8 @@ enum weaponNames {
 
     drone = 5,
     tunnel_Charge = 6,
-    tactical_Nuke = 7,
-    flare = 8,
+    flare = 7,
+    tactical_Nuke = 8,
     chopper = 9
 }
 type position = {

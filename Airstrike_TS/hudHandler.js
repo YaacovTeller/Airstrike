@@ -9,8 +9,9 @@ var killStatDisplayOptions;
 class HudHandler {
     hudElem;
     scoreBox;
-    rightSideContainer;
     leftSideContainer;
+    centerContainer;
+    rightSideContainer;
     multiKillBox;
     constructor() {
     }
@@ -24,16 +25,32 @@ class HudHandler {
         ContentElHandler.addToContentWrapper(el);
         this.hudElem = el;
         this.leftSideContainer = document.createElement('div');
-        this.leftSideContainer.style.display = "flex";
-        this.hudElem.prepend(this.leftSideContainer);
+        this.leftSideContainer.classList.add('leftContainer');
+        this.hudElem.append(this.leftSideContainer);
         this.drawWeaponDisplay();
+        this.centerContainer = document.createElement('div');
+        this.centerContainer.classList.add('centerContainer');
+        this.hudElem.append(this.centerContainer);
+        this.drawProgressBar();
         this.rightSideContainer = document.createElement('div');
-        this.hudElem.appendChild(this.rightSideContainer);
+        this.hudElem.append(this.rightSideContainer);
         this.drawScore();
     }
     drawWeaponDisplay() {
-        this.createWeaponContainers(allWeaponTypes, "leftContainer");
-        this.createWeaponContainers(extraWeaponTypes, "centerContainer");
+        this.createWeaponContainers(conventionalWeapons, "firstWepContainer");
+        this.createWeaponContainers(extraWeapons, "secondWepContainer");
+    }
+    drawProgressBar() {
+        let cont = document.createElement('div');
+        cont.classList.add("container");
+        let progCont = document.createElement('div');
+        progCont.classList.add("progress-container");
+        let bar = document.createElement('div');
+        bar.classList.add("progress-bar");
+        bar.id = "progress";
+        this.centerContainer.appendChild(cont);
+        cont.appendChild(progCont);
+        progCont.appendChild(bar);
     }
     createWeaponContainers(wepArray, contId) {
         let container = document.createElement('div');
@@ -49,7 +66,7 @@ class HudHandler {
         }
     }
     getCorrectWepboxContainer(wep) {
-        let boxId = wep.name <= weaponNames.drone ? "leftContainer" : "centerContainer";
+        let boxId = wep.name <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
         return document.getElementById(boxId);
     }
     orderWeaponBoxes() {
@@ -125,7 +142,7 @@ class HudHandler {
         this.multiKillBox.style.fontSize = textOption.size + "px";
         this.multiKillBox.style.color = textOption.colour;
         this.multiKillBox.classList.remove('hide');
-        let numberAnimTime = 1000;
+        let numberAnimTime = 500;
         this.multiKillBox.style.animation = `slamNumber ${numberAnimTime}ms ease-out`;
         setTimeout(() => {
             this.multiKillBox.classList.add('hide');
@@ -196,6 +213,18 @@ class HudHandler {
         const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
             this.updateScoreSpans(stats, option);
+        }
+    }
+    hideWeapon(name, hide) {
+        let box = this.returnWepBox(name);
+        if (box) {
+            hide ? box.classList.add("displayNone") : box.classList.remove("displayNone");
+        }
+    }
+    removeWeapon(name) {
+        let box = this.returnWepBox(name);
+        if (box) {
+            box.remove();
         }
     }
     selectBox(wepName) {
