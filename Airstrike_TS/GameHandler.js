@@ -556,7 +556,7 @@ class GameHandler {
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
-        this.progressNumber = 96;
+        //     this.progressNumber = 96;
         this.updateProgressBar();
         this.updateKillStats();
         if (mode == GameMode.regular) {
