@@ -318,13 +318,17 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
-        this.level.addNewWeapon(chopperInfo, true);
-        this.level.addNewWeapon(nukeInfo, true);
+        this.onlyOneSuperInst(chopperInfo);
+        this.onlyOneSuperInst(nukeInfo);
+        //this.level.addNewWeapon(chopperInfo, true);
+        //this.level.addNewWeapon(nukeInfo, true);
         //   let special = this.returnOneSuperWeapon();
         ////   this.level.addNewWeapon(chopperInfo, false);
-        //   if (!extraWeaponTypes[special.name]) {
-        //       this.level.addNewWeapon(special, false);
-        //   }
+    }
+    onlyOneSuperInst(info) {
+        if (!extraWeapons[info.name]) {
+            this.level.addNewWeapon(info, true);
+        }
     }
     positionElem(elem, pos) {
         elem.style.left = pos.X - elem.offsetWidth / 2 + 'px';
@@ -385,6 +389,15 @@ class GameHandler {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
             this.progressBar.style.width = this.progressNumber + '%';
         }
+        let span = document.getElementById('UNdescription');
+        let text = progressMarkers[Math.floor(this.progressNumber / 10) * 10];
+        if (this.progressNumber > 50) {
+            text += "!";
+        }
+        if (this.progressNumber > 80) {
+            text += "!!";
+        }
+        span.innerText = text;
     }
     fullProgressBar() {
         this.progressBar.classList.add("full");
@@ -395,6 +408,7 @@ class GameHandler {
     }
     drainProgressBar() {
         this.progressNumber = 0;
+        this.fullProgress = false;
         this.updateProgressBar();
         this.progressBar.classList.remove("full");
     }

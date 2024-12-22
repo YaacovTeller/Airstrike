@@ -339,15 +339,21 @@ class GameHandler {
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
 
-        this.level.addNewWeapon(chopperInfo, true);
-        this.level.addNewWeapon(nukeInfo, true);
+        this.onlyOneSuperInst(chopperInfo);
+        this.onlyOneSuperInst(nukeInfo);
+
+        //this.level.addNewWeapon(chopperInfo, true);
+        //this.level.addNewWeapon(nukeInfo, true);
 
      //   let special = this.returnOneSuperWeapon();
      ////   this.level.addNewWeapon(chopperInfo, false);
 
-     //   if (!extraWeaponTypes[special.name]) {
-     //       this.level.addNewWeapon(special, false);
-     //   }
+
+    }
+    private onlyOneSuperInst(info) {
+        if (!extraWeapons[info.name]) {
+            this.level.addNewWeapon(info, true);
+        }
     }
 
     private positionElem(elem: HTMLElement, pos: position) {
@@ -416,6 +422,15 @@ class GameHandler {
         if (parseInt(this.progressBar.style.width) != this.progressNumber) {
             this.progressBar.style.width = this.progressNumber + '%';
         }
+        let span = document.getElementById('UNdescription');
+        let text = progressMarkers[Math.floor(this.progressNumber / 10) * 10];
+        if (this.progressNumber > 50) {
+            text += "!"
+        }
+        if (this.progressNumber > 80) {
+            text += "!!"
+        }
+        span.innerText = text;
     }
     private fullProgressBar() {
         this.progressBar.classList.add("full");
@@ -426,6 +441,7 @@ class GameHandler {
     }
     public drainProgressBar() {
         this.progressNumber = 0;
+        this.fullProgress = false;
         this.updateProgressBar();
         this.progressBar.classList.remove("full");
     }

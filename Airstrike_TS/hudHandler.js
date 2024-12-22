@@ -41,10 +41,18 @@ class HudHandler {
         this.createWeaponContainers(extraWeapons, "secondWepContainer");
     }
     drawProgressBar() {
+        let titleCont = document.createElement('div');
+        let title = document.createElement('div');
+        title.innerHTML = "UN DISAPPROVAL RATING:&nbsp";
+        let span = document.createElement('span');
+        span.id = "UNdescription";
+        titleCont.appendChild(title);
+        titleCont.appendChild(span);
+        titleCont.classList.add("paddingBottom10");
+        titleCont.style.display = "flex";
         let cont = document.createElement('div');
         cont.classList.add("container");
-        let span = document.createElement('span');
-        span.innerText = "UN disapproval";
+        cont.appendChild(titleCont);
         let progCont = document.createElement('div');
         progCont.classList.add("progress-container");
         let bar = document.createElement('div');

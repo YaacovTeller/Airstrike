@@ -41,6 +41,20 @@ const heavyRain: Rain = {
 }
 const allRains = [noRain, lightRain, medRain, heavyRain];
 
+const progressMarkers = {
+    0: "Unacceptable",
+    10: "Objectionable",
+    20: "Disporportionate",
+    30: "Intolerable",
+    40: "Outrageous",
+    50: "Indiscriminate",
+    60: "Atrocious",
+    70: "Reprehensible",
+    80: "Deplorable",
+    90: "Despicable",
+    100: "Genocidal"
+}
+
 const multiKillText = {
     2: { size: 30, colour: 'yellow'},
     3: { size: 45, colour: 'orange'},
