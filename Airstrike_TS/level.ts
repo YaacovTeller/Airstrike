@@ -296,17 +296,41 @@ class Level {
         }
     }
 }
+
+function provideAllTargets(): Target {
+    let rand = RandomNumberGen.randomNumBetween(1, 100);
+    let newTarget: Target;
+    switch (true) {
+        case (rand >= 93):
+            newTarget = new TunnelTarget();
+            break;
+        case (rand >= 87):
+            newTarget = new HeavyVehicleTarget();
+            break;
+        case (rand >= 78):
+            newTarget = new ModVehicleTarget();
+            break;
+        case (rand >= 68):
+            newTarget = new RocketLauncher();
+            break;
+        default:
+            newTarget = new RegVehicleTarget();
+            break;
+    }
+    return newTarget;
+}
+
 const continuousInfo: LevelInfo = {
     number: 0,
     messages: [{ title: "Weapons Test", text: "", length: msgLength.short }],
     waves: [
-        new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double, null, lightRain),
+        new Wave(16, WaveType.sudden, null, lightRain),
+        new Wave(30, WaveType.double),
         new Wave(50, WaveType.double, null, heavyRain),
         new Wave(10, WaveType.gradual, Time.dusk),
         new Wave(10, WaveType.gradual, Time.night),
         new Wave(25, WaveType.sudden, Time.dusk),
-        new Wave(40, WaveType.sudden),
+        new Wave(40, WaveType.sudden, null, heavyRain),
         new Wave(90, WaveType.double),
     ],
     startArms: [],
@@ -319,8 +343,8 @@ const weatherTestInfo: LevelInfo = {
     number: 0,
     messages: [{ title: "Weather Test", text: "", length: msgLength.short }],
     waves: [
-        new Wave(8, WaveType.double),
-        new Wave(8, WaveType.double, Time.dusk),
+        new Wave(8, WaveType.double, null, medRain),
+        new Wave(8, WaveType.double, Time.dusk, heavyRain),
         new Wave(8, WaveType.double, Time.night),
         new Wave(8, WaveType.double, Time.dusk, lightRain),
         new Wave(8, WaveType.double, null, medRain),
@@ -522,26 +546,3 @@ const allLevelInfo: Array<LevelInfo> = [
     },
 
 ]
-
-function provideAllTargets(): Target {
-    let rand = RandomNumberGen.randomNumBetween(1, 100);
-    let newTarget: Target;
-    switch (true) {
-        case (rand >= 93):
-            newTarget = new TunnelTarget();
-            break;
-        case (rand >= 87):
-            newTarget = new HeavyVehicleTarget();
-            break;
-        case (rand >= 78):
-            newTarget = new ModVehicleTarget();
-            break;
-        case (rand >= 68):
-            newTarget = new RocketLauncher();
-            break;
-        default:
-            newTarget = new RegVehicleTarget();
-            break;
-    }
-    return newTarget;
-}

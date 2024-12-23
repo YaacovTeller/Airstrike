@@ -47,7 +47,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; } // FIX?
+    provideAvailTargets() { return; }
     armingUp() { }
     ;
     finalStageArms() { }
@@ -158,15 +158,13 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        PopupHandler.addToArray("Nice job!" + "\n");
         this.allTargetsDeployed = false;
         this.targets = [];
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
-            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -201,7 +199,6 @@ class Level {
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -230,7 +227,7 @@ class Level {
             let this_ = this;
             setTimeout(() => {
                 this_.pauseTargetProduction = false;
-                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+                RandomSoundGen.playSequentialSound(revs);
             }, this_.pauseLength);
         }
         if (this.targets.length >= this.currentWave.number && this.allTargetsDeployed === false) {
@@ -269,17 +266,39 @@ class Level {
         }
     }
 }
+function provideAllTargets() {
+    let rand = RandomNumberGen.randomNumBetween(1, 100);
+    let newTarget;
+    switch (true) {
+        case (rand >= 93):
+            newTarget = new TunnelTarget();
+            break;
+        case (rand >= 87):
+            newTarget = new HeavyVehicleTarget();
+            break;
+        case (rand >= 78):
+            newTarget = new ModVehicleTarget();
+            break;
+        case (rand >= 68):
+            newTarget = new RocketLauncher();
+            break;
+        default:
+            newTarget = new RegVehicleTarget();
+            break;
+    }
+    return newTarget;
+}
 const continuousInfo = {
     number: 0,
     messages: [{ title: "Weapons Test", text: "", length: msgLength.short }],
     waves: [
-        new Wave(16, WaveType.sudden),
-        new Wave(30, WaveType.double, null, lightRain),
+        new Wave(16, WaveType.sudden, null, lightRain),
+        new Wave(30, WaveType.double),
         new Wave(50, WaveType.double, null, heavyRain),
         new Wave(10, WaveType.gradual, Time.dusk),
         new Wave(10, WaveType.gradual, Time.night),
         new Wave(25, WaveType.sudden, Time.dusk),
-        new Wave(40, WaveType.sudden),
+        new Wave(40, WaveType.sudden, null, heavyRain),
         new Wave(90, WaveType.double),
     ],
     startArms: [],
@@ -292,8 +311,8 @@ const weatherTestInfo = {
     number: 0,
     messages: [{ title: "Weather Test", text: "", length: msgLength.short }],
     waves: [
-        new Wave(8, WaveType.double),
-        new Wave(8, WaveType.double, Time.dusk),
+        new Wave(8, WaveType.double, null, medRain),
+        new Wave(8, WaveType.double, Time.dusk, heavyRain),
         new Wave(8, WaveType.double, Time.night),
         new Wave(8, WaveType.double, Time.dusk, lightRain),
         new Wave(8, WaveType.double, null, medRain),
@@ -401,7 +420,6 @@ const allLevelInfo = [
             new Wave(40, WaveType.double, Time.dusk),
         ],
         startArms: [flareInfo, mortarInfo],
-        //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -491,26 +509,3 @@ const allLevelInfo = [
         }
     },
 ];
-function provideAllTargets() {
-    let rand = RandomNumberGen.randomNumBetween(1, 100);
-    let newTarget;
-    switch (true) {
-        case (rand >= 93):
-            newTarget = new TunnelTarget();
-            break;
-        case (rand >= 87):
-            newTarget = new HeavyVehicleTarget();
-            break;
-        case (rand >= 78):
-            newTarget = new ModVehicleTarget();
-            break;
-        case (rand >= 68):
-            newTarget = new RocketLauncher();
-            break;
-        default:
-            newTarget = new RegVehicleTarget();
-            break;
-    }
-    return newTarget;
-}
-//# sourceMappingURL=level.js.map

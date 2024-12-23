@@ -58,7 +58,7 @@ class ExplosionHandler {
         let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity = this.determineSeverity(fraction);
         if (target.damage != Damage.destroyed) {
-            target.hit(severity, weaponName, collisionInfo); // TARGET - Main hit function
+            target.hit(severity, weaponName, collisionInfo);
         }
     }
     static determineSeverity(fraction) {
@@ -129,4 +129,3 @@ class ExplosionHandler {
         return crater;
     }
 }
-//# sourceMappingURL=explosionHandler.js.map
