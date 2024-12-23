@@ -486,8 +486,8 @@ const allLevelInfo: Array<LevelInfo> = [
             new Wave(35, WaveType.gradual),
             new Wave(40, WaveType.double),
         ],
-        startArms: [],
-        endArms: [],
+        startArms: [mortarInfo, droneInfo],
+        endArms: [droneInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);
             let newTarget: Target;
@@ -514,7 +514,7 @@ const allLevelInfo: Array<LevelInfo> = [
             new Wave(55, WaveType.double, Time.dusk),
             new Wave(80, WaveType.double),
         ],
-        startArms: [flareInfo],
+        startArms: [flareInfo, droneInfo],
         endArms: [],
         targetFunc: () => {
             return provideAllTargets();
