@@ -301,14 +301,12 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
     }
     returnOneSuperWeapon() {
-        let rand = RandomNumberGen.randomNumBetween(1, 2);
-        switch (rand) {
-            case (1):
-                return chopperInfo;
-            case (2):
-                return nukeInfo;
-            default:
+        let supers = [chopperInfo, nukeInfo];
+        let rand = RandomNumberGen.randomNumBetween(0, 1);
+        if (extraWeapons[supers[rand].name]) {
+            rand = rand == 0 ? 1 : 0;
         }
+        return supers[rand];
     }
     addAllWeapons() {
         this.level.addNewWeapon(sniperInfo, false);
@@ -354,9 +352,6 @@ class GameHandler {
         }
     }
     changeWeapon(wep) {
-        if (wep == null) {
-            debugger;
-        }
         let wepArr = wep.getWeaponArray();
         if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return;

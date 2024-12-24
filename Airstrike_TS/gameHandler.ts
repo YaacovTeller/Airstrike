@@ -320,14 +320,12 @@ class GameHandler {
         
     }
     private returnOneSuperWeapon() {
-        let rand = RandomNumberGen.randomNumBetween(1, 2);
-        switch (rand) {
-            case (1):
-                return chopperInfo
-            case (2):
-                return nukeInfo
-            default:
+        let supers = [chopperInfo, nukeInfo];
+        let rand = RandomNumberGen.randomNumBetween(0, 1);
+        if (extraWeapons[supers[rand].name]) {
+            rand = rand == 0 ? 1 : 0;
         }
+        return supers[rand];
     }
 
     private addAllWeapons() {
@@ -347,7 +345,6 @@ class GameHandler {
 
      //   let special = this.returnOneSuperWeapon();
      ////   this.level.addNewWeapon(chopperInfo, false);
-
 
     }
     private onlyOneSuperInst(info) {
@@ -383,9 +380,6 @@ class GameHandler {
     }
 
     public changeWeapon(wep: WeaponType) {
-        if (wep == null) {
-            debugger
-        }
         let wepArr = wep.getWeaponArray();
         if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return
