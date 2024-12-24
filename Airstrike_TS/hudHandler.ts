@@ -153,12 +153,40 @@ class HudHandler {
     private addInstance(wepBox: HTMLElement) {
         let instBox = document.createElement('div');
         instBox.classList.add("instBox");
+
+        let timerOverlay = document.createElement('div');
+        timerOverlay.classList.add("timer-overlay");
+        instBox.appendChild(timerOverlay);
+
+     //   this.startTimer(5000, instBox);
+
         wepBox.appendChild(instBox);
+
     }
     private drawInstances(wep, wepBox) {
         for (let y of wep.instances) {
             this.addInstance(wepBox);
         }
+    }
+
+    private startTimer(duration: number, container: HTMLElement): void {
+        const overlay = container.querySelector('.timer-overlay') as HTMLElement | null;
+        let startTime: number | null = null;
+
+        function animateOverlay(timestamp: number): void {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+
+            const progress = Math.min(elapsed / duration, 1);
+            const heightPercentage = (1 - progress) * 100;
+
+            overlay.style.height = `${heightPercentage}%`;
+
+            if (progress < 1) {
+                requestAnimationFrame(animateOverlay);
+            }
+        }
+        requestAnimationFrame(animateOverlay);
     }
 
     public drawMultiKill() {
@@ -273,7 +301,6 @@ class HudHandler {
         }
     }
 
-
     public selectBox(wepName: weaponNames) {
         this.getWepboxByName(wepName, true)      
     }
@@ -294,10 +321,14 @@ class HudHandler {
         }
         return wepBox;
     }
-    public genericChangeClass(num: number, name: weaponNames, action: "add" | "remove", classname: string) {
-        let wep = this.getWepboxByName(name)
+    private genericChangeClass(num: number, name: weaponNames, action: "add" | "remove", classname: string, coolDown?: number) {
+        let wep = this.getWepboxByName(name);
         let instboxes = wep.getElementsByClassName('instBox');
-        action === "add" ? instboxes[num].classList.add(classname) : instboxes[num].classList.remove(classname)
+        action === "add" ? instboxes[num].classList.add(classname) : instboxes[num].classList.remove(classname);
+
+        if (coolDown) {
+            this.startTimer(coolDown, instboxes[num] as HTMLElement);
+        }
     }
 
     public selectInst(num: number, name: weaponNames) {
@@ -306,8 +337,9 @@ class HudHandler {
     public deselectInst(num: number, name: weaponNames) {
         this.genericChangeClass(num, name, "remove", "instSelected")
     }
-    public unavailInst(num: number, name: weaponNames) {
-        this.genericChangeClass(num, name, "add", "instUnavailable")
+    public unavailInst(num: number, name: weaponNames, coolDown: number) {
+        this.genericChangeClass(num, name, "add", "instUnavailable", coolDown);
+
     }
     public availInst(num: number, name: weaponNames) {
         this.genericChangeClass(num, name, "remove", "instUnavailable")

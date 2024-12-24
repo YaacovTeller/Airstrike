@@ -119,7 +119,7 @@ class WeaponType {
         let instances: Array<weaponInstance> = this.instances;
         let name: weaponNames = this.name;
         let index = instances.indexOf(inst);
-        game.hud.unavailInst(index, name);
+        game.hud.unavailInst(index, name, this.cooldown);
 
         let _this = this;
         setTimeout(() => {

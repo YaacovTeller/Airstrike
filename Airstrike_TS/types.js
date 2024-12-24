@@ -91,6 +91,7 @@ var Armour;
     Armour[Armour["moderate"] = 1] = "moderate";
     Armour[Armour["heavy"] = 2] = "heavy";
 })(Armour || (Armour = {}));
+// speeds are actually set with the difficulty settings. Nominal values here
 const regTarget = {
     minSpeed: 4,
     maxSpeed: 8,
@@ -140,6 +141,13 @@ var weaponNames;
     weaponNames[weaponNames["tactical_Nuke"] = 8] = "tactical_Nuke";
     weaponNames[weaponNames["chopper"] = 9] = "chopper";
 })(weaponNames || (weaponNames = {}));
+//const easy: difficultyLevelInfo = {
+//    newTargetEvery: 3000,
+//    regTargetSpeed: { min: 2, max: 3 },
+//    modTargetSpeed: { min: 1, max: 2 },
+//    heavyTargetSpeed: { min: 1, max: 1 },
+//    tunnelTargetSpeed: { min: 1, max: 2 },
+//}
 const normal = {
     newTargetEvery: 3500,
     failLimit: 15,
@@ -403,6 +411,7 @@ class PopupHandler {
         }
     }
     static showPopup() {
+        //pop.play();
         bleepbleep.play();
         if (!this.popUpArray.length)
             return;
@@ -410,6 +419,8 @@ class PopupHandler {
         let currentMsg = this.popUpArray[0];
         let titlebox = document.getElementById("popupTitle");
         let textbox = document.getElementById("popupText");
+        //titlebox.innerText = currentMsg.title;
+        //textbox.innerText = currentMsg.text;
         titlebox.innerHTML = currentMsg.title;
         textbox.innerHTML = currentMsg.text;
         popup.classList.remove("hide");
@@ -448,6 +459,7 @@ class ContentElHandler {
     static returnNewEl(parent, classname) {
         let el = document.createElement('div');
         el.className = classname;
+        //    parent.appendChild(el);
         parent.prepend(el);
         return el;
     }
@@ -490,3 +502,4 @@ class RandomNumberGen {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
+//# sourceMappingURL=types.js.map

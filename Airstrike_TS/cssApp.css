@@ -110,11 +110,17 @@
         /*background-color: rgba(173,216,230, 0.6);*/
         background-color: rgb(173,216,230);
         opacity: 0.6;
+        overflow: hidden;
     }
 
     .instBox.instUnavailable {
         background-color: indianred;
     }
+        .instBox .timer-overlay {
+            width: 100%;
+            height: 0%;
+            background-color: rgba(0, 0, 0, 0.5); 
+        }
 
 .cursor1 {
     cursor: url(./AS_assets/cursors/sniper.cur), crosshair;

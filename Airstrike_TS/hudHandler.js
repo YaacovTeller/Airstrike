@@ -58,6 +58,7 @@ class HudHandler {
         let bar = document.createElement('div');
         bar.classList.add("progress-bar");
         bar.id = "progress";
+        //     this.centerContainer.prepend(span);
         this.centerContainer.appendChild(cont);
         cont.appendChild(progCont);
         progCont.appendChild(bar);
@@ -112,7 +113,7 @@ class HudHandler {
         wepBoxContainerElem.appendChild(wepBox);
         this.drawInstances(wep, wepBox);
         if (wep.name == weaponNames.flare) {
-            game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone");
+            game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone"); // DOUBLED with setWave in Levels. For all weps start.
         }
         if (wep.name == weaponNames.tactical_Nuke || wep.name == weaponNames.chopper) {
             wepBox.classList.add('specialWeapon');
@@ -127,12 +128,32 @@ class HudHandler {
     addInstance(wepBox) {
         let instBox = document.createElement('div');
         instBox.classList.add("instBox");
+        let timerOverlay = document.createElement('div');
+        timerOverlay.classList.add("timer-overlay");
+        instBox.appendChild(timerOverlay);
+        //   this.startTimer(5000, instBox);
         wepBox.appendChild(instBox);
     }
     drawInstances(wep, wepBox) {
         for (let y of wep.instances) {
             this.addInstance(wepBox);
         }
+    }
+    startTimer(duration, container) {
+        const overlay = container.querySelector('.timer-overlay');
+        let startTime = null;
+        function animateOverlay(timestamp) {
+            if (!startTime)
+                startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const heightPercentage = (1 - progress) * 100;
+            overlay.style.height = `${heightPercentage}%`;
+            if (progress < 1) {
+                requestAnimationFrame(animateOverlay);
+            }
+        }
+        requestAnimationFrame(animateOverlay);
     }
     drawMultiKill() {
         this.multiKillBox = document.createElement('div');
@@ -217,6 +238,9 @@ class HudHandler {
         }
     }
     updateScore(stats) {
+        //let span = document.getElementById('scoreCounter')
+        //span.innerText = "Shots: " + stats.shots
+        //    const optionsArray = this.returnkillStatDisplayOptions ();
         const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
             this.updateScoreSpans(stats, option);
@@ -238,13 +262,13 @@ class HudHandler {
         this.getWepboxByName(wepName, true);
     }
     returnWepBox(wepName) {
-        return this.hudElem.querySelector(`[data-name="${wepName}"]`);
+        return this.hudElem.querySelector(`[data-name="${wepName}"]`); // DOUBLED --V
     }
     getWepboxByName(wepName, select) {
         let weps = this.hudElem.getElementsByClassName('wepBox');
         let wepBox = null;
         for (let x of weps) {
-            select ? x.classList.remove("selected") : "";
+            select ? x.classList.remove("selected") : ""; // MESSY
             if (x.getAttribute('data-name') === wepName.toString()) {
                 wepBox = x;
                 if (select) {
@@ -254,10 +278,13 @@ class HudHandler {
         }
         return wepBox;
     }
-    genericChangeClass(num, name, action, classname) {
+    genericChangeClass(num, name, action, classname, coolDown) {
         let wep = this.getWepboxByName(name);
         let instboxes = wep.getElementsByClassName('instBox');
         action === "add" ? instboxes[num].classList.add(classname) : instboxes[num].classList.remove(classname);
+        if (coolDown) {
+            this.startTimer(coolDown, instboxes[num]);
+        }
     }
     selectInst(num, name) {
         this.genericChangeClass(num, name, "add", "instSelected");
@@ -265,10 +292,11 @@ class HudHandler {
     deselectInst(num, name) {
         this.genericChangeClass(num, name, "remove", "instSelected");
     }
-    unavailInst(num, name) {
-        this.genericChangeClass(num, name, "add", "instUnavailable");
+    unavailInst(num, name, coolDown) {
+        this.genericChangeClass(num, name, "add", "instUnavailable", coolDown);
     }
     availInst(num, name) {
         this.genericChangeClass(num, name, "remove", "instUnavailable");
     }
 }
+//# sourceMappingURL=hudHandler.js.map
