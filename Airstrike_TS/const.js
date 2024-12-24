@@ -8,4 +8,3 @@ const destroyedTargetStay = 20000;
 const damagedTargetStay = 40000;
 const itemStay = 15000;
 const fadeAnimTime = 8000;
-//# sourceMappingURL=const.js.map

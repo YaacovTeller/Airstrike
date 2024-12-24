@@ -31,7 +31,7 @@ class GameHandler {
     ambience;
     killStats;
     sequentialHits = 0;
-    level; // messy, fix
+    level;
     gameTimer;
     soundTimer;
     gameInProgress = false;
@@ -46,11 +46,9 @@ class GameHandler {
         }
         this.menuSetup();
         window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
         this.addWeather();
-        //        WeatherHandler.weatherTest();
         this.darkOverlay.style.opacity = '0.5';
         this.killStats = {
             total: 0,
@@ -123,10 +121,10 @@ class GameHandler {
         if (level) {
             let nextLevel = level;
             if (mode == GameMode.sandbox) {
-                nextLevel = level_continuous; /// AWWKWARD? 
+                nextLevel = level_continuous;
             }
             this.level = nextLevel;
-            this.level.setAsLevel(); // NEEDED?
+            this.level.setAsLevel();
             this.level.nextWave();
         }
         else {
@@ -138,7 +136,7 @@ class GameHandler {
         PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
         PopupHandler.addToArray(`Finished <strong>${GameMode[this.gameMode]}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
-        this.gameInProgress = false; // HACKY??
+        this.gameInProgress = false;
         this.cutGameFuncs();
         setTimeout(() => {
             this.toggleModal();
@@ -153,7 +151,6 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        //document.getElementById("startbutton_WeaponTest").onclick = () => this.newGame(GameMode.test_2);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr);
@@ -215,7 +212,6 @@ class GameHandler {
         const selected = JSON.parse(value);
         this.setDifficulty(selected);
     }
-    ////////
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
         this.setSpeeds();
@@ -252,7 +248,7 @@ class GameHandler {
             bleep_neg.play();
             return;
         }
-        this.weapon.fireFunc(); // MESSY??
+        this.weapon.fireFunc();
     }
     handleKeyPress(event) {
         if (event.key === 'Escape') {
@@ -318,10 +314,6 @@ class GameHandler {
         this.level.addNewWeapon(flareInfo, false);
         this.onlyOneSuperInst(chopperInfo);
         this.onlyOneSuperInst(nukeInfo);
-        //this.level.addNewWeapon(chopperInfo, true);
-        //this.level.addNewWeapon(nukeInfo, true);
-        //   let special = this.returnOneSuperWeapon();
-        ////   this.level.addNewWeapon(chopperInfo, false);
     }
     onlyOneSuperInst(info) {
         if (!extraWeapons[info.name]) {
@@ -334,7 +326,7 @@ class GameHandler {
     }
     updateCursorPosition(event) {
         let newMousePos = MouseHandler.updateMousePos(event);
-        if (!this.weapon) { // NEEDED? FROM SHIFTING ARMING LATER IN WAVE SETUP
+        if (!this.weapon) {
             return;
         }
         if (this.weapon.activeInstance && this.weapon.activeInstance.blastRadElement) {
@@ -342,7 +334,7 @@ class GameHandler {
             this.positionElem(blast, newMousePos);
         }
         if (event) {
-            const target = event.target; // FAILSAFE FOR REMOVING NO STRIKE ZONES
+            const target = event.target;
             if (!target.classList.contains('noStrikeZone')) {
                 if (game.strikesRestricted == true) {
                     console.log("hit residual strike zone");
@@ -362,7 +354,7 @@ class GameHandler {
         this.hud.selectBox(wep.name);
         this.switchCursor();
         this.updateCursorPosition();
-        this.weapon.switchTo(); // Main weapon switch func
+        this.weapon.switchTo();
     }
     switchCursor() {
         this.contentEl.classList.forEach((className) => {
@@ -460,7 +452,7 @@ class GameHandler {
         var gradientsString = [lightsString, flaresString]
             .filter(str => str)
             .join(', ');
-        this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
+        this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB;
         this.darkOverlay.style.backgroundColor = defaultRGB;
     }
     returnLightString(arr, rbgString) {
@@ -487,7 +479,7 @@ class GameHandler {
                 setTimeout(() => { light.fading = true; }, baseFadeDelay + light.size);
             }
             if (light.opac > 0 && light.fading) {
-                light.opac -= 0.15; // Reduce opacity
+                light.opac -= 0.15;
             }
             else if (light.opac == 0) {
                 let index = arr.indexOf(light);
@@ -511,10 +503,10 @@ class GameHandler {
             }
             else {
                 this.start_unpause();
-                this.level.continueWave(); // UNPAUSE
+                this.level.continueWave();
             }
         }
-        else if (this.gameWasPlayed) { // FOR WHAT SITU??
+        else if (this.gameWasPlayed) {
             this.pause();
         }
     }
@@ -568,7 +560,6 @@ class GameHandler {
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
-        //     this.progressNumber = 96;
         this.updateProgressBar();
         this.updateKillStats();
         if (mode == GameMode.regular) {
@@ -593,7 +584,7 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
         }
         this.hud.drawMultiKill();
-        this.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.killStats.failLimit = this.difficulty.failLimit;
         let startWeapon;
         for (let w of conventionalWeapons) {
             if (w == undefined)
@@ -606,7 +597,7 @@ class GameHandler {
         this.start_unpause();
     }
     start_unpause() {
-        if (this.gameInProgress == false) { // NEW GAME
+        if (this.gameInProgress == false) {
             this.gameInProgress = true;
             this.gameWasPlayed = true;
         }
@@ -635,15 +626,6 @@ class WeatherHandler {
         setTimeout(() => {
             this.createRain(this.rains[0]);
         }, 6000);
-        //setTimeout(() => {
-        //    this.createRain(this.rains[0])
-        //}, 8000)
-        //setTimeout(() => {
-        //    this.createRain(this.rains[3])
-        //}, 12000)
-        //setTimeout(() => {
-        //    this.createRain(this.rains[0])
-        //}, 15000)
     }
     static createRain(rainType) {
         const rainContainer = document.querySelector(".rain");
@@ -673,4 +655,3 @@ class WeatherHandler {
         }
     }
 }
-//# sourceMappingURL=gameHandler.js.map

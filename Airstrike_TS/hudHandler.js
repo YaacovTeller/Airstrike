@@ -58,7 +58,6 @@ class HudHandler {
         let bar = document.createElement('div');
         bar.classList.add("progress-bar");
         bar.id = "progress";
-        //     this.centerContainer.prepend(span);
         this.centerContainer.appendChild(cont);
         cont.appendChild(progCont);
         progCont.appendChild(bar);
@@ -113,7 +112,7 @@ class HudHandler {
         wepBoxContainerElem.appendChild(wepBox);
         this.drawInstances(wep, wepBox);
         if (wep.name == weaponNames.flare) {
-            game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone"); // DOUBLED with setWave in Levels. For all weps start.
+            game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone");
         }
         if (wep.name == weaponNames.tactical_Nuke || wep.name == weaponNames.chopper) {
             wepBox.classList.add('specialWeapon');
@@ -131,7 +130,6 @@ class HudHandler {
         let timerOverlay = document.createElement('div');
         timerOverlay.classList.add("timer-overlay");
         instBox.appendChild(timerOverlay);
-        //   this.startTimer(5000, instBox);
         wepBox.appendChild(instBox);
     }
     drawInstances(wep, wepBox) {
@@ -238,9 +236,6 @@ class HudHandler {
         }
     }
     updateScore(stats) {
-        //let span = document.getElementById('scoreCounter')
-        //span.innerText = "Shots: " + stats.shots
-        //    const optionsArray = this.returnkillStatDisplayOptions ();
         const optionsArray = this.returnkillStatDisplayOptions();
         for (let option of optionsArray) {
             this.updateScoreSpans(stats, option);
@@ -262,13 +257,13 @@ class HudHandler {
         this.getWepboxByName(wepName, true);
     }
     returnWepBox(wepName) {
-        return this.hudElem.querySelector(`[data-name="${wepName}"]`); // DOUBLED --V
+        return this.hudElem.querySelector(`[data-name="${wepName}"]`);
     }
     getWepboxByName(wepName, select) {
         let weps = this.hudElem.getElementsByClassName('wepBox');
         let wepBox = null;
         for (let x of weps) {
-            select ? x.classList.remove("selected") : ""; // MESSY
+            select ? x.classList.remove("selected") : "";
             if (x.getAttribute('data-name') === wepName.toString()) {
                 wepBox = x;
                 if (select) {
@@ -299,4 +294,3 @@ class HudHandler {
         this.genericChangeClass(num, name, "remove", "instUnavailable");
     }
 }
-//# sourceMappingURL=hudHandler.js.map

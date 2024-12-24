@@ -47,7 +47,7 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
-    provideAvailTargets() { return; } // FIX?
+    provideAvailTargets() { return; }
     armingUp() { }
     ;
     finalStageArms() { }
@@ -158,15 +158,13 @@ class Level {
         return fin;
     }
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        PopupHandler.addToArray("Nice job!" + "\n");
         this.allTargetsDeployed = false;
         this.targets = [];
         this.nextWavePrepGap();
     }
     nextWavePrepGap() {
         setTimeout(() => {
-            //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
@@ -201,7 +199,6 @@ class Level {
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -230,7 +227,7 @@ class Level {
             let this_ = this;
             setTimeout(() => {
                 this_.pauseTargetProduction = false;
-                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+                RandomSoundGen.playSequentialSound(revs);
             }, this_.pauseLength);
         }
         if (this.targets.length >= this.currentWave.number && this.allTargetsDeployed === false) {
@@ -423,7 +420,6 @@ const allLevelInfo = [
             new Wave(40, WaveType.double, Time.dusk),
         ],
         startArms: [flareInfo, mortarInfo],
-        //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -513,4 +509,3 @@ const allLevelInfo = [
         }
     },
 ];
-//# sourceMappingURL=level.js.map
