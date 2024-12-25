@@ -33,6 +33,7 @@ class GameHandler {
 
     public killStats: killStats;
 
+    public volume: number = 0;
     private sequentialHits: number = 0;
     public level: Level;   // messy, fix
     public gameTimer: number;
@@ -50,12 +51,10 @@ class GameHandler {
         }
 
         this.menuSetup();
-        window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
-        //  document.getElementById("devDiff").onclick = () => { this.setDifficulty(dev); this.newGame(GameMode.regular); }
         this.setEventListeners();
+
         document.getElementById("loader").style.display = 'none';
-        this.addWeather();
-//        WeatherHandler.weatherTest();
+        this.addWeatherElements();
         this.darkOverlay.style.opacity = '0.5';
 
         this.killStats = {
@@ -74,7 +73,7 @@ class GameHandler {
         this.killStats.escaped = 0;
         this.killStats.shots = 0;
     }
-    private addWeather() {
+    private addWeatherElements() {
         this.darkOverlay = document.createElement('div');
         this.darkOverlay.classList.add('darkOverlay')
         ContentElHandler.addToContentWrapper(this.darkOverlay);
@@ -156,6 +155,7 @@ class GameHandler {
     }
 
     private setEventListeners() {
+        window.addEventListener('keydown', (event) => this.handleKeyPress(event), true);
         this.contentEl.addEventListener("click", () => this.fireFunc());
         this.contentEl.addEventListener('mousemove', (event) => this.updateCursorPosition(event));
     }
@@ -172,6 +172,10 @@ class GameHandler {
         this.toggleLang();
         this.toggleModal();
 
+        this.setRadioButtons();
+        this.setVolumeSlider();
+    }
+    private setRadioButtons() {
         const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
@@ -179,6 +183,19 @@ class GameHandler {
                 this.jsonParseRadioDifficulty(radioButton.value);
             }
         });
+    }
+    private setVolumeSlider() {
+        const slider: HTMLInputElement = document.getElementById("slider") as HTMLInputElement;
+        slider.addEventListener("input", () => {
+            this.setVolume(slider);
+        });
+        this.setVolume(slider);
+    }
+    private setVolume(slider) {
+        const sliderValue = document.getElementById("sliderValue");
+        let vol = Math.round(parseFloat(slider.value)*100);
+        this.volume = vol / 100;
+        sliderValue.textContent = `Volume: ${(vol)}%`;
     }
     private setMenuDifficulty(liOptions) {
         this.setIndivMenuDifficulty(normal, liOptions[0]);

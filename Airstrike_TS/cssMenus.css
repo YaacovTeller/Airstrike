@@ -150,13 +150,14 @@ body {
     width: 75%;
     padding: 10px;
 }
+.menuTopBar {
+    display: flex;
+    justify-content:space-between;
+}
 
 #langbutton {
-    position: absolute;
-    top: 5%;
-    right: 4%;
+    margin: 0;
     padding: 10px;
-    font-size: 16px;
 }
 /*#devDiff {
     width: fit-content;
@@ -448,4 +449,50 @@ input[type=radio]:checked ~ label {
 .throwWheel {
 /*    animation: rotate 2s linear infinite, move-right 4s ease-out infinite;
 */    transition: opacity 6s ease-in-out
+}
+
+
+#slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #ddd;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    border-radius: 5px;
+}
+    #slider:hover {
+        opacity: 1;
+    }
+    #slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 10px;
+        height: 10px;
+        background: grey;
+        cursor: pointer;
+        border-radius: 50%;
+        box-shadow: 0 0 2px #000;
+    }
+    #slider::-moz-range-thumb {
+        width: 10px;
+        height: 10px;
+        background: grey;
+        cursor: pointer;
+        border-radius: 50%;
+        box-shadow: 0 0 2px #000;
+    }
+    #slider::-webkit-slider-runnable-track {
+        background: #4CAF50;
+        border-radius: 5px;
+    }
+    #slider::-moz-range-track {
+        background: #4CAF50;
+        border-radius: 5px;
+    }
+#sliderValue {
+/*    margin-top: 10px;
+    font-weight: bold;*/
 }

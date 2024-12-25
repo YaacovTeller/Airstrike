@@ -25,8 +25,19 @@
     <div class="flexCenter">
         <div id="modal" class="displayNone">
             <div class="modalContainer">
-                <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
-                <!--<button id="devDiff"><span>dev</span></button>-->
+
+                <div class="menuTopBar">
+                    <div>
+                        <input type="range"
+                               id="slider"
+                               min="0"
+                               max="1"
+                               step="0.05"
+                               value="1.0" />
+                        <div id="sliderValue"></div>
+                    </div>
+                    <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
+                </div>
                 <div id="input-container">
                     <div id="userNameInput">
                         <input type="text" id="username" placeholder="Enter your name">

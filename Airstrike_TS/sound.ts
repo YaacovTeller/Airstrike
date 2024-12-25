@@ -1,6 +1,7 @@
 ﻿class Sound {
     private sound;
     public title;
+    public volume;
     constructor(src: string) {
         let arr = src.split('/');
         this.title = arr[arr.length - 1] //arr[arr.length - 2] + "/" + arr[arr.length - 1]
@@ -31,6 +32,11 @@
 
 class RandomSoundGen {
     static soundIndexes: Object = {};
+
+    static playWithVolumeSet(sound: Sound) {
+        sound.setVolume(game.volume);
+        sound.play();
+    }
     static getRandomSound(sounds: Array<Sound>) {
         let length = sounds.length;
         let randNum = Math.floor(Math.random() * (length) + 1);
@@ -38,7 +44,8 @@ class RandomSoundGen {
     }
     static playRandomSound(sounds: Array<Sound>) {
         let sound = this.getRandomSound(sounds);
-        sound.play();
+        // sound.play();
+        this.playWithVolumeSet(sound);
     }
     static playSequentialSound(sounds: Array<Sound>) {
         let title = sounds[0].title
@@ -49,16 +56,20 @@ class RandomSoundGen {
         else {
             this.soundIndexes[title]++
         }
-        sounds[this.soundIndexes[title]].play();
+        let sound = sounds[this.soundIndexes[title]];
+        // sound.play();
+        this.playWithVolumeSet(sound);
     }
+
     static playThroughArray(sounds: Array<Sound>) {
         let index = 0;
         this.playWithEndEvent(sounds, index);
     }
     private static playWithEndEvent(sounds: Array<Sound>, index) {
         let sound = sounds[index];
-        sound.play();
-        sound.addEndEvent (() => {
+        // sound.play();
+        this.playWithVolumeSet(sound);
+        sound.addEndEvent(() => {
             index++;
             index == sounds.length ? index = 0 : "";
             if (index < sounds.length) {
