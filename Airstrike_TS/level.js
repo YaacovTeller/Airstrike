@@ -195,7 +195,7 @@ class Level {
         this.setCurrentWave();
         funcToExecute ? funcToExecute() : "";
         if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
-            RandomSoundGen.playSequentialSound(revs);
+            SoundPlayer.playSequentialSound(revs);
         }
         this.continueWave();
         return true;
@@ -230,7 +230,7 @@ class Level {
             let this_ = this;
             setTimeout(() => {
                 this_.pauseTargetProduction = false;
-                RandomSoundGen.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
+                SoundPlayer.playSequentialSound(revs); // UNIFY with NEXT WAVE revs
             }, this_.pauseLength);
         }
         if (this.targets.length >= this.currentWave.number && this.allTargetsDeployed === false) {

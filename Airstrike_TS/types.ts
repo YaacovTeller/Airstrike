@@ -484,8 +484,8 @@ class PopupHandler {
         }
     }
     private static showPopup() {
-        //pop.play();
-        bleepbleep.play();
+        SoundPlayer.playWithVolumeSet(bleepbleep);
+
         if (!this.popUpArray.length) return
         let popup = document.getElementById("popupBox");
         let currentMsg = this.popUpArray[0]

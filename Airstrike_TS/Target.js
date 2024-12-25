@@ -145,7 +145,7 @@ class TunnelTarget extends Target {
             let rect = this.getTargetEl().getBoundingClientRect();
             let pos = { X: rect.x, Y: rect.y };
             let newTarget = new RegVehicleTarget(pos);
-            RandomSoundGen.playSequentialSound(revs);
+            SoundPlayer.playSequentialSound(revs);
             game.targetCreation(newTarget);
         }
     }
@@ -221,7 +221,7 @@ class VehicleTarget extends Target {
         super(info, position);
     }
     ricochetChance(num) {
-        RandomNumberGen.randomNumBetween(1, 10) > num ? RandomSoundGen.playRandomSound(ricochet) : "";
+        RandomNumberGen.randomNumBetween(1, 10) > num ? SoundPlayer.playRandomSound(ricochet) : "";
     }
     incrementDamageForArmour() {
         this.damage += 1;
@@ -290,7 +290,7 @@ class VehicleTarget extends Target {
         if (this.damage <= Damage.damaged) {
             let rollForHit = RandomNumberGen.randomNumBetween(1, 8);
             if (rollForHit == 8) {
-                RandomSoundGen.playRandomSound(acknowledge);
+                SoundPlayer.playRandomSound(acknowledge);
             }
         }
     }
@@ -503,7 +503,7 @@ class RocketLauncher extends VehicleTarget {
         let delay = 500;
         let _this = this;
         setTimeout(() => {
-            activate.play();
+            SoundPlayer.playWithVolumeSet(activate);
             _this.launcherEl.classList.add('raiseLauncher');
         }, delay);
         setTimeout(() => {

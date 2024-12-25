@@ -28,7 +28,7 @@ class Sound {
         this.sound.onended = () => func();
     }
 }
-class RandomSoundGen {
+class SoundPlayer {
     static soundIndexes = {};
     static playWithVolumeSet(sound) {
         sound.setVolume(game.volume);

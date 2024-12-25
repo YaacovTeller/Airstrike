@@ -285,7 +285,7 @@ class GameHandler {
             return;
         }
         if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
-            bleep_neg.play();
+            SoundPlayer.playWithVolumeSet(bleep_neg);
             return
         }
         this.weapon.fireFunc(); // MESSY??
@@ -558,7 +558,7 @@ class GameHandler {
             this.pause();
             this.gameInProgress = false;
             PopupHandler.addToArray("", "Game Over!", msgLength.long);
-            alarm3.play();
+            SoundPlayer.playWithVolumeSet(alarm3);
         }
     }
 
@@ -582,11 +582,11 @@ class GameHandler {
         this.startAmbience();
     }
     private startAmbience() {
-        RandomSoundGen.playThroughArray(this.ambience.primary);
+        SoundPlayer.playThroughArray(this.ambience.primary);
         if (this.ambience.secondary.length) {
             this.soundTimer = setInterval(() => {
                 if (!this.ambience.secondary.length) return
-                RandomSoundGen.playRandomSound(this.ambience.secondary);
+                SoundPlayer.playRandomSound(this.ambience.secondary);
             }, 15000);
         }
     }

@@ -9,7 +9,7 @@
     }
     private static carCrashSound() {
         setTimeout(() => {
-            RandomSoundGen.playRandomSound(crashes)
+            SoundPlayer.playRandomSound(crashes)
         }, crashTimeout);
     }
 

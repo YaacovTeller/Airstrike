@@ -33,10 +33,10 @@ class WeaponType {
         }
     }
     playSound() {
-        RandomSoundGen.playSequentialSound(this.sound);
+        SoundPlayer.playSequentialSound(this.sound);
     }
     playSelectSound() {
-        RandomSoundGen.playSequentialSound(this.select);
+        SoundPlayer.playSequentialSound(this.select);
     }
     switchTo() {
         this.playSelectSound();
@@ -74,7 +74,7 @@ class WeaponType {
         }
     }
     pushNewWeaponInstance() {
-        pickup.play();
+        SoundPlayer.playWithVolumeSet(pickup);
         let inst = {
             ready: true,
         };
@@ -122,7 +122,7 @@ class WeaponType {
     }
     ammoCheck() {
         if (this.activeInstance == null || this.activeInstance.ready === false) {
-            this.noAmmo.play();
+            SoundPlayer.playWithVolumeSet(this.noAmmo);
             return false;
         }
         else
@@ -183,7 +183,7 @@ class BulletWeaponType extends WeaponType {
     determineExceptionsForArmour(target, severity) {
         let exception = false;
         if (target.armour >= Armour.moderate) {
-            RandomSoundGen.playRandomSound(ricochet);
+            SoundPlayer.playRandomSound(ricochet);
             exception = true;
         }
         return exception;
@@ -233,7 +233,7 @@ class ExplosiveWeaponType extends WeaponType {
             this.createFlyover(inst);
         }
         if (this.explosionInfo.sound.length) {
-            setTimeout(() => RandomSoundGen.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
+            setTimeout(() => SoundPlayer.playSequentialSound(this.explosionInfo.sound), this.explosionInfo.soundDelay || 100);
         }
         this.fireResultsTimeout(inst);
         this.cooldownTimeout(inst);
@@ -359,17 +359,17 @@ class ChargeWeaponType extends WeaponType {
                 inst.ready = false;
                 this.shotCounter();
                 this.cooldownTimeout(inst);
-                RandomSoundGen.playSequentialSound(beeps);
-                RandomSoundGen.playSequentialSound(ticks);
+                SoundPlayer.playSequentialSound(beeps);
+                SoundPlayer.playSequentialSound(ticks);
                 setTimeout(() => {
                     tunnel.hit(strikeSeverity.catastrophic, this.name); // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
-                    RandomSoundGen.playSequentialSound(multiExplosions);
+                    SoundPlayer.playSequentialSound(multiExplosions);
                 }, this.speed);
             }
             ;
         }
-        hit === false ? bleep_neg.play() : "";
+        hit === false ? SoundPlayer.playWithVolumeSet(bleep_neg) : "";
         this.setActiveInstance();
     }
 }
@@ -395,7 +395,7 @@ class Chopper extends ExplosiveWeaponType {
         }
         this.shotCounter();
         this.firing = true;
-        RandomSoundGen.playRandomSound(this.sound);
+        SoundPlayer.playRandomSound(this.sound);
         setTimeout(() => this.fireInterval(), this.shotDelay);
     }
     fireInterval() {
@@ -407,7 +407,7 @@ class Chopper extends ExplosiveWeaponType {
         let fireTimer = setInterval(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
-            RandomSoundGen.playSequentialSound(cannonSounds);
+            SoundPlayer.playSequentialSound(cannonSounds);
             ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
             side = !side;
             shots--;
@@ -437,7 +437,7 @@ class Chopper extends ExplosiveWeaponType {
         const leaveSpeed = startSpeed + 5;
         setTimeout(() => this.beginMoveInterval(div, leaveSpeed, enterTime), 0);
         setTimeout(() => this.beginMoveInterval(div, startSpeed, duration), enterTime);
-        setTimeout(() => { this.beginMoveInterval(div, leaveSpeed, duration), RandomSoundGen.playRandomSound(this.sound); }, duration);
+        setTimeout(() => { this.beginMoveInterval(div, leaveSpeed, duration), SoundPlayer.playRandomSound(this.sound); }, duration);
         ContentElHandler.fadeRemoveItem(div, pause + duration * 2, 10);
     }
 }
@@ -461,7 +461,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
         this.findTargets();
     }
     findTargets() {
-        bleep_pos.play();
+        SoundPlayer.playWithVolumeSet(bleep_pos);
         this.clearTargets();
         let activeTargets = game.level.targets.filter(t => t.status == Status.active && t.getLockOnStatus() == false && t.movesAtBlast);
         let noStrikeZones = document.querySelectorAll(".noStrikeZone");
@@ -481,11 +481,11 @@ class DroneWeaponType extends ExplosiveWeaponType {
         this.lockedTargets = chosenTargets;
     }
     playSound() {
-        bleepbleep.play();
+        SoundPlayer.playWithVolumeSet(bleepbleep);
         let snd = this.sound;
         setTimeout(() => {
-            RandomSoundGen.playSequentialSound(strikePrep);
-            setTimeout(() => { RandomSoundGen.playRandomSound(snd); }, 300);
+            SoundPlayer.playSequentialSound(strikePrep);
+            setTimeout(() => { SoundPlayer.playRandomSound(snd); }, 300);
         }, 300);
     }
     fireFunc() {
@@ -511,7 +511,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
             setTimeout(() => {
                 trgt.toggleLockOn(false);
                 trgt.toggleLockOnStrike(false);
-                RandomSoundGen.playSequentialSound(multiExplosions);
+                SoundPlayer.playSequentialSound(multiExplosions);
                 let deviation = 10;
                 let deviationX = RandomNumberGen.randomNumBetween(-deviation, deviation);
                 let deviationY = RandomNumberGen.randomNumBetween(-deviation, deviation);

@@ -30,7 +30,7 @@
     }
 }
 
-class RandomSoundGen {
+class SoundPlayer {
     static soundIndexes: Object = {};
 
     static playWithVolumeSet(sound: Sound) {
