@@ -14,9 +14,11 @@ var conventionalWeapons: Array<WeaponType> = [];
 var extraWeapons: Array<WeaponType> = [];
 var allTargets: Array<Target> = [];
 var allObjects: Array<HTMLElement> = [];
-var allLevelsArray: Array<Level> = [];
-const level_continuous: Level = new Level(continuousInfo);
-const level_weather: Level = new Level(weatherTestInfo);
+var allBuildings: Array<HTMLElement> = [];
+var allLevelsArray: Array<Level_Waves> = [];
+const level_continuous: Level_Waves = new Level_Waves(continuousInfo);
+const level_weather: Level_Waves = new Level_Waves(weatherTestInfo);
+const level_static: Level_Static = new Level_Static(staticInfo);
 
 class GameHandler {
     public hud = new HudHandler();
@@ -29,7 +31,7 @@ class GameHandler {
     private language: Languages = Languages.eng;
     public difficulty: difficultyLevelInfo;
     public gameMode: GameMode;
-    private ambience: AmbienceSet;
+    public ambience: AmbienceSet;
 
     public killStats: killStats;
 
@@ -56,6 +58,9 @@ class GameHandler {
         document.getElementById("loader").style.display = 'none';
         this.addWeatherElements();
         this.darkOverlay.style.opacity = '0.5';
+        this.createWater(0);
+
+        this.handleBackgroundByLocation(Area.desert);
 
         this.killStats = {
             total: 0,
@@ -79,7 +84,8 @@ class GameHandler {
         ContentElHandler.addToContentWrapper(this.darkOverlay);
 
         let rain = document.createElement('div');
-        rain.classList.add('rain')
+        rain.classList.add('rain');
+        
         ContentElHandler.addToContentWrapper(rain);
     }
     public setRain(rain: Rain) {
@@ -87,6 +93,38 @@ class GameHandler {
             this.switchAmbience(rain.ambience)
         }
         WeatherHandler.createRain(rain);
+    }
+
+    private setBackground(url: string) {
+        let back = ContentElHandler.returnbackground();
+        back.style.backgroundImage = url;
+        back.style.backgroundSize = 'tile';
+        //content.style.backgroundSize = 'cover';
+    }
+    private handleBackgroundByLocation(num: Area) {
+        let url: string;
+        if (num == Area.desert) {
+            url = "url(./AS_assets/Sand.png)";
+            this.extendWater("0%")
+        }
+        else if (num == Area.port) {
+            url = "url(./AS_assets/DS_sand.png)"; // SAME so far
+            this.extendWater("33%");
+        }
+        this.setBackground(url);
+        document.getElementById("contentWrapper").style.backgroundImage = `url(./AS_assets/Sand.png)`;
+
+    }
+    private createWater(width) {
+        let water = document.createElement('div');
+        water.id = "water";
+        water.classList.add('water');
+        water.style.width = width;
+        ContentElHandler.addToBackground(water);
+    }
+    private extendWater(width) {
+        let water = document.getElementById("water")
+        water.style.width = width;
     }
 
     public changeTime(time: Time) {
@@ -123,20 +161,29 @@ class GameHandler {
     private addAllLevels() {
         allLevelsArray = [];
         for (let i of allLevelInfo) {
-            let lev = new Level(i)
+            let lev = new Level_Waves(i)
             allLevelsArray.push(lev);
         }
     }
 
-    public newLevel(level: Level, mode: GameMode) {
+    public newStaticLevel(level: Level_Static) {
+        this.handleBackgroundByLocation(this.level.returnLocation());
+
+    }
+
+    public newLevel(level: Level_Waves, mode: GameMode) {
         if (level) {
             let nextLevel = level;
             if (mode == GameMode.sandbox) {
-                nextLevel = level_continuous;   /// AWWKWARD? 
+                nextLevel = level_continuous;   // AWWKWARD? 
             }
             this.level = nextLevel;
             this.level.setAsLevel(); // NEEDED?
-            this.level.nextWave();
+
+            this.handleBackgroundByLocation(this.level.returnLocation());
+            if (this.level instanceof Level_Waves) {
+                this.level.nextWave();
+            }
         }
         else {
             this.endGame();
@@ -164,7 +211,7 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        //document.getElementById("startbutton_WeaponTest").onclick = () => this.newGame(GameMode.test_2);
+        document.getElementById("startbutton_test_2").onclick = () => this.newGame(GameMode.test_2);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
 
@@ -174,6 +221,7 @@ class GameHandler {
 
         this.setRadioButtons();
         this.setVolumeSlider();
+        this.setupInstructionsToggle();
     }
     private setRadioButtons() {
         const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
@@ -207,6 +255,25 @@ class GameHandler {
         let lis = container.getElementsByTagName('li');
         return Array.from(lis);
     }
+    private setupInstructionsToggle() {
+        const button = document.getElementById("instructionsToggle");
+        const content = document.getElementById("instructionsContent");
+
+        button.addEventListener("click", () => {
+            content.classList.toggle("open");
+            button.classList.toggle("active");
+            const open = content.classList.contains("open");
+            // rotate arrow
+            if (open) {
+                button.querySelector(".eng").innerHTML = "▼ Instructions";
+                button.querySelector(".heb").innerHTML = "הנחיות ▼";
+            }
+            else {
+                button.querySelector(".eng").innerHTML = "▶ Instructions";
+                button.querySelector(".heb").innerHTML = "◀ הנחיות";
+            }
+        });
+    }
 
     private toggleLang() { // CLEAN UP
         const root: HTMLElement = document.querySelector(':root');
@@ -237,7 +304,7 @@ class GameHandler {
         span.classList.add(langString)
         label.appendChild(span);
         span = document.createElement('span');
-        span.innerText = dif[langString].description;
+        span.innerHTML = dif[langString].description;
         span.classList.add(langString)
         label.appendChild(span);
     }
@@ -578,6 +645,22 @@ class GameHandler {
     }
     public switchAmbience(amb: AmbienceSet) {
         this.stopAmbience();
+        let divisor = 1;
+        switch (amb) {
+            case storm_amb:
+                divisor = 8
+                break;
+            case heavyRain_amb:
+                divisor = 4
+                break;
+            case rain_amb:
+                divisor = 2
+                break;
+            default:
+                divisor = 1
+        }
+        fireStay = itemStay / divisor;
+        destroyedTargetStay = destroyedTargetStayConst / divisor;
         this.ambience = amb;
         this.startAmbience();
     }
@@ -611,6 +694,7 @@ class GameHandler {
     }
     public reset() {
         this.level.resetTargets();
+        this.resetBuildings();
         this.level.pauseWave();
         this.level = null;
         ContentElHandler.clearContent();
@@ -618,6 +702,12 @@ class GameHandler {
         conventionalWeapons = [];
         extraWeapons = [];
         this.resetStats();
+    }
+    private resetBuildings() {
+        for (let x of allBuildings) {
+            x.remove();
+        }
+        allBuildings = [];
     }
 
     public newGame(mode: GameMode) {
@@ -628,7 +718,6 @@ class GameHandler {
         PopupHandler.addToArray(game.difficulty.eng.name);
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
-   //     this.progressNumber = 96;
         this.updateProgressBar();
 
         this.updateKillStats();
@@ -638,7 +727,7 @@ class GameHandler {
             this.newLevel(allLevelsArray[0], mode)
         }
         else if (mode == GameMode.sandbox) {
-            this.newLevel(level_continuous, mode)
+            this.newLevel(level_continuous, mode);
             this.addFullWeaponLoadout();
         }
         else if (mode == GameMode.test_1) {
@@ -653,9 +742,14 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
             this.level.addNewWeapon(flareInfo, false);
         }
+        else if (mode == GameMode.test_2) {
+            this.newStaticLevel(level_continuous);
+            this.level.addNewWeapon(airstrikeInfo, true);
+            this.drawAllBuildings();
+        }
 
         this.hud.drawMultiKill();
-        this.killStats.failLimit = this.difficulty.failLimit; /// put with level
+        this.killStats.failLimit = this.difficulty.failLimit; // put with level
         let startWeapon;
         for (let w of conventionalWeapons) {
             if (w == undefined) continue
@@ -667,6 +761,184 @@ class GameHandler {
 
         this.start_unpause();
     }
+    public drawAllBuildings() {
+        const buildings: Building[] = [];
+        for (let i = 0; i < 40; i++) {
+            buildings.push(new Building());
+        }
+        this.layoutStreetBlocks(
+            buildings,
+        );
+    }
+
+    public layoutStreetBlocks(
+    buildings: Building[],
+    options?: {
+        startX?: number;
+        startY?: number;
+        buildingSpacingX?: number;
+        buildingSpacingY?: number;
+        streetWidth?: number;
+        padding?: number;
+    }
+) {
+    const {
+        startX = 100,
+        startY = 100,
+        buildingSpacingX = 120,
+        buildingSpacingY = 120,
+        streetWidth = 260,
+        padding = 50
+    } = options || {};
+
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    const blockTypes: BlockType[] = [
+        { rows: 2, cols: 6 },
+        { rows: 2, cols: 4 },
+        { rows: 2, cols: 6 },
+        { rows: 2, cols: 4 },
+        { rows: 2, cols: 6 }
+    ];
+
+    let currentX = startX;
+    let currentY = startY;
+
+    let tallestBlockInRow = 0;
+    let buildingIndex = 0;
+
+    for (const block of blockTypes) {
+        const blockWidth =
+            (block.cols - 1) * buildingSpacingX;
+
+        const blockHeight =
+            (block.rows - 1) * buildingSpacingY;
+
+        // WRAP TO NEXT ROW IF BLOCK WOULD GO OFF SCREEN
+        if (
+            currentX + blockWidth + padding >
+            screenWidth
+        ) {
+            currentX = startX;
+
+            currentY +=
+                tallestBlockInRow +
+                streetWidth;
+
+            tallestBlockInRow = 0;
+        }
+
+        // STOP if block would exceed screen height
+        if (
+            currentY + blockHeight + padding >
+            screenHeight
+        ) {
+            console.warn(
+                "Not enough screen space for more blocks"
+            );
+            return;
+        }
+
+        // Place buildings in this block
+        for (let row = 0; row < block.rows; row++) {
+            for (let col = 0; col < block.cols; col++) {
+                if (buildingIndex >= buildings.length)
+                    return;
+
+                const x =
+                    currentX +
+                    col * buildingSpacingX;
+
+                const y =
+                    currentY +
+                    row * buildingSpacingY;
+
+                buildings[buildingIndex].setPosition({
+                    X: x,
+                    Y: y
+                });
+
+                buildingIndex++;
+            }
+        }
+
+        // Move to next block position
+        currentX += blockWidth + streetWidth;
+
+        tallestBlockInRow = Math.max(
+            tallestBlockInRow,
+            blockHeight
+        );
+    }
+}
+
+    //public layoutStreetBlocks(
+    //    buildings: Building[],
+    //    startX: number,
+    //    startY: number,
+    //    buildingSpacingX = 120,
+    //    buildingSpacingY = 120,
+    //    streetWidth = 300
+    //) {
+    //    let buildingIndex = 0;
+
+    //    // Block patterns
+    //    const blockTypes = [
+    //        { rows: 2, cols: 6 },
+    //        { rows: 2, cols: 4 },
+    //        { rows: 2, cols: 6 },
+    //        { rows: 2, cols: 4 }
+    //    ];
+
+    //    // Arrange blocks in a grid
+    //    const blocksPerRow = 2;
+
+    //    for (let blockIndex = 0; blockIndex < blockTypes.length; blockIndex++) {
+    //        const block = blockTypes[blockIndex];
+
+    //        const blockGridX = blockIndex % blocksPerRow;
+    //        const blockGridY = Math.floor(blockIndex / blocksPerRow);
+
+    //        // Size of this block
+    //        const blockWidth =
+    //            (block.cols - 1) * buildingSpacingX;
+
+    //        const blockHeight =
+    //            (block.rows - 1) * buildingSpacingY;
+
+    //        // Position of block itself
+    //        const blockStartX =
+    //            startX +
+    //            blockGridX * (blockWidth + streetWidth);
+
+    //        const blockStartY =
+    //            startY +
+    //            blockGridY * (blockHeight + streetWidth);
+
+    //        // Place buildings inside block
+    //        for (let row = 0; row < block.rows; row++) {
+    //            for (let col = 0; col < block.cols; col++) {
+    //                if (buildingIndex >= buildings.length) return;
+
+    //                const building = buildings[buildingIndex];
+
+    //                const x =
+    //                    blockStartX + col * buildingSpacingX;
+
+    //                const y =
+    //                    blockStartY + row * buildingSpacingY;
+
+    //                building.setPosition({
+    //                    X: x,
+    //                    Y: y
+    //                });
+
+    //                buildingIndex++;
+    //            }
+    //        }
+    //    }
+    //}
 
     public start_unpause() {
         if (this.gameInProgress == false) { // NEW GAME
@@ -675,7 +947,7 @@ class GameHandler {
         }
         this.startAmbience();
         this.toggleModal();
-        
+
         this.gameTimer = window.setInterval(() => {
             this.checkEnd();
             this.updateProgressBar();

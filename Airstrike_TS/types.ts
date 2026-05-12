@@ -127,6 +127,11 @@ const regTunnelTarget: TargetInfo = {
     maxSpeed: 2,
     armour: Armour.moderate,
 }
+const boatTarget: TargetInfo = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.moderate,
+}
 
 enum direction {
     forward = "forward",
@@ -196,7 +201,8 @@ type ExplosiveWeaponInfo = weaponInfo & {
     flyover?: FlyOver
 }
 type ExplosionInfo = {
-    imageSource: string,
+  //  imageSource: string,
+    frames: Array<string>,
     size: ExplSizes,
     length: number,
     sound: Array<Sound>,
@@ -208,6 +214,11 @@ type FlyOver = {
     delay: number,
     duration: number
 }
+
+type BlockType = {
+    rows: number;
+    cols: number;
+};
 
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -225,11 +236,11 @@ const normal: difficultyLevelInfo = {
     tunnelTargetSpeed: { min: 1, max: 2 },
     eng: {
         name: "Normal",
-        description: "Regular speed targets, up to 15 will get taken care of for you.",
+        description: "Regular speed targets, up to <b>15</b> will get taken care of for you.",
     },
     heb: {
         name: "רגיל",
-        description: "יעדי מהירות רגילים, עד 15 יטופלו עבורך."
+        description: "יעדי מהירות רגילים, עד <b>15</b> יטופלו עבורך."
     }
 }
 const hard: difficultyLevelInfo = {
@@ -241,11 +252,11 @@ const hard: difficultyLevelInfo = {
     tunnelTargetSpeed: { min: 1, max: 2 },
     eng: {
         name: "Hard",
-        description: "Faster targets, don't miss more than 10.",
+        description: "Faster targets, don't miss more than <b>10</b>.",
     },
     heb: {
         name: "קשה",
-        description: "מטרות מהירות יותר, אל תפספסו יותר מ-10."
+        description: "מטרות מהירות יותר, אל תפספסו יותר מ-<b>10</b>."
     }
 }
 const chaos: difficultyLevelInfo = {
@@ -257,11 +268,11 @@ const chaos: difficultyLevelInfo = {
     tunnelTargetSpeed: { min: 1, max: 3 },
     eng: {
         name: "Chaos",
-        description: "Targets pile in at a ridiculous rate, you're on your own.",
+        description: "Targets pile in at a ridiculous rate, <b>you're on your own</b>.",  
     },
     heb: {
         name: "מהומה",
-        description: "מטרות נערמות בקצב מגוחך, אתה לבד"
+        description: "מטרות נערמות בקצב מגוחך,  <b>אתה לבד</b>"
     }
 }
 const dev: difficultyLevelInfo = {
@@ -298,7 +309,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
     cursor: "cursor2",
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: [],
         length: 1000,
     },
@@ -316,7 +327,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     cursor: "cursor3",
     explosionInfo: {
         size: ExplSizes.large,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         soundDelay: 3000,
         length: 1000,
@@ -335,7 +346,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        imageSource: assetsFolder + strikeExplosion,
+        frames: expl_med_frames,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -360,7 +371,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        imageSource: assetsFolder + mushroomExplosion,
+        frames: expl_big_frames,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -395,7 +406,7 @@ const droneInfo: ExplosiveWeaponInfo = {
     blastRadius: 0,
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         length: 1000,
         soundDelay: 2000
@@ -420,7 +431,7 @@ const chopperInfo: ExplosiveWeaponInfo = {
     blastRadius: 20,
     explosionInfo: {
         size: ExplSizes.tiny,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         length: 1000,
         soundDelay: 1000
@@ -446,7 +457,7 @@ const flareInfo: ExplosiveWeaponInfo = {
     blastRadius: 300,
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: [],
         length: 1000,
     },
@@ -458,9 +469,7 @@ const flareInfo: ExplosiveWeaponInfo = {
     select: gib
 }
 
-function loadNewImage() {
-    return '?' + new Date().getTime();
-}
+
 enum msgLength {
     long = 3000,
     short = 2000
@@ -506,74 +515,5 @@ class PopupHandler {
             this_.popUpArray.shift();
             this_.showPopup();
         }, currentMsg.length + 200);
-    }
-}
-
-class ContentElHandler {
-    static returnContentWrapper() {
-        return document.getElementById("contentWrapper")!;
-    }
-    static addToContentWrapper(elem: HTMLElement) {
-        this.returnContentWrapper().appendChild(elem);
-    }
-    static returnContentEl() {
-        return document.getElementById("content")!;
-    }
-    static addToContentEl(elem: HTMLElement) {
-        this.returnContentEl().appendChild(elem);
-    }
-    static removeFromContentEl(elem: HTMLElement) {
-        let contentEl: HTMLElement = this.returnContentEl();
-        if (elem && contentEl.contains(elem)) {
-            contentEl.removeChild(elem);
-        }
-        elem = null
-    }
-    static returnNewEl(parent: HTMLElement, classname: string) {
-        let el = document.createElement('div');
-        el.className = classname;
-        //    parent.appendChild(el);
-        parent.prepend(el);
-        return el;
-    }
-    static contentElWidth() {
-        return document.getElementById("content").clientWidth;
-    }
-    static clearContent() {
-        document.getElementById("content").innerHTML = "";
-    }
-    static fadeRemoveItem(item: HTMLElement, stayTime, fadeTime, array?) {
-        item.classList.add('smoothFade');
-        setTimeout(() => {
-            item.classList.add("hide");
-        }, stayTime)
-        setTimeout(() => {
-            if (item) {
-                if (array) {
-                    let index = array.indexOf(item);
-                    if (index >= 0) {
-                        array.splice(index, 1);
-                    }
-                }
-                ContentElHandler.removeFromContentEl(item);
-            }
-        }, stayTime + fadeTime)
-    }
-}
-
-class MouseHandler {
-    static mousePos: position = { X: '', Y: '' };
-
-    static updateMousePos(event?: MouseEvent) {
-        if (event) {
-            this.mousePos.X = event.clientX
-            this.mousePos.Y = event.clientY
-        }
-        return this.mousePos
-    }
-}
-class RandomNumberGen {
-    static randomNumBetween(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }

@@ -316,3 +316,90 @@ function loadSound() {
         new Sound(soundFolder + "chopper.mp3"),
     )
 }
+
+var expl_small_frames: Array<string> = [];
+var expl_med_frames: Array<string> = [];
+var expl_big_frames: Array<string> = [];
+var fire_1_frames: Array<string> = [];
+var fire_2_frames: Array<string> = [];
+var smoke_frames: Array<string> = [];
+
+function loadAllGifs() {
+    fire_1_frames.push(...loadGifFrames('fire_1/', 8, '1'));
+    fire_2_frames.push(...loadGifFrames('fire_3/', 15, '11'));
+    expl_small_frames.push(...loadGifFrames('expl_small/', 25, '05'));
+    expl_med_frames.push(...loadGifFrames('expl_med/', 24, '08'));
+    expl_big_frames.push(...loadGifFrames('expl_big/', 26, '1'));
+    smoke_frames.push(...loadGifFrames('smoke3/', 15, '1'));
+}
+
+function loadGifFrames(folder, total, speed) {
+    let frames: Array<string> = [];
+    let path = assetsFolder + folder;
+    for (let i = 0; i <= total; i++) {
+        let num: string = i < 10 && total >=10 ? "0" + i : "" + i;
+        let string = `frame_${num}_delay-0.${speed}s.gif`;
+        frames.push(path + string);
+    }
+    return frames;
+}
+
+class CanvasGifPlayer {
+    private frames: HTMLImageElement[] = [];
+    private fps: number;
+    private currentFrame = 0;
+    private playing = false;
+    private ctx: CanvasRenderingContext2D;
+
+    constructor(
+        private canvas: HTMLCanvasElement,
+        size: ExplSizes,
+        frameUrls: string[],
+        fps = 24
+    ) {
+        this.ctx = canvas.getContext("2d")!;
+        this.fps = fps;
+        this.canvas.width = size;
+        this.canvas.height = size;
+
+        //this.canvas.style.width = "100px";
+        //this.canvas.style.height = "100px";
+
+        // preload frames
+        frameUrls.forEach((url) => {
+            const img = new Image();
+            img.src = url;
+            this.frames.push(img);
+        });
+    }
+
+    play(repeat?) {
+        this.playing = true;
+        this.loop(repeat);
+    }
+
+    pause() {
+        this.playing = false;
+    }
+
+    private loop = (repeat) => {
+        if (!this.playing) return;
+
+        const frame = this.frames[this.currentFrame];
+
+        if (frame.complete) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
+        }
+        this.currentFrame++;
+        if (this.currentFrame >= this.frames.length) {
+            if (repeat) {
+                this.currentFrame = 0;
+            } else {
+                this.playing = false;
+                return;
+            }
+        }
+        setTimeout(this.loop, 1000 / this.fps);
+    };
+}

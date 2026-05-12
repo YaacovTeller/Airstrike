@@ -194,4 +194,78 @@ function loadSound() {
     //)
     chopper.push(new Sound(soundFolder + "chopper.mp3"), new Sound(soundFolder + "chopper.mp3"));
 }
+var expl_small_frames = [];
+var expl_med_frames = [];
+var expl_big_frames = [];
+var fire_1_frames = [];
+var fire_2_frames = [];
+var smoke_frames = [];
+function loadAllGifs() {
+    fire_1_frames.push(...loadGifFrames('fire_1/', 8, '1'));
+    fire_2_frames.push(...loadGifFrames('fire_3/', 15, '11'));
+    expl_small_frames.push(...loadGifFrames('expl_small/', 25, '05'));
+    expl_med_frames.push(...loadGifFrames('expl_med/', 24, '08'));
+    expl_big_frames.push(...loadGifFrames('expl_big/', 26, '1'));
+    smoke_frames.push(...loadGifFrames('smoke3/', 15, '1'));
+}
+function loadGifFrames(folder, total, speed) {
+    let frames = [];
+    let path = assetsFolder + folder;
+    for (let i = 0; i <= total; i++) {
+        let num = i < 10 && total >= 10 ? "0" + i : "" + i;
+        let string = `frame_${num}_delay-0.${speed}s.gif`;
+        frames.push(path + string);
+    }
+    return frames;
+}
+class CanvasGifPlayer {
+    canvas;
+    frames = [];
+    fps;
+    currentFrame = 0;
+    playing = false;
+    ctx;
+    constructor(canvas, size, frameUrls, fps = 24) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+        this.fps = fps;
+        this.canvas.width = size;
+        this.canvas.height = size;
+        //this.canvas.style.width = "100px";
+        //this.canvas.style.height = "100px";
+        // preload frames
+        frameUrls.forEach((url) => {
+            const img = new Image();
+            img.src = url;
+            this.frames.push(img);
+        });
+    }
+    play(repeat) {
+        this.playing = true;
+        this.loop(repeat);
+    }
+    pause() {
+        this.playing = false;
+    }
+    loop = (repeat) => {
+        if (!this.playing)
+            return;
+        const frame = this.frames[this.currentFrame];
+        if (frame.complete) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
+        }
+        this.currentFrame++;
+        if (this.currentFrame >= this.frames.length) {
+            if (repeat) {
+                this.currentFrame = 0;
+            }
+            else {
+                this.playing = false;
+                return;
+            }
+        }
+        setTimeout(this.loop, 1000 / this.fps);
+    };
+}
 //# sourceMappingURL=sound.js.map

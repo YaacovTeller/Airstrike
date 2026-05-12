@@ -156,6 +156,14 @@
 .smoothFade {
     transition: opacity 8s ease-in-out;
 }
+.building {
+    width: 100px;
+    height: 100px;
+
+    position: absolute;
+    user-select: none;
+    z-index: 5;
+}
 
 .smallSquare {
     height: 45px;
@@ -164,6 +172,10 @@
 .medRectTarget {
     height: 45px;
     width: 65px;
+}
+.longTarget {
+    height: 45px;
+    width: 100px;
 }
 .picEl > img {
     width: 100%;
@@ -234,6 +246,17 @@
     padding-bottom: 29px;
 }
 
+.rollWheel {
+    animation: rotate 0.5s linear infinite, move-right 4s ease-out forwards;
+    transition: opacity 6s ease-in-out
+}
+
+.throwWheel {
+    /*    animation: rotate 2s linear infinite, move-right 4s ease-out infinite;
+*/ transition: opacity 6s ease-in-out
+}
+
+
 .lightDamaged {
     width: 100%;
     padding-bottom: 35px;
@@ -290,7 +313,7 @@
 */ /*overflow: hidden;*/
 }
 
-.crater {
+.crater, .splash {
     position: absolute;
     z-index: -1;
     transition: opacity 8s ease-in-out;
@@ -345,7 +368,8 @@ img#crater { /*to override the img[src]!*/
     width: 25px;
     height: 25px;
     opacity: 1;
-    animation: pulsate 1.5s ease infinite, moveDown 10s linear;
+    animation: pulsate 1.5s ease infinite, moveDown 15s linear; /*match with flareFade time*/
+
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.3) 60%, rgba(255, 255, 255, 0) 100%);
 }
@@ -393,5 +417,5 @@ img#crater { /*to override the img[src]!*/
 }
 
 .displayNone {
-    display: none;
+    display: none!important;
 }

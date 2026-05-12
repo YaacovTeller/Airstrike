@@ -19,18 +19,21 @@ body {
     }
 #contentWrapper {
     height: 100vh;
-    background-image: url(./AS_assets/DS_sand.png);
 }
-
-    #content.shake_1 {
-        animation: shake_1 0.2s ease-out forwards;
-    }
-    #content.shake_2 {
-        animation: shake_2 0.3s ease-out forwards;
-    }
-    #content.shake_3 {
-        animation: shake_3 0.4s ease-out forwards;
-    }
+#backgroundContainer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+#backgroundContainer.shake_1 {
+    animation: shake_1 0.2s ease-out forwards;
+}
+#backgroundContainer.shake_2 {
+    animation: shake_2 0.3s ease-out forwards;
+}
+#backgroundContainer.shake_3 {
+    animation: shake_3 0.4s ease-out forwards;
+}
 .darkOverlay {
     transition: opacity 2s linear;
     position: fixed;
@@ -43,6 +46,11 @@ body {
     pointer-events: none;
     z-index: 8;
     mix-blend-mode: multiply; /* Enhances the effect on lighter backgrounds */
+}
+.water {
+    position: fixed;
+    height: 100%;
+    background-image: url(./AS_assets/DS_water.png);
 }
 .rain {
     position: absolute;
@@ -87,7 +95,281 @@ body {
     }
 }
 
+
+/* ===== Modal Overlay ===== */
+
 #modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: radial-gradient(circle at top, rgba(40,60,80,0.45), rgba(0,0,0,0.88)), rgba(0,0,0,0.82);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modalContainer {
+    width: min(1000px, 95vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 16px;
+    background: linear-gradient( 180deg, rgba(28,34,40,0.96), rgba(14,18,22,0.96) );
+    border: 1px solid rgba(120,160,120,0.35);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 12px 40px rgba(0,0,0,0.75), 0 0 25px rgba(40,255,120,0.08);
+    color: #dfe7df;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+/* ===== Top Bar ===== */
+
+.menuTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+#slider {
+    width: 220px;
+    accent-color: #59d47b;
+    cursor: pointer;
+}
+
+#sliderValue {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    color: #9dc6a5;
+}
+
+/* ===== Buttons ===== */
+
+.greenButtonStyle {
+    padding: 11px 18px;
+    border: 1px solid rgba(110,255,150,0.4);
+    border-radius: 10px;
+    background: linear-gradient( 180deg, #3fa95d, #2d7b44 );
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+    .greenButtonStyle:hover {
+        transform: translateY(-2px);
+        background: linear-gradient( 180deg, #4cc96e, #338f4f );
+        box-shadow: 0 0 18px rgba(90,255,140,0.35);
+    }
+
+    .greenButtonStyle:active {
+        transform: translateY(1px);
+    }
+
+/* ===== Username ===== */
+
+#input-container {
+    margin-bottom: 28px;
+}
+
+#userNameInput {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#username {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+    #username:focus {
+        border-color: rgba(100,255,160,0.5);
+        box-shadow: 0 0 0 3px rgba(80,255,150,0.12);
+    }
+
+    #username::placeholder {
+        color: rgba(255,255,255,0.4);
+    }
+
+/* ===== Main Content ===== */
+
+.directionalFluidContainer {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+    .directionalFluidContainer > div {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 14px;
+        padding: 20px;
+    }
+
+/* ===== Headings ===== */
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #90ffb0;
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 12px rgba(80,255,140,0.18);
+}
+
+/* ===== Lists ===== */
+
+ol {
+    margin: 0;
+    padding-left: 22px;
+    line-height: 1.75;
+}
+
+    ol li {
+        margin-bottom: 10px;
+        color: rgba(235,240,235,0.92);
+    }
+
+b {
+    color: #98ffae;
+}
+
+/* ===== Difficulty ===== */
+
+#difficultiesContainer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#difficultiesContainer li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#difficultiesContainer input[type="radio"] {
+    accent-color: #5dff9d;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* ===== Bottom Buttons ===== */
+
+.buttonContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+}
+
+/* ===== Scrollbar ===== */
+
+.modalContainer::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modalContainer::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.04);
+}
+
+.modalContainer::-webkit-scrollbar-thumb {
+    background: rgba(100,255,150,0.25);
+    border-radius: 999px;
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 850px) {
+
+    .directionalFluidContainer {
+        grid-template-columns: 1fr;
+    }
+
+    .menuTopBar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .buttonContainer {
+        flex-direction: column;
+    }
+
+    .greenButtonStyle {
+        width: 100%;
+    }
+}
+
+.instructionsPanel {
+    margin-bottom: 18px;
+}
+
+.instructionsToggle {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(110,255,150,0.25);
+    border-radius: 12px;
+    background: linear-gradient( 180deg, rgba(70,90,70,0.35), rgba(30,40,30,0.45) );
+    color: #b7ffca;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+}
+
+    .instructionsToggle:hover {
+        background: linear-gradient( 180deg, rgba(90,120,90,0.45), rgba(40,55,40,0.55) );
+        border-color: rgba(120,255,170,0.55);
+        box-shadow: 0 0 18px rgba(100,255,160,0.15);
+        transform: translateY(-1px);
+    }
+
+    .instructionsToggle.active {
+        border-color: rgba(120,255,170,0.65);
+        box-shadow: 0 0 22px rgba(100,255,160,0.22);
+    }
+
+.instructionsContent {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.22s ease, margin-top 0.22s ease;
+    margin-top: 0;
+}
+
+    .instructionsContent.open {
+        max-height: 1200px;
+        opacity: 1;
+        margin-top: 16px;
+    }
+
+
+
+
+/*OLD MENU*/
+/*#modal {
     user-select: none;
     z-index: 10;
     position: fixed;
@@ -95,11 +377,11 @@ body {
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);*/
     /*    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);*/
-    max-width: 50%;
+    /*max-width: 50%;
     top: 10%;
 }
 
@@ -136,15 +418,15 @@ body {
     margin-right: 10px;
     margin-top: 15px;
     font-size: 16px;
-    background-color: #4CAF50; /* Green */
-    color: white;
+    background-color: #4CAF50;*/ /* Green */
+    /*color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
     .greenButtonStyle:hover {
-        background-color: #45a049; /* Darker Green */
-    }
+        background-color: #45a049;*/ /* Darker Green */
+    /*}
 #startbutton {
     display: block;
     width: 75%;
@@ -158,17 +440,17 @@ body {
 #langbutton {
     margin: 0;
     padding: 10px;
-}
+}*/
 /*#devDiff {
     width: fit-content;
     font-size: xx-small;
     border: none;
 }*/
-#input-container {
+/*#input-container {
     margin: auto;
-}
+}*/
 /**/
-ul li {
+/*ul li {
     color: #AAAAAA;
     display: block;
     position: relative;
@@ -204,10 +486,10 @@ ul li {
 
         ul li label span {
             padding: 12px 0px 0px 0px;
-            margin: 0px 0px;
+            margin: 0px 0px;*/
             /*        -webkit-transition: all 0.25s linear;
 */
-        }
+        /*}
 
     ul li:hover label {
         color: black
@@ -255,7 +537,11 @@ input[type=radio]:checked ~ .check {
 
 input[type=radio]:checked ~ label {
     color: #4CAF50;
-}
+}*/
+/*END*/
+
+
+
 .multiKillBox {
     width: fit-content;
     height: fit-content;
@@ -440,15 +726,6 @@ input[type=radio]:checked ~ label {
     width: 250px;
     height: 250px;
     animation: rotate 2s linear infinite;
-}
-
-.rollWheel {
-    animation: rotate 0.5s linear infinite, move-right 4s ease-out forwards;
-    transition: opacity 6s ease-in-out
-}
-.throwWheel {
-/*    animation: rotate 2s linear infinite, move-right 4s ease-out infinite;
-*/    transition: opacity 6s ease-in-out
 }
 
 

@@ -247,7 +247,7 @@ class ExplosiveWeaponType extends WeaponType {
         game.drainProgressBar();
     }
     createFlyover(inst) {
-        let div = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), "flyover");
+        let div = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "flyover");
         let img = document.createElement('img');
         div.appendChild(img);
         img.src = this.flyoverInfo.imageSource;
@@ -285,7 +285,7 @@ class ExplosiveWeaponType extends WeaponType {
     fireResultsTimeout(inst) {
         setTimeout(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
@@ -408,7 +408,7 @@ class Chopper extends ExplosiveWeaponType {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
             SoundPlayer.playSequentialSound(cannonSounds);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
             side = !side;
             shots--;
             if (shots <= 0) {
@@ -419,7 +419,7 @@ class Chopper extends ExplosiveWeaponType {
         }, shotGap);
     }
     createFlyover(inst) {
-        let div = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), "flyover");
+        let div = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "flyover");
         div.classList.add("chopper");
         let img = document.createElement('img');
         let img2 = document.createElement('img');
@@ -518,7 +518,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
-                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.imageSource, this.name);
+                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
                 //    this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer);
         });

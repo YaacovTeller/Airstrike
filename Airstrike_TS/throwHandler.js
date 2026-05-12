@@ -1,14 +1,14 @@
 class ThrowHandler {
-    static flip(elem, direc, parentElem, angle) {
+    static flip(elem, direc, impactSounds, parentElem, angle) {
         let thrownElem = parentElem ? parentElem : elem;
         this.throwArc(thrownElem, direc); // ARC
         let deg = this.rotate(elem, direc, angle); // ROTATION
-        this.carCrashSound();
+        this.crashSound(impactSounds);
         return deg;
     }
-    static carCrashSound() {
+    static crashSound(impactSounds) {
         setTimeout(() => {
-            SoundPlayer.playRandomSound(crashes);
+            SoundPlayer.playRandomSound(impactSounds);
         }, crashTimeout);
     }
     static determineDirectionForFlip(vectorMove) {
@@ -87,6 +87,80 @@ class ThrowHandler {
         }
         requestAnimationFrame(step);
     }
+    //private static throwArc(elem: HTMLElement, direc: direction) {
+    //    const startX = parseFloat(elem.style.left) || 0;
+    //    const startY = parseFloat(elem.style.top) || 0;
+    //    const dir = direc === direction.forward ? 1 : -1;
+    //    // Main throw distance
+    //    const throwDistance = RandomNumberGen.randomNumBetween(40, 120);
+    //    // Small vertical deviation from origin
+    //    const driftY = RandomNumberGen.randomNumBetween(-12, 12);
+    //    // Visual arc height only
+    //    const arcHeight = RandomNumberGen.randomNumBetween(20, 60);
+    //    // Arc duration
+    //    const arcDuration = RandomNumberGen.randomNumBetween(400, 850);
+    //    // Optional slide after landing
+    //    const slideDistance = throwDistance > 45
+    //        ? RandomNumberGen.randomNumBetween(40, 60)
+    //        : RandomNumberGen.randomNumBetween(10, 25);
+    //    const slideDuration = 250;
+    //    let startTime: number | null = null;
+    //    function step(timestamp: number) {
+    //        if (startTime === null) {
+    //            startTime = timestamp;
+    //        }
+    //        const elapsed = timestamp - startTime;
+    //        // ---------- ARC PHASE ----------
+    //        if (elapsed <= arcDuration) {
+    //            const t = elapsed / arcDuration;
+    //            // Smooth horizontal movement
+    //            const x =
+    //                startX +
+    //                throwDistance * t * dir;
+    //            // Slight drift only
+    //            const baseY =
+    //                startY +
+    //                driftY * t;
+    //            // Fake "hop" arc
+    //            const physicsT = t * 2;
+    //            const arc =
+    //                (-arcHeight * physicsT) +
+    //                (arcHeight * physicsT * physicsT * 0.5);
+    //            const y = baseY + arc;
+    //            //const arc =
+    //            //    Math.sin(t * Math.PI) * arcHeight;
+    //            //const y = baseY - arc;
+    //            elem.style.left = `${x}px`;
+    //            elem.style.top = `${y}px`;
+    //        }
+    //        // ---------- SLIDE PHASE ----------
+    //        else {
+    //            const slideElapsed = elapsed - arcDuration;
+    //            if (slideElapsed <= slideDuration && slideDistance > 0) {
+    //                const t = slideElapsed / slideDuration;
+    //                // Ease out slide
+    //                const ease = 1 - Math.pow(1 - t, 3);
+    //                const landingX =
+    //                    startX +
+    //                    throwDistance * dir;
+    //                const x =
+    //                    landingX +
+    //                    (slideDistance * ease) * dir;
+    //                //const x =
+    //                //    startX +
+    //                //    (throwDistance + slideDistance * ease) * dir;
+    //                const y =
+    //                    startY + driftY;
+    //                elem.style.left = `${x}px`;
+    //                elem.style.top = `${y}px`;
+    //            }
+    //        }
+    //        if (elapsed < arcDuration + slideDuration) {
+    //            requestAnimationFrame(step);
+    //        }
+    //    }
+    //    requestAnimationFrame(step);
+    //}
     static rotate(elem, direc, angle, iterations = 0, maxIterations = 1) {
         if (iterations >= maxIterations)
             return; // Termination condition

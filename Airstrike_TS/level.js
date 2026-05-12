@@ -3,6 +3,7 @@ var WaveType;
     WaveType[WaveType["gradual"] = 0] = "gradual";
     WaveType[WaveType["sudden"] = 1] = "sudden";
     WaveType[WaveType["double"] = 2] = "double";
+    WaveType[WaveType["static"] = 3] = "static";
 })(WaveType || (WaveType = {}));
 var Time;
 (function (Time) {
@@ -10,6 +11,11 @@ var Time;
     Time[Time["dusk"] = 1] = "dusk";
     Time[Time["night"] = 2] = "night";
 })(Time || (Time = {}));
+var Area;
+(function (Area) {
+    Area[Area["desert"] = 0] = "desert";
+    Area[Area["port"] = 1] = "port";
+})(Area || (Area = {}));
 class Wave {
     number;
     type;
@@ -24,10 +30,82 @@ class Wave {
     }
 }
 class Level {
+    info;
+    targets = [];
+    currentWave;
+    constructor() { }
+    returnLocation() {
+        return this.info.location;
+    }
+    resetTargets() {
+        this.targets = [];
+        for (let x of allTargets) {
+            x.getTargetEl().remove();
+        }
+        allTargets = [];
+    }
+    addNewWeapon(info, showMsg) {
+        let wepName = weaponNames[info.name];
+        let wepArr = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        if (wepArr[info.name]) {
+            wepArr[info.name].pushNewWeaponInstance();
+            if (showMsg != false) {
+                PopupHandler.addToArray("You got another " + wepName);
+            }
+        }
+        else {
+            new info.class(info);
+            if (showMsg != false) {
+                PopupHandler.addToArray("New weapon:\n" + wepName);
+            }
+        }
+    }
+    showActiveTargets() {
+        for (let t of this.targets) {
+            if (t.status === Status.active) {
+                t.toggleLockOn(true);
+                setTimeout(() => {
+                    t.toggleLockOn(false);
+                }, 1000);
+            }
+        }
+    }
+    checkForDamagedActiveTargets() {
+        let warn = false;
+        for (let t of this.targets) {
+            if (t.damage != Damage.undamaged && t.status === Status.active) {
+                warn = true;
+            }
+        }
+        return warn;
+    }
+    checkForNilActiveTargets() {
+        let fin = true;
+        for (let t of this.targets) {
+            if (t.status === Status.active) {
+                fin = false;
+                break;
+            }
+        }
+        return fin;
+    }
+    setAsLevel() {
+    }
+    produceSingleTarget(target) {
+    }
+    pauseWave() {
+    }
+    continueWave() {
+    }
+}
+class Level_Static extends Level {
+    constructor(info) {
+        super();
+    }
+}
+class Level_Waves extends Level {
     waveIndex = -1;
     frequency;
-    currentWave;
-    targets = [];
     winCheckTimer;
     targetTimer;
     waveDurationTimer;
@@ -36,8 +114,9 @@ class Level {
     passedHalfTargetProduction = false;
     pauseLength = 6000;
     suddenTargetFreq = 150;
-    info;
+    staticTargetFreq = 2;
     constructor(info) {
+        super();
         this.info = info;
         this.armingUp = () => {
             this.addWeaponsFromArray(this.info.startArms);
@@ -128,35 +207,6 @@ class Level {
         clearInterval(this.winCheckTimer);
         this.winCheckTimer = null;
     }
-    showActiveTargets() {
-        for (let t of this.targets) {
-            if (t.status === Status.active) {
-                t.toggleLockOn(true);
-                setTimeout(() => {
-                    t.toggleLockOn(false);
-                }, 1000);
-            }
-        }
-    }
-    checkForDamagedActiveTargets() {
-        let warn = false;
-        for (let t of this.targets) {
-            if (t.damage != Damage.undamaged && t.status === Status.active) {
-                warn = true;
-            }
-        }
-        return warn;
-    }
-    checkForNilActiveTargets() {
-        let fin = true;
-        for (let t of this.targets) {
-            if (t.status === Status.active) {
-                fin = false;
-                break;
-            }
-        }
-        return fin;
-    }
     endWave() {
         PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
         );
@@ -201,7 +251,7 @@ class Level {
         return true;
     }
     continueWave() {
-        // this.winLimitCheck(); // UNNEEDED? prevents new target on unpause
+        // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
         let freq;
         if (this.currentWave.type == WaveType.gradual) {
             freq = this.frequency;
@@ -209,8 +259,10 @@ class Level {
         else if (this.currentWave.type == WaveType.sudden || this.currentWave.type == WaveType.double) {
             freq = this.suddenTargetFreq;
         }
-        if (this.targetTimer != null)
-            console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!");
+        else if (this.currentWave.type == WaveType.static) {
+            freq = this.staticTargetFreq;
+        }
+        //   if (this.targetTimer != null) console.log("WARNING: STARTED MULTIPLE TARGET TIMERS!!!")
         this.targetTimer = setInterval(() => {
             if (this.allTargetsDeployed == false) {
                 this.produceSingleTarget();
@@ -222,6 +274,7 @@ class Level {
             return;
         }
         let target = tgt ? tgt : this.provideAvailTargets();
+        target.setPosition();
         this.targets.push(target);
         allTargets.push(target);
         game.updateKillStats(killStatDisplayOptions.total);
@@ -244,29 +297,9 @@ class Level {
         this.targetTimer = null;
     }
     resetTargets() {
-        this.targets = [];
-        for (let x of allTargets) {
-            x.getTargetEl().remove();
-        }
-        allTargets = [];
+        super.resetTargets();
         this.allTargetsDeployed = false;
         this.resetWincheck();
-    }
-    addNewWeapon(info, showMsg) {
-        let wepName = weaponNames[info.name];
-        let wepArr = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
-        if (wepArr[info.name]) {
-            wepArr[info.name].pushNewWeaponInstance();
-            if (showMsg != false) {
-                PopupHandler.addToArray("You got another " + wepName);
-            }
-        }
-        else {
-            new info.class(info);
-            if (showMsg != false) {
-                PopupHandler.addToArray("New weapon:\n" + wepName);
-            }
-        }
     }
 }
 function provideAllTargets() {
@@ -291,8 +324,12 @@ function provideAllTargets() {
     }
     return newTarget;
 }
+const staticInfo = {
+    location: Area.port,
+};
 const continuousInfo = {
     number: 0,
+    location: Area.desert,
     messages: [{ title: "Weapons Test", text: "", length: msgLength.short }],
     waves: [
         new Wave(16, WaveType.sudden, null, lightRain),
@@ -307,11 +344,23 @@ const continuousInfo = {
     startArms: [],
     endArms: [],
     targetFunc: () => {
+        //let rand = RandomNumberGen.randomNumBetween(1, 100);
+        //let newTarget: Target;
+        //switch (true) {
+        //    case (rand >= 90):
+        //        newTarget = new WaterVehicleTarget();
+        //        break;
+        //    default:
+        //        newTarget = new WaterVehicleTarget();
+        //        break;
+        //}
+        //return newTarget;
         return provideAllTargets();
     },
 };
 const weatherTestInfo = {
     number: 0,
+    location: Area.desert,
     messages: [{ title: "Weather Test", text: "", length: msgLength.short }],
     waves: [
         new Wave(8, WaveType.double, null, medRain),
@@ -344,12 +393,13 @@ const weatherTestInfo = {
 const allLevelInfo = [
     {
         number: 1,
+        location: Area.desert,
         messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
             new Wave(8, WaveType.double, Time.dusk),
             new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
-            new Wave(14, WaveType.sudden)
+            /*            new Wave(14, WaveType.sudden)*/
         ],
         startArms: [sniperInfo, mortarInfo, mortarInfo],
         endArms: [mortarInfo],
@@ -357,10 +407,11 @@ const allLevelInfo = [
     },
     {
         number: 2,
+        location: Area.desert,
         messages: [{ text: "It's getting dark...", title: "NOTE" }],
         waves: [
             new Wave(8, WaveType.sudden, Time.dusk),
-            new Wave(25, WaveType.gradual, Time.night),
+            new Wave(14, WaveType.gradual, Time.night),
             new Wave(20, WaveType.sudden, Time.dusk),
         ],
         startArms: [mortarInfo, howitzerInfo],
@@ -381,17 +432,20 @@ const allLevelInfo = [
     },
     {
         number: 3,
+        location: Area.desert,
         messages: [],
         waves: [
             new Wave(16, WaveType.gradual, null, medRain),
             new Wave(10, WaveType.sudden, null, heavyRain),
         ],
         startArms: [howitzerInfo, airstrikeInfo],
+        //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
         endArms: [howitzerInfo, airstrikeInfo],
         targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {
         number: 4,
+        location: Area.desert,
         messages: [{ text: "Watch out for tunnels", title: "WARNING" }],
         waves: [
             new Wave(8, WaveType.gradual, null, lightRain),
@@ -415,6 +469,7 @@ const allLevelInfo = [
     },
     {
         number: 5,
+        location: Area.desert,
         messages: [{ text: "Mortar team positioning to provide flare rounds...", title: "NOTE" }],
         waves: [
             new Wave(16, WaveType.sudden),
@@ -422,8 +477,7 @@ const allLevelInfo = [
             new Wave(30, WaveType.gradual, Time.night),
             new Wave(40, WaveType.double, Time.dusk),
         ],
-        startArms: [flareInfo, mortarInfo],
-        //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
+        startArms: [flareInfo, flareInfo, mortarInfo],
         endArms: [airstrikeInfo],
         targetFunc: () => {
             let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -447,6 +501,7 @@ const allLevelInfo = [
     },
     {
         number: 6,
+        location: Area.desert,
         messages: [{ text: "Missile trucks prevent aircraft strikes", title: "WARNING" }],
         waves: [
             new Wave(30, WaveType.gradual),
@@ -471,6 +526,7 @@ const allLevelInfo = [
     },
     {
         number: 7,
+        location: Area.desert,
         messages: [],
         waves: [
             new Wave(20, WaveType.double),
@@ -499,6 +555,7 @@ const allLevelInfo = [
     },
     {
         number: 8,
+        location: Area.desert,
         messages: [{ text: "Almost there!", title: "" }],
         waves: [
             new Wave(25, WaveType.double, Time.dusk),

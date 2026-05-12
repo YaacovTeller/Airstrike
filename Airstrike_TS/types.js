@@ -117,6 +117,11 @@ const regTunnelTarget = {
     maxSpeed: 2,
     armour: Armour.moderate,
 };
+const boatTarget = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.moderate,
+};
 var direction;
 (function (direction) {
     direction["forward"] = "forward";
@@ -157,11 +162,11 @@ const normal = {
     tunnelTargetSpeed: { min: 1, max: 2 },
     eng: {
         name: "Normal",
-        description: "Regular speed targets, up to 15 will get taken care of for you.",
+        description: "Regular speed targets, up to <b>15</b> will get taken care of for you.",
     },
     heb: {
         name: "רגיל",
-        description: "יעדי מהירות רגילים, עד 15 יטופלו עבורך."
+        description: "יעדי מהירות רגילים, עד <b>15</b> יטופלו עבורך."
     }
 };
 const hard = {
@@ -173,11 +178,11 @@ const hard = {
     tunnelTargetSpeed: { min: 1, max: 2 },
     eng: {
         name: "Hard",
-        description: "Faster targets, don't miss more than 10.",
+        description: "Faster targets, don't miss more than <b>10</b>.",
     },
     heb: {
         name: "קשה",
-        description: "מטרות מהירות יותר, אל תפספסו יותר מ-10."
+        description: "מטרות מהירות יותר, אל תפספסו יותר מ-<b>10</b>."
     }
 };
 const chaos = {
@@ -189,11 +194,11 @@ const chaos = {
     tunnelTargetSpeed: { min: 1, max: 3 },
     eng: {
         name: "Chaos",
-        description: "Targets pile in at a ridiculous rate, you're on your own.",
+        description: "Targets pile in at a ridiculous rate, <b>you're on your own</b>.",
     },
     heb: {
         name: "מהומה",
-        description: "מטרות נערמות בקצב מגוחך, אתה לבד"
+        description: "מטרות נערמות בקצב מגוחך,  <b>אתה לבד</b>"
     }
 };
 const dev = {
@@ -230,7 +235,7 @@ const mortarInfo = {
     cursor: "cursor2",
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: [],
         length: 1000,
     },
@@ -248,7 +253,7 @@ const howitzerInfo = {
     cursor: "cursor3",
     explosionInfo: {
         size: ExplSizes.large,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         soundDelay: 3000,
         length: 1000,
@@ -267,7 +272,7 @@ const airstrikeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        imageSource: assetsFolder + strikeExplosion,
+        frames: expl_med_frames,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -292,7 +297,7 @@ const nukeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        imageSource: assetsFolder + mushroomExplosion,
+        frames: expl_big_frames,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -328,7 +333,7 @@ const droneInfo = {
     blastRadius: 0,
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         length: 1000,
         soundDelay: 2000
@@ -353,7 +358,7 @@ const chopperInfo = {
     blastRadius: 20,
     explosionInfo: {
         size: ExplSizes.tiny,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: explosions,
         length: 1000,
         soundDelay: 1000
@@ -378,7 +383,7 @@ const flareInfo = {
     blastRadius: 300,
     explosionInfo: {
         size: ExplSizes.small,
-        imageSource: assetsFolder + classicExplosion,
+        frames: expl_small_frames,
         sound: [],
         length: 1000,
     },
@@ -389,9 +394,6 @@ const flareInfo = {
     noAmmo: click_2,
     select: gib
 };
-function loadNewImage() {
-    return '?' + new Date().getTime();
-}
 var msgLength;
 (function (msgLength) {
     msgLength[msgLength["long"] = 3000] = "long";
@@ -433,72 +435,6 @@ class PopupHandler {
             this_.popUpArray.shift();
             this_.showPopup();
         }, currentMsg.length + 200);
-    }
-}
-class ContentElHandler {
-    static returnContentWrapper() {
-        return document.getElementById("contentWrapper");
-    }
-    static addToContentWrapper(elem) {
-        this.returnContentWrapper().appendChild(elem);
-    }
-    static returnContentEl() {
-        return document.getElementById("content");
-    }
-    static addToContentEl(elem) {
-        this.returnContentEl().appendChild(elem);
-    }
-    static removeFromContentEl(elem) {
-        let contentEl = this.returnContentEl();
-        if (elem && contentEl.contains(elem)) {
-            contentEl.removeChild(elem);
-        }
-        elem = null;
-    }
-    static returnNewEl(parent, classname) {
-        let el = document.createElement('div');
-        el.className = classname;
-        //    parent.appendChild(el);
-        parent.prepend(el);
-        return el;
-    }
-    static contentElWidth() {
-        return document.getElementById("content").clientWidth;
-    }
-    static clearContent() {
-        document.getElementById("content").innerHTML = "";
-    }
-    static fadeRemoveItem(item, stayTime, fadeTime, array) {
-        item.classList.add('smoothFade');
-        setTimeout(() => {
-            item.classList.add("hide");
-        }, stayTime);
-        setTimeout(() => {
-            if (item) {
-                if (array) {
-                    let index = array.indexOf(item);
-                    if (index >= 0) {
-                        array.splice(index, 1);
-                    }
-                }
-                ContentElHandler.removeFromContentEl(item);
-            }
-        }, stayTime + fadeTime);
-    }
-}
-class MouseHandler {
-    static mousePos = { X: '', Y: '' };
-    static updateMousePos(event) {
-        if (event) {
-            this.mousePos.X = event.clientX;
-            this.mousePos.Y = event.clientY;
-        }
-        return this.mousePos;
-    }
-}
-class RandomNumberGen {
-    static randomNumBetween(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 }
 //# sourceMappingURL=types.js.map

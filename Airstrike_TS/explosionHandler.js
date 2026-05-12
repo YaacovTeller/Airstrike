@@ -6,21 +6,55 @@ var screenShakeTimeouts;
 })(screenShakeTimeouts || (screenShakeTimeouts = {}));
 var lights = [];
 var flares = [];
-const flareFade = 10000;
+const flareFade = 15000;
 class ExplosionHandler {
     static craterDecalStay = 15000;
     static craterFadingTillRemoval = fadeAnimTime;
+    static craterSources = ["crater_1.png", "crater_2.png", "crater_3.png"];
     static createFlare(blastCenter, size) {
         this.pushLight(flares, blastCenter, size);
-        let fallingFlare = ContentElHandler.returnNewEl(ContentElHandler.returnContentEl(), 'flare');
+        let fallingFlare = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), 'flare');
         fallingFlare.style.left = blastCenter.X + 'px';
         fallingFlare.style.top = blastCenter.Y + 'px';
         ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
     }
-    static basicExplosion(blastCenter, size, explSrc, weaponName) {
-        let explosion = this.setAndReturnExplosion(blastCenter, size, explSrc);
+    static basicExplosion(blastCenter, size, explFrames, weaponName) {
+        let water = document.getElementById("water");
+        if (water) {
+            if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {
+                if (this.checkForAnyDirectTargetHit(blastCenter, size)) {
+                    this.waterHit(blastCenter, size, explFrames, weaponName);
+                }
+                this.waterMiss(blastCenter, size);
+            }
+            else {
+                this.landHit(blastCenter, size, explFrames, weaponName);
+            }
+        }
+        else {
+            this.landHit(blastCenter, size, explFrames, weaponName);
+        }
+    }
+    static waterHit(blastCenter, size, explSrc, weaponName) {
+        this.setAndReturnExplosion(blastCenter, size, explSrc);
+        this.shake_Light_Targets(blastCenter, size, weaponName);
+    }
+    static waterMiss(blastCenter, size) {
+        let splash = this.setAndReturnSplash(blastCenter, size);
+        this.presentAndFadeout(splash, 4000, 100);
+    }
+    static landHit(blastCenter, size, explFrames, weaponName) {
+        let explosion = this.setAndReturnExplosion(blastCenter, size, explFrames);
         let crater = this.setAndReturnCrater(blastCenter, size);
-        this.explode(explosion, crater);
+        this.handleExplosionCrater(explosion, crater);
+        this.shake_Light_Targets(blastCenter, size, weaponName);
+    }
+    static shake_Light_Targets(blastCenter, size, weaponName) {
+        this.setScreenShake(size);
+        this.pushLight(lights, blastCenter, size);
+        this.checkForTargets(blastCenter, size, weaponName);
+    }
+    static setScreenShake(size) {
         if (size == ExplSizes.large) {
             this.shake(screenShakeTimeouts.shake_1);
         }
@@ -31,8 +65,27 @@ class ExplosionHandler {
             this.flash();
             this.shake(screenShakeTimeouts.shake_3);
         }
-        this.pushLight(lights, blastCenter, size);
-        this.checkForTargets(blastCenter, size, weaponName);
+    }
+    static checkForAnyDirectTargetHit(blastCenter, size) {
+        let directHit = false;
+        let rad = size / 2;
+        let minDist = 20;
+        for (let target of allTargets) {
+            let targetEl = target.getTargetEl();
+            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad)) {
+                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, targetEl, rad);
+                if (collisionInfo.dist < minDist)
+                    directHit = true;
+            }
+        }
+        for (let item of allObjects) {
+            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, item, rad)) {
+                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, item, rad);
+                if (collisionInfo.dist < minDist)
+                    directHit = true;
+            }
+        }
+        return directHit;
     }
     static checkForTargets(blastCenter, size, weaponName) {
         let rad = size / 2;
@@ -52,7 +105,7 @@ class ExplosionHandler {
     }
     static itemStrike(item, collisionInfo) {
         let direc = ThrowHandler.determineDirectionForFlip(collisionInfo);
-        ThrowHandler.flip(item, direc);
+        ThrowHandler.flip(item, direc, crashes);
     }
     static targetStrike(target, weaponName, collisionInfo) {
         let fraction = collisionInfo.dist / collisionInfo.radius;
@@ -91,42 +144,46 @@ class ExplosionHandler {
         lightArr.push(light);
     }
     static shake(shakeTimeout) {
-        let content = document.getElementById("content");
-        content.classList.add(screenShakeTimeouts[shakeTimeout]);
-        setTimeout(() => { content.classList.remove(screenShakeTimeouts[shakeTimeout]); }, shakeTimeout);
+        let contentParent = ContentElHandler.returnContentEl().parentElement;
+        contentParent.classList.add(screenShakeTimeouts[shakeTimeout]);
+        setTimeout(() => { contentParent.classList.remove(screenShakeTimeouts[shakeTimeout]); }, shakeTimeout);
     }
-    static returnNewImageEl(classname, src) {
-        let el = document.createElement('img');
-        if (src)
-            el.src = src;
-        el.className = classname;
-        ContentElHandler.addToContentEl(el);
-        return el;
+    static presentAndFadeout(item, decalStay, fadingTillRemoval) {
+        item.style.visibility = "visible";
+        ContentElHandler.fadeRemoveItem(item, decalStay, fadingTillRemoval);
     }
-    static explode(explosion, crater) {
-        explosion.style.visibility = "visible";
-        crater.style.visibility = "visible";
-        ContentElHandler.fadeRemoveItem(crater, this.craterDecalStay, this.craterFadingTillRemoval);
-        ContentElHandler.fadeRemoveItem(explosion, 4000, 100);
+    static handleExplosionCrater(explosion, crater) {
+        this.presentAndFadeout(explosion, 4000, 100);
+        this.presentAndFadeout(crater, this.craterDecalStay, this.craterFadingTillRemoval);
     }
-    static setAndReturnExplosion(blastCenter, size, explSrc) {
-        let explosion = this.returnNewImageEl("explosion");
-        explosion.src = explSrc + loadNewImage();
-        explosion.style.width = size + 'px';
-        explosion.style.height = size + 'px';
-        explosion.style.left = blastCenter.X - explosion.clientWidth / 2 + 'px';
-        explosion.style.top = blastCenter.Y - explosion.clientHeight * 0.9 + 'px';
+    static setAndReturnExplosion(blastCenter, size, frames) {
+        let explosion = ElementCreator.returnNewCanvas(ContentElHandler.returnContentEl(), "explosion");
+        const player = new CanvasGifPlayer(explosion, size, frames, 12); // 12 FPS
+        player.play(false);
+        this.setSizeAndPos(explosion, size, size, blastCenter.X - (size / 2), blastCenter.Y - (size * 0.9));
         return explosion;
     }
     static setAndReturnCrater(blastCenter, size) {
-        let craterSrc = assetsFolder + "crater.png";
-        let crater = this.returnNewImageEl("crater", craterSrc);
+        let craterSrc = assetsFolder + RandomNumberGen.returnRandomFromArray(this.craterSources);
+        let crater = ElementCreator.returnNewImageEl(ContentElHandler.returnContentEl(), "crater", craterSrc);
         crater.id = "crater";
-        crater.style.width = size / 1.5 + 'px';
-        crater.style.height = size / 3 + 'px';
-        crater.style.left = blastCenter.X - crater.clientWidth / 2 + 'px';
-        crater.style.top = blastCenter.Y - crater.clientHeight / 2 + 'px';
+        let width = size / 1.5;
+        let height = size / 3;
+        this.setSizeAndPos(crater, width, height, blastCenter.X - width / 2, blastCenter.Y - height / 2);
         return crater;
+    }
+    static setAndReturnSplash(blastCenter, size) {
+        let src = assetsFolder + "splash.gif";
+        let item = ElementCreator.returnNewImageEl(ContentElHandler.returnContentEl(), "splash", src);
+        item.className = "splash";
+        this.setSizeAndPos(item, size, size, blastCenter.X - size / 2, blastCenter.Y - size / 1.5);
+        return item;
+    }
+    static setSizeAndPos(item, width, height, left, top) {
+        item.style.width = width + 'px';
+        item.style.height = height + 'px';
+        item.style.left = left + 'px';
+        item.style.top = top + 'px';
     }
 }
 //# sourceMappingURL=explosionHandler.js.map

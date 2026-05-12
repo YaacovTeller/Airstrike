@@ -45,7 +45,13 @@ audio {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-image: url(./AS_assets/DS_sand.png);
     background-repeat: round;
     z-index: 0;
+}
+#background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-repeat: round;
 }
