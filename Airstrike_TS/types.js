@@ -61,8 +61,14 @@ const multiKillText = {
     13: { size: 200, colour: 'black' },
     14: { size: 200, colour: 'black' },
 };
+var HitSurface;
+(function (HitSurface) {
+    HitSurface[HitSurface["water"] = 0] = "water";
+    HitSurface[HitSurface["land"] = 1] = "land";
+})(HitSurface || (HitSurface = {}));
 var ExplSizes;
 (function (ExplSizes) {
+    ExplSizes[ExplSizes["XXS"] = 20] = "XXS";
     ExplSizes[ExplSizes["tiny"] = 60] = "tiny";
     ExplSizes[ExplSizes["small"] = 100] = "small";
     ExplSizes[ExplSizes["large"] = 140] = "large";
@@ -235,7 +241,7 @@ const mortarInfo = {
     cursor: "cursor2",
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: [],
         length: 1000,
     },
@@ -253,7 +259,7 @@ const howitzerInfo = {
     cursor: "cursor3",
     explosionInfo: {
         size: ExplSizes.large,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         soundDelay: 3000,
         length: 1000,
@@ -272,7 +278,7 @@ const airstrikeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        frames: expl_med_frames,
+        frames: expl_med_imgs,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -297,7 +303,7 @@ const nukeInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        frames: expl_big_frames,
+        frames: expl_big_imgs,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -333,7 +339,7 @@ const droneInfo = {
     blastRadius: 0,
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         length: 1000,
         soundDelay: 2000
@@ -358,7 +364,7 @@ const chopperInfo = {
     blastRadius: 20,
     explosionInfo: {
         size: ExplSizes.tiny,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         length: 1000,
         soundDelay: 1000
@@ -383,7 +389,7 @@ const flareInfo = {
     blastRadius: 300,
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: [],
         length: 1000,
     },

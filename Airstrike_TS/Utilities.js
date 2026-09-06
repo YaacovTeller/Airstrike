@@ -23,8 +23,8 @@ class ElementCreator {
     static returnNewDiv(parent, classname) {
         return this.returnNewEl(parent, 'div', classname);
     }
-    static returnNewCanvas(parent, classname) {
-        return this.returnNewEl(parent, 'canvas', classname);
+    static returnNewCanvas(parent, classname, append) {
+        return this.returnNewEl(parent, 'canvas', classname, append);
     }
 }
 class ContentElHandler {

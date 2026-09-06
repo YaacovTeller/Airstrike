@@ -6,6 +6,7 @@ var screenShakeTimeouts;
 })(screenShakeTimeouts || (screenShakeTimeouts = {}));
 var lights = [];
 var flares = [];
+var fires = [];
 const flareFade = 15000;
 class ExplosionHandler {
     static craterDecalStay = 15000;
@@ -36,15 +37,16 @@ class ExplosionHandler {
         }
     }
     static waterHit(blastCenter, size, explSrc, weaponName) {
-        this.setAndReturnExplosion(blastCenter, size, explSrc);
+        this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
         this.shake_Light_Targets(blastCenter, size, weaponName);
     }
     static waterMiss(blastCenter, size) {
-        let splash = this.setAndReturnSplash(blastCenter, size);
+        let splash = this.setAndReturnExplosion(blastCenter, size, HitSurface.water);
+        //let splash = this.setAndReturnSplash(blastCenter, size);
         this.presentAndFadeout(splash, 4000, 100);
     }
     static landHit(blastCenter, size, explFrames, weaponName) {
-        let explosion = this.setAndReturnExplosion(blastCenter, size, explFrames);
+        let explosion = this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
         let crater = this.setAndReturnCrater(blastCenter, size);
         this.handleExplosionCrater(explosion, crater);
         this.shake_Light_Targets(blastCenter, size, weaponName);
@@ -140,7 +142,8 @@ class ExplosionHandler {
         setTimeout(() => { overlay.classList.remove("flash"); }, 2000);
     }
     static pushLight(lightArr, blastCenter, explSize) {
-        let light = { pos: blastCenter, opac: 1, size: explSize, fading: false };
+        lightID++;
+        let light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false };
         lightArr.push(light);
     }
     static shake(shakeTimeout) {
@@ -156,10 +159,32 @@ class ExplosionHandler {
         this.presentAndFadeout(explosion, 4000, 100);
         this.presentAndFadeout(crater, this.craterDecalStay, this.craterFadingTillRemoval);
     }
-    static setAndReturnExplosion(blastCenter, size, frames) {
+    static setAndReturnExplosion(blastCenter, size, surface) {
         let explosion = ElementCreator.returnNewCanvas(ContentElHandler.returnContentEl(), "explosion");
-        const player = new CanvasGifPlayer(explosion, size, frames, 12); // 12 FPS
-        player.play(false);
+        let explosionImgs;
+        if (surface == HitSurface.land) {
+            switch (size) {
+                case ExplSizes.tiny:
+                case ExplSizes.small:
+                case ExplSizes.large:
+                    explosionImgs = expl_small_imgs;
+                    break;
+                case ExplSizes.XL:
+                    explosionImgs = expl_med_imgs;
+                    break;
+                case ExplSizes.XXL:
+                    explosionImgs = expl_big_imgs;
+                    break;
+                default:
+                    explosionImgs = expl_small_imgs;
+                    break;
+            }
+        }
+        else {
+            explosionImgs = splash_imgs;
+        }
+        const player = new CanvasGifPlayer(explosion, size);
+        player.play(explosionImgs, false);
         this.setSizeAndPos(explosion, size, size, blastCenter.X - (size / 2), blastCenter.Y - (size * 0.9));
         return explosion;
     }

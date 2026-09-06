@@ -24,8 +24,8 @@ class ElementCreator {
     public static returnNewDiv(parent: HTMLElement, classname: string) {
         return this.returnNewEl(parent, 'div', classname);
     }
-    public static returnNewCanvas(parent: HTMLElement, classname: string) {
-        return this.returnNewEl(parent, 'canvas', classname);
+    public static returnNewCanvas(parent: HTMLElement, classname: string, append?: boolean) {
+        return this.returnNewEl(parent, 'canvas', classname, append) as HTMLCanvasElement;
     }
 }
 

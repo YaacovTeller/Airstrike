@@ -27,14 +27,13 @@ class Wave {
         this.type = type;
     }
 }
+
 type TargetProbability = {
     type: Target;
     prob: number;
 }
 type LevelInfo = {
     location: Area
-}
-type WaveLevelInfo = LevelInfo & {
     number: number
     messages: Array<popupMsg>
     waves: Array<Wave>
@@ -42,13 +41,41 @@ type WaveLevelInfo = LevelInfo & {
     endArms: Array<weaponInfo>
     targetFunc: () => Target
 }
+//type WaveLevelInfo = LevelInfo & {
+
+//}
 
 class Level {
-    protected info: LevelInfo;
+    public waveIndex: number = -1;
+    public frequency: number;
+    public winCheckTimer: number;
+    public targetTimer: number;
+    public waveDurationTimer: number;
+    private allTargetsDeployed: boolean = false;
+    private pauseTargetProduction: boolean = false;
+    private passedHalfTargetProduction: boolean = false;
+    private pauseLength: number = 6000;
+    private suddenTargetFreq: number = 150;
+    private staticTargetFreq: number = 2;
+    declare protected info: LevelInfo;
+
+    constructor(info: LevelInfo) {
+        this.info = info;
+        this.armingUp = () => {
+            this.addWeaponsFromArray(this.info.startArms);
+        }
+        this.finalStageArms = () => {
+            this.addWeaponsFromArray(this.info.endArms);
+        }
+        this.provideAvailTargets = this.info.targetFunc;
+    }
+
+    protected provideAvailTargets(): Target { return } // FIX?
+    protected armingUp() { };
+    protected finalStageArms() { };
+
     public targets: Array<Target> = [];
     public currentWave: Wave;
-
-    constructor() { }
 
     public returnLocation() {
         return this.info.location
@@ -59,6 +86,8 @@ class Level {
             x.getTargetEl().remove();
         }
         allTargets = [];
+        this.allTargetsDeployed = false;
+        this.resetWincheck();
     }
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
         let wepName = weaponNames[info.name];
@@ -107,62 +136,28 @@ class Level {
         }
         return fin;
     }
-    public setAsLevel() {
 
-    }
-    public produceSingleTarget(target: Target) {
-
-    }
-    public pauseWave() {
-
-    }
-    public continueWave() {
-
-    }
-}
-
-class Level_Static extends Level {
-    constructor(info: LevelInfo) {
-        super()
-    }
-    
-}
-
-class Level_Waves extends Level {
-    public waveIndex: number = -1;
-    public frequency: number;
-    public winCheckTimer: number;
-    public targetTimer: number;
-    public waveDurationTimer: number;
-    private allTargetsDeployed: boolean = false;
-    private pauseTargetProduction: boolean = false;
-    private passedHalfTargetProduction: boolean = false;
-    private pauseLength: number = 6000;
-    private suddenTargetFreq: number = 150;
-    private staticTargetFreq: number = 2;
-    declare protected info: WaveLevelInfo;
-
-    constructor(info: WaveLevelInfo) {
-        super();
-        this.info = info;
-        this.armingUp = () => {
-            this.addWeaponsFromArray(this.info.startArms);
-        }
-        this.finalStageArms = () => {
-            this.addWeaponsFromArray(this.info.endArms);
-        }
-        this.provideAvailTargets = this.info.targetFunc;
-    }
-
-    protected provideAvailTargets(): Target { return } // FIX?
-    protected armingUp() { };
-    protected finalStageArms() { };
-
-    private addWeaponsFromArray(arr: Array<weaponInfo>) {
+    protected addWeaponsFromArray(arr: Array<weaponInfo>) {
         for (let wep of arr) {
             this.addNewWeapon(wep);
         }
     }
+    public setAsLevel() {
+        let num = this.info.number;
+
+        this.frequency = game.difficulty.newTargetEvery;
+        if (game.gameMode == GameMode.regular) {
+            PopupHandler.addToArray("", "Level " + num, msgLength.long)
+            this.setLevelDisplay(num);
+        }
+        else {
+            PopupHandler.addToArray("", "Sandbox", msgLength.short)
+        }
+        for (let msg of this.info.messages) {
+            PopupHandler.addToArray(msg.text, msg.title, msg.length);
+        }
+    }
+
     private setLevelDisplay(num: number) {
         let div = document.getElementById("levDiv_" + num);
         let prevDiv = document.getElementById("levDiv_" + (num - 1));
@@ -188,21 +183,6 @@ class Level_Waves extends Level {
             }
         }
         div.classList.add("selected");
-    }
-    public setAsLevel() {
-        let num = this.info.number;
-        
-        this.frequency = game.difficulty.newTargetEvery;
-        if (game.gameMode == GameMode.regular) {
-            PopupHandler.addToArray("", "Level " + num, msgLength.long)
-            this.setLevelDisplay(num);
-        }
-        else {
-            PopupHandler.addToArray("", "Sandbox", msgLength.short)
-        }
-        for (let msg of this.info.messages) {
-            PopupHandler.addToArray(msg.text, msg.title, msg.length);
-        }
     }
 
     private setCurrentWave() {
@@ -252,7 +232,7 @@ class Level_Waves extends Level {
         this.targets = [];
         this.nextWavePrepGap();
     }
-    protected nextWavePrepGap() {
+    private nextWavePrepGap() {
         setTimeout(() => {
             //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
@@ -310,12 +290,12 @@ class Level_Waves extends Level {
         }, freq);
     }
 
-    public produceSingleTarget(tgt?: Target) {
+    public produceSingleTarget(tgt?: Target, pos?: position) {
         if (this.pauseTargetProduction == true) {
             return
         }
         let target: Target = tgt ? tgt : this.provideAvailTargets();
-        target.setPosition();
+        target.decidePosition(pos);
         this.targets.push(target);
         allTargets.push(target);
         game.updateKillStats(killStatDisplayOptions.total)
@@ -339,12 +319,26 @@ class Level_Waves extends Level {
         clearInterval(this.targetTimer);
         this.targetTimer = null;
     }
-    public resetTargets() {
-        super.resetTargets();
-        this.allTargetsDeployed = false;
-        this.resetWincheck();
-    }
 }
+
+//class Level_Static extends Level {
+//    constructor(info: LevelInfo) {
+//        super(info)
+//        this.info = info;
+//    }
+
+//}
+//class Level_Waves extends Level {
+//    constructor(info: LevelInfo) {
+//        super(info)
+//        this.info = info;
+//    }
+
+//}
+
+
+
+
 
 function provideAllTargets(): Target {
     let rand = RandomNumberGen.randomNumBetween(1, 100);
@@ -371,10 +365,31 @@ function provideAllTargets(): Target {
 
 
 const staticInfo: LevelInfo = {
+    number: 0,
     location: Area.port,
+    messages: [{ title: "Static Test", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(10, WaveType.static, Time.day),
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => {
+        let rand = RandomNumberGen.randomNumBetween(1, 100);
+        let newTarget: Target;
+        switch (true) {
+            case (rand >= 90):
+                newTarget = new WaterVehicleTarget();
+                break;
+            default:
+                newTarget = new WaterVehicleTarget();
+                break;
+        }
+        return newTarget;
+    },
+
 }
 
-const continuousInfo: WaveLevelInfo = {
+const continuousInfo: LevelInfo = {
     number: 0,
     location: Area.desert,
     messages: [{ title: "Weapons Test", text: "", length: msgLength.short }],
@@ -405,7 +420,7 @@ const continuousInfo: WaveLevelInfo = {
         return provideAllTargets();
     },
 }
-const weatherTestInfo: WaveLevelInfo = {
+const weatherTestInfo: LevelInfo = {
     number: 0,
     location: Area.desert,
     messages: [{ title: "Weather Test", text: "", length: msgLength.short }],
@@ -440,7 +455,7 @@ const weatherTestInfo: WaveLevelInfo = {
 
 
 
-const allLevelInfo: Array<WaveLevelInfo> = [
+const allLevelInfo: Array<LevelInfo> = [
     {
         number: 1,
         location: Area.desert,

@@ -70,7 +70,12 @@ const multiKillText = {
     13: { size: 200, colour: 'black' },
     14: { size: 200, colour: 'black' },
 }
+enum HitSurface {
+    water,
+    land
+}
 enum ExplSizes {
+    XXS = 20,
     tiny = 60,
     small = 100,
     large = 140,
@@ -201,8 +206,8 @@ type ExplosiveWeaponInfo = weaponInfo & {
     flyover?: FlyOver
 }
 type ExplosionInfo = {
-  //  imageSource: string,
-    frames: Array<string>,
+    //  imageSource: string,
+    frames: Array<HTMLImageElement>,
     size: ExplSizes,
     length: number,
     sound: Array<Sound>,
@@ -309,7 +314,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
     cursor: "cursor2",
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: [],
         length: 1000,
     },
@@ -327,7 +332,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
     cursor: "cursor3",
     explosionInfo: {
         size: ExplSizes.large,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         soundDelay: 3000,
         length: 1000,
@@ -346,7 +351,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XL,
-        frames: expl_med_frames,
+        frames: expl_med_imgs,
         sound: strikes,
         soundDelay: 2500,
         length: 1000,
@@ -371,7 +376,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
     cursor: "cursor4",
     explosionInfo: {
         size: ExplSizes.XXL,
-        frames: expl_big_frames,
+        frames: expl_big_imgs,
         sound: bigExplosions,
         soundDelay: 6500,
         length: 2500,
@@ -406,7 +411,7 @@ const droneInfo: ExplosiveWeaponInfo = {
     blastRadius: 0,
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         length: 1000,
         soundDelay: 2000
@@ -431,7 +436,7 @@ const chopperInfo: ExplosiveWeaponInfo = {
     blastRadius: 20,
     explosionInfo: {
         size: ExplSizes.tiny,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: explosions,
         length: 1000,
         soundDelay: 1000
@@ -457,7 +462,7 @@ const flareInfo: ExplosiveWeaponInfo = {
     blastRadius: 300,
     explosionInfo: {
         size: ExplSizes.small,
-        frames: expl_small_frames,
+        frames: expl_small_imgs,
         sound: [],
         length: 1000,
     },

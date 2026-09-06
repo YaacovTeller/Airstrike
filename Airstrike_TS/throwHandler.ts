@@ -3,13 +3,15 @@
         let thrownElem = parentElem ? parentElem : elem;
         this.throwArc(thrownElem, direc); // ARC
         let deg = this.rotate(elem, direc, angle);   // ROTATION
-        this.crashSound(impactSounds);
+        if (impactSounds && impactSounds.length) {
+            this.crashSound(impactSounds);
+        }
 
         return deg;
     }
-    private static crashSound(impactSounds) {
+    private static crashSound(sounds) {
         setTimeout(() => {
-            SoundPlayer.playRandomSound(impactSounds)
+            SoundPlayer.playRandomSound(sounds)
         }, crashTimeout);
     }
 

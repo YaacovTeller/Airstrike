@@ -16,9 +16,9 @@ var allTargets = [];
 var allObjects = [];
 var allBuildings = [];
 var allLevelsArray = [];
-const level_continuous = new Level_Waves(continuousInfo);
-const level_weather = new Level_Waves(weatherTestInfo);
-const level_static = new Level_Static(staticInfo);
+const level_continuous = new Level(continuousInfo);
+const level_weather = new Level(weatherTestInfo);
+const level_static = new Level(staticInfo);
 class GameHandler {
     hud = new HudHandler();
     weapon;
@@ -41,6 +41,7 @@ class GameHandler {
     gameWasPlayed = false;
     fullProgress = false;
     strikesRestricted = false;
+    waterWidth;
     constructor(element) {
         this.contentEl = element;
         userHandler.getUserInfo();
@@ -52,7 +53,7 @@ class GameHandler {
         document.getElementById("loader").style.display = 'none';
         this.addWeatherElements();
         this.darkOverlay.style.opacity = '0.5';
-        this.createWater(0);
+        this.createWater();
         this.handleBackgroundByLocation(Area.desert);
         this.killStats = {
             total: 0,
@@ -94,25 +95,31 @@ class GameHandler {
         let url;
         if (num == Area.desert) {
             url = "url(./AS_assets/Sand.png)";
-            this.extendWater("0%");
+            this.extendWater(10, false);
         }
         else if (num == Area.port) {
-            url = "url(./AS_assets/DS_sand.png)"; // SAME so far
-            this.extendWater("33%");
+            url = "url(./AS_assets/Sand.png)"; // SAME so far
+            this.extendWater(50, true);
         }
         this.setBackground(url);
         document.getElementById("contentWrapper").style.backgroundImage = `url(./AS_assets/Sand.png)`;
     }
-    createWater(width) {
+    createWater() {
         let water = document.createElement('div');
         water.id = "water";
         water.classList.add('water');
-        water.style.width = width;
         ContentElHandler.addToBackground(water);
     }
-    extendWater(width) {
+    extendWater(width, bool) {
+        this.waterWidth = width;
         let water = document.getElementById("water");
-        water.style.width = width;
+        water.style.width = width + "%";
+        if (bool) {
+            water.classList.remove("displayNone");
+        }
+        else {
+            water.classList.add('displayNone');
+        }
     }
     changeTime(time) {
         this.hideFlare(time);
@@ -147,13 +154,14 @@ class GameHandler {
     addAllLevels() {
         allLevelsArray = [];
         for (let i of allLevelInfo) {
-            let lev = new Level_Waves(i);
+            let lev = new Level(i);
             allLevelsArray.push(lev);
         }
     }
-    newStaticLevel(level) {
-        this.handleBackgroundByLocation(this.level.returnLocation());
-    }
+    //public newStaticLevel(level: Level_Static) {
+    //    this.level = level;
+    //    this.handleBackgroundByLocation(this.level.returnLocation());
+    //}
     newLevel(level, mode) {
         if (level) {
             let nextLevel = level;
@@ -163,9 +171,7 @@ class GameHandler {
             this.level = nextLevel;
             this.level.setAsLevel(); // NEEDED?
             this.handleBackgroundByLocation(this.level.returnLocation());
-            if (this.level instanceof Level_Waves) {
-                this.level.nextWave();
-            }
+            this.level.nextWave();
         }
         else {
             this.endGame();
@@ -445,8 +451,8 @@ class GameHandler {
         });
         this.contentEl.classList.add(this.weapon.cursor);
     }
-    targetCreation(newTarget) {
-        this.level.produceSingleTarget(newTarget);
+    targetCreation(newTarget, pos) {
+        this.level.produceSingleTarget(newTarget, pos);
     }
     updateProgressBar() {
         if (this.progressNumber >= 100) {
@@ -532,7 +538,8 @@ class GameHandler {
         let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
         var lightsString = this.returnLightString(lights, "255, 255, 255");
         var flaresString = this.returnLightString(flares, "255, 255, 50");
-        var gradientsString = [lightsString, flaresString]
+        var firesString = this.returnLightString(fires, "255, 255, 255");
+        var gradientsString = [lightsString, flaresString, firesString]
             .filter(str => str)
             .join(', ');
         this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
@@ -544,7 +551,13 @@ class GameHandler {
             .map(light => {
             let brightRange = light.size / 12;
             let featherRange = light.size / 12 + 30;
-            return `radial-gradient(circle at ${light.pos.X}px ${light.pos.Y}px, rgba(${rbgString}, ${light.opac}) ${brightRange}%, rgba(0, 0, 0, 0) ${featherRange}%)`;
+            if (light.parent) {
+                light.pos.X = parseInt(light.parent.style.left);
+                light.pos.Y = parseInt(light.parent.style.top);
+            }
+            return `radial-gradient(circle ${light.size}px at ${light.pos.X}px ${light.pos.Y}px,
+                        rgba(${rbgString}, ${light.opac}) ${brightRange}%,
+                        rgba(0, 0, 0, 0) ${featherRange}%)`;
         })
             .join(', ');
     }
@@ -690,7 +703,7 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
         }
         else if (mode == GameMode.test_2) {
-            this.newStaticLevel(level_continuous);
+            this.newLevel(level_static, mode);
             this.level.addNewWeapon(airstrikeInfo, true);
             this.drawAllBuildings();
         }

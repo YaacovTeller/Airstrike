@@ -10,4 +10,5 @@ const damagedTargetStay = 40000;
 const itemStay = 15000;
 var fireStay = itemStay;
 const fadeAnimTime = 8000;
+var lightID = 1;
 //# sourceMappingURL=const.js.map

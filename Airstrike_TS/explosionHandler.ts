@@ -4,13 +4,16 @@
     "shake_3" = 400,
 }
 type light = {
+    id: number,
     pos: position,
     opac: number,
     size: ExplSizes,
-    fading: boolean
+    fading: boolean,
+    parent?: HTMLElement
 }
 var lights: Array<light> = [];
 var flares: Array<light> = [];
+var fires: Array<light> = [];
 
 const flareFade = 15000;
 
@@ -27,7 +30,7 @@ class ExplosionHandler {
         ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
 
     }
-    public static basicExplosion(blastCenter: position, size: ExplSizes, explFrames: Array<string>, weaponName: weaponNames) {
+    public static basicExplosion(blastCenter: position, size: ExplSizes, explFrames: Array<HTMLImageElement>, weaponName: weaponNames) {
         let water = document.getElementById("water")
         if (water) {
             if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {
@@ -45,19 +48,20 @@ class ExplosionHandler {
         }
     }
 
-    private static waterHit(blastCenter: position, size: ExplSizes, explSrc: Array<string>, weaponName: weaponNames) {
-        this.setAndReturnExplosion(blastCenter, size, explSrc);
+    private static waterHit(blastCenter: position, size: ExplSizes, explSrc: Array<HTMLImageElement>, weaponName: weaponNames) {
+        this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
 
         this.shake_Light_Targets(blastCenter, size, weaponName);
     }
 
     private static waterMiss(blastCenter, size) {
-        let splash = this.setAndReturnSplash(blastCenter, size);
+        let splash = this.setAndReturnExplosion(blastCenter, size, HitSurface.water)
+        //let splash = this.setAndReturnSplash(blastCenter, size);
         this.presentAndFadeout(splash, 4000, 100);
     }
 
-    private static landHit(blastCenter: position, size: ExplSizes, explFrames: Array<string>, weaponName: weaponNames) {
-        let explosion = this.setAndReturnExplosion(blastCenter, size, explFrames);
+    private static landHit(blastCenter: position, size: ExplSizes, explFrames: Array<HTMLImageElement>, weaponName: weaponNames) {
+        let explosion = this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
 
         let crater = this.setAndReturnCrater(blastCenter, size);
         this.handleExplosionCrater(explosion, crater);
@@ -158,7 +162,8 @@ class ExplosionHandler {
         setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
     }
     private static pushLight(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
-        let light: light = { pos: blastCenter, opac: 1, size: explSize, fading: false }
+        lightID++
+        let light: light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false }
         lightArr.push(light);
     }
 
@@ -178,11 +183,34 @@ class ExplosionHandler {
         this.presentAndFadeout(crater, this.craterDecalStay, this.craterFadingTillRemoval)
     }
 
-    private static setAndReturnExplosion(blastCenter, size: ExplSizes, frames) {
+    private static setAndReturnExplosion(blastCenter, size: ExplSizes, surface: HitSurface) {
         let explosion = ElementCreator.returnNewCanvas(ContentElHandler.returnContentEl(), "explosion") as HTMLCanvasElement;
+        let explosionImgs;
+        if (surface == HitSurface.land) {
+            switch (size) {
+                case ExplSizes.tiny:
+                case ExplSizes.small:
+                case ExplSizes.large:
+                    explosionImgs = expl_small_imgs;
+                    break;
+                case ExplSizes.XL:
+                    explosionImgs = expl_med_imgs;
+                    break;
 
-        const player = new CanvasGifPlayer(explosion, size, frames, 12); // 12 FPS
-        player.play(false);
+                case ExplSizes.XXL:
+                    explosionImgs = expl_big_imgs;
+                    break;
+
+                default:
+                    explosionImgs = expl_small_imgs;
+                    break;
+            }
+        }
+        else {
+            explosionImgs = splash_imgs;
+        }
+        const player = new CanvasGifPlayer(explosion, size);
+        player.play(explosionImgs, false);
         this.setSizeAndPos(explosion, size, size, blastCenter.X - (size / 2), blastCenter.Y - (size * 0.9));
         return explosion
     }

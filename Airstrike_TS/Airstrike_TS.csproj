@@ -316,7 +316,6 @@
     <Content Include="AS_assets\cursors\sniper.cur" />
     <Content Include="AS_assets\cursors\target.cur" />
     <Content Include="AS_assets\cursors\unbounded.cur" />
-    <Content Include="AS_assets\DS_sand.png" />
     <Content Include="AS_assets\expl1.gif" />
     <Content Include="AS_assets\explode_unused.gif" />
     <Content Include="AS_assets\expl_big.gif" />

@@ -317,23 +317,58 @@ function loadSound() {
     )
 }
 
-var expl_small_frames: Array<string> = [];
-var expl_med_frames: Array<string> = [];
-var expl_big_frames: Array<string> = [];
-var fire_1_frames: Array<string> = [];
-var fire_2_frames: Array<string> = [];
-var smoke_frames: Array<string> = [];
 
-function loadAllGifs() {
-    fire_1_frames.push(...loadGifFrames('fire_1/', 8, '1'));
-    fire_2_frames.push(...loadGifFrames('fire_3/', 15, '11'));
-    expl_small_frames.push(...loadGifFrames('expl_small/', 25, '05'));
-    expl_med_frames.push(...loadGifFrames('expl_med/', 24, '08'));
-    expl_big_frames.push(...loadGifFrames('expl_big/', 26, '1'));
-    smoke_frames.push(...loadGifFrames('smoke3/', 15, '1'));
+
+var expl_small_imgs: Array<HTMLImageElement> = [];
+var expl_med_imgs: Array<HTMLImageElement> = [];
+var expl_big_imgs: Array<HTMLImageElement> = [];
+var fire_1_imgs: Array<HTMLImageElement> = [];
+var fire_2_imgs: Array<HTMLImageElement> = [];
+var smoke_imgs: Array<HTMLImageElement> = [];
+var splash_imgs: Array<HTMLImageElement> = [];
+
+class CanvasGifHandler {
+    private static expl_small_frames: Array<string> = [];
+    private static expl_med_frames: Array<string> = [];
+    private static expl_big_frames: Array<string> = [];
+    private static fire_1_frames: Array<string> = [];
+    private static fire_2_frames: Array<string> = [];
+    private static smoke_frames: Array<string> = [];
+    private static splash_frames: Array<string> = [];
+
+    public static loadAllGifs() {
+        this.loadAllGifFrames();
+        this.loadAllGifImages();
+    }
+    private static loadAllGifFrames() {
+        this.fire_1_frames.push(...this.loadGifFrames('fire_1/', 6, '1'));
+        this.fire_2_frames.push(...this.loadGifFrames('fire_2/', 11, '15'));
+        this.expl_small_frames.push(...this.loadGifFrames('expl_small/', 25, '05'));
+        this.expl_med_frames.push(...this.loadGifFrames('expl_med/', 24, '08'));
+        this.expl_big_frames.push(...this.loadGifFrames('expl_big/', 26, '1'));
+        this.smoke_frames.push(...this.loadGifFrames('smoke_3/', 15, '1'));
+        this.splash_frames.push(...this.loadGifFrames('splash/', 13, '1'));
+}
+    private static loadAllGifImages() {
+        expl_small_imgs = this.convertToGifImages(this.expl_small_frames);
+        expl_med_imgs = this.convertToGifImages(this.expl_med_frames);
+        expl_big_imgs = this.convertToGifImages(this.expl_big_frames);
+        fire_1_imgs = this.convertToGifImages(this.fire_1_frames);
+        fire_2_imgs = this.convertToGifImages(this.fire_2_frames);
+        smoke_imgs = this.convertToGifImages(this.smoke_frames);
+        splash_imgs = this.convertToGifImages(this.splash_frames);
+}
+    private static convertToGifImages(frameUrls) {
+    let frameImages = [];
+    frameUrls.forEach((url) => {
+        const img = new Image();
+        img.src = url;
+        frameImages.push(img);
+    });
+    return frameImages;
 }
 
-function loadGifFrames(folder, total, speed) {
+    private static loadGifFrames(folder, total, speed) {
     let frames: Array<string> = [];
     let path = assetsFolder + folder;
     for (let i = 0; i <= total; i++) {
@@ -344,50 +379,68 @@ function loadGifFrames(folder, total, speed) {
     return frames;
 }
 
+}
+
 class CanvasGifPlayer {
     private frames: HTMLImageElement[] = [];
     private fps: number;
     private currentFrame = 0;
     private playing = false;
     private ctx: CanvasRenderingContext2D;
+    private timeoutId?: number;
 
     constructor(
         private canvas: HTMLCanvasElement,
-        size: ExplSizes,
-        frameUrls: string[],
-        fps = 24
+        size?: ExplSizes,
+    //    fps = 24
     ) {
         this.ctx = canvas.getContext("2d")!;
-        this.fps = fps;
-        this.canvas.width = size;
-        this.canvas.height = size;
-
+      //  this.fps = fps;
+        this.fps = 12;
+        if (size) {
+            this.canvas.width = size;
+            this.canvas.height = size;
+        } 
         //this.canvas.style.width = "100px";
         //this.canvas.style.height = "100px";
-
-        // preload frames
-        frameUrls.forEach((url) => {
-            const img = new Image();
-            img.src = url;
-            this.frames.push(img);
-        });
     }
 
-    play(repeat?) {
+    //play(frameUrls: string[], repeat?) {
+    //    if (this.playing) return;
+    //    this.playing = true;
+
+    //    frameUrls.forEach((url) => {
+    //        const img = new Image();
+    //        img.src = url;
+    //        this.frames.push(img);
+    //    });
+
+    //    this.loop(repeat);
+    //}
+    play(frameImgs: HTMLImageElement[], repeat?) {
+        if (this.playing) return;
         this.playing = true;
+        this.frames = frameImgs;
         this.loop(repeat);
     }
 
     pause() {
         this.playing = false;
+        if (this.timeoutId !== undefined) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = undefined;
+        }
+        this.frames = [];
     }
 
-    private loop = (repeat) => {
+    loop = (repeat) => {
         if (!this.playing) return;
 
         const frame = this.frames[this.currentFrame];
-
-        if (frame.complete) {
+        //if (frame == null) {
+        //    debugger
+        //}
+        if (frame && frame.complete) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
         }
@@ -400,6 +453,10 @@ class CanvasGifPlayer {
                 return;
             }
         }
-        setTimeout(this.loop, 1000 / this.fps);
+        this.timeoutId = window.setTimeout(
+            () => this.loop(repeat),
+            1000 / this.fps
+        );
+    //    setTimeout(this.loop, 1000 / this.fps, repeat);
     };
 }

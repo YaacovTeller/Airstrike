@@ -3,6 +3,6 @@
 window.onload = () => {
     const contentEl: HTMLElement = ContentElHandler.returnContentEl();
     loadSound();
-    loadAllGifs();
+    CanvasGifHandler.loadAllGifs();
     game = new GameHandler(contentEl);
 };

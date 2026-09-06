@@ -29,11 +29,37 @@ class Wave {
         this.type = type;
     }
 }
+//type WaveLevelInfo = LevelInfo & {
+//}
 class Level {
-    info;
+    waveIndex = -1;
+    frequency;
+    winCheckTimer;
+    targetTimer;
+    waveDurationTimer;
+    allTargetsDeployed = false;
+    pauseTargetProduction = false;
+    passedHalfTargetProduction = false;
+    pauseLength = 6000;
+    suddenTargetFreq = 150;
+    staticTargetFreq = 2;
+    constructor(info) {
+        this.info = info;
+        this.armingUp = () => {
+            this.addWeaponsFromArray(this.info.startArms);
+        };
+        this.finalStageArms = () => {
+            this.addWeaponsFromArray(this.info.endArms);
+        };
+        this.provideAvailTargets = this.info.targetFunc;
+    }
+    provideAvailTargets() { return; } // FIX?
+    armingUp() { }
+    ;
+    finalStageArms() { }
+    ;
     targets = [];
     currentWave;
-    constructor() { }
     returnLocation() {
         return this.info.location;
     }
@@ -43,6 +69,8 @@ class Level {
             x.getTargetEl().remove();
         }
         allTargets = [];
+        this.allTargetsDeployed = false;
+        this.resetWincheck();
     }
     addNewWeapon(info, showMsg) {
         let wepName = weaponNames[info.name];
@@ -89,51 +117,23 @@ class Level {
         }
         return fin;
     }
-    setAsLevel() {
-    }
-    produceSingleTarget(target) {
-    }
-    pauseWave() {
-    }
-    continueWave() {
-    }
-}
-class Level_Static extends Level {
-    constructor(info) {
-        super();
-    }
-}
-class Level_Waves extends Level {
-    waveIndex = -1;
-    frequency;
-    winCheckTimer;
-    targetTimer;
-    waveDurationTimer;
-    allTargetsDeployed = false;
-    pauseTargetProduction = false;
-    passedHalfTargetProduction = false;
-    pauseLength = 6000;
-    suddenTargetFreq = 150;
-    staticTargetFreq = 2;
-    constructor(info) {
-        super();
-        this.info = info;
-        this.armingUp = () => {
-            this.addWeaponsFromArray(this.info.startArms);
-        };
-        this.finalStageArms = () => {
-            this.addWeaponsFromArray(this.info.endArms);
-        };
-        this.provideAvailTargets = this.info.targetFunc;
-    }
-    provideAvailTargets() { return; } // FIX?
-    armingUp() { }
-    ;
-    finalStageArms() { }
-    ;
     addWeaponsFromArray(arr) {
         for (let wep of arr) {
             this.addNewWeapon(wep);
+        }
+    }
+    setAsLevel() {
+        let num = this.info.number;
+        this.frequency = game.difficulty.newTargetEvery;
+        if (game.gameMode == GameMode.regular) {
+            PopupHandler.addToArray("", "Level " + num, msgLength.long);
+            this.setLevelDisplay(num);
+        }
+        else {
+            PopupHandler.addToArray("", "Sandbox", msgLength.short);
+        }
+        for (let msg of this.info.messages) {
+            PopupHandler.addToArray(msg.text, msg.title, msg.length);
         }
     }
     setLevelDisplay(num) {
@@ -159,20 +159,6 @@ class Level_Waves extends Level {
             }
         }
         div.classList.add("selected");
-    }
-    setAsLevel() {
-        let num = this.info.number;
-        this.frequency = game.difficulty.newTargetEvery;
-        if (game.gameMode == GameMode.regular) {
-            PopupHandler.addToArray("", "Level " + num, msgLength.long);
-            this.setLevelDisplay(num);
-        }
-        else {
-            PopupHandler.addToArray("", "Sandbox", msgLength.short);
-        }
-        for (let msg of this.info.messages) {
-            PopupHandler.addToArray(msg.text, msg.title, msg.length);
-        }
     }
     setCurrentWave() {
         let num = this.waveIndex;
@@ -269,12 +255,12 @@ class Level_Waves extends Level {
             }
         }, freq);
     }
-    produceSingleTarget(tgt) {
+    produceSingleTarget(tgt, pos) {
         if (this.pauseTargetProduction == true) {
             return;
         }
         let target = tgt ? tgt : this.provideAvailTargets();
-        target.setPosition();
+        target.decidePosition(pos);
         this.targets.push(target);
         allTargets.push(target);
         game.updateKillStats(killStatDisplayOptions.total);
@@ -296,12 +282,19 @@ class Level_Waves extends Level {
         clearInterval(this.targetTimer);
         this.targetTimer = null;
     }
-    resetTargets() {
-        super.resetTargets();
-        this.allTargetsDeployed = false;
-        this.resetWincheck();
-    }
 }
+//class Level_Static extends Level {
+//    constructor(info: LevelInfo) {
+//        super(info)
+//        this.info = info;
+//    }
+//}
+//class Level_Waves extends Level {
+//    constructor(info: LevelInfo) {
+//        super(info)
+//        this.info = info;
+//    }
+//}
 function provideAllTargets() {
     let rand = RandomNumberGen.randomNumBetween(1, 100);
     let newTarget;
@@ -325,7 +318,27 @@ function provideAllTargets() {
     return newTarget;
 }
 const staticInfo = {
+    number: 0,
     location: Area.port,
+    messages: [{ title: "Static Test", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(10, WaveType.static, Time.day),
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => {
+        let rand = RandomNumberGen.randomNumBetween(1, 100);
+        let newTarget;
+        switch (true) {
+            case (rand >= 90):
+                newTarget = new WaterVehicleTarget();
+                break;
+            default:
+                newTarget = new WaterVehicleTarget();
+                break;
+        }
+        return newTarget;
+    },
 };
 const continuousInfo = {
     number: 0,

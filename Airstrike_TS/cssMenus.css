@@ -49,9 +49,21 @@ body {
 }
 .water {
     position: fixed;
-    height: 100%;
+    height: 150%;
     background-image: url(./AS_assets/DS_water.png);
+    mask-image: linear-gradient(to right, transparent, black 0%, black 90%, transparent);
+    left: -10%;
+    transform: skewX(30deg);
+    /*    transform: rotate(-30deg);
+    /*    border-top-right-radius: 24px;
+    border-bottom-right-radius: 24px;*/
 }
+/*.water::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100% );
+}*/
 .rain {
     position: absolute;
     top: 0;

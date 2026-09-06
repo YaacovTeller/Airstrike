@@ -180,6 +180,9 @@
 .picEl > img {
     width: 100%;
 }
+.damageEl {
+
+}
 .target {
     position: absolute;
     user-select: none;
@@ -187,7 +190,7 @@
     /*    cursor: url(./AS_assets/bazooka.cur), crosshair;*/
 }
 
-    .target > img {
+    .target > img, .target > canvas {
         position: absolute;
         max-width: 100%;
         max-height: 100%;
@@ -225,10 +228,11 @@
     transition: opacity 3s ease-in-out;
 }
 .wheel {
-/*    width: 10px;
-*/    display: flex;
-    flex-direction:column;
+    /*    width: 10px;*/ 
+    display: flex;
+    flex-direction: column;
     justify-content: center;
+    transition: opacity 6s ease-in-out
 }
 .wheelPic {
     position: absolute;
@@ -248,13 +252,12 @@
 
 .rollWheel {
     animation: rotate 0.5s linear infinite, move-right 4s ease-out forwards;
-    transition: opacity 6s ease-in-out
 }
 
-.throwWheel {
+/*.throwWheel {*/
     /*    animation: rotate 2s linear infinite, move-right 4s ease-out infinite;
-*/ transition: opacity 6s ease-in-out
-}
+*/ /*transition: opacity 6s ease-in-out
+}*/
 
 
 .lightDamaged {
@@ -309,8 +312,8 @@
     opacity: 0.5;
     position: fixed;
     border-radius: 50%;
-    /*    pointer-events: none;
-*/ /*overflow: hidden;*/
+        pointer-events: none;
+ /*overflow: hidden;*/
 }
 
 .crater, .splash {

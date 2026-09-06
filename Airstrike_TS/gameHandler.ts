@@ -12,13 +12,13 @@ enum GameMode {
 
 var conventionalWeapons: Array<WeaponType> = [];
 var extraWeapons: Array<WeaponType> = [];
-var allTargets: Array<Target> = [];
+var allTargets: Array<any> = [];
 var allObjects: Array<HTMLElement> = [];
 var allBuildings: Array<HTMLElement> = [];
-var allLevelsArray: Array<Level_Waves> = [];
-const level_continuous: Level_Waves = new Level_Waves(continuousInfo);
-const level_weather: Level_Waves = new Level_Waves(weatherTestInfo);
-const level_static: Level_Static = new Level_Static(staticInfo);
+var allLevelsArray: Array<Level> = [];
+const level_continuous: Level = new Level(continuousInfo);
+const level_weather: Level = new Level(weatherTestInfo);
+const level_static: Level = new Level(staticInfo);
 
 class GameHandler {
     public hud = new HudHandler();
@@ -44,6 +44,7 @@ class GameHandler {
     private gameWasPlayed: boolean = false;
     private fullProgress: boolean = false;
     public strikesRestricted: boolean = false;
+    public waterWidth: number;
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
@@ -58,7 +59,7 @@ class GameHandler {
         document.getElementById("loader").style.display = 'none';
         this.addWeatherElements();
         this.darkOverlay.style.opacity = '0.5';
-        this.createWater(0);
+        this.createWater();
 
         this.handleBackgroundByLocation(Area.desert);
 
@@ -105,26 +106,34 @@ class GameHandler {
         let url: string;
         if (num == Area.desert) {
             url = "url(./AS_assets/Sand.png)";
-            this.extendWater("0%")
+            this.extendWater(10, false)
         }
         else if (num == Area.port) {
-            url = "url(./AS_assets/DS_sand.png)"; // SAME so far
-            this.extendWater("33%");
+            url = "url(./AS_assets/Sand.png)"; // SAME so far
+            this.extendWater(50, true);
         }
         this.setBackground(url);
         document.getElementById("contentWrapper").style.backgroundImage = `url(./AS_assets/Sand.png)`;
 
     }
-    private createWater(width) {
+
+    private createWater() {
         let water = document.createElement('div');
         water.id = "water";
         water.classList.add('water');
-        water.style.width = width;
         ContentElHandler.addToBackground(water);
     }
-    private extendWater(width) {
+
+    private extendWater(width, bool) {
+        this.waterWidth = width;
         let water = document.getElementById("water")
-        water.style.width = width;
+        water.style.width = width + "%";
+        if (bool) {
+            water.classList.remove("displayNone");
+        }
+        else {
+            water.classList.add('displayNone');
+        }
     }
 
     public changeTime(time: Time) {
@@ -161,18 +170,18 @@ class GameHandler {
     private addAllLevels() {
         allLevelsArray = [];
         for (let i of allLevelInfo) {
-            let lev = new Level_Waves(i)
+            let lev = new Level(i)
             allLevelsArray.push(lev);
         }
     }
 
-    public newStaticLevel(level: Level_Static) {
-        this.handleBackgroundByLocation(this.level.returnLocation());
+    //public newStaticLevel(level: Level_Static) {
+    //    this.level = level;
+    //    this.handleBackgroundByLocation(this.level.returnLocation());
+    //}
 
-    }
-
-    public newLevel(level: Level_Waves, mode: GameMode) {
-        if (level) {
+    public newLevel(level: Level, mode: GameMode) {
+            if (level) {
             let nextLevel = level;
             if (mode == GameMode.sandbox) {
                 nextLevel = level_continuous;   // AWWKWARD? 
@@ -181,9 +190,7 @@ class GameHandler {
             this.level.setAsLevel(); // NEEDED?
 
             this.handleBackgroundByLocation(this.level.returnLocation());
-            if (this.level instanceof Level_Waves) {
-                this.level.nextWave();
-            }
+            this.level.nextWave();
         }
         else {
             this.endGame();
@@ -485,8 +492,8 @@ class GameHandler {
         this.contentEl.classList.add(this.weapon.cursor);
     }
 
-    public targetCreation(newTarget: Target) {
-        this.level.produceSingleTarget(newTarget);
+    public targetCreation(newTarget: Target, pos?: position) {
+        this.level.produceSingleTarget(newTarget, pos);
     }
 
     private updateProgressBar() {
@@ -577,9 +584,10 @@ class GameHandler {
         const darkBlueVal = 40;
         let defaultRGB = `rgb(0, 0, ${darkBlueVal})`;
 
-        var lightsString: string = this.returnLightString(lights, "255, 255, 255")
-        var flaresString: string = this.returnLightString(flares, "255, 255, 50")
-        var gradientsString: string = [lightsString, flaresString]
+        var lightsString: string = this.returnLightString(lights, "255, 255, 255");
+        var flaresString: string = this.returnLightString(flares, "255, 255, 50");
+        var firesString: string = this.returnLightString(fires, "255, 255, 255");
+        var gradientsString: string = [lightsString, flaresString, firesString]
             .filter(str => str) 
             .join(', ');
         this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
@@ -592,7 +600,13 @@ class GameHandler {
             .map(light => {
                 let brightRange = light.size / 12;
                 let featherRange = light.size / 12 + 30;
-                return `radial-gradient(circle at ${light.pos.X}px ${light.pos.Y}px, rgba(${rbgString}, ${light.opac}) ${brightRange}%, rgba(0, 0, 0, 0) ${featherRange}%)`;
+                if (light.parent) {
+                    light.pos.X = parseInt(light.parent.style.left);
+                    light.pos.Y = parseInt(light.parent.style.top);
+                }
+                return `radial-gradient(circle ${light.size}px at ${light.pos.X}px ${light.pos.Y}px,
+                        rgba(${rbgString}, ${light.opac}) ${brightRange}%,
+                        rgba(0, 0, 0, 0) ${featherRange}%)`;
             })
             .join(', ');
     }
@@ -743,7 +757,7 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
         }
         else if (mode == GameMode.test_2) {
-            this.newStaticLevel(level_continuous);
+            this.newLevel(level_static, mode);
             this.level.addNewWeapon(airstrikeInfo, true);
             this.drawAllBuildings();
         }

@@ -1,15 +1,7 @@
 class CollisionDetection {
     static checkCollisionFromPosition(mousePos, targetEl) {
-        //let trgtPos: position = this.getXYfromPoint(targetEl);
-        let targetRect = targetEl.getBoundingClientRect();
-        if (mousePos.X >= targetRect.left &&
-            mousePos.X <= targetRect.left + targetRect.width &&
-            mousePos.Y >= targetRect.top &&
-            mousePos.Y <= targetRect.top + targetRect.height) {
-            return true;
-        }
-        else
-            return false;
+        let elems = document.elementsFromPoint(mousePos.X, mousePos.Y);
+        return elems.some(el => el === targetEl);
     }
     static checkCollisionWithElement(element, targetEl) {
         let targetRect = targetEl.getBoundingClientRect();

@@ -207,6 +207,7 @@ class BulletWeaponType extends WeaponType {
         return exception;
     }
 }
+
 class ExplosiveWeaponType extends WeaponType {
     public blastRadius: number;
     protected explosionInfo: ExplosionInfo;
