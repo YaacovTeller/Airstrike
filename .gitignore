@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Windows shortcut files
+*.lnk
+
+# Claude Code local settings (personal permission overrides)
+.claude/settings.local.json

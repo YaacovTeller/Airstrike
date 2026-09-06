@@ -299,7 +299,6 @@
     <Content Include="icons\tank-mortar.ico" />
     <Content Include="icons\tank.ico" />
     <Content Include="icons\target.ico" />
-    <Content Include="index.html - Shortcut.lnk" />
     <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
