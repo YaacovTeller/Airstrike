@@ -1,3 +1,4 @@
+"use strict";
 var screenShakeTimeouts;
 (function (screenShakeTimeouts) {
     screenShakeTimeouts[screenShakeTimeouts["shake_1"] = 200] = "shake_1";
@@ -68,42 +69,34 @@ class ExplosionHandler {
             this.shake(screenShakeTimeouts.shake_3);
         }
     }
-    static checkForAnyDirectTargetHit(blastCenter, size) {
-        let directHit = false;
-        let rad = size / 2;
-        let minDist = 20;
+    // Walks allTargets and allObjects, invoking the callback for every element within the blast radius.
+    static forEachBlastCollision(blastCenter, rad, onTarget, onItem) {
         for (let target of allTargets) {
             let targetEl = target.getTargetEl();
             if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad)) {
                 let collisionInfo = CollisionDetection.getVectorMove(blastCenter, targetEl, rad);
-                if (collisionInfo.dist < minDist)
-                    directHit = true;
+                onTarget(target, collisionInfo);
             }
         }
         for (let item of allObjects) {
             if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, item, rad)) {
                 let collisionInfo = CollisionDetection.getVectorMove(blastCenter, item, rad);
-                if (collisionInfo.dist < minDist)
-                    directHit = true;
+                onItem(item, collisionInfo);
             }
         }
+    }
+    static checkForAnyDirectTargetHit(blastCenter, size) {
+        let directHit = false;
+        let minDist = 20;
+        let flagIfDirect = (elem, collisionInfo) => {
+            if (collisionInfo.dist < minDist)
+                directHit = true;
+        };
+        this.forEachBlastCollision(blastCenter, size / 2, flagIfDirect, flagIfDirect);
         return directHit;
     }
     static checkForTargets(blastCenter, size, weaponName) {
-        let rad = size / 2;
-        for (let target of allTargets) {
-            let targetEl = target.getTargetEl();
-            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad)) {
-                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, targetEl, rad);
-                this.targetStrike(target, weaponName, collisionInfo);
-            }
-        }
-        for (let item of allObjects) {
-            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, item, rad)) {
-                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, item, rad);
-                this.itemStrike(item, collisionInfo);
-            }
-        }
+        this.forEachBlastCollision(blastCenter, size / 2, (target, collisionInfo) => this.targetStrike(target, weaponName, collisionInfo), (item, collisionInfo) => this.itemStrike(item, collisionInfo));
     }
     static itemStrike(item, collisionInfo) {
         let direc = ThrowHandler.determineDirectionForFlip(collisionInfo);

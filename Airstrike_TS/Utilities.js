@@ -1,3 +1,4 @@
+"use strict";
 class RandomNumberGen {
     static randomNumBetween(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -25,6 +26,16 @@ class ElementCreator {
     }
     static returnNewCanvas(parent, classname, append) {
         return this.returnNewEl(parent, 'canvas', classname, append);
+    }
+    // Freezes targetEl's absolute page position to match sourceEl's current on-screen rect,
+    // so it can be detached/reparented without visually jumping.
+    static positionAbsoluteAtElementRect(sourceEl, targetEl) {
+        const rect = sourceEl.getBoundingClientRect();
+        const x = rect.left + window.scrollX;
+        const y = rect.top + window.scrollY;
+        targetEl.style.position = "absolute";
+        targetEl.style.left = `${x}px`;
+        targetEl.style.top = `${y}px`;
     }
 }
 class ContentElHandler {

@@ -1,16 +1,47 @@
+"use strict";
 const buildingSources = {
     W1: "Warehouse_blue",
     W2: "Warehouse_brown",
     //   H1: "house_1",
 };
-class Building {
+// Shared by Target and Building: both are sprites placed and repositioned within the content area.
+class MapEntity {
     targetEl;
     picEl;
     baseImgEl;
+    placeAt(left, top) {
+        this.targetEl.style.top = top + 'px';
+        this.targetEl.style.left = left + 'px';
+    }
+    getTargetEl() {
+        return this.targetEl;
+    }
+    getPicEl() {
+        return this.picEl;
+    }
+}
+// Wraps the gif-based damage overlay (smoke/fire) that plays on a target's damageEl canvas.
+class DamageOverlay {
+    player;
+    canvas;
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.player = new CanvasGifPlayer(canvas);
+    }
+    playLoop(frames) {
+        this.player.pause();
+        this.player.play(frames, true);
+    }
+    hide() {
+        this.canvas.style.visibility = "hidden";
+    }
+}
+class Building extends MapEntity {
     damageEl;
     damage = Damage.undamaged;
     picSrc; // = assetsFolder + "house_1.png";
     constructor() {
+        super();
         //   let picSrc = assetsFolder + "buildings_1.png";
         let picSrc = assetsFolder + "buildings/" + this.getSource();
         this.targetEl = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "building");
@@ -58,31 +89,21 @@ class Building {
         let x, y;
         x = position.X;
         y = position.Y;
-        this.setStartPos(x, y);
-    }
-    setStartPos(left, top) {
-        this.targetEl.style.top = top + 'px';
-        this.targetEl.style.left = left + 'px';
+        this.placeAt(x, y);
     }
     hit(severity, wepName, collisionInfo) {
         this.damage = Damage.damaged;
         this.reAssignSrc();
     }
-    getTargetEl() {
-        return this.targetEl;
-    }
 }
-class Target {
-    targetEl;
-    picEl;
-    baseImgEl;
+class Target extends MapEntity {
     damageEl;
     //  protected damageEl: HTMLImageElement;
     lockonEl;
     destroyedSource = assetsFolder + 'fire_3.gif';
     onFireSource = assetsFolder + 'fire_1.gif';
     smokingSource = assetsFolder + 'smoke_3.gif';
-    player;
+    damageOverlay;
     //   protected damagedSource: Array<string> = smoke_Frames;
     speed;
     armour;
@@ -93,6 +114,7 @@ class Target {
     movesAtBlast;
     info;
     constructor(info) {
+        super();
         this.info = info;
         this.targetEl = document.createElement("div");
         this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
@@ -102,7 +124,7 @@ class Target {
         this.damageEl = ElementCreator.returnNewCanvas(this.targetEl, "smallSquare", true);
         //   this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "smallSquare");
         this.lockonEl = ElementCreator.returnNewImageEl(this.targetEl, 'lockon', assetsSVGFolder + "target-box.svg");
-        this.player = new CanvasGifPlayer(this.damageEl);
+        this.damageOverlay = new DamageOverlay(this.damageEl);
         ContentElHandler.addToContentEl(this.targetEl);
         //        console.log("POS_X: " + this.getTargetEl().clientWidth * -1);
         this.speed = RandomNumberGen.randomNumBetween(this.info.minSpeed, this.info.maxSpeed);
@@ -123,15 +145,11 @@ class Target {
             this.startPosition = RandomNumberGen.randomNumBetween(10, 90);
             y = window.innerHeight * this.startPosition / 100;
         }
-        this.setPosition(x, y);
+        this.placeAt(x, y);
     }
     returnPosition() {
         let pos = { X: parseInt(this.targetEl.style.left), Y: parseInt(this.targetEl.style.top) };
         return pos;
-    }
-    setPosition(left, top) {
-        this.targetEl.style.top = top + 'px';
-        this.targetEl.style.left = left + 'px';
     }
     moveFromBlast(severity, collisionInfo) {
         if (this.movesAtBlast) {
@@ -176,18 +194,10 @@ class Target {
     returnBit(imageSrc, parentClass, childClass) {
         let bit = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), parentClass);
         ElementCreator.returnNewImageEl(bit, childClass, imageSrc);
-        this.positionBit(bit);
+        ElementCreator.positionAbsoluteAtElementRect(this.picEl, bit);
         allObjects.push(bit);
         ContentElHandler.fadeRemoveItem(bit, itemStay, fadeAnimTime, allObjects);
         return bit;
-    }
-    positionBit(bit) {
-        const rect = this.picEl.getBoundingClientRect();
-        const x = rect.left + window.scrollX;
-        const y = rect.top + window.scrollY;
-        bit.style.position = "absolute";
-        bit.style.left = `${x}px`;
-        bit.style.top = `${y}px`;
     }
     toggleLockOnStrike(bool) {
         bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg";
@@ -197,12 +207,6 @@ class Target {
     }
     getLockOnStatus() {
         return this.lockonEl.style.visibility == 'visible' ? true : false;
-    }
-    getTargetEl() {
-        return this.targetEl;
-    }
-    getPicEl() {
-        return this.picEl;
     }
     action() {
         if (this.status == Status.active) {
@@ -430,18 +434,12 @@ class VehicleTarget extends Target {
         this.damageEl.classList.add('lightDamaged');
         this.speed = this.speed / 3;
     }
-    playGifPlayer(frames, bool) {
-        this.player.pause();
-        this.player.play(frames, bool);
-    }
     addSrc(src) {
         //return src + loadNewImage();
         return src;
     }
     smoking() {
-        this.playGifPlayer(smoke_imgs, true);
-        //this.player.pause();
-        //this.player.play(smoke_frames, true);
+        this.damageOverlay.playLoop(smoke_imgs);
         //   this.damageEl.src = this.addSrc(this.smokingSource);
     }
     pushFire(lightArr, blastCenter, explSize) {
@@ -451,8 +449,7 @@ class VehicleTarget extends Target {
     }
     badDamage(direc) {
         if (!this.damageEl.classList.contains("badDamaged")) {
-            this.playGifPlayer(fire_1_imgs, true);
-            //        this.playGifPlayer(fire_1_frames, true)
+            this.damageOverlay.playLoop(fire_1_imgs);
             //        this.damageEl.src = this.addSrc(this.onFireSource);
         }
         this.damageEl.classList.add('badDamaged');
@@ -480,7 +477,7 @@ class VehicleTarget extends Target {
         this.removeFlip(this.picEl);
         this.baseImgEl.src = this.addSrc(this.destroyedSource);
         this.baseImgEl.className = 'destroyed';
-        this.damageEl.style.visibility = "hidden";
+        this.damageOverlay.hide();
         this.targetEl.classList.add('show');
         ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
         SoundPlayer.playRandomSound(explosions);
@@ -538,7 +535,7 @@ class WaterVehicleTarget extends VehicleTarget {
         let water = document.getElementById("water");
         let pos = { X: x, Y: y };
         if (CollisionDetection.checkCollisionFromPosition(pos, water)) {
-            this.setPosition(x, y);
+            this.placeAt(x, y);
         }
         else {
             console.log("none-water boat position");
@@ -613,13 +610,8 @@ class RocketLauncher extends VehicleTarget {
     }
     throwRocketPack() {
         let pack = this.launcherEl;
-        const rect = pack.getBoundingClientRect();
-        const x = rect.left + window.scrollX;
-        const y = rect.top + window.scrollY;
+        ElementCreator.positionAbsoluteAtElementRect(pack, pack);
         pack.remove();
-        pack.style.position = "absolute";
-        pack.style.left = `${x}px`;
-        pack.style.top = `${y}px`;
         ContentElHandler.addToContentEl(pack);
         allObjects.push(pack);
         ThrowHandler.flip(pack, direction.backward, crashes); /////////////////////////////////////////////////////////////////

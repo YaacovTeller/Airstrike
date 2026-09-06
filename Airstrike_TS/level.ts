@@ -340,27 +340,29 @@ class Level {
 
 
 
-function provideAllTargets(): Target {
-    let rand = RandomNumberGen.randomNumBetween(1, 100);
-    let newTarget: Target;
-    switch (true) {
-        case (rand >= 93):
-            newTarget = new TunnelTarget();
-            break;
-        case (rand >= 87):
-            newTarget = new HeavyVehicleTarget();
-            break;
-        case (rand >= 78):
-            newTarget = new ModVehicleTarget();
-            break;
-        case (rand >= 68):
-            newTarget = new RocketLauncher();
-            break;
-        default:
-            newTarget = new RegVehicleTarget();
-            break;
+// Each option is tried highest-threshold-first; the roll (1-100) picks the first option
+// whose threshold it meets or exceeds, so the last entry should have threshold 0 as a catch-all.
+type WeightedTargetOption = {
+    threshold: number,
+    create: () => Target
+}
+function pickWeightedTarget(options: Array<WeightedTargetOption>): Target {
+    let roll = RandomNumberGen.randomNumBetween(1, 100);
+    for (let option of options) {
+        if (roll >= option.threshold) {
+            return option.create();
+        }
     }
-    return newTarget;
+}
+
+function provideAllTargets(): Target {
+    return pickWeightedTarget([
+        { threshold: 93, create: () => new TunnelTarget() },
+        { threshold: 87, create: () => new HeavyVehicleTarget() },
+        { threshold: 78, create: () => new ModVehicleTarget() },
+        { threshold: 68, create: () => new RocketLauncher() },
+        { threshold: 0, create: () => new RegVehicleTarget() },
+    ]);
 }
 
 
@@ -373,19 +375,7 @@ const staticInfo: LevelInfo = {
     ],
     startArms: [],
     endArms: [],
-    targetFunc: () => {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 90):
-                newTarget = new WaterVehicleTarget();
-                break;
-            default:
-                newTarget = new WaterVehicleTarget();
-                break;
-        }
-        return newTarget;
-    },
+    targetFunc: () => new WaterVehicleTarget(),
 
 }
 
@@ -438,19 +428,10 @@ const weatherTestInfo: LevelInfo = {
     ],
     startArms: [],
     endArms: [],
-    targetFunc: () => {
-        let rand = RandomNumberGen.randomNumBetween(1, 100);
-        let newTarget: Target;
-        switch (true) {
-            case (rand >= 90):
-                newTarget = new ModVehicleTarget();
-                break;
-            default:
-                newTarget = new RegVehicleTarget();
-                break;
-        }
-        return newTarget;
-    },
+    targetFunc: () => pickWeightedTarget([
+        { threshold: 90, create: () => new ModVehicleTarget() },
+        { threshold: 0, create: () => new RegVehicleTarget() },
+    ]),
 }
 
 
@@ -481,19 +462,10 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [mortarInfo, howitzerInfo],
         endArms: [howitzerInfo],
-        targetFunc: () => {
-            let rand = RandomNumberGen.randomNumBetween(1, 100);
-            let newTarget: Target;
-            switch (true) {
-                case (rand >= 90):
-                    newTarget = new ModVehicleTarget();
-                    break;
-                default:
-                    newTarget = new RegVehicleTarget();
-                    break;
-            }
-            return newTarget;
-        },
+        targetFunc: () => pickWeightedTarget([
+            { threshold: 90, create: () => new ModVehicleTarget() },
+            { threshold: 0, create: () => new RegVehicleTarget() },
+        ]),
     },
     {
         number: 3,
@@ -518,19 +490,10 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [chargeInfo, airstrikeInfo],
         endArms: [chargeInfo],
-        targetFunc: () => {
-            let rand = RandomNumberGen.randomNumBetween(1, 100);
-            let newTarget: Target;
-            switch (true) {
-                case (rand >= 50):
-                    newTarget = new TunnelTarget();
-                    break;
-                default:
-                    newTarget = new HeavyVehicleTarget();
-                    break;
-            }
-            return newTarget;
-        },
+        targetFunc: () => pickWeightedTarget([
+            { threshold: 50, create: () => new TunnelTarget() },
+            { threshold: 0, create: () => new HeavyVehicleTarget() },
+        ]),
     },
     {
         number: 5,
@@ -544,25 +507,12 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [flareInfo, flareInfo, mortarInfo],
         endArms: [airstrikeInfo],
-        targetFunc: () => {
-            let rand = RandomNumberGen.randomNumBetween(1, 100);
-            let newTarget: Target;
-            switch (true) {
-                case (rand >= 90):
-                    newTarget = new TunnelTarget();
-                    break;
-                case (rand >= 80):
-                    newTarget = new HeavyVehicleTarget();
-                    break;
-                case (rand >= 72):
-                    newTarget = new ModVehicleTarget();
-                    break;
-                default:
-                    newTarget = new RegVehicleTarget();
-                    break;
-            }
-            return newTarget;
-        }
+        targetFunc: () => pickWeightedTarget([
+            { threshold: 90, create: () => new TunnelTarget() },
+            { threshold: 80, create: () => new HeavyVehicleTarget() },
+            { threshold: 72, create: () => new ModVehicleTarget() },
+            { threshold: 0, create: () => new RegVehicleTarget() },
+        ])
     },
     {
         number: 6,
@@ -575,19 +525,10 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [],
         endArms: [mortarInfo, airstrikeInfo],
-        targetFunc: () => {
-            let rand = RandomNumberGen.randomNumBetween(1, 100);
-            let newTarget: Target;
-            switch (true) {
-                case (rand >= 85):
-                    newTarget = new RocketLauncher();
-                    break;
-                default:
-                    newTarget = new RegVehicleTarget();
-                    break;
-            }
-            return newTarget;
-        }
+        targetFunc: () => pickWeightedTarget([
+            { threshold: 85, create: () => new RocketLauncher() },
+            { threshold: 0, create: () => new RegVehicleTarget() },
+        ])
     },
     {
         number: 7,
@@ -601,22 +542,11 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [mortarInfo, droneInfo],
         endArms: [droneInfo],
-        targetFunc: () => {
-            let rand = RandomNumberGen.randomNumBetween(1, 100);
-            let newTarget: Target;
-            switch (true) {
-                case (rand >= 70):
-                    newTarget = new RocketLauncher();
-                    break;
-                case (rand >= 40):
-                    newTarget = new HeavyVehicleTarget();
-                    break;
-                default:
-                    newTarget = new RegVehicleTarget();
-                    break;
-            }
-            return newTarget;
-        }
+        targetFunc: () => pickWeightedTarget([
+            { threshold: 70, create: () => new RocketLauncher() },
+            { threshold: 40, create: () => new HeavyVehicleTarget() },
+            { threshold: 0, create: () => new RegVehicleTarget() },
+        ])
     },
     {
         number: 8,
