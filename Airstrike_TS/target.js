@@ -1,9 +1,18 @@
 "use strict";
-const buildingSources = {
-    W1: "Warehouse_blue",
-    W2: "Warehouse_brown",
-    //   H1: "house_1",
+const warehouseBlueInfo = {
+    undamaged: "Warehouse_blue_1.jpeg",
+    damaged: "Warehouse_blue_2.jpeg",
+    badlyDamaged: "Warehouse_blue_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
+    destroyed: "Warehouse_blue_3.jpeg",
 };
+const warehouseBrownInfo = {
+    undamaged: "Warehouse_brown_1.jpeg",
+    damaged: "Warehouse_brown_2.jpeg",
+    badlyDamaged: "Warehouse_brown_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
+    destroyed: "Warehouse_brown_3.jpeg",
+};
+// Add new building types here to get them into the random rotation.
+const allBuildingInfo = [warehouseBlueInfo, warehouseBrownInfo];
 // Shared by Target and Building: both are sprites placed and repositioned within the content area.
 class MapEntity {
     targetEl;
@@ -39,14 +48,13 @@ class DamageOverlay {
 class Building extends MapEntity {
     damageEl;
     damage = Damage.undamaged;
-    picSrc; // = assetsFolder + "house_1.png";
-    constructor() {
+    info;
+    constructor(info) {
         super();
-        //   let picSrc = assetsFolder + "buildings_1.png";
-        let picSrc = assetsFolder + "buildings/" + this.getSource();
+        this.info = info ? info : RandomNumberGen.returnRandomFromArray(allBuildingInfo);
         this.targetEl = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "building");
         this.picEl = ElementCreator.returnNewDiv(this.targetEl, "picEl");
-        this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", picSrc);
+        this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", this.getSource());
         this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "", "", true);
         allTargets.push(this);
     }
@@ -54,36 +62,26 @@ class Building extends MapEntity {
         this.baseImgEl.src = this.getSource();
     }
     getSource() {
-        let src;
-        if (this.picSrc) {
-            src = this.picSrc;
-        }
-        else {
-            const keys = Object.keys(buildingSources);
-            const randomIndex = RandomNumberGen.randomNumBetween(0, keys.length - 1);
-            const randomKey = keys[randomIndex];
-            src = buildingSources[randomKey];
-        }
-        let num;
+        let filename;
         switch (this.damage) {
             case Damage.undamaged:
-                num = 1;
+                filename = this.info.undamaged;
                 break;
             case Damage.dented:
             case Damage.badlyDented:
             case Damage.damaged:
-                num = 2;
+                filename = this.info.damaged;
                 break;
             case Damage.moderateDamaged:
             case Damage.heavyDamaged:
-            case Damage.destroyed:
-                num = 3;
+                filename = this.info.badlyDamaged;
                 break;
+            case Damage.destroyed:
             default:
-                num = 1;
+                filename = this.info.destroyed;
                 break;
         }
-        return `${src}_${num}.png`;
+        return assetsFolder + "buildings/" + filename;
     }
     setPosition(position) {
         let x, y;
@@ -92,7 +90,9 @@ class Building extends MapEntity {
         this.placeAt(x, y);
     }
     hit(severity, wepName, collisionInfo) {
-        this.damage = Damage.damaged;
+        if (this.damage < Damage.destroyed) {
+            this.damage += 1;
+        }
         this.reAssignSrc();
     }
 }
