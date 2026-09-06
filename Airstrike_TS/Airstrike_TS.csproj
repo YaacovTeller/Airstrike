@@ -411,7 +411,7 @@
     <TypeScriptCompile Include="sound.ts" />
     <TypeScriptCompile Include="target.ts" />
     <TypeScriptCompile Include="users.ts" />
-    <TypeScriptCompile Include="Utilities.ts" />
+    <TypeScriptCompile Include="utilities.ts" />
     <TypeScriptCompile Include="weaponType.ts" />
   </ItemGroup>
   <ItemGroup>
