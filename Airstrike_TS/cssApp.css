@@ -244,6 +244,9 @@
 .medWheel {
     width: 14px;
 }
+.buildingDebris {
+    width: 20px;
+}
 .wheelFire {
     position: absolute;
     width: inherit;

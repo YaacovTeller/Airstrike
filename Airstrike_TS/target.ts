@@ -36,6 +36,19 @@ class MapEntity {
     public getPicEl(): HTMLElement {
         return this.picEl;
     }
+
+    // Spawns a free-standing piece of debris at this entity's current on-screen position,
+    // registers it for cleanup, and fades it out after a while.
+    protected returnBit(imageSrc, parentClass, childClass): HTMLElement {
+        let bit = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), parentClass);
+        ElementCreator.returnNewImageEl(bit, childClass, imageSrc);
+
+        ElementCreator.positionAbsoluteAtElementRect(this.picEl, bit);
+
+        allObjects.push(bit);
+        ContentElHandler.fadeRemoveItem(bit, itemStay, fadeAnimTime, allObjects);
+        return bit;
+    }
 }
 
 // Wraps the gif-based damage overlay (smoke/fire) that plays on a target's damageEl canvas.
@@ -60,6 +73,13 @@ class Building extends MapEntity {
     protected damageEl: HTMLImageElement;
     public damage: number = Damage.undamaged;
     protected info: BuildingInfo;
+
+    private static debrisSources: Array<string> = [
+        assetsFolder + "ruin_1.png",
+        assetsFolder + "ruin_2.png",
+        assetsFolder + "bit.png",
+    ];
+    private static debrisPerHit: number = 2;
 
     constructor(info?: BuildingInfo) {
         super();
@@ -107,6 +127,20 @@ class Building extends MapEntity {
             this.damage += 1;
         }
         this.reAssignSrc();
+        this.throwDebris();
+    }
+
+    private throwDebris() {
+        for (let i = 0; i < Building.debrisPerHit; i++) {
+            this.throwDebrisPiece();
+        }
+    }
+    private throwDebrisPiece() {
+        let imageSrc = RandomNumberGen.returnRandomFromArray(Building.debrisSources);
+        let piece = this.returnBit(imageSrc, "wheel", "wheelPic");
+        piece.classList.add("buildingDebris");
+        let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
+        ThrowHandler.flip(piece, direc, crashes);
     }
 }
 
@@ -218,17 +252,6 @@ class Target extends MapEntity {
         }, damagedTargetStay + fadeAnimTime);
     }
     protected destructionBits() {    }
-
-    protected returnBit(imageSrc, parentClass, childClass): HTMLElement {
-        let bit = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), parentClass);
-        ElementCreator.returnNewImageEl(bit, childClass, imageSrc);
-
-        ElementCreator.positionAbsoluteAtElementRect(this.picEl, bit);
-
-        allObjects.push(bit);
-        ContentElHandler.fadeRemoveItem(bit, itemStay, fadeAnimTime, allObjects);
-        return bit;
-    }
 
     public toggleLockOnStrike(bool) {
         bool ? this.lockonEl.src = assetsSVGFolder + "lock_red.svg" + loadNewImage() : this.lockonEl.src = assetsSVGFolder + "target-box.svg"
