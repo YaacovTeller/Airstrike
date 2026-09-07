@@ -1,25 +1,29 @@
-﻿// Filenames (relative to assetsFolder + "buildings/") for one building's damage tiers, short of
-// destroyed -- once a building is actually destroyed it collapses into one of buildingRuinSources
-// instead, regardless of building type (see Building.getSource()).
+﻿// undamaged/damaged/badlyDamaged are filenames relative to assetsFolder + "buildings/".
+// destroyed is a full path -- for now every type is just placeholdered onto one of the generic
+// ruin sprites below, until each building type gets its own dedicated collapsed-ruin art.
 type BuildingInfo = {
     undamaged: string,
     damaged: string,
     badlyDamaged: string,
+    destroyed: string,
 }
 const warehouseBlueInfo: BuildingInfo = {
     undamaged: "Warehouse_blue_1.jpeg",
     damaged: "Warehouse_blue_2.jpeg",
     badlyDamaged: "Warehouse_blue_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
+    destroyed: assetsFolder + "ruin_1.png", // TODO: swap in a dedicated destroyed sprite once one exists
 }
 const warehouseBrownInfo: BuildingInfo = {
     undamaged: "Warehouse_brown_1.jpeg",
     damaged: "Warehouse_brown_2.jpeg",
     badlyDamaged: "Warehouse_brown_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
+    destroyed: assetsFolder + "ruin_2.png", // TODO: swap in a dedicated destroyed sprite once one exists
 }
 // Add new building types here to get them into the random rotation.
 const allBuildingInfo: Array<BuildingInfo> = [warehouseBlueInfo, warehouseBrownInfo];
 
-// Full collapsed-ruin sprites, shared across every building type.
+// Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources) --
+// unrelated to a building's own `destroyed` sprite above.
 const buildingRuinSources: Array<string> = [
     assetsFolder + "ruin_1.png",
     assetsFolder + "ruin_2.png",
@@ -78,7 +82,6 @@ class Building extends MapEntity {
     protected damageEl: HTMLImageElement;
     public damage: number = Damage.undamaged;
     protected info: BuildingInfo;
-    private ruinSrc: string; // picked once, the moment this building reaches Damage.destroyed
 
     private static debrisSources: Array<string> = [
         ...buildingRuinSources,
@@ -100,10 +103,7 @@ class Building extends MapEntity {
     }
     public getSource(): string {
         if (this.damage === Damage.destroyed) {
-            if (!this.ruinSrc) {
-                this.ruinSrc = RandomNumberGen.returnRandomFromArray(buildingRuinSources);
-            }
-            return this.ruinSrc;
+            return this.info.destroyed;
         }
         let filename: string;
         switch (this.damage) {
@@ -521,13 +521,13 @@ class VehicleTarget extends Target {
         this.damageOverlay.playLoop(smoke_imgs);
      //   this.damageEl.src = this.addSrc(this.smokingSource);
     }
-    private pushFire(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
+    protected pushFire(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
         lightID++
         let light: light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false, parent: this.getTargetEl() }
         lightArr.push(light);
     }
 
-    private badDamage(direc?) {
+    protected badDamage(direc?) {
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
     //        this.damageEl.src = this.addSrc(this.onFireSource);
@@ -596,6 +596,10 @@ class VehicleTarget extends Target {
 }
 
 class WaterVehicleTarget extends VehicleTarget {
+    private static sinkDuration: number = 6000;
+    private static tiltPause: number = 1500;
+    private static tiltSinkDuration: number = 7000;
+
     constructor() {
         super(boatTarget);
         this.targetEl.classList.add('longTarget');
@@ -614,6 +618,47 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     protected get picSources(): Array<string> {
         return ['ship1.png'];
+    }
+
+    // A badly damaged boat always burns for a while and then sinks, rather than the generic
+    // vehicle's chance of an early explosion or recovering back to just smoking.
+    protected badDamage() {
+        if (!this.damageEl.classList.contains("badDamaged")) {
+            this.damageOverlay.playLoop(fire_1_imgs);
+        }
+        this.damageEl.classList.add('badDamaged');
+        this.damageEl.classList.remove('lightDamaged');
+        this.pushFire(fires, this.returnPosition(), ExplSizes.XL);
+
+        setTimeout(() => {
+            RandomNumberGen.randomNumBetween(0, 1) === 0 ? this.sink() : this.tiltingSink();
+        }, fireStay + RandomNumberGen.randomNumBetween(0, 3000));
+    }
+
+    private sink() {
+        this.targetEl.classList.add('sinking');
+        this.targetEl.style.transform = 'translateY(30px)';
+        this.targetEl.style.opacity = '0';
+        setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
+    }
+
+    private tiltingSink() {
+        this.picEl.classList.add('tiltSinking');
+        let tiltAngle = RandomNumberGen.randomNumBetween(20, 35);
+        this.picEl.style.transform = `rotate(${tiltAngle}deg)`;
+        setTimeout(() => {
+            this.picEl.style.clipPath = 'inset(0 0 100% 0)';
+        }, WaterVehicleTarget.tiltPause);
+        setTimeout(() => this.finishSinking(), WaterVehicleTarget.tiltSinkDuration);
+    }
+
+    private finishSinking() {
+        let priorStatus = this.status;
+        this.targetDestroyed(priorStatus);
+        this.damageOverlay.hide();
+        ContentElHandler.removeFromContentEl(this.targetEl);
+        this.destructionBits();
+        game.assessKillPoints(priorStatus, this.damage);
     }
     public decidePosition() {
         let x, y;
