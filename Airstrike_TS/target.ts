@@ -596,6 +596,8 @@ class VehicleTarget extends Target {
 }
 
 class WaterVehicleTarget extends VehicleTarget {
+    private static fireBeforeSinkMin: number = 2000;
+    private static fireBeforeSinkMax: number = 7000;
     private static sinkDuration: number = 6000;
     private static tiltPause: number = 1500;
     private static tiltSinkDuration: number = 7000;
@@ -630,9 +632,10 @@ class WaterVehicleTarget extends VehicleTarget {
         this.damageEl.classList.remove('lightDamaged');
         this.pushFire(fires, this.returnPosition(), ExplSizes.XL);
 
+        let fireDuration = RandomNumberGen.randomNumBetween(WaterVehicleTarget.fireBeforeSinkMin, WaterVehicleTarget.fireBeforeSinkMax);
         setTimeout(() => {
             RandomNumberGen.randomNumBetween(0, 1) === 0 ? this.sink() : this.tiltingSink();
-        }, fireStay + RandomNumberGen.randomNumBetween(0, 3000));
+        }, fireDuration);
     }
 
     private sink() {
