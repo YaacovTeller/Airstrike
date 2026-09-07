@@ -1,7 +1,8 @@
+"use strict";
 class ThrowHandler {
-    static flip(elem, direc, impactSounds, parentElem, angle) {
+    static flip(elem, direc, impactSounds, parentElem, angle, onLanded) {
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc); // ARC
+        this.throwArc(thrownElem, direc, onLanded); // ARC
         let deg = this.rotate(elem, direc, angle); // ROTATION
         if (impactSounds && impactSounds.length) {
             this.crashSound(impactSounds);
@@ -12,6 +13,22 @@ class ThrowHandler {
         setTimeout(() => {
             SoundPlayer.playRandomSound(sounds);
         }, crashTimeout);
+    }
+    // Pass as flip()'s onLanded for throwaway debris (wheels/bits/etc, tracked in allObjects) so
+    // it splashes and vanishes instead of sitting on top of the water. Not for actual targets.
+    static removeIfLandedInWater(landedElem) {
+        let water = document.getElementById("water");
+        if (!water)
+            return;
+        let pos = CollisionDetection.getXYfromPoint(landedElem);
+        if (CollisionDetection.checkCollisionFromPosition(pos, water)) {
+            ExplosionHandler.createSplash(pos);
+            ContentElHandler.removeFromContentEl(landedElem);
+            let index = allObjects.indexOf(landedElem);
+            if (index >= 0) {
+                allObjects.splice(index, 1);
+            }
+        }
     }
     static determineDirectionForFlip(vectorMove) {
         let angle = vectorMove.angle;
@@ -49,7 +66,7 @@ class ThrowHandler {
         }
         requestAnimationFrame(step);
     }
-    static throwArc(elem, direc) {
+    static throwArc(elem, direc, onLanded) {
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
         let distance = RandomNumberGen.randomNumBetween(10, 40); //20
@@ -85,6 +102,9 @@ class ThrowHandler {
             }
             if (progress < maxProgress) {
                 requestAnimationFrame(step);
+            }
+            else if (onLanded) {
+                onLanded(elem);
             }
         }
         requestAnimationFrame(step);

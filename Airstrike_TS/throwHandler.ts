@@ -1,7 +1,7 @@
 ﻿class ThrowHandler {
-    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number): number { // ODD? HACKY?
+    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number, onLanded?: (landedElem: HTMLElement) => void): number { // ODD? HACKY?
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc); // ARC
+        this.throwArc(thrownElem, direc, onLanded); // ARC
         let deg = this.rotate(elem, direc, angle);   // ROTATION
         if (impactSounds && impactSounds.length) {
             this.crashSound(impactSounds);
@@ -13,6 +13,22 @@
         setTimeout(() => {
             SoundPlayer.playRandomSound(sounds)
         }, crashTimeout);
+    }
+
+    // Pass as flip()'s onLanded for throwaway debris (wheels/bits/etc, tracked in allObjects) so
+    // it splashes and vanishes instead of sitting on top of the water. Not for actual targets.
+    public static removeIfLandedInWater(landedElem: HTMLElement) {
+        let water = document.getElementById("water");
+        if (!water) return;
+        let pos: position = CollisionDetection.getXYfromPoint(landedElem);
+        if (CollisionDetection.checkCollisionFromPosition(pos, water)) {
+            ExplosionHandler.createSplash(pos);
+            ContentElHandler.removeFromContentEl(landedElem);
+            let index = allObjects.indexOf(landedElem);
+            if (index >= 0) {
+                allObjects.splice(index, 1);
+            }
+        }
     }
 
 
@@ -59,7 +75,7 @@
         }
         requestAnimationFrame(step);
     }
-    private static throwArc(elem: HTMLElement, direc: direction) { // Handles the arc travelled NOT rotation, see CSS
+    private static throwArc(elem: HTMLElement, direc: direction, onLanded?: (landedElem: HTMLElement) => void) { // Handles the arc travelled NOT rotation, see CSS
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
 
@@ -99,6 +115,9 @@
             }
             if (progress < maxProgress) {
                 requestAnimationFrame(step);
+            }
+            else if (onLanded) {
+                onLanded(elem);
             }
         }
         requestAnimationFrame(step);

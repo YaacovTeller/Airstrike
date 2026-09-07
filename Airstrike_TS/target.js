@@ -3,16 +3,19 @@ const warehouseBlueInfo = {
     undamaged: "Warehouse_blue_1.jpeg",
     damaged: "Warehouse_blue_2.jpeg",
     badlyDamaged: "Warehouse_blue_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: "Warehouse_blue_3.jpeg",
 };
 const warehouseBrownInfo = {
     undamaged: "Warehouse_brown_1.jpeg",
     damaged: "Warehouse_brown_2.jpeg",
     badlyDamaged: "Warehouse_brown_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: "Warehouse_brown_3.jpeg",
 };
 // Add new building types here to get them into the random rotation.
 const allBuildingInfo = [warehouseBlueInfo, warehouseBrownInfo];
+// Full collapsed-ruin sprites, shared across every building type.
+const buildingRuinSources = [
+    assetsFolder + "ruin_1.png",
+    assetsFolder + "ruin_2.png",
+];
 // Shared by Target and Building: both are sprites placed and repositioned within the content area.
 class MapEntity {
     targetEl;
@@ -59,9 +62,9 @@ class Building extends MapEntity {
     damageEl;
     damage = Damage.undamaged;
     info;
+    ruinSrc; // picked once, the moment this building reaches Damage.destroyed
     static debrisSources = [
-        assetsFolder + "ruin_1.png",
-        assetsFolder + "ruin_2.png",
+        ...buildingRuinSources,
         assetsFolder + "bit.png",
     ];
     static debrisPerHit = 2;
@@ -78,6 +81,12 @@ class Building extends MapEntity {
         this.baseImgEl.src = this.getSource();
     }
     getSource() {
+        if (this.damage === Damage.destroyed) {
+            if (!this.ruinSrc) {
+                this.ruinSrc = RandomNumberGen.returnRandomFromArray(buildingRuinSources);
+            }
+            return this.ruinSrc;
+        }
         let filename;
         switch (this.damage) {
             case Damage.undamaged:
@@ -90,11 +99,8 @@ class Building extends MapEntity {
                 break;
             case Damage.moderateDamaged:
             case Damage.heavyDamaged:
-                filename = this.info.badlyDamaged;
-                break;
-            case Damage.destroyed:
             default:
-                filename = this.info.destroyed;
+                filename = this.info.badlyDamaged;
                 break;
         }
         return assetsFolder + "buildings/" + filename;
@@ -122,7 +128,7 @@ class Building extends MapEntity {
         let piece = this.returnBit(imageSrc, "wheel", "wheelPic");
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.flip(piece, direc, crashes);
+        ThrowHandler.flip(piece, direc, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater);
     }
 }
 class Target extends MapEntity {
@@ -520,7 +526,7 @@ class VehicleTarget extends Target {
         let wheel = this.createWheel();
         this.lightOnFire(wheel);
         let wheelPic = wheel.querySelector(".wheelPic");
-        ThrowHandler.flip(wheelPic, direc, null, wheel);
+        ThrowHandler.flip(wheelPic, direc, null, wheel, undefined, ThrowHandler.removeIfLandedInWater);
     }
     destructionBits() {
         this.rollWheel();
@@ -534,11 +540,11 @@ class WaterVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('longTarget');
     }
     createScrap() {
-        return this.returnBit("bit.png", "wheel", "wheelPic");
+        return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic");
     }
     throwBit(direc) {
         let bit = this.createScrap();
-        ThrowHandler.flip(bit, direc, null);
+        ThrowHandler.flip(bit, direc, null, undefined, undefined, ThrowHandler.removeIfLandedInWater);
     }
     destructionBits() {
         this.throwBit(direction.forward);
@@ -635,7 +641,7 @@ class RocketLauncher extends VehicleTarget {
         pack.remove();
         ContentElHandler.addToContentEl(pack);
         allObjects.push(pack);
-        ThrowHandler.flip(pack, direction.backward, crashes); /////////////////////////////////////////////////////////////////
+        ThrowHandler.flip(pack, direction.backward, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater); /////////////////////////////////////////////////////////////////
         //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
         setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out'; }, itemStay); // AWFUL !!!
         ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime, allObjects);

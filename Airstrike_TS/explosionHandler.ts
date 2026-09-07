@@ -60,6 +60,13 @@ class ExplosionHandler {
         this.presentAndFadeout(splash, 4000, 100);
     }
 
+    // Small splash for a piece of thrown debris (wheel/bit/etc) landing in water -- see
+    // ThrowHandler.removeIfLandedInWater.
+    public static createSplash(position: position) {
+        let splash = this.setAndReturnExplosion(position, ExplSizes.XXS, HitSurface.water);
+        this.presentAndFadeout(splash, 2000, 100);
+    }
+
     private static landHit(blastCenter: position, size: ExplSizes, explFrames: Array<HTMLImageElement>, weaponName: weaponNames) {
         let explosion = this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
 

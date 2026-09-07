@@ -1,24 +1,29 @@
-﻿// Filenames (relative to assetsFolder + "buildings/") for one building's four damage tiers.
+﻿// Filenames (relative to assetsFolder + "buildings/") for one building's damage tiers, short of
+// destroyed -- once a building is actually destroyed it collapses into one of buildingRuinSources
+// instead, regardless of building type (see Building.getSource()).
 type BuildingInfo = {
     undamaged: string,
     damaged: string,
     badlyDamaged: string,
-    destroyed: string,
 }
 const warehouseBlueInfo: BuildingInfo = {
     undamaged: "Warehouse_blue_1.jpeg",
     damaged: "Warehouse_blue_2.jpeg",
     badlyDamaged: "Warehouse_blue_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: "Warehouse_blue_3.jpeg",
 }
 const warehouseBrownInfo: BuildingInfo = {
     undamaged: "Warehouse_brown_1.jpeg",
     damaged: "Warehouse_brown_2.jpeg",
     badlyDamaged: "Warehouse_brown_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: "Warehouse_brown_3.jpeg",
 }
 // Add new building types here to get them into the random rotation.
 const allBuildingInfo: Array<BuildingInfo> = [warehouseBlueInfo, warehouseBrownInfo];
+
+// Full collapsed-ruin sprites, shared across every building type.
+const buildingRuinSources: Array<string> = [
+    assetsFolder + "ruin_1.png",
+    assetsFolder + "ruin_2.png",
+];
 
 // Shared by Target and Building: both are sprites placed and repositioned within the content area.
 class MapEntity {
@@ -73,10 +78,10 @@ class Building extends MapEntity {
     protected damageEl: HTMLImageElement;
     public damage: number = Damage.undamaged;
     protected info: BuildingInfo;
+    private ruinSrc: string; // picked once, the moment this building reaches Damage.destroyed
 
     private static debrisSources: Array<string> = [
-        assetsFolder + "ruin_1.png",
-        assetsFolder + "ruin_2.png",
+        ...buildingRuinSources,
         assetsFolder + "bit.png",
     ];
     private static debrisPerHit: number = 2;
@@ -94,6 +99,12 @@ class Building extends MapEntity {
         this.baseImgEl.src = this.getSource();
     }
     public getSource(): string {
+        if (this.damage === Damage.destroyed) {
+            if (!this.ruinSrc) {
+                this.ruinSrc = RandomNumberGen.returnRandomFromArray(buildingRuinSources);
+            }
+            return this.ruinSrc;
+        }
         let filename: string;
         switch (this.damage) {
             case Damage.undamaged:
@@ -106,11 +117,8 @@ class Building extends MapEntity {
                 break;
             case Damage.moderateDamaged:
             case Damage.heavyDamaged:
-                filename = this.info.badlyDamaged;
-                break;
-            case Damage.destroyed:
             default:
-                filename = this.info.destroyed;
+                filename = this.info.badlyDamaged;
                 break;
         }
         return assetsFolder + "buildings/" + filename;
@@ -140,7 +148,7 @@ class Building extends MapEntity {
         let piece = this.returnBit(imageSrc, "wheel", "wheelPic");
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.flip(piece, direc, crashes);
+        ThrowHandler.flip(piece, direc, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater);
     }
 }
 
@@ -578,7 +586,7 @@ class VehicleTarget extends Target {
         let wheel = this.createWheel();
         this.lightOnFire(wheel);
         let wheelPic = wheel.querySelector(".wheelPic") as HTMLElement;
-        ThrowHandler.flip(wheelPic, direc, null, wheel);
+        ThrowHandler.flip(wheelPic, direc, null, wheel, undefined, ThrowHandler.removeIfLandedInWater);
     }
     protected destructionBits() {
         this.rollWheel();
@@ -593,12 +601,12 @@ class WaterVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('longTarget');
     }
     private createScrap() {
-        return this.returnBit("bit.png", "wheel", "wheelPic");
+        return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic");
     }
 
     private throwBit(direc: direction) {
         let bit = this.createScrap();
-        ThrowHandler.flip(bit, direc, null);
+        ThrowHandler.flip(bit, direc, null, undefined, undefined, ThrowHandler.removeIfLandedInWater);
     }
     protected destructionBits() {
         this.throwBit(direction.forward);
@@ -700,7 +708,7 @@ class RocketLauncher extends VehicleTarget {
         ContentElHandler.addToContentEl(pack);
         allObjects.push(pack);
 
-        ThrowHandler.flip(pack, direction.backward, crashes); /////////////////////////////////////////////////////////////////
+        ThrowHandler.flip(pack, direction.backward, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater); /////////////////////////////////////////////////////////////////
         //setTimeout(() => { pack.classList.remove('raiseLauncher', 'flip') }, packStay)
         setTimeout(() => { pack.style.transition = 'opacity 8s ease-in-out' }, itemStay)   // AWFUL !!!
         ContentElHandler.fadeRemoveItem(pack, itemStay, fadeAnimTime, allObjects);
