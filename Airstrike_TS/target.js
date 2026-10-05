@@ -1,13 +1,13 @@
 "use strict";
 const warehouseBlueInfo = {
-    undamaged: "Warehouse_blue_1.png", // .png for transparency; the _2/_3 stages only exist as .jpeg (flat white border)
-    damaged: "Warehouse_blue_2.jpeg",
-    destroyed: "Warehouse_blue_3.jpeg",
+    undamaged: "Warehouse_blue_1.png",
+    damaged: "Warehouse_blue_2.png",
+    destroyed: "Warehouse_blue_3.png",
 };
 const warehouseBrownInfo = {
     undamaged: "Warehouse_brown_1.png",
-    damaged: "Warehouse_brown_2.jpeg",
-    destroyed: "Warehouse_brown_3.jpeg",
+    damaged: "Warehouse_brown_2.png",
+    destroyed: "Warehouse_brown_3.png",
 };
 // Add new building types here to get them into the random rotation.
 const allBuildingInfo = [warehouseBlueInfo, warehouseBrownInfo];
