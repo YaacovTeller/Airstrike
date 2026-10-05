@@ -571,18 +571,39 @@ class WaterVehicleTarget extends VehicleTarget {
             RandomNumberGen.randomNumBetween(0, 1) === 0 ? this.sink() : this.tiltingSink();
         }, fireDuration);
     }
+    // Wraps the boat's image in a fixed, unrotated overflow:hidden box sized to match its
+    // current on-screen position, so that shrinking the box's height clips the image along a
+    // flat horizontal line regardless of any rotation applied to the image itself -- like the
+    // boat is sinking into a block of water positioned right beneath it, rather than just being
+    // cut off along its own (possibly tilted) edge.
+    createSinkMask() {
+        const targetRect = this.targetEl.getBoundingClientRect();
+        const picRect = this.picEl.getBoundingClientRect();
+        const mask = ElementCreator.returnNewDiv(this.targetEl, "sinkMask");
+        mask.style.left = (picRect.left - targetRect.left) + "px";
+        mask.style.top = (picRect.top - targetRect.top) + "px";
+        mask.style.width = picRect.width + "px";
+        mask.style.height = picRect.height + "px";
+        mask.appendChild(this.baseImgEl);
+        this.baseImgEl.style.width = picRect.width + "px"; // picEl's CSS sized it via "width: 100%", which no longer applies once it's moved out of picEl
+        this.picEl.style.visibility = "hidden";
+        return mask;
+    }
     sink() {
-        this.targetEl.classList.add('sinking');
-        this.targetEl.style.transform = 'translateY(30px)';
-        this.targetEl.style.opacity = '0';
+        let mask = this.createSinkMask();
+        mask.style.transition = `height ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
+        requestAnimationFrame(() => { mask.style.height = "0px"; });
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
     tiltingSink() {
-        this.picEl.classList.add('tiltSinking');
+        let mask = this.createSinkMask();
         let tiltAngle = RandomNumberGen.randomNumBetween(20, 35);
-        this.picEl.style.transform = `rotate(${tiltAngle}deg)`;
+        this.baseImgEl.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
+        this.baseImgEl.style.transform = `rotate(${tiltAngle}deg)`;
         setTimeout(() => {
-            this.picEl.style.clipPath = 'inset(0 0 100% 0)';
+            let submergeDuration = WaterVehicleTarget.tiltSinkDuration - WaterVehicleTarget.tiltPause;
+            mask.style.transition = `height ${submergeDuration / 1000}s ease-in`;
+            requestAnimationFrame(() => { mask.style.height = "0px"; });
         }, WaterVehicleTarget.tiltPause);
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.tiltSinkDuration);
     }

@@ -156,11 +156,9 @@
 .smoothFade {
     transition: opacity 8s ease-in-out;
 }
-.sinking {
-    transition: transform 6s ease-in, opacity 6s ease-in;
-}
-.tiltSinking {
-    transition: transform 2s ease-in-out, clip-path 5.5s ease-in;
+.sinkMask {
+    position: absolute;
+    overflow: hidden;
 }
 .building {
     width: 100px;
