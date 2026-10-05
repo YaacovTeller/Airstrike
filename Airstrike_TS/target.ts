@@ -638,11 +638,11 @@ class WaterVehicleTarget extends VehicleTarget {
         }, fireDuration);
     }
 
-    // Wraps the boat's image in a fixed, unrotated overflow:hidden box sized to match its
-    // current on-screen position, so that shrinking the box's height clips the image along a
-    // flat horizontal line regardless of any rotation applied to the image itself -- like the
-    // boat is sinking into a block of water positioned right beneath it, rather than just being
-    // cut off along its own (possibly tilted) edge.
+    // Wraps the boat's image in a fixed-size, fixed-position, unrotated overflow:hidden window
+    // matching its current on-screen box. The window itself never moves or resizes -- it's the
+    // image inside it that gets translated downward (and optionally rotated) and disappears as
+    // it's clipped by the window's bottom edge, so the boat itself visibly sinks down into a
+    // block of water beneath it, rather than a shrinking window revealing less of a static boat.
     private createSinkMask(): HTMLElement {
         const targetRect = this.targetEl.getBoundingClientRect();
         const picRect = this.picEl.getBoundingClientRect();
@@ -660,21 +660,27 @@ class WaterVehicleTarget extends VehicleTarget {
 
     private sink() {
         let mask = this.createSinkMask();
-        mask.style.transition = `height ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
-        requestAnimationFrame(() => { mask.style.height = "0px"; });
+        let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
+        this.baseImgEl.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
+        requestAnimationFrame(() => {
+            this.baseImgEl.style.transform = `translateY(${sinkDistance}px)`;
+        });
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
 
     private tiltingSink() {
         let mask = this.createSinkMask();
+        let sinkDistance = mask.getBoundingClientRect().height * 1.2;
         let tiltAngle = RandomNumberGen.randomNumBetween(20, 35);
         this.baseImgEl.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         this.baseImgEl.style.transform = `rotate(${tiltAngle}deg)`;
 
         setTimeout(() => {
             let submergeDuration = WaterVehicleTarget.tiltSinkDuration - WaterVehicleTarget.tiltPause;
-            mask.style.transition = `height ${submergeDuration / 1000}s ease-in`;
-            requestAnimationFrame(() => { mask.style.height = "0px"; });
+            this.baseImgEl.style.transition = `transform ${submergeDuration / 1000}s ease-in`;
+            requestAnimationFrame(() => {
+                this.baseImgEl.style.transform = `translateY(${sinkDistance}px) rotate(${tiltAngle}deg)`;
+            });
         }, WaterVehicleTarget.tiltPause);
 
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.tiltSinkDuration);
