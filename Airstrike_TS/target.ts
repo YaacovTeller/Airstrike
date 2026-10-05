@@ -1,29 +1,23 @@
-﻿// undamaged/damaged/badlyDamaged are filenames relative to assetsFolder + "buildings/".
-// destroyed is a full path -- for now every type is just placeholdered onto one of the generic
-// ruin sprites below, until each building type gets its own dedicated collapsed-ruin art.
+﻿// Filenames (all relative to assetsFolder + "buildings/") for one building type's three stages.
 type BuildingInfo = {
     undamaged: string,
     damaged: string,
-    badlyDamaged: string,
     destroyed: string,
 }
 const warehouseBlueInfo: BuildingInfo = {
     undamaged: "Warehouse_blue_1.jpeg",
     damaged: "Warehouse_blue_2.jpeg",
-    badlyDamaged: "Warehouse_blue_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: assetsFolder + "ruin_1.png", // TODO: swap in a dedicated destroyed sprite once one exists
+    destroyed: "Warehouse_blue_3.jpeg",
 }
 const warehouseBrownInfo: BuildingInfo = {
     undamaged: "Warehouse_brown_1.jpeg",
     damaged: "Warehouse_brown_2.jpeg",
-    badlyDamaged: "Warehouse_brown_2.jpeg", // TODO: swap in a dedicated badly-damaged sprite once one exists
-    destroyed: assetsFolder + "ruin_2.png", // TODO: swap in a dedicated destroyed sprite once one exists
+    destroyed: "Warehouse_brown_3.jpeg",
 }
 // Add new building types here to get them into the random rotation.
 const allBuildingInfo: Array<BuildingInfo> = [warehouseBlueInfo, warehouseBrownInfo];
 
-// Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources) --
-// unrelated to a building's own `destroyed` sprite above.
+// Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
 const buildingRuinSources: Array<string> = [
     assetsFolder + "ruin_1.png",
     assetsFolder + "ruin_2.png",
@@ -102,23 +96,16 @@ class Building extends MapEntity {
         this.baseImgEl.src = this.getSource();
     }
     public getSource(): string {
-        if (this.damage === Damage.destroyed) {
-            return this.info.destroyed;
-        }
         let filename: string;
         switch (this.damage) {
             case Damage.undamaged:
                 filename = this.info.undamaged;
                 break;
-            case Damage.dented:
-            case Damage.badlyDented:
-            case Damage.damaged:
-                filename = this.info.damaged;
+            case Damage.destroyed:
+                filename = this.info.destroyed;
                 break;
-            case Damage.moderateDamaged:
-            case Damage.heavyDamaged:
             default:
-                filename = this.info.badlyDamaged;
+                filename = this.info.damaged;
                 break;
         }
         return assetsFolder + "buildings/" + filename;
@@ -130,9 +117,14 @@ class Building extends MapEntity {
             y = position.Y;
         this.placeAt(x, y);
     }
+    // Three stages: undamaged -> damaged (first hit) -> destroyed (second hit). Further hits on
+    // a destroyed building just keep knocking debris loose.
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
-        if (this.damage < Damage.destroyed) {
-            this.damage += 1;
+        if (this.damage === Damage.undamaged) {
+            this.damage = Damage.damaged;
+        }
+        else if (this.damage !== Damage.destroyed) {
+            this.damage = Damage.destroyed;
         }
         this.reAssignSrc();
         this.throwDebris();
