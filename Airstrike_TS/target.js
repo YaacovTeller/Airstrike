@@ -629,6 +629,7 @@ class WaterVehicleTarget extends VehicleTarget {
     static shoreMargin = 10; // how far inside the open water a boat has to stay
     static fireBeforeSinkMin = 2000;
     static fireBeforeSinkMax = 7000;
+    static explodeChance = 15; // percent of burning boats that blow up rather than sink
     static sinkDuration = 6000;
     static tiltPause = 1500;
     static tiltSinkDuration = 7000;
@@ -636,8 +637,8 @@ class WaterVehicleTarget extends VehicleTarget {
         super(boatTarget);
         this.targetEl.classList.add('longTarget');
     }
-    // Where the wreckage flies out from: the point on the hull the blast struck. Worked out when the
-    // boat is hit, because the boat may be gone from the screen by the time it sinks and breaks up.
+    // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
+    // remembered from when the boat was hit.
     strikePoint;
     createScrap() {
         return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic", this.strikePoint);
@@ -687,8 +688,20 @@ class WaterVehicleTarget extends VehicleTarget {
         setTimeout(() => {
             if (this.damage === Damage.destroyed)
                 return; // already wrecked some other way while it burned
-            tilt === 0 ? this.sink() : this.tiltingSink(tilt);
+            if (RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.explodeChance) {
+                this.explode();
+            }
+            else {
+                tilt === 0 ? this.sink() : this.tiltingSink(tilt);
+            }
         }, fireDuration);
+    }
+    // The fire reaches something that goes up: the same wreck and fireball as a direct hit.
+    explode() {
+        let priorStatus = this.status;
+        this.targetDestroyed(priorStatus);
+        this.completeDestruction();
+        game.assessKillPoints(priorStatus, this.damage);
     }
     // A boat that's already burning or sinking can still be finished off: a heavy blow (a direct
     // hit, or an airstrike landing on it) sends it up in the full destruction fireball instead of
@@ -796,8 +809,7 @@ class WaterVehicleTarget extends VehicleTarget {
         let priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         this.damageOverlay.hide();
-        ContentElHandler.removeFromContentEl(this.targetEl);
-        this.destructionBits();
+        ContentElHandler.removeFromContentEl(this.targetEl); // it's gone under the water: nothing left to throw about
         game.assessKillPoints(priorStatus, this.damage);
     }
     // Anywhere in open water: the whole boat has to fit between the left of the water and the
