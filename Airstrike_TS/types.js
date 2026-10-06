@@ -129,6 +129,11 @@ const boatTarget = {
     maxSpeed: 0,
     armour: Armour.moderate,
 };
+// The smaller boat has no armour, so it takes damage like a jeep: any proper hit sets it ablaze
+const smallBoatTarget = {
+    ...boatTarget,
+    armour: Armour.none,
+};
 var direction;
 (function (direction) {
     direction["forward"] = "forward";

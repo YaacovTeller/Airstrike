@@ -137,6 +137,11 @@ const boatTarget: TargetInfo = {
     maxSpeed: 0,
     armour: Armour.moderate,
 }
+// The smaller boat has no armour, so it takes damage like a jeep: any proper hit sets it ablaze
+const smallBoatTarget: TargetInfo = {
+    ...boatTarget,
+    armour: Armour.none,
+}
 
 enum direction {
     forward = "forward",

@@ -640,6 +640,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('longTarget');
         if (WaterVehicleTarget.smallBoatPics.some(pic => this.baseImgEl.src.endsWith(pic))) {
             this.targetEl.classList.add('smallBoat');
+            this.armour = smallBoatTarget.armour;
         }
     }
     // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
