@@ -321,8 +321,8 @@ class SceneLevel extends Level {
     stageProgress() {
         return { done: this.targets.filter(t => t.isFinished()).length, total: this.targets.length };
     }
-    // The base level's check for "nothing left to do" -- here that means every target destroyed or as
-    // good as (a burning boat that's certain to sink or blow up), not just disabled.
+    // The base level's check for "nothing left to do" -- here that means every target destroyed, not
+    // just disabled. (A boat counts as destroyed once its fire has done for it, not when it's on the bottom.)
     checkForNilActiveTargets() {
         return this.targets.every(t => t.isFinished());
     }

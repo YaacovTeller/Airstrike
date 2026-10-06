@@ -756,11 +756,6 @@ class WaterVehicleTarget extends VehicleTarget {
     // straight down.
     private sinkScheduled: boolean = false;
 
-    // A boat that's disabled and burning is as good as done: it's going to sink or blow up.
-    public isFinished(): boolean {
-        return super.isFinished() || this.sinkScheduled;
-    }
-
     protected badDamage(direc?, collisionInfo?: vectorMoveObj) {
         if (this.sinkScheduled) return; // already burning and on its way down
         this.sinkScheduled = true;
@@ -775,11 +770,16 @@ class WaterVehicleTarget extends VehicleTarget {
 
         let tilt = this.tiltForStrike(collisionInfo);
         let fireDuration = RandomNumberGen.randomNumBetween(WaterVehicleTarget.fireBeforeSinkMin, WaterVehicleTarget.fireBeforeSinkMax);
-        game.updateKillStats(); // it counts as done from now, which the HUD's target count shows
         setTimeout(() => {
-            if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return; // already wrecked some other way while it burned, or cleared away with its stage
+            if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return; // already wrecked some other way while it burned, or cleared away with its game
+            // Once the fire has done for it -- it's blowing up or going under -- it's destroyed. That
+            // counts now, not when the sinking has finished playing out.
+            let priorStatus = this.status;
+            this.targetDestroyed(priorStatus);
+            game.assessKillPoints(priorStatus, this.damage);
+
             if (RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.explodeChance) {
-                this.explode();
+                this.completeDestruction(); // the same wreck and fireball as a direct hit
             }
             else {
                 tilt === 0 ? this.sink() : this.tiltingSink(tilt);
@@ -787,17 +787,10 @@ class WaterVehicleTarget extends VehicleTarget {
         }, fireDuration);
     }
 
-    // The fire reaches something that goes up: the same wreck and fireball as a direct hit.
-    private explode() {
-        let priorStatus = this.status;
-        this.targetDestroyed(priorStatus);
-        this.completeDestruction();
-        game.assessKillPoints(priorStatus, this.damage);
-    }
-
-    // A boat that's already burning or sinking can still be finished off: a heavy blow (a direct
-    // hit, or an airstrike landing on it) sends it up in the full destruction fireball instead of
-    // just feeding the fire. Gentler hits don't add anything, it's burning already.
+    // A boat that's already burning can still be finished off: a heavy blow (a direct hit, or an
+    // airstrike landing on it) sends it up in the full destruction fireball instead of just feeding
+    // the fire. Gentler hits don't add anything, it's burning already. (Once the fire has done for
+    // it and it's going down, it's destroyed, and hits no longer register.)
     protected adjustSeverity(severity: strikeSeverity): strikeSeverity {
         return this.sinkScheduled && severity >= strikeSeverity.heavy ? strikeSeverity.catastrophic : severity;
     }
@@ -909,13 +902,11 @@ class WaterVehicleTarget extends VehicleTarget {
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.tiltSinkDuration);
     }
 
+    // The boat has been destroyed since it started to go down (see badDamage), so this is just the
+    // clearing away of it once it's out of sight.
     private finishSinking() {
-        if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return; // blown up on the way down, which has already dealt with everything, or cleared away with its stage
-        let priorStatus = this.status;
-        this.targetDestroyed(priorStatus);
         this.damageOverlay.hide();
         ContentElHandler.removeFromContentEl(this.targetEl); // it's gone under the water: nothing left to throw about
-        game.assessKillPoints(priorStatus, this.damage);
     }
     // Anywhere in open water: the whole boat has to fit between the left of the water and the
     // start of the faded shallows at the shore (see Shoreline), not just its top-left corner.
