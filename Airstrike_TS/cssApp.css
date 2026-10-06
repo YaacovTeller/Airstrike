@@ -3,7 +3,7 @@
     pointer-events:all;
     display: flex;
     justify-content: flex-start;
-    margin-right: 45px; /* the gap between the regular weapons and the utility ones */
+    margin-right: 25px;
 }
 
 .hud {
