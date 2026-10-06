@@ -169,7 +169,8 @@ enum weaponNames {
     tunnel_Charge = 6,
     flare = 7,
     tactical_Nuke = 8,
-    chopper = 9
+    chopper = 9,
+    surveillance = 10 // the 0 key
 }
 type position = {
     X,
@@ -459,6 +460,33 @@ const chopperInfo: ExplosiveWeaponInfo = {
         speed: 5,
         duration: 7000,
         delay: 500
+    }
+}
+
+// A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
+const surveillanceInfo: ExplosiveWeaponInfo = {
+    name: weaponNames.surveillance,
+    displayName: "Surveillance Drone",
+    class: SurveillanceDrone,
+    cursor: "cursor4",
+    blastRadius: 90, // how far around the mouse it can pick up a heat signature
+    explosionInfo: { // it doesn't explode, but the weapon classes expect one
+        size: ExplSizes.tiny,
+        frames: [],
+        sound: [],
+        length: 0,
+    },
+    imageSource: assetsSVGFolder + 'drone.svg',
+    sound: [jet],
+    speed: 0,
+    cooldown: 15000,
+    noAmmo: bleep_neg,
+    select: [jet],
+    flyover: {
+        imageSource: assetsSVGFolder + 'reaper3.svg',
+        speed: 3,       // vw per 100ms, so a pass of 4s crosses the screen with a bit to spare
+        duration: 4000,
+        delay: 1000     // a second to arrive
     }
 }
 

@@ -373,12 +373,17 @@ class BuildingEnemy extends Target {
         this.targetEl.classList.add('buildingEnemy');
     }
     public action() { } // it stays put
+    // Shown through the building while something is scanning for heat signatures there
+    public setRevealed(revealed: boolean) {
+        this.targetEl.classList.toggle('revealed', revealed);
+    }
     public eliminate() {
         if (this.damage === Damage.destroyed) return;
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup for each one
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         game.assessKillPoints(priorStatus, this.damage);
+        this.setRevealed(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }

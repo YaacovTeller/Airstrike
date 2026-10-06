@@ -270,6 +270,19 @@
 .buildingEnemy > * {
     display: none;
 }
+/* Seen by a surveillance drone: up over the building, glowing like a heat signature */
+.target.buildingEnemy.revealed {
+    z-index: 6;
+    background: #ffb02e;
+    border-color: #ff4500;
+    box-shadow: 0 0 6px 3px rgba(255, 120, 0, 0.9);
+}
+/* The area a surveillance drone is scanning, around the mouse */
+.blastRadius.scanRing {
+    border: 2px dashed rgba(255, 160, 50, 0.9);
+    background: rgba(255, 120, 0, 0.12);
+    opacity: 1;
+}
 .wheelFire {
     position: absolute;
     width: inherit;

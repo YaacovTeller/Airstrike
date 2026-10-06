@@ -444,6 +444,58 @@ class Chopper extends ExplosiveWeaponType {
         ContentElHandler.fadeRemoveItem(div, pause + duration * 2, 10);
     }
 }
+// A utility weapon. The drone takes a moment to arrive and then makes a slow pass, and for as long as it's
+// overhead the area around the mouse is scanned: any enemy hiding in a building there shows up as a
+// heat signature, through the building. Enemies already killed don't show.
+class SurveillanceDrone extends ExplosiveWeaponType {
+    static activePasses = 0;
+    static scanInterval = 50;
+    constructor(info) {
+        super(info);
+    }
+    fireFunc() {
+        if (this.ammoCheck() === false) {
+            return;
+        }
+        this.playSound();
+        this.shotCounter();
+        let inst = this.activeInstance;
+        inst.ready = false;
+        inst.blastRadElement.style.visibility = 'hidden'; // the scan has its own ring, once the drone's there
+        this.createFlyover(inst);
+        setTimeout(() => this.scan(this.flyoverInfo.duration), this.flyoverInfo.delay);
+        this.cooldownTimeout(inst);
+        this.setActiveInstance();
+    }
+    scan(duration) {
+        const radius = this.blastRadius;
+        const ring = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), 'blastRadius scanRing');
+        ring.style.width = ring.style.height = radius * 2 + 'px';
+        SurveillanceDrone.activePasses++;
+        const sweep = () => {
+            const mouse = MouseHandler.mousePos;
+            if (typeof mouse.X !== 'number')
+                return; // the mouse hasn't been over the game yet
+            ring.style.left = mouse.X - radius + 'px';
+            ring.style.top = mouse.Y - radius + 'px';
+            for (const target of allTargets) {
+                if (target instanceof BuildingEnemy && target.damage !== Damage.destroyed) {
+                    const middle = CollisionDetection.getXYfromPoint(target.getTargetEl());
+                    target.setRevealed(Math.hypot(middle.X - mouse.X, middle.Y - mouse.Y) <= radius);
+                }
+            }
+        };
+        const timer = setInterval(sweep, SurveillanceDrone.scanInterval);
+        sweep();
+        setTimeout(() => {
+            clearInterval(timer);
+            ring.remove();
+            if (--SurveillanceDrone.activePasses === 0) { // nothing else is scanning: back to hidden
+                allTargets.forEach(t => t instanceof BuildingEnemy ? t.setRevealed(false) : "");
+            }
+        }, duration);
+    }
+}
 class DroneWeaponType extends ExplosiveWeaponType {
     attackLimit = 3;
     lockedTargets = [];

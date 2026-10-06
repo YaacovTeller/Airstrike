@@ -163,6 +163,7 @@ var weaponNames;
     weaponNames[weaponNames["flare"] = 7] = "flare";
     weaponNames[weaponNames["tactical_Nuke"] = 8] = "tactical_Nuke";
     weaponNames[weaponNames["chopper"] = 9] = "chopper";
+    weaponNames[weaponNames["surveillance"] = 10] = "surveillance"; // the 0 key
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -392,6 +393,32 @@ const chopperInfo = {
         speed: 5,
         duration: 7000,
         delay: 500
+    }
+};
+// A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
+const surveillanceInfo = {
+    name: weaponNames.surveillance,
+    displayName: "Surveillance Drone",
+    class: SurveillanceDrone,
+    cursor: "cursor4",
+    blastRadius: 90, // how far around the mouse it can pick up a heat signature
+    explosionInfo: {
+        size: ExplSizes.tiny,
+        frames: [],
+        sound: [],
+        length: 0,
+    },
+    imageSource: assetsSVGFolder + 'drone.svg',
+    sound: [jet],
+    speed: 0,
+    cooldown: 15000,
+    noAmmo: bleep_neg,
+    select: [jet],
+    flyover: {
+        imageSource: assetsSVGFolder + 'reaper3.svg',
+        speed: 3, // vw per 100ms, so a pass of 4s crosses the screen with a bit to spare
+        duration: 4000,
+        delay: 1000 // a second to arrive
     }
 };
 const flareInfo = {

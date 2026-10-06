@@ -332,6 +332,10 @@ class BuildingEnemy extends Target {
         this.targetEl.classList.add('buildingEnemy');
     }
     action() { } // it stays put
+    // Shown through the building while something is scanning for heat signatures there
+    setRevealed(revealed) {
+        this.targetEl.classList.toggle('revealed', revealed);
+    }
     eliminate() {
         if (this.damage === Damage.destroyed)
             return;
@@ -339,6 +343,7 @@ class BuildingEnemy extends Target {
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         game.assessKillPoints(priorStatus, this.damage);
+        this.setRevealed(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }

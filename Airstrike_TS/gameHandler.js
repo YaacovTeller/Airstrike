@@ -343,7 +343,7 @@ class GameHandler {
             if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') {
                 this.fireFunc();
             }
-            let int = parseInt(event.key);
+            let int = event.key === '0' ? weaponNames.surveillance : parseInt(event.key); // the tenth weapon is on the 0 key
             if (int) {
                 if (conventionalWeapons[int]) {
                     this.changeWeapon(conventionalWeapons[int]);
@@ -388,6 +388,8 @@ class GameHandler {
         for (let i = 0; i < 2; i++) {
             scaledWeapons.slice(1).forEach(info => this.level.addNewWeapon(info, false)); // spare rounds, but just the one gun
         }
+        this.level.addNewWeapon(surveillanceInfo, false);
+        this.level.addNewWeapon(surveillanceInfo, false);
     }
     returnOneSuperWeapon() {
         let supers = [chopperInfo, nukeInfo];
@@ -405,6 +407,7 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         this.level.addNewWeapon(droneInfo, false);
         this.level.addNewWeapon(flareInfo, false);
+        this.level.addNewWeapon(surveillanceInfo, false);
         this.onlyOneSuperInst(chopperInfo);
         this.onlyOneSuperInst(nukeInfo);
         //this.level.addNewWeapon(chopperInfo, true);
