@@ -76,10 +76,12 @@ class ExplosionHandler {
         }
     }
     // Walks allTargets and allObjects, invoking the callback for every element within the blast radius.
+    // Some targets reach out a bit further than their centre point (hitPadding); how hard they're hit
+    // is still measured against the blast's own radius, so a hit out on the fringe is a weak one.
     static forEachBlastCollision(blastCenter, rad, onTarget, onItem) {
         for (let target of allTargets) {
             let targetEl = target.getTargetEl();
-            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad)) {
+            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad + target.hitPadding)) {
                 let collisionInfo = CollisionDetection.getVectorMove(blastCenter, targetEl, rad);
                 onTarget(target, collisionInfo);
             }

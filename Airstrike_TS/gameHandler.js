@@ -740,7 +740,7 @@ class GameHandler {
     }
     drawAllBuildings() {
         for (const slot of this.streetBlockSlots(40)) {
-            new Building().setPosition(slot);
+            new Building(slot.info).setPosition(slot);
         }
     }
     // How big a building is (see .building in cssApp.css) and how far clear of the water's faded
@@ -754,10 +754,10 @@ class GameHandler {
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
     // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
-    // buildings packed tight in blocks 2 or 3 across and blockRows deep, with a road's width
-    // between blocks, along the row and between rows.
+    // buildings side by side in blocks 2 or 3 across and blockRows deep, with a road's width between
+    // blocks, along the row and between rows. Every building in a block is the same type.
     streetBlockSlots(maxCount, options) {
-        const { startX = 100, startY = 100, buildingGap = 6, roadWidth = 70, blockRows = 2, padding = 50 } = options || {};
+        const { startX = 100, startY = 100, buildingGap = 0, roadWidth = 70, blockRows = 2, padding = 50 } = options || {};
         const slots = [];
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
@@ -795,11 +795,13 @@ class GameHandler {
             if (slots.length + cols * blockRows > maxCount) {
                 return slots;
             }
+            const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
             for (let row = 0; row < blockRows; row++) {
                 for (let col = 0; col < cols; col++) {
                     slots.push({
                         X: blockX + col * (size + buildingGap),
-                        Y: currentY + row * (size + buildingGap)
+                        Y: currentY + row * (size + buildingGap),
+                        info: info
                     });
                 }
             }

@@ -31,6 +31,11 @@ class MapEntity {
     getPicEl() {
         return this.picEl;
     }
+    // A blast hits something when its centre point lands inside the blast's area, which is stingy
+    // for something wide. This is extra reach (px) added to the blast for the check on this one.
+    get hitPadding() {
+        return 0;
+    }
     // Spawns a free-standing piece of debris at this entity's current on-screen position,
     // registers it for cleanup, and fades it out after a while.
     returnBit(imageSrc, parentClass, childClass) {
@@ -547,6 +552,7 @@ class VehicleTarget extends Target {
 }
 class WaterVehicleTarget extends VehicleTarget {
     static shoreMargin = 10; // how far inside the open water a boat has to stay
+    static hitReach = 20; // see hitPadding
     static fireBeforeSinkMin = 2000;
     static fireBeforeSinkMax = 7000;
     static sinkDuration = 6000;
@@ -573,6 +579,10 @@ class WaterVehicleTarget extends VehicleTarget {
     // A wrecked boat's fire burns out in half the time -- it's sitting on water.
     get destroyedStay() {
         return destroyedTargetStay / 2;
+    }
+    // Boats are long, so a blast landing over the bow or stern would otherwise miss entirely.
+    get hitPadding() {
+        return WaterVehicleTarget.hitReach;
     }
     // A badly damaged boat always burns for a while and then sinks, rather than the generic
     // vehicle's chance of an early explosion or recovering back to just smoking.
