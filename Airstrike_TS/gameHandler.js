@@ -9,8 +9,7 @@ var GameMode;
     GameMode[GameMode["regular"] = 0] = "regular";
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
     GameMode[GameMode["test_1"] = 2] = "test_1";
-    GameMode[GameMode["test_2"] = 3] = "test_2";
-    GameMode[GameMode["test_3"] = 4] = "test_3";
+    GameMode[GameMode["test_3"] = 3] = "test_3";
 })(GameMode || (GameMode = {}));
 var conventionalWeapons = [];
 var extraWeapons = [];
@@ -20,7 +19,6 @@ var allBuildings = [];
 var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
 const level_weather = new Level(weatherTestInfo);
-const level_static = new Level(staticInfo);
 class GameHandler {
     hud = new HudHandler();
     weapon;
@@ -200,7 +198,6 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        document.getElementById("startbutton_test_2").onclick = () => this.newGame(GameMode.test_2);
         document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
@@ -748,11 +745,6 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, true);
             this.level.addNewWeapon(flareInfo, false);
             this.level.addNewWeapon(flareInfo, false);
-        }
-        else if (mode == GameMode.test_2) {
-            this.newLevel(level_static, mode);
-            this.level.addNewWeapon(airstrikeInfo, true);
-            this.drawAllBuildings();
         }
         else if (mode == GameMode.test_3) {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings

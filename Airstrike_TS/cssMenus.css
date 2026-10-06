@@ -295,6 +295,23 @@ b {
     justify-content: center;
 }
 
+/* The test modes, fenced off from the main Start button */
+.testGroup {
+    margin: 22px 0 0;
+    padding: 8px 14px 16px;
+    border: 1px dashed rgba(110,255,150,0.4);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+}
+
+.testGroupLabel {
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
 /* ===== Scrollbar ===== */
 
 .modalContainer::-webkit-scrollbar {

@@ -275,6 +275,11 @@ class Target extends MapEntity {
 
     public hit(sev: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) { }
 
+    // Whether there's nothing more to be done about this one: it's destroyed
+    public isFinished(): boolean {
+        return this.damage === Damage.destroyed;
+    }
+
     protected move(posX: number) {
         if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
@@ -751,6 +756,11 @@ class WaterVehicleTarget extends VehicleTarget {
     // straight down.
     private sinkScheduled: boolean = false;
 
+    // A boat that's disabled and burning is as good as done: it's going to sink or blow up.
+    public isFinished(): boolean {
+        return super.isFinished() || this.sinkScheduled;
+    }
+
     protected badDamage(direc?, collisionInfo?: vectorMoveObj) {
         if (this.sinkScheduled) return; // already burning and on its way down
         this.sinkScheduled = true;
@@ -765,8 +775,9 @@ class WaterVehicleTarget extends VehicleTarget {
 
         let tilt = this.tiltForStrike(collisionInfo);
         let fireDuration = RandomNumberGen.randomNumBetween(WaterVehicleTarget.fireBeforeSinkMin, WaterVehicleTarget.fireBeforeSinkMax);
+        game.updateKillStats(); // it counts as done from now, which the HUD's target count shows
         setTimeout(() => {
-            if (this.damage === Damage.destroyed) return; // already wrecked some other way while it burned
+            if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return; // already wrecked some other way while it burned, or cleared away with its stage
             if (RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.explodeChance) {
                 this.explode();
             }
@@ -899,7 +910,7 @@ class WaterVehicleTarget extends VehicleTarget {
     }
 
     private finishSinking() {
-        if (this.damage === Damage.destroyed) return; // blown up on the way down, which has already dealt with everything
+        if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return; // blown up on the way down, which has already dealt with everything, or cleared away with its stage
         let priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         this.damageOverlay.hide();

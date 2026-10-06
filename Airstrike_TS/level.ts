@@ -360,13 +360,13 @@ class SceneLevel extends Level {
     public continueWave() { } // unpausing must not start target production
 
     public stageProgress() {
-        return { done: this.targets.filter(t => t.damage === Damage.destroyed).length, total: this.targets.length };
+        return { done: this.targets.filter(t => t.isFinished()).length, total: this.targets.length };
     }
 
-    // The base level's check for "nothing left to do" -- here that means every target destroyed, not
-    // just disabled, so the stage doesn't finish while the last boat is still burning.
+    // The base level's check for "nothing left to do" -- here that means every target destroyed or as
+    // good as (a burning boat that's certain to sink or blow up), not just disabled.
     protected checkForNilActiveTargets() {
-        return this.targets.every(t => t.damage === Damage.destroyed);
+        return this.targets.every(t => t.isFinished());
     }
 
     protected endWave() {
@@ -419,19 +419,6 @@ function provideAllTargets(): Target {
     ]);
 }
 
-
-const staticInfo: LevelInfo = {
-    number: 0,
-    location: Area.port,
-    messages: [{ title: "Static Test", text: "", length: msgLength.short }],
-    waves: [
-        new Wave(10, WaveType.static, Time.day),
-    ],
-    startArms: [],
-    endArms: [],
-    targetFunc: () => new WaterVehicleTarget(),
-
-}
 
 const sceneInfo: LevelInfo = {
     number: 0,
