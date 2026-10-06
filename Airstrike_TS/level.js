@@ -170,6 +170,10 @@ class Level {
         game.changeTime(this.currentWave.timeOfDay);
         game.setRain(this.currentWave.weather);
     }
+    // For levels that have a fixed set of targets to clear: how many are done out of how many.
+    stageProgress() {
+        return null;
+    }
     winLimitCheck() {
         if (this.winCheckTimer != null) {
             console.log("HIT existing wincheck!");
@@ -287,20 +291,45 @@ class Level {
         game.updateKillStats(killStatDisplayOptions.total);
     }
 }
-// A level that's just a static scene rather than a stream of targets: everything is placed once
-// up front, nothing is produced afterwards, nothing runs a win/escape check, and it never ends.
-// Its single wave only carries the time of day and weather.
+// A level that's a series of static scenes rather than a stream of targets. Each stage places its
+// buildings and targets once up front; nothing is produced afterwards, nothing escapes, and the
+// stage is finished when every target has been destroyed, after which a freshly generated stage
+// follows -- forever. Its single wave only carries the time of day and weather.
 class SceneLevel extends Level {
     staticTargetCount = 10;
+    stage = 0;
     nextWave() {
-        this.waveIndex = 0;
-        this.setCurrentWave();
+        if (game.level !== this)
+            return true; // a stale call from before the game was reset
+        this.stage++;
+        this.resetTargets(); // clears the last stage's targets and buildings
+        if (this.stage == 1) {
+            this.waveIndex = 0;
+            this.setCurrentWave(); // later stages keep whatever time of day and weather they're in
+        }
         for (let i = 0; i < this.staticTargetCount; i++) {
             this.registerTarget(this.provideAvailTargets());
         }
+        game.drawAllBuildings();
+        if (this.stage > 1) {
+            PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
+        }
+        this.winLimitCheck();
         return true;
     }
     continueWave() { } // unpausing must not start target production
+    stageProgress() {
+        return { done: this.targets.filter(t => t.damage === Damage.destroyed).length, total: this.targets.length };
+    }
+    // The base level's check for "nothing left to do" -- here that means every target destroyed, not
+    // just disabled, so the stage doesn't finish while the last boat is still burning.
+    checkForNilActiveTargets() {
+        return this.targets.every(t => t.damage === Damage.destroyed);
+    }
+    endWave() {
+        PopupHandler.addToArray("", "Stage " + this.stage + " finished!", msgLength.long);
+        this.nextWavePrepGap(); // then nextWave() builds the next stage
+    }
 }
 function pickWeightedTarget(options) {
     let roll = RandomNumberGen.randomNumBetween(1, 100);

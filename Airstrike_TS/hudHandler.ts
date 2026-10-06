@@ -11,6 +11,7 @@ enum killStatDisplayOptions {
     disabled = 'Disabled',
     destroyed = 'Destroyed',
     escaped = 'Escaped',
+    targets = 'Targets', // stage progress, shown instead of escaped by modes with stages
     shots = 'Shots',
 }
 
@@ -235,8 +236,11 @@ class HudHandler {
             }
         }
     }
+    // Modes with stages have no escapes to count, so they get the stage's target count in its place.
     private returnkillStatDisplayOptions() {
-        return Object.values(killStatDisplayOptions);
+        const staged = game.hasStages();
+        return Object.values(killStatDisplayOptions).filter(option =>
+            option === killStatDisplayOptions.targets ? staged : !(staged && option === killStatDisplayOptions.escaped));
     }
 
     public drawScore() {
@@ -264,6 +268,11 @@ class HudHandler {
     }
     private updateScoreSpans(stats, title) {
         let span = document.getElementById(title);
+        if (title === killStatDisplayOptions.targets) {
+            const progress = game.level ? game.level.stageProgress() : null;
+            span.innerText = title + ": " + (progress ? progress.done : 0) + "/" + (progress ? progress.total : 0);
+            return;
+        }
         let num = stats[title.toLowerCase()]
         span.innerText = title + ": " + num;
 

@@ -5,6 +5,7 @@ var killStatDisplayOptions;
     killStatDisplayOptions["disabled"] = "Disabled";
     killStatDisplayOptions["destroyed"] = "Destroyed";
     killStatDisplayOptions["escaped"] = "Escaped";
+    killStatDisplayOptions["targets"] = "Targets";
     killStatDisplayOptions["shots"] = "Shots";
 })(killStatDisplayOptions || (killStatDisplayOptions = {}));
 class HudHandler {
@@ -200,8 +201,10 @@ class HudHandler {
             }
         }
     }
+    // Modes with stages have no escapes to count, so they get the stage's target count in its place.
     returnkillStatDisplayOptions() {
-        return Object.values(killStatDisplayOptions);
+        const staged = game.hasStages();
+        return Object.values(killStatDisplayOptions).filter(option => option === killStatDisplayOptions.targets ? staged : !(staged && option === killStatDisplayOptions.escaped));
     }
     drawScore() {
         this.scoreBox = document.createElement('div');
@@ -225,6 +228,11 @@ class HudHandler {
     }
     updateScoreSpans(stats, title) {
         let span = document.getElementById(title);
+        if (title === killStatDisplayOptions.targets) {
+            const progress = game.level ? game.level.stageProgress() : null;
+            span.innerText = title + ": " + (progress ? progress.done : 0) + "/" + (progress ? progress.total : 0);
+            return;
+        }
         let num = stats[title.toLowerCase()];
         span.innerText = title + ": " + num;
         if (title === killStatDisplayOptions.escaped) {

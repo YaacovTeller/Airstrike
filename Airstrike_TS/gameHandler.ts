@@ -732,6 +732,12 @@ class GameHandler {
         allBuildings = [];
     }
 
+    // Whether this mode is a series of stages of targets to clear, rather than targets that cross the
+    // screen and can escape -- the HUD shows progress through the stage instead of the escape limit.
+    public hasStages(): boolean {
+        return this.gameMode == GameMode.test_3;
+    }
+
     public newGame(mode: GameMode) {
         if (this.gameWasPlayed) {
             this.reset();
@@ -770,9 +776,8 @@ class GameHandler {
             this.drawAllBuildings();
         }
         else if (mode == GameMode.test_3) {
-            this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the scene's targets
+            this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
             this.addScaledWeaponSet();
-            this.drawAllBuildings();
         }
 
         this.hud.drawMultiKill();
