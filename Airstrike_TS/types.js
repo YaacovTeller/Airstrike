@@ -1,3 +1,4 @@
+"use strict";
 var RainTypes;
 (function (RainTypes) {
     RainTypes["none"] = "none";
@@ -400,6 +401,47 @@ const flareInfo = {
     noAmmo: click_2,
     select: gib
 };
+// ---- Scaled-down weapon set, used by Test_3 instead of the standard weapons above ----
+// Each one takes the same slot (1-5) as the standard weapon it's a version of, so it keeps the same
+// key, HUD position and damage behaviour, and is that weapon with a smaller explosion -- one rung
+// down the ExplSizes ladder -- so it also covers a smaller area and needs a closer hit to do the
+// same damage. Everything else (cooldowns, flight times, flyovers, impact sounds) is inherited.
+// The jet icon and aircraft noises (from the airstrike) are placeholders for all of them.
+// The gun is hitscan, so there's no explosion to scale down.
+const jetPlaceholder = {
+    imageSource: airstrikeInfo.imageSource,
+    sound: airstrikeInfo.sound,
+    select: airstrikeInfo.select,
+    noAmmo: airstrikeInfo.noAmmo,
+};
+const scaledGunInfo = {
+    ...sniperInfo,
+    ...jetPlaceholder,
+};
+const scaledMortarInfo = {
+    ...mortarInfo,
+    ...jetPlaceholder,
+    blastRadius: 30,
+    explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
+};
+const scaledHowitzerInfo = {
+    ...howitzerInfo,
+    ...jetPlaceholder,
+    blastRadius: 50,
+    explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
+};
+const scaledAirstrikeInfo = {
+    ...airstrikeInfo,
+    ...jetPlaceholder,
+    blastRadius: 70,
+    explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
+};
+const scaledDroneInfo = {
+    ...droneInfo,
+    ...jetPlaceholder,
+    explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
+};
+const scaledWeapons = [scaledGunInfo, scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];
 var msgLength;
 (function (msgLength) {
     msgLength[msgLength["long"] = 3000] = "long";

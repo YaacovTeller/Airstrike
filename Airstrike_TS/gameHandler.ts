@@ -410,6 +410,14 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         
     }
+    // Test_3's own weapons instead of the standard ones. Every game starts from empty weapon lists
+    // (see reset()), so going back to any other mode gets the standard set again.
+    private addScaledWeaponSet() {
+        scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
+        for (let i = 0; i < 2; i++) {
+            scaledWeapons.slice(1).forEach(info => this.level.addNewWeapon(info, false)); // spare rounds, but just the one gun
+        }
+    }
     private returnOneSuperWeapon() {
         let supers = [chopperInfo, nukeInfo];
         let rand = RandomNumberGen.randomNumBetween(0, 1);
@@ -763,7 +771,7 @@ class GameHandler {
         }
         else if (mode == GameMode.test_3) {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the scene's targets
-            this.addFullWeaponLoadout();
+            this.addScaledWeaponSet();
             this.drawAllBuildings();
         }
 
