@@ -214,6 +214,7 @@
     <Content Include="AS_assets\Sand_crater_1.png" />
     <Content Include="AS_assets\Sand_scrub.png" />
     <Content Include="AS_assets\ship1.png" />
+    <Content Include="AS_assets\ship2.png" />
     <Content Include="AS_assets\smoke_3\frame_00_delay-0.1s.gif" />
     <Content Include="AS_assets\smoke_3\frame_01_delay-0.1s.gif" />
     <Content Include="AS_assets\smoke_3\frame_02_delay-0.1s.gif" />

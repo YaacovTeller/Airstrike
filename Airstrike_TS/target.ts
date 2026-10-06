@@ -1,4 +1,4 @@
-﻿// Filenames (all relative to assetsFolder + "buildings/") for one building type's three stages.
+﻿﻿// Filenames (all relative to assetsFolder + "buildings/") for one building type's three stages.
 type BuildingInfo = {
     undamaged: string,
     damaged: string,
@@ -698,9 +698,15 @@ class WaterVehicleTarget extends VehicleTarget {
     private static tiltPause: number = 1500;
     private static tiltSinkDuration: number = 7000;
 
+    // The boat pictures that are the smaller sort of boat (see .smallBoat in cssApp.css)
+    private static smallBoatPics: Array<string> = ['ship2.png'];
+
     constructor() {
         super(boatTarget);
         this.targetEl.classList.add('longTarget');
+        if (WaterVehicleTarget.smallBoatPics.some(pic => this.baseImgEl.src.endsWith(pic))) {
+            this.targetEl.classList.add('smallBoat');
+        }
     }
     // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
     // remembered from when the boat was hit.
@@ -719,7 +725,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.throwBit(direction.backward);
     }
     protected get picSources(): Array<string> {
-        return ['ship1.png'];
+        return ['ship1.png', 'ship2.png']; // an even chance of each
     }
 
     // A wrecked boat's fire burns out in half the time -- it's sitting on water.

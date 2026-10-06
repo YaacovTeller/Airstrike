@@ -186,6 +186,9 @@
     height: 45px;
     width: 100px;
 }
+.longTarget.smallBoat {
+    width: 70px;
+}
 .picEl > img {
     width: 100%;
 }
