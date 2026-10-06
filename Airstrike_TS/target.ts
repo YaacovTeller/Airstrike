@@ -500,7 +500,13 @@ class VehicleTarget extends Target {
             }
         }
     }
+    // A chance for a vehicle to treat a blow as harder (or softer) than the blast's distance alone says.
+    protected adjustSeverity(severity: strikeSeverity): strikeSeverity {
+        return severity;
+    }
+
     private basicVehicleDamageModel(severity: strikeSeverity, direc: direction, collisionInfo?: vectorMoveObj) {
+        severity = this.adjustSeverity(severity);
         let priorStatus = this.status;
         if (severity == strikeSeverity.light) {
             this.damage >= Damage.badlyDented ? severity = strikeSeverity.medium : "";
@@ -584,7 +590,7 @@ class VehicleTarget extends Target {
         return destroyedTargetStay;
     }
 
-    private completeDestruction(collisionInfo?: vectorMoveObj) {
+    protected completeDestruction(collisionInfo?: vectorMoveObj) {
         this.targetEl.classList.remove('smoothTransition');
         this.targetEl.classList.add('smoothFade');
         this.removeFlip(this.picEl);
@@ -693,6 +699,21 @@ class WaterVehicleTarget extends VehicleTarget {
         }, fireDuration);
     }
 
+    // A boat that's already burning or sinking can still be finished off: a heavy blow (a direct
+    // hit, or an airstrike landing on it) sends it up in the full destruction fireball instead of
+    // just feeding the fire. Gentler hits don't add anything, it's burning already.
+    protected adjustSeverity(severity: strikeSeverity): strikeSeverity {
+        return this.sinkScheduled && severity >= strikeSeverity.heavy ? strikeSeverity.catastrophic : severity;
+    }
+
+    // If that happens part way through the sinking, the boat's picture and fire are inside the sink
+    // window (clipped, and moving down), so put them back where they belong first, otherwise the
+    // fireball would be cut off by the waterline.
+    protected completeDestruction(collisionInfo?: vectorMoveObj) {
+        this.cancelSinking();
+        super.completeDestruction(collisionInfo);
+    }
+
     // Which way a strike should tip the boat: 1 for the bow going down, -1 for the stern, 0 for
     // straight down (hit in the middle third of the hull, or nothing known about where it landed).
     // The sprite faces right, so a blast to the right of the boat's middle hit the bow.
@@ -712,6 +733,8 @@ class WaterVehicleTarget extends VehicleTarget {
     // the middle of the bottom of the hull (see .sinkGroup), so a tilt dips one end straight into
     // the water rather than swinging about the middle of the boat; the window has room above and
     // to the sides so the end that lifts isn't cropped.
+    private sinkMask: HTMLElement; // there once the sinking has started
+
     private createSinkMask(): { mask: HTMLElement, group: HTMLElement } {
         const targetRect = this.targetEl.getBoundingClientRect();
         const picRect = this.picEl.getBoundingClientRect();
@@ -720,6 +743,7 @@ class WaterVehicleTarget extends VehicleTarget {
         const sideRoom = picRect.height;
 
         const mask = ElementCreator.returnNewDiv(this.targetEl, "sinkMask");
+        this.sinkMask = mask;
         mask.style.left = (picRect.left - targetRect.left - sideRoom) + "px";
         mask.style.top = (picRect.top - targetRect.top - headroom) + "px";
         mask.style.width = (picRect.width + 2 * sideRoom) + "px";
@@ -742,6 +766,20 @@ class WaterVehicleTarget extends VehicleTarget {
 
         void group.offsetHeight; // lay it out now, so the transform changes that follow animate instead of jumping
         return { mask, group };
+    }
+
+    // Undoes createSinkMask: the picture and fire go back to where they were, and the window goes.
+    private cancelSinking() {
+        if (!this.sinkMask) return;
+        this.picEl.appendChild(this.baseImgEl);
+        this.baseImgEl.style.width = "";
+        this.picEl.style.visibility = "";
+        this.targetEl.appendChild(this.damageEl);
+        this.damageEl.style.position = "";
+        this.damageEl.style.left = "";
+        this.damageEl.style.top = "";
+        this.sinkMask.remove();
+        this.sinkMask = null;
     }
 
     private sink() {
@@ -770,6 +808,7 @@ class WaterVehicleTarget extends VehicleTarget {
     }
 
     private finishSinking() {
+        if (this.damage === Damage.destroyed) return; // blown up on the way down, which has already dealt with everything
         let priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         this.damageOverlay.hide();
