@@ -30,6 +30,7 @@ class GameHandler {
     private contentEl: HTMLElement;
     private progressBar: HTMLElement;
     private darkOverlay: HTMLElement;
+    private daytime: boolean = true; // the dark overlay is invisible by day, so its lights aren't drawn
     private progressNumber: number = 0;
     public shotCount: number = 0;
     private language: Languages = Languages.eng;
@@ -139,6 +140,7 @@ class GameHandler {
     }
 
     public changeTime(time: Time) {
+        this.daytime = time == Time.day;
         this.hideFlare(time);
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
@@ -627,8 +629,9 @@ class GameHandler {
         this.fadeLights(flares, flareFade);
         this.fadeFires();
         // redraw while anything was around, including the tick that removes the last of it,
-        // otherwise its final faint glow would be left painted on the overlay
-        anyLights ? this.updateLights() : "";
+        // otherwise its final faint glow would be left painted on the overlay (not by day, when
+        // the overlay can't be seen -- the lights still fade and clear, they just aren't drawn)
+        anyLights && !this.daytime ? this.updateLights() : "";
     }
     private fadeLights(arr: Array<light>, baseFadeDelay: number) {
         if (!arr.length) return
