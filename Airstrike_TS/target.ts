@@ -529,8 +529,22 @@ class VehicleTarget extends Target {
         return severity;
     }
 
+    // Wear: every hit that gets past the armour adds to a running total, the stronger the hit the
+    // more, and once a vehicle has taken all it can it's destroyed by the next one, whatever that
+    // hit would have done alone. So it can be knocked about and flipped a few times, but a dozen
+    // tiny blasts add up to a wreck. Heavier armour holds out longer.
+    private static wearPerSeverity: Array<number> = [1, 2, 3]; // light, medium, heavy
+    private static wearToDestroy: Array<number> = [10, 14, 20]; // by armour: none, moderate, heavy
+    private wear: number = 0;
+
+    private wearDown(severity: strikeSeverity): strikeSeverity {
+        if (severity >= strikeSeverity.catastrophic) return severity;
+        this.wear += VehicleTarget.wearPerSeverity[severity];
+        return this.wear >= VehicleTarget.wearToDestroy[this.armour] ? strikeSeverity.catastrophic : severity;
+    }
+
     private basicVehicleDamageModel(severity: strikeSeverity, direc: direction, collisionInfo?: vectorMoveObj) {
-        severity = this.adjustSeverity(severity);
+        severity = this.wearDown(this.adjustSeverity(severity));
         let priorStatus = this.status;
         if (severity == strikeSeverity.light) {
             this.damage >= Damage.badlyDented ? severity = strikeSeverity.medium : "";

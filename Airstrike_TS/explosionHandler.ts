@@ -24,6 +24,7 @@ var fires: Array<light> = [];
 
 const flareFade = 15000;
 const flareReach = 550;
+const strikeLightReachFactor = 4; // a strike lights up this many times its own size
 
 class ExplosionHandler {
     private static craterDecalStay: number = 15000;
@@ -31,8 +32,7 @@ class ExplosionHandler {
     private static craterSources: string[] = ["crater_1.png", "crater_2.png", "crater_3.png"];
 
     public static createFlare(blastCenter: position, size: ExplSizes) {
-        this.pushLight(flares, blastCenter, size);
-        flares[flares.length - 1].reach = flareReach;
+        this.pushLight(flares, blastCenter, size, flareReach);
         let fallingFlare = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), 'flare');
         fallingFlare.style.left = blastCenter.X + 'px';
         fallingFlare.style.top = blastCenter.Y + 'px';
@@ -86,7 +86,7 @@ class ExplosionHandler {
     }
     private static shake_Light_Targets(blastCenter: position, size: ExplSizes, weaponName: weaponNames) {
         this.setScreenShake(size)
-        this.pushLight(lights, blastCenter, size);
+        this.pushLight(lights, blastCenter, size, size * strikeLightReachFactor);
         this.checkForTargets(blastCenter, size, weaponName)
     }
     private static setScreenShake(size: ExplSizes) {
@@ -180,9 +180,9 @@ class ExplosionHandler {
         overlay.classList.add("flash");
         setTimeout(() => { overlay.classList.remove("flash"); }, 2000)
     }
-    private static pushLight(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
+    private static pushLight(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes, reach?: number) {
         lightID++
-        let light: light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false }
+        let light: light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false, reach: reach }
         lightArr.push(light);
     }
 
