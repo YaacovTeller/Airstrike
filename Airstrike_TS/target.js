@@ -403,6 +403,8 @@ class VehicleTarget extends Target {
         this.ricochetChance(7);
     }
     hit(severity, wepName, collisionInfo) {
+        if (this.wrecked)
+            return; // just a burning wreck now: nothing left to flip, shove or damage
         let direc;
         if (collisionInfo) {
             direc = ThrowHandler.determineDirectionForFlip(collisionInfo);
@@ -726,11 +728,12 @@ class WaterVehicleTarget extends VehicleTarget {
         super.completeDestruction(collisionInfo);
     }
     // Which way a strike should tip the boat: 1 for the bow going down, -1 for the stern, 0 for
-    // straight down (hit in the middle third of the hull, or nothing known about where it landed).
+    // straight down (hit in the middle third of the hull, nothing known about where it landed, or a
+    // small boat -- the slow tilt is a big ship thing).
     // The sprite faces right, so a blast to the right of the boat's middle hit the bow.
     tiltForStrike(collisionInfo) {
-        if (!collisionInfo)
-            return 0;
+        if (!collisionInfo || this.targetEl.classList.contains('smallBoat'))
+            return 0; // a small boat just goes down
         // the angle and distance run from the blast to the boat, hence the minus
         const strikeX = -collisionInfo.dist * Math.cos(collisionInfo.angle * Math.PI / 180);
         const amidships = this.targetEl.offsetWidth / 6;
