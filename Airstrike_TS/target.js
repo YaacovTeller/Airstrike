@@ -529,6 +529,7 @@ class VehicleTarget extends Target {
     }
 }
 class WaterVehicleTarget extends VehicleTarget {
+    static shoreMargin = 10; // how far inside the open water a boat has to stay
     static fireBeforeSinkMin = 2000;
     static fireBeforeSinkMax = 7000;
     static sinkDuration = 6000;
@@ -626,21 +627,25 @@ class WaterVehicleTarget extends VehicleTarget {
         this.destructionBits();
         game.assessKillPoints(priorStatus, this.damage);
     }
+    // Anywhere in open water: the whole boat has to fit between the left of the water and the
+    // start of the faded shallows at the shore (see Shoreline), not just its top-left corner.
     decidePosition() {
-        let x, y;
-        let randX = RandomNumberGen.randomNumBetween(10, 90);
-        let randY = RandomNumberGen.randomNumBetween(10, 90);
-        y = window.innerHeight * randY / 100;
-        x = game.waterWidth + window.innerWidth / 3 * randX / 100;
-        let water = document.getElementById("water");
-        let pos = { X: x, Y: y };
-        if (CollisionDetection.checkCollisionFromPosition(pos, water)) {
-            this.placeAt(x, y);
+        const size = this.targetEl.getBoundingClientRect();
+        const minY = Math.ceil(window.innerHeight * 0.1);
+        const maxY = Math.floor(window.innerHeight * 0.9 - size.height);
+        for (let attempt = 0; attempt < 50; attempt++) {
+            const y = RandomNumberGen.randomNumBetween(minY, maxY);
+            const span = Shoreline.waterSpan(y, y + size.height);
+            if (!span)
+                break; // no water showing at all
+            const minX = Math.ceil(Math.max(span.left + WaterVehicleTarget.shoreMargin, 0));
+            const maxX = Math.floor(Math.min(span.openRight - WaterVehicleTarget.shoreMargin - size.width, window.innerWidth - size.width));
+            if (maxX >= minX) {
+                this.placeAt(RandomNumberGen.randomNumBetween(minX, maxX), y);
+                return;
+            }
         }
-        else {
-            console.log("none-water boat position");
-            this.decidePosition();
-        }
+        console.warn("no open water to place a boat in");
     }
 }
 class RegVehicleTarget extends VehicleTarget {

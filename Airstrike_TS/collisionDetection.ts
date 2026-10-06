@@ -83,3 +83,38 @@ class CollisionDetection {
         return angleDegrees;
     }
 }
+
+// Horizontal extent of the water across a band of rows, in viewport coordinates.
+type WaterSpan = {
+    left: number,       // water starts here
+    openRight: number,  // water is fully opaque up to here
+    shoreRight: number, // past here is dry land (between openRight and shoreRight the water fades out)
+}
+
+// Works out where the water actually is, so things can be kept clear of it. The .water div is a
+// skewed rectangle (see cssMenus.css), so its shore slants, and its right edge fades out rather
+// than stopping -- a single point hit test against the element can't tell either of those apart.
+class Shoreline {
+    private static openFraction = 0.9; // matches the 90% where .water's mask-image starts fading out
+
+    // Where the water is across the rows from topY to bottomY, or null if no water is showing.
+    // Because the shore slants, a box covering several rows has to respect its most restrictive row.
+    public static waterSpan(topY: number, bottomY: number): WaterSpan | null {
+        const water = document.getElementById("water");
+        if (!water) return null;
+        const rect = water.getBoundingClientRect();
+        if (!rect.width) return null;
+
+        const skew = new DOMMatrix(getComputedStyle(water).transform).c; // sideways shift per row
+        const width = rect.width - Math.abs(skew) * rect.height;          // bounding box minus the skew
+        const centreX = rect.left + rect.width / 2;
+        const centreY = rect.top + rect.height / 2;
+        const edge = (fraction: number, y: number) => centreX + (fraction - 0.5) * width + skew * (y - centreY);
+
+        return {
+            left: Math.max(edge(0, topY), edge(0, bottomY)),
+            openRight: Math.min(edge(this.openFraction, topY), edge(this.openFraction, bottomY)),
+            shoreRight: Math.max(edge(1, topY), edge(1, bottomY)),
+        };
+    }
+}

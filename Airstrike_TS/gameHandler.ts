@@ -45,7 +45,6 @@ class GameHandler {
     private gameWasPlayed: boolean = false;
     private fullProgress: boolean = false;
     public strikesRestricted: boolean = false;
-    public waterWidth: number;
 
     constructor(element: HTMLElement) {
         this.contentEl = element;
@@ -126,7 +125,6 @@ class GameHandler {
     }
 
     private extendWater(width, bool) {
-        this.waterWidth = width;
         let water = document.getElementById("water")
         water.style.width = width + "%";
         if (bool) {
@@ -783,17 +781,25 @@ class GameHandler {
         this.start_unpause();
     }
     public drawAllBuildings() {
-        const buildings: Building[] = [];
-        for (let i = 0; i < 40; i++) {
-            buildings.push(new Building());
+        for (const slot of this.streetBlockSlots(40)) {
+            new Building().setPosition(slot);
         }
-        this.layoutStreetBlocks(
-            buildings,
-        );
     }
 
-    public layoutStreetBlocks(
-    buildings: Building[],
+    // How big a building is (see .building in cssApp.css) and how far clear of the water's faded
+    // shallows it has to stay.
+    private static buildingSize = 100;
+    private static shoreMargin = 10;
+
+    // Left-most x for a block starting at topY that is clear of the water across all of its rows.
+    private firstDryX(topY: number, blockHeight: number): number {
+        const span = Shoreline.waterSpan(topY, topY + blockHeight + GameHandler.buildingSize);
+        return span ? span.shoreRight + GameHandler.shoreMargin : 0;
+    }
+
+    // Where to put up to maxCount buildings, in blocks separated by streets, none of them in the water.
+    public streetBlockSlots(
+    maxCount: number,
     options?: {
         startX?: number;
         startY?: number;
@@ -802,7 +808,7 @@ class GameHandler {
         streetWidth?: number;
         padding?: number;
     }
-) {
+): Array<position> {
     const {
         startX = 100,
         startY = 100,
@@ -811,6 +817,7 @@ class GameHandler {
         streetWidth = 260,
         padding = 50
     } = options || {};
+    const slots: Array<position> = [];
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -827,7 +834,6 @@ class GameHandler {
     let currentY = startY;
 
     let tallestBlockInRow = 0;
-    let buildingIndex = 0;
 
     for (const block of blockTypes) {
         const blockWidth =
@@ -836,9 +842,12 @@ class GameHandler {
         const blockHeight =
             (block.rows - 1) * buildingSpacingY;
 
+        // SHIFT THE BLOCK RIGHT OF THE SHORE
+        let blockX = Math.max(currentX, this.firstDryX(currentY, blockHeight));
+
         // WRAP TO NEXT ROW IF BLOCK WOULD GO OFF SCREEN
         if (
-            currentX + blockWidth + padding >
+            blockX + blockWidth + padding >
             screenWidth
         ) {
             currentX = startX;
@@ -848,6 +857,8 @@ class GameHandler {
                 streetWidth;
 
             tallestBlockInRow = 0;
+
+            blockX = Math.max(currentX, this.firstDryX(currentY, blockHeight));
         }
 
         // STOP if block would exceed screen height
@@ -858,40 +869,37 @@ class GameHandler {
             console.warn(
                 "Not enough screen space for more blocks"
             );
-            return;
+            return slots;
+        }
+
+        // Still no room once it's clear of the water (the shore moves right further down the
+        // screen): skip this block and see whether a smaller one fits
+        if (blockX + blockWidth + padding > screenWidth) {
+            continue;
         }
 
         // Place buildings in this block
         for (let row = 0; row < block.rows; row++) {
             for (let col = 0; col < block.cols; col++) {
-                if (buildingIndex >= buildings.length)
-                    return;
+                if (slots.length >= maxCount)
+                    return slots;
 
-                const x =
-                    currentX +
-                    col * buildingSpacingX;
-
-                const y =
-                    currentY +
-                    row * buildingSpacingY;
-
-                buildings[buildingIndex].setPosition({
-                    X: x,
-                    Y: y
+                slots.push({
+                    X: blockX + col * buildingSpacingX,
+                    Y: currentY + row * buildingSpacingY
                 });
-
-                buildingIndex++;
             }
         }
 
         // Move to next block position
-        currentX += blockWidth + streetWidth;
+        currentX = blockX + blockWidth + streetWidth;
 
         tallestBlockInRow = Math.max(
             tallestBlockInRow,
             blockHeight
         );
     }
+    return slots;
 }
 
     //public layoutStreetBlocks(
