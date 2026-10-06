@@ -350,7 +350,7 @@ class SceneLevel extends Level {
         for (let i = 0; i < this.staticTargetCount; i++) {
             this.registerTarget(this.provideAvailTargets());
         }
-        game.drawAllBuildings();
+        this.infestBuildings(game.drawAllBuildings());
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
         }
@@ -358,6 +358,24 @@ class SceneLevel extends Level {
         return true;
     }
     public continueWave() { } // unpausing must not start target production
+
+    private static infestedBuildingCount: number = 3;
+    private static minOccupants: number = 2;
+    private static maxOccupants: number = 6;
+
+    // A few of the buildings have enemies hiding in them, who count as targets for the stage.
+    private infestBuildings(buildings: Array<Building>) {
+        const pool = [...buildings];
+        for (let n = 0; n < SceneLevel.infestedBuildingCount && pool.length; n++) {
+            const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
+            const occupants = RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants);
+            for (let i = 0; i < occupants; i++) {
+                const enemy = new BuildingEnemy();
+                building.addOccupant(enemy);
+                this.registerTarget(enemy, building.randomHidingSpot());
+            }
+        }
+    }
 
     public stageProgress() {
         return { done: this.targets.filter(t => t.isFinished()).length, total: this.targets.length };

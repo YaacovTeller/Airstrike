@@ -97,6 +97,30 @@ class Building extends MapEntity {
         assetsFolder + "bit.png",
     ];
     static debrisPerHit = 2;
+    // Enemies hiding inside, under the picture. The building's damage is what decides their fate.
+    occupants = [];
+    addOccupant(enemy) {
+        this.occupants.push(enemy);
+    }
+    // Somewhere within the building's picture to hide (on the page). This is the area of the 100px
+    // box that is solid in both the undamaged and the damaged pictures of every building type so far
+    // (measured from the pngs), so that the enemy's square is never in a transparent gap where it
+    // would show. Revisit if a new building's sprite isn't solid across it.
+    randomHidingSpot() {
+        return {
+            X: parseInt(this.targetEl.style.left) + RandomNumberGen.randomNumBetween(21, 63),
+            Y: parseInt(this.targetEl.style.top) + RandomNumberGen.randomNumBetween(14, 40),
+        };
+    }
+    // Wrecking the building takes everyone in it with it. Just damaging it gives each of them an
+    // even chance of being killed, the once, when it first gets damaged.
+    killOccupants(destroyed) {
+        for (const enemy of this.occupants) {
+            if (destroyed || RandomNumberGen.randomNumBetween(0, 1) === 1) {
+                enemy.eliminate();
+            }
+        }
+    }
     constructor(info) {
         super();
         this.info = info ? info : RandomNumberGen.returnRandomFromArray(allBuildingInfo);
@@ -158,9 +182,16 @@ class Building extends MapEntity {
         if (wepName < weaponNames.mortar) {
             return;
         }
+        const wasUndamaged = this.damage === Damage.undamaged;
         this.damagePoints += this.hitPoints(severity, wepName);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         this.reAssignSrc();
+        if (this.damage === Damage.destroyed) {
+            this.killOccupants(true);
+        }
+        else if (wasUndamaged) {
+            this.killOccupants(false);
+        }
         this.throwDebris(collisionInfo);
     }
     // The pieces fly out from where the blast hit the building.
@@ -200,7 +231,7 @@ class Target extends MapEntity {
         this.info = info;
         this.targetEl = document.createElement("div");
         this.targetEl.classList.add('target', 'flexCenter', 'smoothTransition');
-        let picSrc = assetsFolder + RandomNumberGen.returnRandomFromArray(this.picSources);
+        let picSrc = this.picSources.length ? assetsFolder + RandomNumberGen.returnRandomFromArray(this.picSources) : undefined; // some have no picture
         this.picEl = ElementCreator.returnNewDiv(this.targetEl, "picEl");
         this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", picSrc);
         this.damageEl = ElementCreator.returnNewCanvas(this.targetEl, "smallSquare", true);
@@ -290,6 +321,25 @@ class Target extends MapEntity {
         if (this.status == Status.active) {
             this.move(parseInt(this.targetEl.style.left));
         }
+    }
+}
+// A tiny enemy hiding in a building, with no picture of its own yet -- just a small square, under
+// the building's picture. Nothing hits it directly; it's killed (see Building.hit) when the building
+// is damaged or destroyed. It counts as a target like any other.
+class BuildingEnemy extends Target {
+    constructor() {
+        super(buildingEnemyTarget);
+        this.targetEl.classList.add('buildingEnemy');
+    }
+    action() { } // it stays put
+    eliminate() {
+        if (this.damage === Damage.destroyed)
+            return;
+        this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup for each one
+        const priorStatus = this.status;
+        this.targetDestroyed(priorStatus);
+        game.assessKillPoints(priorStatus, this.damage);
+        ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }
 class TunnelTarget extends Target {

@@ -820,10 +820,12 @@ class GameHandler {
 
         this.start_unpause();
     }
-    public drawAllBuildings() {
-        for (const slot of this.streetBlockSlots(40)) {
-            new Building(slot.info).setPosition(slot);
-        }
+    public drawAllBuildings(): Array<Building> {
+        return this.streetBlockSlots(40).map(slot => {
+            const building = new Building(slot.info);
+            building.setPosition(slot);
+            return building;
+        });
     }
 
     // How big a building is (see .building in cssApp.css) and how far clear of the water's faded

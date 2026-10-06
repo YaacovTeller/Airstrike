@@ -259,6 +259,17 @@
 .buildingDebris {
     width: 20px;
 }
+/* A tiny enemy hiding under a building (which is z-index 5): just a small square for now */
+.target.buildingEnemy {
+    width: 8px;
+    height: 8px;
+    background: #b22;
+    border: 1px solid #400;
+    z-index: 4;
+}
+.buildingEnemy > * {
+    display: none;
+}
 .wheelFire {
     position: absolute;
     width: inherit;

@@ -109,6 +109,12 @@ const modTarget = {
     maxSpeed: 6,
     armour: Armour.moderate,
 };
+// Enemies hiding in a building: they don't move, and only the building's fate can touch them
+const buildingEnemyTarget = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+};
 const heavyTarget = {
     minSpeed: 1,
     maxSpeed: 3,
