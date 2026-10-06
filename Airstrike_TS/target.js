@@ -277,6 +277,15 @@ class Target extends MapEntity {
     isFinished() {
         return this.damage === Damage.destroyed;
     }
+    // What a surveillance drone sees (see SurveillanceDrone): the area on the screen this gives off a
+    // heat signature across, or null if it isn't giving one off at the moment. It shows when that area
+    // is within the drone's scan, and is drawn by the 'heatSig' class.
+    heatSignatureBox() {
+        return null;
+    }
+    setHeatSignature(show) {
+        this.targetEl.classList.toggle('heatSig', show);
+    }
     move(posX) {
         if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
@@ -332,9 +341,9 @@ class BuildingEnemy extends Target {
         this.targetEl.classList.add('buildingEnemy');
     }
     action() { } // it stays put
-    // Shown through the building while something is scanning for heat signatures there
-    setRevealed(revealed) {
-        this.targetEl.classList.toggle('revealed', revealed);
+    // Picked up through the building by a surveillance drone, as long as it's alive
+    heatSignatureBox() {
+        return this.damage === Damage.destroyed ? null : this.targetEl.getBoundingClientRect();
     }
     eliminate() {
         if (this.damage === Damage.destroyed)
@@ -343,7 +352,7 @@ class BuildingEnemy extends Target {
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         game.assessKillPoints(priorStatus, this.damage);
-        this.setRevealed(false);
+        this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }
@@ -357,6 +366,19 @@ class TunnelTarget extends Target {
     targetTimer;
     newTargetFrequency = 5000;
     trail;
+    // The whole tunnel, from the head right back along the trail, for as long as it's still there
+    heatSignatureBox() {
+        if (this.damage === Damage.destroyed)
+            return null;
+        const head = this.targetEl.getBoundingClientRect();
+        const trail = this.trail.getBoundingClientRect();
+        return {
+            left: Math.min(head.left, trail.left),
+            top: Math.min(head.top, trail.top),
+            right: Math.max(head.right, trail.right),
+            bottom: Math.max(head.bottom, trail.bottom),
+        };
+    }
     constructor() {
         super(regTunnelTarget);
         this.targetEl.classList.add('smallSquare');
@@ -447,6 +469,10 @@ class TunnelTarget extends Target {
     }
 }
 class VehicleTarget extends Target {
+    // A vehicle that's up and running is hot, one that's been disabled or wrecked isn't
+    heatSignatureBox() {
+        return this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
+    }
     wheelSource = assetsFolder + 'wheel.png';
     wheelSizeClass;
     movesAtBlast = true;

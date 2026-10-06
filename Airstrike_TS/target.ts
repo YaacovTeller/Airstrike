@@ -312,6 +312,16 @@ class Target extends MapEntity {
         return this.damage === Damage.destroyed;
     }
 
+    // What a surveillance drone sees (see SurveillanceDrone): the area on the screen this gives off a
+    // heat signature across, or null if it isn't giving one off at the moment. It shows when that area
+    // is within the drone's scan, and is drawn by the 'heatSig' class.
+    public heatSignatureBox(): Box | null {
+        return null;
+    }
+    public setHeatSignature(show: boolean) {
+        this.targetEl.classList.toggle('heatSig', show);
+    }
+
     protected move(posX: number) {
         if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
@@ -373,9 +383,9 @@ class BuildingEnemy extends Target {
         this.targetEl.classList.add('buildingEnemy');
     }
     public action() { } // it stays put
-    // Shown through the building while something is scanning for heat signatures there
-    public setRevealed(revealed: boolean) {
-        this.targetEl.classList.toggle('revealed', revealed);
+    // Picked up through the building by a surveillance drone, as long as it's alive
+    public heatSignatureBox(): Box | null {
+        return this.damage === Damage.destroyed ? null : this.targetEl.getBoundingClientRect();
     }
     public eliminate() {
         if (this.damage === Damage.destroyed) return;
@@ -383,7 +393,7 @@ class BuildingEnemy extends Target {
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         game.assessKillPoints(priorStatus, this.damage);
-        this.setRevealed(false);
+        this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }
@@ -399,6 +409,20 @@ class TunnelTarget extends Target {
     private newTargetFrequency: number = 5000;
 
     private trail: HTMLElement;
+
+    // The whole tunnel, from the head right back along the trail, for as long as it's still there
+    public heatSignatureBox(): Box | null {
+        if (this.damage === Damage.destroyed) return null;
+        const head = this.targetEl.getBoundingClientRect();
+        const trail = this.trail.getBoundingClientRect();
+        return {
+            left: Math.min(head.left, trail.left),
+            top: Math.min(head.top, trail.top),
+            right: Math.max(head.right, trail.right),
+            bottom: Math.max(head.bottom, trail.bottom),
+        };
+    }
+
     constructor() {
         super(regTunnelTarget);
         this.targetEl.classList.add('smallSquare');
@@ -497,6 +521,11 @@ class TunnelTarget extends Target {
 }
 
 class VehicleTarget extends Target {
+    // A vehicle that's up and running is hot, one that's been disabled or wrecked isn't
+    public heatSignatureBox(): Box | null {
+        return this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
+    }
+
     protected wheelSource: string = assetsFolder + 'wheel.png';
     protected wheelSizeClass: string;
     public movesAtBlast: boolean = true;

@@ -99,7 +99,7 @@ class HudHandler {
         }
     }
     private getCorrectWepboxContainer(wep: WeaponType) {
-        let boxId: string = wep.name <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
+        let boxId: string = wep.slot <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
         return document.getElementById(boxId);
     }
 
@@ -121,8 +121,8 @@ class HudHandler {
     public addWeapon(wep: WeaponType) {
         let wepBox = document.createElement('div');
         let numBox = document.createElement('span');
-        let num = wep.name.toString();
-        let name = weaponNames[num];
+        let num = wep.slot.toString();
+        let name = weaponNames[wep.name];
         numBox.className = "wepNum";
         numBox.innerText = num;
         wepBox.appendChild(numBox);
@@ -148,7 +148,7 @@ class HudHandler {
     }
     public addInstanceByWeapon(wep: WeaponType) {
         let wepBoxes: Array<HTMLDivElement> = Array.from(this.leftSideContainer.querySelectorAll(".wepBox"));
-        let wepBox = wepBoxes.find(wepBox => wepBox.dataset.name === wep.name.toString());
+        let wepBox = wepBoxes.find(wepBox => wepBox.dataset.name === wep.slot.toString());
         this.addInstance(wepBox);
     }
     private addInstance(wepBox: HTMLElement) {

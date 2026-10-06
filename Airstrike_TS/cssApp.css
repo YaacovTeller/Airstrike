@@ -3,7 +3,7 @@
     pointer-events:all;
     display: flex;
     justify-content: flex-start;
-    margin-right: 25px;
+    margin-right: 45px; /* the gap between the regular weapons and the utility ones */
 }
 
 .hud {
@@ -270,8 +270,16 @@
 .buildingEnemy > * {
     display: none;
 }
-/* Seen by a surveillance drone: up over the building, glowing like a heat signature */
-.target.buildingEnemy.revealed {
+/* Picked up by a surveillance drone's scan: glowing like a heat signature */
+.target.heatSig > .picEl {
+    filter: sepia(1) saturate(5) brightness(1.25) drop-shadow(0 0 4px #ff6a00) drop-shadow(0 0 9px #ffb02e);
+}
+.target.heatSig > .trail { /* the whole length of a tunnel */
+    background: linear-gradient(90deg, rgba(255, 110, 0, 0), rgba(255, 140, 20, 0.55) 70%, rgba(255, 210, 70, 0.9));
+    box-shadow: 0 0 30px 12px rgba(255, 120, 0, 0.85);
+}
+/* ...and the enemies hiding in buildings come up over the building */
+.target.buildingEnemy.heatSig {
     z-index: 6;
     background: #ffb02e;
     border-color: #ff4500;

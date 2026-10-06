@@ -440,26 +440,22 @@ const flareInfo = {
     select: gib
 };
 // ---- Scaled-down weapon set, used by Test_3 instead of the standard weapons above ----
-// Each one takes the same slot (1-5) as the standard weapon it's a version of, so it keeps the same
-// key, HUD position and damage behaviour, and is that weapon with a smaller explosion -- one rung
-// down the ExplSizes ladder -- so it also covers a smaller area and needs a closer hit to do the
-// same damage. Everything else (cooldowns, flight times, flyovers, impact sounds) is inherited.
-// The jet icon and aircraft noises (from the airstrike) are placeholders for all of them.
-// The gun is hitscan, so there's no explosion to scale down.
+// Each one is a standard weapon with a smaller explosion -- one rung down the ExplSizes ladder -- so it
+// covers a smaller area and needs a closer hit to do the same damage, and it keeps that weapon's name,
+// so it hurts things the way that weapon does. There's no gun: it can't hurt anything in this mode, so
+// the bombs take slots 1-3 (the "slot" setting, which is separate from the name), and the guided strike
+// keeps 5. Everything else (cooldowns, flight times, flyovers, impact sounds) is inherited.
+// The jet icon and aircraft noises (from the airstrike) are placeholders for the bombs.
 const jetPlaceholder = {
     imageSource: airstrikeInfo.imageSource,
     sound: airstrikeInfo.sound,
     select: airstrikeInfo.select,
     noAmmo: airstrikeInfo.noAmmo,
 };
-const scaledGunInfo = {
-    ...sniperInfo,
-    ...jetPlaceholder,
-    displayName: "Strafing Run",
-};
 const scaledMortarInfo = {
     ...mortarInfo,
     ...jetPlaceholder,
+    slot: 1,
     displayName: "Light Bomb",
     blastRadius: 30,
     explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
@@ -467,6 +463,7 @@ const scaledMortarInfo = {
 const scaledHowitzerInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
+    slot: 2,
     displayName: "Bomb",
     blastRadius: 50,
     explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
@@ -474,17 +471,17 @@ const scaledHowitzerInfo = {
 const scaledAirstrikeInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
+    slot: 3,
     displayName: "Heavy Bomb",
     blastRadius: 70,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 };
 const scaledDroneInfo = {
-    ...droneInfo,
-    ...jetPlaceholder,
+    ...droneInfo, // with its own drone icon
     displayName: "Guided Strike",
     explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
 };
-const scaledWeapons = [scaledGunInfo, scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];
+const scaledWeapons = [scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];
 var msgLength;
 (function (msgLength) {
     msgLength[msgLength["long"] = 3000] = "long";

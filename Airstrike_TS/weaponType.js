@@ -1,6 +1,7 @@
 "use strict";
 class WeaponType {
     name;
+    slot;
     displayName;
     cursor;
     sound;
@@ -13,6 +14,7 @@ class WeaponType {
     instances = [];
     constructor(info) {
         this.name = info.name;
+        this.slot = info.slot !== undefined ? info.slot : info.name;
         this.displayName = info.displayName;
         this.cursor = info.cursor;
         this.sound = info.sound;
@@ -22,11 +24,11 @@ class WeaponType {
         this.noAmmo = info.noAmmo;
         this.select = info.select;
         let wepArr = this.getWeaponArray();
-        wepArr[this.name] = this;
+        wepArr[this.slot] = this;
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        return this.slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -61,11 +63,11 @@ class WeaponType {
     }
     searchInstances(nextReady) {
         for (let i in this.instances) {
-            game.hud.deselectInst(parseInt(i), this.name); //MESSY?
+            game.hud.deselectInst(parseInt(i), this.slot); //MESSY?
             if (this.instances[i].ready === true) {
                 if (nextReady == null) {
                     nextReady = this.instances[i];
-                    game.hud.selectInst(parseInt(i), this.name); //MESSY?
+                    game.hud.selectInst(parseInt(i), this.slot); //MESSY?
                 }
             }
         }
@@ -109,7 +111,7 @@ class WeaponType {
     }
     cooldownTimeout(inst) {
         let instances = this.instances;
-        let name = this.name;
+        let name = this.slot;
         let index = instances.indexOf(inst);
         game.hud.unavailInst(index, name, this.cooldown);
         let _this = this;
@@ -142,7 +144,7 @@ class WeaponType {
                     break;
                 }
             }
-            game.hud.removeWeapon(this.name);
+            game.hud.removeWeapon(this.slot);
         }
     }
 }
@@ -445,8 +447,10 @@ class Chopper extends ExplosiveWeaponType {
     }
 }
 // A utility weapon. The drone takes a moment to arrive and then makes a slow pass, and for as long as it's
-// overhead the area around the mouse is scanned: any enemy hiding in a building there shows up as a
-// heat signature, through the building. Enemies already killed don't show.
+// overhead the area around the mouse is scanned: anything giving off a heat signature (see
+// Target.heatSignatureBox) that the scan reaches shows up -- enemies hiding in buildings, through the
+// building, vehicles that are up and running, and a tunnel in its whole length. Things that are
+// dead or destroyed don't show.
 class SurveillanceDrone extends ExplosiveWeaponType {
     static activePasses = 0;
     static scanInterval = 50;
@@ -479,10 +483,11 @@ class SurveillanceDrone extends ExplosiveWeaponType {
             ring.style.left = mouse.X - radius + 'px';
             ring.style.top = mouse.Y - radius + 'px';
             for (const target of allTargets) {
-                if (target instanceof BuildingEnemy && target.damage !== Damage.destroyed) {
-                    const middle = CollisionDetection.getXYfromPoint(target.getTargetEl());
-                    target.setRevealed(Math.hypot(middle.X - mouse.X, middle.Y - mouse.Y) <= radius);
-                }
+                if (!(target instanceof Target))
+                    continue; // buildings give off nothing themselves
+                const area = target.heatSignatureBox();
+                const nearest = area ? CollisionDetection.nearestPointInBox(mouse, area) : null;
+                target.setHeatSignature(!!nearest && Math.hypot(nearest.X - mouse.X, nearest.Y - mouse.Y) <= radius);
             }
         };
         const timer = setInterval(sweep, SurveillanceDrone.scanInterval);
@@ -490,8 +495,8 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         setTimeout(() => {
             clearInterval(timer);
             ring.remove();
-            if (--SurveillanceDrone.activePasses === 0) { // nothing else is scanning: back to hidden
-                allTargets.forEach(t => t instanceof BuildingEnemy ? t.setRevealed(false) : "");
+            if (--SurveillanceDrone.activePasses === 0) { // nothing else is scanning: back to normal
+                allTargets.forEach(t => t instanceof Target ? t.setHeatSignature(false) : "");
             }
         }, duration);
     }

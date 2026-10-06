@@ -415,9 +415,8 @@ class GameHandler {
     // Test_3's own weapons instead of the standard ones. Every game starts from empty weapon lists
     // (see reset()), so going back to any other mode gets the standard set again.
     private addScaledWeaponSet() {
-        scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
-        for (let i = 0; i < 2; i++) {
-            scaledWeapons.slice(1).forEach(info => this.level.addNewWeapon(info, false)); // spare rounds, but just the one gun
+        for (let i = 0; i < 3; i++) {
+            scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
         }
         this.level.addNewWeapon(surveillanceInfo, false);
         this.level.addNewWeapon(surveillanceInfo, false);
@@ -491,7 +490,7 @@ class GameHandler {
             this.weapon.switchFrom();
         }
         this.weapon = wep;
-        this.hud.selectBox(wep.name);
+        this.hud.selectBox(wep.slot);
 
         this.switchCursor();
         this.updateCursorPosition();

@@ -75,9 +75,10 @@ class Level {
     }
     addNewWeapon(info, showMsg) {
         let wepName = info.displayName || weaponNames[info.name];
-        let wepArr = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
-        if (wepArr[info.name]) {
-            wepArr[info.name].pushNewWeaponInstance();
+        let slot = info.slot !== undefined ? info.slot : info.name;
+        let wepArr = slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        if (wepArr[slot]) {
+            wepArr[slot].pushNewWeaponInstance();
             if (showMsg != false) {
                 PopupHandler.addToArray("You got another " + wepName);
             }
