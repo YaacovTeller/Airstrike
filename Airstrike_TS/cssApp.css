@@ -159,6 +159,11 @@
 .sinkMask {
     position: absolute;
     overflow: hidden;
+    pointer-events: none; /* it's bigger than the boat, to leave room for it to tilt */
+}
+.sinkGroup {
+    position: absolute;
+    transform-origin: 50% 100%; /* the middle of the bottom of the hull, which is the waterline */
 }
 .building {
     width: 100px;
