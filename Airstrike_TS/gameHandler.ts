@@ -622,9 +622,13 @@ class GameHandler {
             .join(', ');
     }
     private fadeAllLights() {
+        const anyLights = lights.length || flares.length || fires.length;
         this.fadeLights(lights, 200);
         this.fadeLights(flares, flareFade);
-        lights.length || flares.length ? this.updateLights() : "";
+        this.fadeFires();
+        // redraw while anything was around, including the tick that removes the last of it,
+        // otherwise its final faint glow would be left painted on the overlay
+        anyLights ? this.updateLights() : "";
     }
     private fadeLights(arr: Array<light>, baseFadeDelay: number) {
         if (!arr.length) return
@@ -634,14 +638,32 @@ class GameHandler {
                 light.fading = null
                 setTimeout(() => { light.fading = true }, baseFadeDelay + light.size)
             }
-            if (light.opac > 0 && light.fading) {
-                light.opac -= 0.15; // Reduce opacity
-            }
-            else if (light.opac == 0){
-                let index = arr.indexOf(light);
-                arr.splice(index, 1);
+            if (light.fading) {
+                light.opac = Math.max(0, light.opac - 0.15); // Reduce opacity, and don't overshoot zero
             }
         });
+        this.removeFaded(arr);
+    }
+    // A fire glows for as long as the thing burning it is still on the screen, then fades like any
+    // other light. Fires nobody removes would pile up for the whole game.
+    private fadeFires() {
+        fires.forEach(fire => {
+            if (!fire.parent || !fire.parent.isConnected) {
+                fire.opac = Math.max(0, fire.opac - 0.15);
+            }
+        });
+        this.removeFaded(fires);
+    }
+    private removeFaded(arr: Array<light>) {
+        for (let i = arr.length - 1; i >= 0; i--) {
+            if (arr[i].opac <= 0) arr.splice(i, 1);
+        }
+    }
+    private clearLights() {
+        lights.length = 0;
+        flares.length = 0;
+        fires.length = 0;
+        this.darkOverlay.style.background = "";
     }
 
     public checkEnd() {
@@ -723,6 +745,7 @@ class GameHandler {
         this.level.pauseWave();
         this.level = null;
         ContentElHandler.clearContent();
+        this.clearLights();
 
         conventionalWeapons = [];
         extraWeapons = [];
