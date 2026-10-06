@@ -123,29 +123,38 @@ class Building extends MapEntity {
             y = position.Y;
         this.placeAt(x, y);
     }
-    // Three stages (undamaged -> damaged -> destroyed), and how far a hit moves a building depends
-    // on the weapon and on how close to the blast's centre it was (severity), like the vehicles:
+    // Three stages (undamaged -> damaged -> destroyed), worn down cumulatively like the vehicles:
+    // every hit adds damage points, and the building is destroyed once it has taken
+    // hitPointsToDestroy. How many a hit adds depends on the weapon and on how close to the blast's
+    // centre it landed (severity):
     //  - bullets do nothing
-    //  - anything that only clips it (the outer part of the blast) scuffs it up to damaged, but
-    //    never brings it down, whatever the weapon
-    //  - a direct hit from a mortar/howitzer shell knocks it down one stage
-    //  - a direct hit from an airstrike or nuke flattens it outright
+    //  - a direct hit from a mortar/howitzer shell is half of what it takes, so two destroy it
+    //  - a direct hit from an airstrike or nuke is all of it
+    //  - further out from the centre it counts for less (half, then a quarter at the edge), but it
+    //    all adds up, so a few glancing blows do as much as a direct one
+    // Any hit at all leaves it at least damaged.
+    private static hitPointsToDestroy: number = 100;
+    private damagePoints: number = 0;
+
+    private hitPoints(severity: strikeSeverity, wepName: weaponNames): number {
+        const flattening = wepName == weaponNames.airstrike || wepName == weaponNames.tactical_Nuke;
+        const direct = flattening ? Building.hitPointsToDestroy : Building.hitPointsToDestroy / 2;
+        switch (severity) {
+            case strikeSeverity.light:
+                return direct / 4;
+            case strikeSeverity.medium:
+                return direct / 2;
+            default:
+                return direct;
+        }
+    }
+
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
         if (wepName < weaponNames.mortar) {
             return;
         }
-        const direct = severity >= strikeSeverity.heavy;
-        const flattening = wepName == weaponNames.airstrike || wepName == weaponNames.tactical_Nuke;
-
-        if (direct && flattening) {
-            this.damage = Damage.destroyed;
-        }
-        else if (direct) {
-            this.damage = this.damage === Damage.undamaged ? Damage.damaged : Damage.destroyed;
-        }
-        else if (this.damage === Damage.undamaged) {
-            this.damage = Damage.damaged;
-        }
+        this.damagePoints += this.hitPoints(severity, wepName);
+        this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         this.reAssignSrc();
         this.throwDebris();
     }

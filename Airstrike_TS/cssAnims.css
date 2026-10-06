@@ -33,6 +33,18 @@
     }
 }
 
+/* A slight breathing for the firing reticle. Uses the separate "scale" property rather than
+   transform so it combines with the reticle's rotate animation instead of replacing it. */
+@keyframes reticlePulse {
+    0%, 100% {
+        scale: 1;
+    }
+
+    50% {
+        scale: 1.05;
+    }
+}
+
 @keyframes expandContractRotate {
     0% {
         transform: scale(1.5) rotate(0deg);

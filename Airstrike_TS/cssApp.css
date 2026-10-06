@@ -296,9 +296,9 @@
 }
 
 .preFire {
-    border: 2px dashed black;
+    border: 3px dashed black;
     border-style: dashed;
-    animation: rotate 40s linear infinite;
+    animation: rotate 15s linear infinite, reticlePulse 1.5s ease-in-out infinite;
 }
 
 .nukeIndicator {
@@ -328,6 +328,7 @@
 .blastRadius {
     opacity: 0.5;
     position: fixed;
+    z-index: 7; /* above the buildings and targets (5) and the explosions (6) */
     border-radius: 50%;
         pointer-events: none;
  /*overflow: hidden;*/
