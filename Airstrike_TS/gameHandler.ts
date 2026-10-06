@@ -611,13 +611,14 @@ class GameHandler {
         return arr
             .filter(light => light.opac > 0)
             .map(light => {
-                let brightRange = light.size / 12;
-                let featherRange = light.size / 12 + 30;
-                if (light.parent) {
-                    light.pos.X = parseInt(light.parent.style.left);
-                    light.pos.Y = parseInt(light.parent.style.top);
+                let radius = light.reach || light.size;
+                let brightRange = light.reach ? 20 : light.size / 12;
+                let featherRange = light.reach ? 100 : light.size / 12 + 30;
+                if (light.parent) { // centred on the thing that's burning
+                    light.pos.X = parseInt(light.parent.style.left) + light.parent.offsetWidth / 2;
+                    light.pos.Y = parseInt(light.parent.style.top) + light.parent.offsetHeight / 2;
                 }
-                return `radial-gradient(circle ${light.size}px at ${light.pos.X}px ${light.pos.Y}px,
+                return `radial-gradient(circle ${radius}px at ${light.pos.X}px ${light.pos.Y}px,
                         rgba(${rbgString}, ${light.opac}) ${brightRange}%,
                         rgba(0, 0, 0, 0) ${featherRange}%)`;
             })

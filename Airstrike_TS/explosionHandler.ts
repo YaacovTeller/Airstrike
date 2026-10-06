@@ -13,13 +13,17 @@ type light = {
     // For a fire, which glows with the thing burning (parent): while burning it's as bright as the
     // parent is visible, so it fades along with it. Once it isn't, it fades out by fadeStep a tick.
     burning?: boolean,
-    fadeStep?: number
+    fadeStep?: number,
+    // A light that shines this far (px), solid out to a fifth of it and fading away at the edge,
+    // instead of the usual size-based glow.
+    reach?: number
 }
 var lights: Array<light> = [];
 var flares: Array<light> = [];
 var fires: Array<light> = [];
 
 const flareFade = 15000;
+const flareReach = 550;
 
 class ExplosionHandler {
     private static craterDecalStay: number = 15000;
@@ -28,6 +32,7 @@ class ExplosionHandler {
 
     public static createFlare(blastCenter: position, size: ExplSizes) {
         this.pushLight(flares, blastCenter, size);
+        flares[flares.length - 1].reach = flareReach;
         let fallingFlare = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), 'flare');
         fallingFlare.style.left = blastCenter.X + 'px';
         fallingFlare.style.top = blastCenter.Y + 'px';

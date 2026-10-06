@@ -9,12 +9,14 @@ var lights = [];
 var flares = [];
 var fires = [];
 const flareFade = 15000;
+const flareReach = 550;
 class ExplosionHandler {
     static craterDecalStay = 15000;
     static craterFadingTillRemoval = fadeAnimTime;
     static craterSources = ["crater_1.png", "crater_2.png", "crater_3.png"];
     static createFlare(blastCenter, size) {
         this.pushLight(flares, blastCenter, size);
+        flares[flares.length - 1].reach = flareReach;
         let fallingFlare = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), 'flare');
         fallingFlare.style.left = blastCenter.X + 'px';
         fallingFlare.style.top = blastCenter.Y + 'px';
