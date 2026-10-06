@@ -787,59 +787,72 @@ class GameHandler {
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
     // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
-    // buildings side by side in blocks 2 or 3 across and blockRows deep, with a road's width between
-    // blocks, along the row and between rows. Every building in a block is the same type.
+    // buildings tucked up together in blocks 2 or 3 across and 2 or 3 deep, with a road's width
+    // between blocks. Every building in a block is the same type. The blocks run along in lines, but
+    // each sits a little higher or lower than its neighbours rather than all on the same level.
     streetBlockSlots(maxCount, options) {
-        const { startX = 100, startY = 100, buildingGap = 0, roadWidth = 70, blockRows = 2, padding = 50 } = options || {};
+        const { startX = 100, startY = 100, buildingGap = -6, rowGap = -12, roadWidth = 70, minRows = 2, maxRows = 3, yVariation = 50, padding = 50 } = options || {};
         const slots = [];
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         const size = GameHandler.buildingSize;
         // How far a run of this many buildings reaches, first edge to last edge
-        const extent = (count) => count * size + (count - 1) * buildingGap;
-        const blockHeight = extent(blockRows);
-        const fits = (x, cols) => x + extent(cols) + padding <= screenWidth;
+        const widthOf = (cols) => cols * size + (cols - 1) * buildingGap;
+        const heightOf = (rows) => rows * size + (rows - 1) * rowGap;
+        const fits = (x, cols) => x + widthOf(cols) + padding <= screenWidth;
         // A 3-wide block that won't fit can be squeezed in as a 2-wide one
         const fittingCols = (x, cols) => !fits(x, cols) && cols == 3 ? 2 : cols;
         let currentX = startX;
-        let currentY = startY;
-        // Right of the shore, for the rows the next block would cover
-        const nextBlockX = () => Math.max(currentX, this.firstDryX(currentY, blockHeight));
+        let lineY = startY; // the top of this line of blocks
+        let lineBottom = startY; // how far down the tallest block in the line reaches
         while (slots.length < maxCount) {
-            let blockX = nextBlockX();
-            let cols = fittingCols(blockX, RandomNumberGen.randomNumBetween(2, 3));
-            // WRAP TO THE NEXT ROW OF BLOCKS IF THIS ONE WOULD GO OFF SCREEN
+            let rows = RandomNumberGen.randomNumBetween(minRows, maxRows);
+            let cols = RandomNumberGen.randomNumBetween(2, 3);
+            let dropY = RandomNumberGen.randomNumBetween(0, yVariation);
+            // Right of the shore, for the rows this block would cover
+            const dryX = () => Math.max(currentX, this.firstDryX(lineY + dropY, heightOf(rows)));
+            let blockX = dryX();
+            cols = fittingCols(blockX, cols);
+            // WRAP TO THE NEXT LINE OF BLOCKS IF THIS ONE WOULD GO OFF SCREEN
             if (!fits(blockX, cols)) {
                 currentX = startX;
-                currentY += blockHeight + roadWidth;
-                blockX = nextBlockX();
+                lineY = lineBottom + roadWidth;
+                lineBottom = lineY;
+                blockX = dryX();
                 cols = fittingCols(blockX, cols);
                 if (!fits(blockX, cols)) {
                     console.warn("Not enough screen space for more blocks");
                     return slots;
                 }
             }
-            // STOP if block would exceed screen height
-            if (currentY + blockHeight + padding > screenHeight) {
-                console.warn("Not enough screen space for more blocks");
-                return slots;
+            // A block that would run off the bottom of the screen gets a shallower, level try first
+            if (lineY + dropY + heightOf(rows) + padding > screenHeight) {
+                rows = minRows;
+                dropY = 0;
+                blockX = dryX();
+                if (lineY + heightOf(rows) + padding > screenHeight || !fits(blockX, cols)) {
+                    console.warn("Not enough screen space for more blocks");
+                    return slots;
+                }
             }
             // Whole blocks only, so the last one isn't left half built
-            if (slots.length + cols * blockRows > maxCount) {
+            if (slots.length + cols * rows > maxCount) {
                 return slots;
             }
+            const blockY = lineY + dropY;
             const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
-            for (let row = 0; row < blockRows; row++) {
+            for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     slots.push({
                         X: blockX + col * (size + buildingGap),
-                        Y: currentY + row * (size + buildingGap),
+                        Y: blockY + row * (size + rowGap),
                         info: info
                     });
                 }
             }
             // The road, then the next block
-            currentX = blockX + extent(cols) + roadWidth;
+            currentX = blockX + widthOf(cols) + roadWidth;
+            lineBottom = Math.max(lineBottom, blockY + heightOf(rows));
         }
         return slots;
     }
