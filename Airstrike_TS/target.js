@@ -100,14 +100,27 @@ class Building extends MapEntity {
         y = position.Y;
         this.placeAt(x, y);
     }
-    // Three stages: undamaged -> damaged (first hit) -> destroyed (second hit). Further hits on
-    // a destroyed building just keep knocking debris loose.
+    // Three stages (undamaged -> damaged -> destroyed), and how far a hit moves a building depends
+    // on the weapon and on how close to the blast's centre it was (severity), like the vehicles:
+    //  - bullets do nothing
+    //  - anything that only clips it (the outer part of the blast) scuffs it up to damaged, but
+    //    never brings it down, whatever the weapon
+    //  - a direct hit from a mortar/howitzer shell knocks it down one stage
+    //  - a direct hit from an airstrike or nuke flattens it outright
     hit(severity, wepName, collisionInfo) {
-        if (this.damage === Damage.undamaged) {
-            this.damage = Damage.damaged;
+        if (wepName < weaponNames.mortar) {
+            return;
         }
-        else if (this.damage !== Damage.destroyed) {
+        const direct = severity >= strikeSeverity.heavy;
+        const flattening = wepName == weaponNames.airstrike || wepName == weaponNames.tactical_Nuke;
+        if (direct && flattening) {
             this.damage = Damage.destroyed;
+        }
+        else if (direct) {
+            this.damage = this.damage === Damage.undamaged ? Damage.damaged : Damage.destroyed;
+        }
+        else if (this.damage === Damage.undamaged) {
+            this.damage = Damage.damaged;
         }
         this.reAssignSrc();
         this.throwDebris();
