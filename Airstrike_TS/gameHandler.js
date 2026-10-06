@@ -1,3 +1,4 @@
+"use strict";
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";
@@ -9,6 +10,7 @@ var GameMode;
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
     GameMode[GameMode["test_1"] = 2] = "test_1";
     GameMode[GameMode["test_2"] = 3] = "test_2";
+    GameMode[GameMode["test_3"] = 4] = "test_3";
 })(GameMode || (GameMode = {}));
 var conventionalWeapons = [];
 var extraWeapons = [];
@@ -199,6 +201,7 @@ class GameHandler {
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("startbutton_test_2").onclick = () => this.newGame(GameMode.test_2);
+        document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr);
@@ -705,6 +708,11 @@ class GameHandler {
         else if (mode == GameMode.test_2) {
             this.newLevel(level_static, mode);
             this.level.addNewWeapon(airstrikeInfo, true);
+            this.drawAllBuildings();
+        }
+        else if (mode == GameMode.test_3) {
+            this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the scene's targets
+            this.addFullWeaponLoadout();
             this.drawAllBuildings();
         }
         this.hud.drawMultiKill();

@@ -261,10 +261,7 @@ class Level {
             return;
         }
         let target = tgt ? tgt : this.provideAvailTargets();
-        target.decidePosition(pos);
-        this.targets.push(target);
-        allTargets.push(target);
-        game.updateKillStats(killStatDisplayOptions.total);
+        this.registerTarget(target, pos);
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
             let this_ = this;
@@ -283,6 +280,27 @@ class Level {
         clearInterval(this.targetTimer);
         this.targetTimer = null;
     }
+    registerTarget(target, pos) {
+        target.decidePosition(pos);
+        this.targets.push(target);
+        allTargets.push(target);
+        game.updateKillStats(killStatDisplayOptions.total);
+    }
+}
+// A level that's just a static scene rather than a stream of targets: everything is placed once
+// up front, nothing is produced afterwards, nothing runs a win/escape check, and it never ends.
+// Its single wave only carries the time of day and weather.
+class SceneLevel extends Level {
+    staticTargetCount = 10;
+    nextWave() {
+        this.waveIndex = 0;
+        this.setCurrentWave();
+        for (let i = 0; i < this.staticTargetCount; i++) {
+            this.registerTarget(this.provideAvailTargets());
+        }
+        return true;
+    }
+    continueWave() { } // unpausing must not start target production
 }
 function pickWeightedTarget(options) {
     let roll = RandomNumberGen.randomNumBetween(1, 100);
@@ -307,6 +325,17 @@ const staticInfo = {
     messages: [{ title: "Static Test", text: "", length: msgLength.short }],
     waves: [
         new Wave(10, WaveType.static, Time.day),
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => new WaterVehicleTarget(),
+};
+const sceneInfo = {
+    number: 0,
+    location: Area.port,
+    messages: [{ title: "Static Scene", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(0, WaveType.static, Time.day), // only carries time of day/weather, see SceneLevel
     ],
     startArms: [],
     endArms: [],

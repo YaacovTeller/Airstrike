@@ -185,7 +185,7 @@ class Level {
         div.classList.add("selected");
     }
 
-    private setCurrentWave() {
+    protected setCurrentWave() {
         let num = this.waveIndex;
         if (game.gameMode == GameMode.regular) {
             this.setWaveDisplay(num);
@@ -295,10 +295,7 @@ class Level {
             return
         }
         let target: Target = tgt ? tgt : this.provideAvailTargets();
-        target.decidePosition(pos);
-        this.targets.push(target);
-        allTargets.push(target);
-        game.updateKillStats(killStatDisplayOptions.total)
+        this.registerTarget(target, pos);
 
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
@@ -319,6 +316,30 @@ class Level {
         clearInterval(this.targetTimer);
         this.targetTimer = null;
     }
+
+    protected registerTarget(target: Target, pos?: position) {
+        target.decidePosition(pos);
+        this.targets.push(target);
+        allTargets.push(target);
+        game.updateKillStats(killStatDisplayOptions.total)
+    }
+}
+
+// A level that's just a static scene rather than a stream of targets: everything is placed once
+// up front, nothing is produced afterwards, nothing runs a win/escape check, and it never ends.
+// Its single wave only carries the time of day and weather.
+class SceneLevel extends Level {
+    private staticTargetCount: number = 10;
+
+    public nextWave() {
+        this.waveIndex = 0;
+        this.setCurrentWave();
+        for (let i = 0; i < this.staticTargetCount; i++) {
+            this.registerTarget(this.provideAvailTargets());
+        }
+        return true;
+    }
+    public continueWave() { } // unpausing must not start target production
 }
 
 //class Level_Static extends Level {
@@ -377,6 +398,18 @@ const staticInfo: LevelInfo = {
     endArms: [],
     targetFunc: () => new WaterVehicleTarget(),
 
+}
+
+const sceneInfo: LevelInfo = {
+    number: 0,
+    location: Area.port,
+    messages: [{ title: "Static Scene", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(0, WaveType.static, Time.day), // only carries time of day/weather, see SceneLevel
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => new WaterVehicleTarget(),
 }
 
 const continuousInfo: LevelInfo = {

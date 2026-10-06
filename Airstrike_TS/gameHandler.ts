@@ -6,7 +6,8 @@ enum GameMode {
     'regular',
     'sandbox',
     'test_1',
-    'test_2'
+    'test_2',
+    'test_3'
 }
 
 
@@ -219,6 +220,7 @@ class GameHandler {
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("startbutton_test_2").onclick = () => this.newGame(GameMode.test_2);
+        document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
 
@@ -759,6 +761,11 @@ class GameHandler {
         else if (mode == GameMode.test_2) {
             this.newLevel(level_static, mode);
             this.level.addNewWeapon(airstrikeInfo, true);
+            this.drawAllBuildings();
+        }
+        else if (mode == GameMode.test_3) {
+            this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the scene's targets
+            this.addFullWeaponLoadout();
             this.drawAllBuildings();
         }
 
