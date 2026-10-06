@@ -76,13 +76,15 @@ class ExplosionHandler {
         }
     }
     // Walks allTargets and allObjects, invoking the callback for every element within the blast radius.
-    // Some targets reach out a bit further than their centre point (hitPadding); how hard they're hit
-    // is still measured against the blast's own radius, so a hit out on the fringe is a weak one.
+    // A target is hit when the blast's area reaches its hit box (just its middle, unless it says
+    // otherwise -- see MapEntity.hitBox), and collisionInfo.hitDist is the distance to the nearest
+    // point of that box, which is what decides how hard it's hit: 0 for a blast landing inside it.
     static forEachBlastCollision(blastCenter, rad, onTarget, onItem) {
         for (let target of allTargets) {
-            let targetEl = target.getTargetEl();
-            if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, targetEl, rad + target.hitPadding)) {
-                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, targetEl, rad);
+            let nearest = CollisionDetection.nearestPointInBox(blastCenter, target.hitBox());
+            if (Math.abs(nearest.X - blastCenter.X) <= rad && Math.abs(nearest.Y - blastCenter.Y) <= rad) {
+                let collisionInfo = CollisionDetection.getVectorMove(blastCenter, target.getTargetEl(), rad);
+                collisionInfo.hitDist = Math.hypot(nearest.X - blastCenter.X, nearest.Y - blastCenter.Y);
                 onTarget(target, collisionInfo);
             }
         }
@@ -97,7 +99,8 @@ class ExplosionHandler {
         let directHit = false;
         let minDist = 20;
         let flagIfDirect = (elem, collisionInfo) => {
-            if (collisionInfo.dist < minDist)
+            let dist = collisionInfo.hitDist !== undefined ? collisionInfo.hitDist : collisionInfo.dist;
+            if (dist < minDist)
                 directHit = true;
         };
         this.forEachBlastCollision(blastCenter, size / 2, flagIfDirect, flagIfDirect);
@@ -111,7 +114,7 @@ class ExplosionHandler {
         ThrowHandler.flip(item, direc, crashes);
     }
     static targetStrike(target, weaponName, collisionInfo) {
-        let fraction = collisionInfo.dist / collisionInfo.radius;
+        let fraction = collisionInfo.hitDist / collisionInfo.radius;
         let severity = this.determineSeverity(fraction);
         if (target.damage != Damage.destroyed) {
             target.hit(severity, weaponName, collisionInfo); // TARGET - Main hit function

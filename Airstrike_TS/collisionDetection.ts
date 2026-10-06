@@ -1,10 +1,22 @@
 ﻿type vectorMoveObj = {
     elem: HTMLElement,
-    angle: number,
-    dist: number,
-    radius: number
+    angle: number,  // from the blast to the middle of the target
+    dist: number,   // likewise
+    radius: number,
+    hitDist?: number // from the blast to the part of the target it has to land on (see MapEntity.hitBox)
+}
+type Box = {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number
 }
 class CollisionDetection {
+    // The point of the box closest to pos -- pos itself if it's inside.
+    public static nearestPointInBox(pos: position, box: Box): position {
+        return { X: Math.min(Math.max(pos.X, box.left), box.right), Y: Math.min(Math.max(pos.Y, box.top), box.bottom) };
+    }
+
     public static checkCollisionFromPosition(mousePos: position, targetEl: HTMLElement): boolean {
         let elems = document.elementsFromPoint(mousePos.X, mousePos.Y);
         return elems.some(el => el === targetEl);

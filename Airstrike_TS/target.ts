@@ -40,10 +40,14 @@ class MapEntity {
         return this.picEl;
     }
 
-    // A blast hits something when its centre point lands inside the blast's area, which is stingy
-    // for something wide. This is extra reach (px) added to the blast for the check on this one.
-    public get hitPadding(): number {
-        return 0;
+    // The part of this that a blast has to reach to hit it (page coordinates). By default that's just
+    // its middle, which is stingy for anything wide, so those override it with an area. How hard a
+    // blast hits is measured from the nearest point of this, so landing inside it is a direct hit.
+    public hitBox(): Box {
+        const rect = this.targetEl.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        return { left: x, top: y, right: x, bottom: y };
     }
 
     // Spawns a free-standing piece of debris at this entity's current on-screen position,
@@ -623,7 +627,6 @@ class VehicleTarget extends Target {
 
 class WaterVehicleTarget extends VehicleTarget {
     private static shoreMargin: number = 10; // how far inside the open water a boat has to stay
-    private static hitReach: number = 20;    // see hitPadding
     private static fireBeforeSinkMin: number = 2000;
     private static fireBeforeSinkMax: number = 7000;
     private static sinkDuration: number = 6000;
@@ -655,9 +658,12 @@ class WaterVehicleTarget extends VehicleTarget {
         return destroyedTargetStay / 2;
     }
 
-    // Boats are long, so a blast landing over the bow or stern would otherwise miss entirely.
-    public get hitPadding(): number {
-        return WaterVehicleTarget.hitReach;
+    // The hull: the full length of the visible picture, lower half. The upper half is just the mast
+    // and superstructure, so a blast landing up there is really a shot over the ship -- it only
+    // counts if the blast's own area reaches down to the hull, and then not as a direct hit.
+    public hitBox(): Box {
+        const rect = this.baseImgEl.getBoundingClientRect();
+        return { left: rect.left, top: rect.top + rect.height / 2, right: rect.right, bottom: rect.bottom };
     }
 
     // A badly damaged boat always burns for a while and then sinks, rather than the generic

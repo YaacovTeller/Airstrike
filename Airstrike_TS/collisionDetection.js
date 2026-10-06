@@ -1,5 +1,9 @@
 "use strict";
 class CollisionDetection {
+    // The point of the box closest to pos -- pos itself if it's inside.
+    static nearestPointInBox(pos, box) {
+        return { X: Math.min(Math.max(pos.X, box.left), box.right), Y: Math.min(Math.max(pos.Y, box.top), box.bottom) };
+    }
     static checkCollisionFromPosition(mousePos, targetEl) {
         let elems = document.elementsFromPoint(mousePos.X, mousePos.Y);
         return elems.some(el => el === targetEl);
