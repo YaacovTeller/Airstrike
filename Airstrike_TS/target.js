@@ -454,13 +454,13 @@ class VehicleTarget extends Target {
         }
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
-            this.badDamage(direc);
+            this.badDamage(direc, collisionInfo);
             game.assessKillPoints(priorStatus, this.damage);
             return;
         }
         if (severity == strikeSeverity.heavy) {
             this.damage = Damage.heavyDamaged;
-            this.badDamage(direc);
+            this.badDamage(direc, collisionInfo);
             game.assessKillPoints(priorStatus, this.damage);
             return;
         }
@@ -494,7 +494,7 @@ class VehicleTarget extends Target {
         let light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false, parent: this.getTargetEl() };
         lightArr.push(light);
     }
-    badDamage(direc) {
+    badDamage(direc, collisionInfo) {
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
             //        this.damageEl.src = this.addSrc(this.onFireSource);
@@ -593,18 +593,39 @@ class WaterVehicleTarget extends VehicleTarget {
         return WaterVehicleTarget.hitReach;
     }
     // A badly damaged boat always burns for a while and then sinks, rather than the generic
-    // vehicle's chance of an early explosion or recovering back to just smoking.
-    badDamage() {
+    // vehicle's chance of an early explosion or recovering back to just smoking. The strike that
+    // first sets it ablaze decides how it goes down: struck near one end it sinks by that end
+    // (bow first if the bow was hit, stern first if the stern was), struck amidships it goes
+    // straight down.
+    sinkScheduled = false;
+    badDamage(direc, collisionInfo) {
+        if (this.sinkScheduled)
+            return; // already burning and on its way down
+        this.sinkScheduled = true;
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
         }
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
         this.pushFire(fires, this.returnPosition(), ExplSizes.XL);
+        let tilt = this.tiltForStrike(collisionInfo);
         let fireDuration = RandomNumberGen.randomNumBetween(WaterVehicleTarget.fireBeforeSinkMin, WaterVehicleTarget.fireBeforeSinkMax);
         setTimeout(() => {
-            RandomNumberGen.randomNumBetween(0, 1) === 0 ? this.sink() : this.tiltingSink();
+            if (this.damage === Damage.destroyed)
+                return; // already wrecked some other way while it burned
+            tilt === 0 ? this.sink() : this.tiltingSink(tilt);
         }, fireDuration);
+    }
+    // Which way a strike should tip the boat: 1 for the bow going down, -1 for the stern, 0 for
+    // straight down (hit in the middle third of the hull, or nothing known about where it landed).
+    // The sprite faces right, so a blast to the right of the boat's middle hit the bow.
+    tiltForStrike(collisionInfo) {
+        if (!collisionInfo)
+            return 0;
+        // the angle and distance run from the blast to the boat, hence the minus
+        const strikeX = -collisionInfo.dist * Math.cos(collisionInfo.angle * Math.PI / 180);
+        const amidships = this.targetEl.offsetWidth / 6;
+        return strikeX > amidships ? 1 : strikeX < -amidships ? -1 : 0;
     }
     // Puts the boat's image AND its fire/smoke canvas in one "group" inside a fixed, unrotated
     // overflow:hidden window. The window never moves or resizes -- its bottom edge is the waterline,
@@ -647,10 +668,11 @@ class WaterVehicleTarget extends VehicleTarget {
         group.style.transform = `translateY(${sinkDistance}px)`;
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
-    tiltingSink() {
+    // tilt is 1 to go down by the bow (the right-hand end), -1 for the stern
+    tiltingSink(tilt) {
         let { mask, group } = this.createSinkMask();
         let sinkDistance = mask.getBoundingClientRect().height * 1.2;
-        let tiltAngle = RandomNumberGen.randomNumBetween(20, 35);
+        let tiltAngle = tilt * RandomNumberGen.randomNumBetween(20, 35);
         group.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         group.style.transform = `rotate(${tiltAngle}deg)`;
         setTimeout(() => {
