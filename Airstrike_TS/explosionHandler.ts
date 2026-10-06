@@ -9,7 +9,11 @@ type light = {
     opac: number,
     size: ExplSizes,
     fading: boolean,
-    parent?: HTMLElement
+    parent?: HTMLElement,
+    // For a fire, which glows with the thing burning (parent): while burning it's as bright as the
+    // parent is visible, so it fades along with it. Once it isn't, it fades out by fadeStep a tick.
+    burning?: boolean,
+    fadeStep?: number
 }
 var lights: Array<light> = [];
 var flares: Array<light> = [];

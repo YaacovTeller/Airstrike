@@ -576,10 +576,27 @@ class VehicleTarget extends Target {
         this.damageOverlay.playLoop(smoke_imgs);
      //   this.damageEl.src = this.addSrc(this.smokingSource);
     }
-    protected pushFire(lightArr: Array<light>, blastCenter: position, explSize: ExplSizes) {
+    // The glow cast over the dark overlay while this is on fire. One per vehicle however many times
+    // it's set alight, and it goes out (see stopFireLight) when the fire does, not when the
+    // vehicle is finally cleared away.
+    private fireLight: light;
+    private wrecked: boolean = false;
+
+    protected startFireLight() {
+        if (this.fireLight && fires.includes(this.fireLight)) { // still there, perhaps fading: light it again
+            this.fireLight.burning = true;
+            this.fireLight.fadeStep = undefined;
+            return;
+        }
         lightID++
-        let light: light = { id: lightID, pos: blastCenter, opac: 1, size: explSize, fading: false, parent: this.getTargetEl() }
-        lightArr.push(light);
+        this.fireLight = { id: lightID, pos: this.returnPosition(), opac: 1, size: ExplSizes.XL, fading: false, parent: this.getTargetEl(), burning: true };
+        fires.push(this.fireLight);
+    }
+    // fadeOver is how long (ms) the glow takes to die away, otherwise it goes in a moment
+    protected stopFireLight(fadeOver?: number) {
+        if (!this.fireLight) return;
+        this.fireLight.burning = false;
+        if (fadeOver) this.fireLight.fadeStep = 1 / (fadeOver / 100); // the game loop ticks every 100ms
     }
 
     protected badDamage(direc?, collisionInfo?: vectorMoveObj) {
@@ -589,7 +606,7 @@ class VehicleTarget extends Target {
         }
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
-        this.pushFire(fires, this.returnPosition(), ExplSizes.XL);
+        this.startFireLight();
         setTimeout(() => {
             if (RandomNumberGen.randomNumBetween(0, 10) >= 8 && this.damageEl.classList.contains("badDamaged")) {
                 this.completeDestruction();
@@ -600,6 +617,7 @@ class VehicleTarget extends Target {
             this.damageEl.classList.remove('badDamaged');
             this.damageEl.classList.add('lightDamaged');
             this.smoking();
+            if (!this.wrecked) this.stopFireLight(); // it's smoke now, which gives no light. A wreck is still burning
         }, fireStay + RandomNumberGen.randomNumBetween(0,3000))
 
         if (direc) {
@@ -618,6 +636,8 @@ class VehicleTarget extends Target {
         this.targetEl.classList.remove('smoothTransition');
         this.targetEl.classList.add('smoothFade');
         this.removeFlip(this.picEl);
+        this.wrecked = true;
+        this.startFireLight();
 
         this.baseImgEl.src = this.addSrc(this.destroyedSource);
         this.baseImgEl.className = 'destroyed';
@@ -718,7 +738,7 @@ class WaterVehicleTarget extends VehicleTarget {
         }
         this.damageEl.classList.add('badDamaged');
         this.damageEl.classList.remove('lightDamaged');
-        this.pushFire(fires, this.returnPosition(), ExplSizes.XL);
+        this.startFireLight();
 
         let tilt = this.tiltForStrike(collisionInfo);
         let fireDuration = RandomNumberGen.randomNumBetween(WaterVehicleTarget.fireBeforeSinkMin, WaterVehicleTarget.fireBeforeSinkMax);
@@ -817,6 +837,7 @@ class WaterVehicleTarget extends VehicleTarget {
     private sink() {
         let { mask, group } = this.createSinkMask();
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
+        this.stopFireLight(WaterVehicleTarget.sinkDuration); // the fire goes down with the boat
         group.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
         group.style.transform = `translateY(${sinkDistance}px)`;
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
@@ -827,6 +848,7 @@ class WaterVehicleTarget extends VehicleTarget {
         let { mask, group } = this.createSinkMask();
         let sinkDistance = mask.getBoundingClientRect().height * 1.2;
         let tiltAngle = tilt * RandomNumberGen.randomNumBetween(20, 35);
+        this.stopFireLight(WaterVehicleTarget.tiltSinkDuration);
         group.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         group.style.transform = `rotate(${tiltAngle}deg)`;
 

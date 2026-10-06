@@ -647,12 +647,17 @@ class GameHandler {
         });
         this.removeFaded(arr);
     }
-    // A fire glows for as long as the thing burning it is still on the screen, then fades like any
-    // other light. Fires nobody removes would pile up for the whole game.
+    // A fire glows as brightly as whatever is burning is visible, so it fades out along with it
+    // (a wreck fades away before it's finally removed), and once the fire is out -- or what was
+    // burning is gone -- it dies away by its fadeStep. Fires nobody removes would pile up.
     private fadeFires() {
         fires.forEach(fire => {
-            if (!fire.parent || !fire.parent.isConnected) {
-                fire.opac = Math.max(0, fire.opac - 0.15);
+            if (fire.burning && fire.parent && fire.parent.isConnected) {
+                const visible = parseFloat(getComputedStyle(fire.parent).opacity);
+                fire.opac = isNaN(visible) ? 1 : visible;
+            }
+            else {
+                fire.opac = Math.max(0, fire.opac - (fire.fadeStep || 0.15));
             }
         });
         this.removeFaded(fires);
