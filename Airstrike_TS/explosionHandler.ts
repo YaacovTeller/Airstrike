@@ -94,8 +94,10 @@ class ExplosionHandler {
     }
     // Walks allTargets and allObjects, invoking the callback for every element within the blast radius.
     // A target is hit when the blast's area reaches its hit box (just its middle, unless it says
-    // otherwise -- see MapEntity.hitBox), and collisionInfo.hitDist is the distance to the nearest
-    // point of that box, which is what decides how hard it's hit: 0 for a blast landing inside it.
+    // otherwise -- see MapEntity.hitBox). That only decides whether it's hit at all: how hard is
+    // still down to how far the blast is from the target's middle (collisionInfo.dist), as a share of
+    // the blast's radius. collisionInfo.hitDist is the distance to the nearest point of the hit box,
+    // 0 for a blast that landed on it.
     private static forEachBlastCollision(blastCenter: position, rad: number, onTarget: (target, collisionInfo: vectorMoveObj) => void, onItem: (item, collisionInfo: vectorMoveObj) => void) {
         for (let target of allTargets) {
             let nearest = CollisionDetection.nearestPointInBox(blastCenter, target.hitBox());
@@ -135,7 +137,7 @@ class ExplosionHandler {
     }
 
     private static targetStrike(target, weaponName: weaponNames, collisionInfo: vectorMoveObj) {
-        let fraction = collisionInfo.hitDist / collisionInfo.radius;
+        let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity: strikeSeverity = this.determineSeverity(fraction);
 
         if (target.damage != Damage.destroyed) {

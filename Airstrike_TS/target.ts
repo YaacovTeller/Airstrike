@@ -40,9 +40,9 @@ class MapEntity {
         return this.picEl;
     }
 
-    // The part of this that a blast has to reach to hit it (page coordinates). By default that's just
-    // its middle, which is stingy for anything wide, so those override it with an area. How hard a
-    // blast hits is measured from the nearest point of this, so landing inside it is a direct hit.
+    // The part of this that a blast has to reach to hit it at all (page coordinates). By default
+    // that's just its middle, which is stingy for anything wide, so those override it with an area.
+    // It only decides whether a blast hits: how hard still depends on how close to the middle it was.
     public hitBox(): Box {
         const rect = this.targetEl.getBoundingClientRect();
         const x = rect.left + rect.width / 2;
@@ -660,7 +660,8 @@ class WaterVehicleTarget extends VehicleTarget {
 
     // The hull: the full length of the visible picture, lower half. The upper half is just the mast
     // and superstructure, so a blast landing up there is really a shot over the ship -- it only
-    // counts if the blast's own area reaches down to the hull, and then not as a direct hit.
+    // counts if the blast's own area reaches down to the hull. Anywhere on the hull is a hit, but
+    // a weak one out towards the ends: the strongest hits are still the ones nearest the middle.
     public hitBox(): Box {
         const rect = this.baseImgEl.getBoundingClientRect();
         return { left: rect.left, top: rect.top + rect.height / 2, right: rect.right, bottom: rect.bottom };

@@ -3,7 +3,7 @@
     angle: number,  // from the blast to the middle of the target
     dist: number,   // likewise
     radius: number,
-    hitDist?: number // from the blast to the part of the target it has to land on (see MapEntity.hitBox)
+    hitDist?: number // from the blast to the nearest point of the target's hit box (see MapEntity.hitBox)
 }
 type Box = {
     left: number,
