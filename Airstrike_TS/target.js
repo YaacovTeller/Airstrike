@@ -766,7 +766,7 @@ class RegVehicleTarget extends VehicleTarget {
     }
 }
 class ModVehicleTarget extends VehicleTarget {
-    wheelSize = "medWheel";
+    wheelSizeClass = "medWheel";
     constructor() {
         super(modTarget);
         this.targetEl.classList.add('medRectTarget');
@@ -776,7 +776,7 @@ class ModVehicleTarget extends VehicleTarget {
     }
 }
 class HeavyVehicleTarget extends VehicleTarget {
-    wheelSize = "medWheel";
+    wheelSizeClass = "medWheel";
     constructor() {
         super(heavyTarget);
         this.targetEl.classList.add('medRectTarget');
@@ -786,7 +786,7 @@ class HeavyVehicleTarget extends VehicleTarget {
     }
 }
 class RocketLauncher extends VehicleTarget {
-    wheelSize = "medWheel";
+    wheelSizeClass = "medWheel";
     stopPos;
     deployed = false;
     launcherEl;
