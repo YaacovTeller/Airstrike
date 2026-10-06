@@ -90,7 +90,7 @@ class Level {
         this.resetWincheck();
     }
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
-        let wepName = weaponNames[info.name];
+        let wepName = info.displayName || weaponNames[info.name];
         let wepArr: Array<WeaponType> = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
         if (wepArr[info.name]) {
             wepArr[info.name].pushNewWeaponInstance();

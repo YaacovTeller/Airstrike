@@ -191,6 +191,7 @@ type weaponInstance = {
 
 type weaponInfo = {
     name: weaponNames,
+    displayName?: string, // what the HUD tooltip and pickup popups call it, instead of the name above
     class: typeof WeaponType,
     sound: Array<Sound>,
     imageSource: string,
@@ -219,11 +220,6 @@ type FlyOver = {
     delay: number,
     duration: number
 }
-
-type BlockType = {
-    rows: number;
-    cols: number;
-};
 
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -490,28 +486,33 @@ const jetPlaceholder = {
 const scaledGunInfo: weaponInfo = {
     ...sniperInfo,
     ...jetPlaceholder,
+    displayName: "Strafing Run",
 }
 const scaledMortarInfo: ExplosiveWeaponInfo = {
     ...mortarInfo,
     ...jetPlaceholder,
+    displayName: "Light Bomb",
     blastRadius: 30,
     explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
 }
 const scaledHowitzerInfo: ExplosiveWeaponInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
+    displayName: "Bomb",
     blastRadius: 50,
     explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
 }
 const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
+    displayName: "Heavy Bomb",
     blastRadius: 70,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 }
 const scaledDroneInfo: ExplosiveWeaponInfo = {
     ...droneInfo,
     ...jetPlaceholder,
+    displayName: "Guided Strike",
     explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
 }
 const scaledWeapons: Array<weaponInfo> = [scaledGunInfo, scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];

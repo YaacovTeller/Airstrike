@@ -417,28 +417,33 @@ const jetPlaceholder = {
 const scaledGunInfo = {
     ...sniperInfo,
     ...jetPlaceholder,
+    displayName: "Strafing Run",
 };
 const scaledMortarInfo = {
     ...mortarInfo,
     ...jetPlaceholder,
+    displayName: "Light Bomb",
     blastRadius: 30,
     explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
 };
 const scaledHowitzerInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
+    displayName: "Bomb",
     blastRadius: 50,
     explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
 };
 const scaledAirstrikeInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
+    displayName: "Heavy Bomb",
     blastRadius: 70,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 };
 const scaledDroneInfo = {
     ...droneInfo,
     ...jetPlaceholder,
+    displayName: "Guided Strike",
     explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
 };
 const scaledWeapons = [scaledGunInfo, scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];

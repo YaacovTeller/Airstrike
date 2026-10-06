@@ -799,113 +799,91 @@ class GameHandler {
     private static buildingSize = 100;
     private static shoreMargin = 10;
 
-    // Left-most x for a block starting at topY that is clear of the water across all of its rows.
-    private firstDryX(topY: number, blockHeight: number): number {
-        const span = Shoreline.waterSpan(topY, topY + blockHeight + GameHandler.buildingSize);
+    // Left-most x for a block of this height starting at topY that is clear of the water across all
+    // of its rows.
+    private firstDryX(topY: number, height: number): number {
+        const span = Shoreline.waterSpan(topY, topY + height);
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
 
-    // Where to put up to maxCount buildings, in blocks separated by streets, none of them in the water.
+    // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
+    // buildings packed tight in blocks 2 or 3 across and blockRows deep, with a road's width
+    // between blocks, along the row and between rows.
     public streetBlockSlots(
     maxCount: number,
     options?: {
         startX?: number;
         startY?: number;
-        buildingSpacingX?: number;
-        buildingSpacingY?: number;
-        streetWidth?: number;
-        padding?: number;
+        buildingGap?: number; // between buildings in the same block
+        roadWidth?: number;   // between blocks
+        blockRows?: number;
+        padding?: number;     // kept clear at the screen edge
     }
 ): Array<position> {
     const {
         startX = 100,
         startY = 100,
-        buildingSpacingX = 120,
-        buildingSpacingY = 120,
-        streetWidth = 260,
+        buildingGap = 6,
+        roadWidth = 70,
+        blockRows = 2,
         padding = 50
     } = options || {};
     const slots: Array<position> = [];
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
+    const size = GameHandler.buildingSize;
 
-    const blockTypes: BlockType[] = [
-        { rows: 2, cols: 6 },
-        { rows: 2, cols: 4 },
-        { rows: 2, cols: 6 },
-        { rows: 2, cols: 4 },
-        { rows: 2, cols: 6 }
-    ];
+    // How far a run of this many buildings reaches, first edge to last edge
+    const extent = (count: number) => count * size + (count - 1) * buildingGap;
+    const blockHeight = extent(blockRows);
+    const fits = (x: number, cols: number) => x + extent(cols) + padding <= screenWidth;
+    // A 3-wide block that won't fit can be squeezed in as a 2-wide one
+    const fittingCols = (x: number, cols: number) => !fits(x, cols) && cols == 3 ? 2 : cols;
 
     let currentX = startX;
     let currentY = startY;
+    // Right of the shore, for the rows the next block would cover
+    const nextBlockX = () => Math.max(currentX, this.firstDryX(currentY, blockHeight));
 
-    let tallestBlockInRow = 0;
+    while (slots.length < maxCount) {
+        let blockX = nextBlockX();
+        let cols = fittingCols(blockX, RandomNumberGen.randomNumBetween(2, 3));
 
-    for (const block of blockTypes) {
-        const blockWidth =
-            (block.cols - 1) * buildingSpacingX;
-
-        const blockHeight =
-            (block.rows - 1) * buildingSpacingY;
-
-        // SHIFT THE BLOCK RIGHT OF THE SHORE
-        let blockX = Math.max(currentX, this.firstDryX(currentY, blockHeight));
-
-        // WRAP TO NEXT ROW IF BLOCK WOULD GO OFF SCREEN
-        if (
-            blockX + blockWidth + padding >
-            screenWidth
-        ) {
+        // WRAP TO THE NEXT ROW OF BLOCKS IF THIS ONE WOULD GO OFF SCREEN
+        if (!fits(blockX, cols)) {
             currentX = startX;
-
-            currentY +=
-                tallestBlockInRow +
-                streetWidth;
-
-            tallestBlockInRow = 0;
-
-            blockX = Math.max(currentX, this.firstDryX(currentY, blockHeight));
+            currentY += blockHeight + roadWidth;
+            blockX = nextBlockX();
+            cols = fittingCols(blockX, cols);
+            if (!fits(blockX, cols)) {
+                console.warn("Not enough screen space for more blocks");
+                return slots;
+            }
         }
 
         // STOP if block would exceed screen height
-        if (
-            currentY + blockHeight + padding >
-            screenHeight
-        ) {
-            console.warn(
-                "Not enough screen space for more blocks"
-            );
+        if (currentY + blockHeight + padding > screenHeight) {
+            console.warn("Not enough screen space for more blocks");
             return slots;
         }
 
-        // Still no room once it's clear of the water (the shore moves right further down the
-        // screen): skip this block and see whether a smaller one fits
-        if (blockX + blockWidth + padding > screenWidth) {
-            continue;
+        // Whole blocks only, so the last one isn't left half built
+        if (slots.length + cols * blockRows > maxCount) {
+            return slots;
         }
 
-        // Place buildings in this block
-        for (let row = 0; row < block.rows; row++) {
-            for (let col = 0; col < block.cols; col++) {
-                if (slots.length >= maxCount)
-                    return slots;
-
+        for (let row = 0; row < blockRows; row++) {
+            for (let col = 0; col < cols; col++) {
                 slots.push({
-                    X: blockX + col * buildingSpacingX,
-                    Y: currentY + row * buildingSpacingY
+                    X: blockX + col * (size + buildingGap),
+                    Y: currentY + row * (size + buildingGap)
                 });
             }
         }
 
-        // Move to next block position
-        currentX = blockX + blockWidth + streetWidth;
-
-        tallestBlockInRow = Math.max(
-            tallestBlockInRow,
-            blockHeight
-        );
+        // The road, then the next block
+        currentX = blockX + extent(cols) + roadWidth;
     }
     return slots;
 }

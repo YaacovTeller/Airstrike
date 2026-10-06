@@ -285,6 +285,16 @@
     z-index: 3;
 }
 
+/* The fire (96x240) and smoke (200x200) sprites are sized above as a share of the vehicle's width,
+   which works out right for the 45px jeeps (27px and 45px). A boat is far wider, so the same
+   percentages stretch them sideways; give it the same absolute sizes instead. */
+.longTarget > .badDamaged {
+    width: 27px;
+}
+.longTarget > .lightDamaged {
+    width: 45px;
+}
+
 .preFire {
     border: 2px dashed black;
     border-style: dashed;

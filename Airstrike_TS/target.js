@@ -505,6 +505,10 @@ class VehicleTarget extends Target {
         ContentElHandler.fadeRemoveItem(this.targetEl, damagedTargetStay, fadeAnimTime);
         this.removeFromArray();
     }
+    // How long the burning wreck of a completely destroyed vehicle stays before it starts to fade.
+    get destroyedStay() {
+        return destroyedTargetStay;
+    }
     completeDestruction(collisionInfo) {
         this.targetEl.classList.remove('smoothTransition');
         this.targetEl.classList.add('smoothFade');
@@ -513,7 +517,7 @@ class VehicleTarget extends Target {
         this.baseImgEl.className = 'destroyed';
         this.damageOverlay.hide();
         this.targetEl.classList.add('show');
-        ContentElHandler.fadeRemoveItem(this.targetEl, destroyedTargetStay, fadeAnimTime);
+        ContentElHandler.fadeRemoveItem(this.targetEl, this.destroyedStay, fadeAnimTime);
         SoundPlayer.playRandomSound(explosions);
         this.destructionBits();
     }
@@ -565,6 +569,10 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     get picSources() {
         return ['ship1.png'];
+    }
+    // A wrecked boat's fire burns out in half the time -- it's sitting on water.
+    get destroyedStay() {
+        return destroyedTargetStay / 2;
     }
     // A badly damaged boat always burns for a while and then sinks, rather than the generic
     // vehicle's chance of an early explosion or recovering back to just smoking.

@@ -1,6 +1,7 @@
 ﻿
 class WeaponType {
     public name: weaponNames;
+    public displayName: string;
     public cursor: string;
     public sound: Array<Sound>;
     public imageSource: string;
@@ -14,6 +15,7 @@ class WeaponType {
 
     constructor(info: weaponInfo) {
         this.name = info.name;
+        this.displayName = info.displayName;
         this.cursor = info.cursor;
         this.sound = info.sound;
         this.imageSource = info.imageSource;

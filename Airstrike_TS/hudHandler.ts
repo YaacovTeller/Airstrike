@@ -128,7 +128,7 @@ class HudHandler {
         wepBox.classList.add("wepBox");
         wepBox.dataset.name = num;
         let wepName = name.charAt(0).toUpperCase() + String(name).slice(1);
-        wepBox.title = wepName
+        wepBox.title = wep.displayName || wepName
         wepBox.style.backgroundImage = "url(" + wep.imageSource + ")";
         wepBox.onclick = (event) => { game.changeWeapon(wep); event.stopPropagation() }
 

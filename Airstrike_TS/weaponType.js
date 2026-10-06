@@ -1,5 +1,7 @@
+"use strict";
 class WeaponType {
     name;
+    displayName;
     cursor;
     sound;
     imageSource;
@@ -11,6 +13,7 @@ class WeaponType {
     instances = [];
     constructor(info) {
         this.name = info.name;
+        this.displayName = info.displayName;
         this.cursor = info.cursor;
         this.sound = info.sound;
         this.imageSource = info.imageSource;
