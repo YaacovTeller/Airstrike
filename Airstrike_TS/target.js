@@ -112,8 +112,9 @@ class Building extends MapEntity {
             Y: parseInt(this.targetEl.style.top) + RandomNumberGen.randomNumBetween(14, 40),
         };
     }
-    // Wrecking the building takes everyone in it with it. Just damaging it gives each of them an
-    // even chance of being killed, the once, when it first gets damaged.
+    // Wrecking the building takes everyone in it with it. A significant hit that only damages it
+    // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
+    // shots can clear a building out without bringing it down.
     killOccupants(destroyed) {
         for (const enemy of this.occupants) {
             if (destroyed || RandomNumberGen.randomNumBetween(0, 1) === 1) {
@@ -182,14 +183,13 @@ class Building extends MapEntity {
         if (wepName < weaponNames.mortar) {
             return;
         }
-        const wasUndamaged = this.damage === Damage.undamaged;
         this.damagePoints += this.hitPoints(severity, wepName);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         this.reAssignSrc();
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
         }
-        else if (wasUndamaged) {
+        else if (severity >= strikeSeverity.medium) { // not just a glancing blow from the edge of a blast
             this.killOccupants(false);
         }
         this.throwDebris(collisionInfo);
