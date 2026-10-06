@@ -50,13 +50,35 @@ class MapEntity {
         return { left: x, top: y, right: x, bottom: y };
     }
 
-    // Spawns a free-standing piece of debris at this entity's current on-screen position,
-    // registers it for cleanup, and fades it out after a while.
-    protected returnBit(imageSrc, parentClass, childClass): HTMLElement {
+    // Where a blast hit this, as an on-screen point: the blast's own position pulled back onto
+    // the given area (the picture, unless told otherwise), so a near miss still comes from the
+    // nearest edge. Without any collision info it's the middle of the area.
+    protected impactPoint(collisionInfo?: vectorMoveObj, area: Box = this.picEl.getBoundingClientRect()): position {
+        if (!collisionInfo) {
+            return { X: (area.left + area.right) / 2, Y: (area.top + area.bottom) / 2 };
+        }
+        // the angle and distance run from the blast to the middle of the target, hence the minus
+        const middle = CollisionDetection.getXYfromPoint(this.targetEl);
+        const rad = collisionInfo.angle * Math.PI / 180;
+        const blast: position = { X: middle.X - collisionInfo.dist * Math.cos(rad), Y: middle.Y - collisionInfo.dist * Math.sin(rad) };
+        return CollisionDetection.nearestPointInBox(blast, area);
+    }
+
+    // Spawns a free-standing piece of debris, registers it for cleanup, and fades it out after a
+    // while. It starts at the origin given (on-screen coordinates), or the top-left of this
+    // entity's picture, which is fine for the small vehicles whose wheels it was written for.
+    protected returnBit(imageSrc, parentClass, childClass, origin?: position): HTMLElement {
         let bit = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), parentClass);
         ElementCreator.returnNewImageEl(bit, childClass, imageSrc);
 
-        ElementCreator.positionAbsoluteAtElementRect(this.picEl, bit);
+        if (origin) {
+            bit.style.position = "absolute";
+            bit.style.left = `${origin.X + window.scrollX}px`;
+            bit.style.top = `${origin.Y + window.scrollY}px`;
+        }
+        else {
+            ElementCreator.positionAbsoluteAtElementRect(this.picEl, bit);
+        }
 
         allObjects.push(bit);
         ContentElHandler.fadeRemoveItem(bit, itemStay, fadeAnimTime, allObjects);
@@ -160,17 +182,19 @@ class Building extends MapEntity {
         this.damagePoints += this.hitPoints(severity, wepName);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         this.reAssignSrc();
-        this.throwDebris();
+        this.throwDebris(collisionInfo);
     }
 
-    private throwDebris() {
+    // The pieces fly out from where the blast hit the building.
+    private throwDebris(collisionInfo?: vectorMoveObj) {
+        const origin = this.impactPoint(collisionInfo);
         for (let i = 0; i < Building.debrisPerHit; i++) {
-            this.throwDebrisPiece();
+            this.throwDebrisPiece(origin);
         }
     }
-    private throwDebrisPiece() {
+    private throwDebrisPiece(origin: position) {
         let imageSrc = RandomNumberGen.returnRandomFromArray(Building.debrisSources);
-        let piece = this.returnBit(imageSrc, "wheel", "wheelPic");
+        let piece = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
         ThrowHandler.flip(piece, direc, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater);
@@ -643,8 +667,12 @@ class WaterVehicleTarget extends VehicleTarget {
         super(boatTarget);
         this.targetEl.classList.add('longTarget');
     }
+    // Where the wreckage flies out from: the point on the hull the blast struck. Worked out when the
+    // boat is hit, because the boat may be gone from the screen by the time it sinks and breaks up.
+    private strikePoint: position;
+
     private createScrap() {
-        return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic");
+        return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic", this.strikePoint);
     }
 
     private throwBit(direc: direction) {
@@ -683,6 +711,7 @@ class WaterVehicleTarget extends VehicleTarget {
     protected badDamage(direc?, collisionInfo?: vectorMoveObj) {
         if (this.sinkScheduled) return; // already burning and on its way down
         this.sinkScheduled = true;
+        this.strikePoint = this.impactPoint(collisionInfo, this.hitBox());
 
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
@@ -711,6 +740,9 @@ class WaterVehicleTarget extends VehicleTarget {
     // fireball would be cut off by the waterline.
     protected completeDestruction(collisionInfo?: vectorMoveObj) {
         this.cancelSinking();
+        if (collisionInfo || !this.strikePoint) {
+            this.strikePoint = this.impactPoint(collisionInfo, this.hitBox());
+        }
         super.completeDestruction(collisionInfo);
     }
 
