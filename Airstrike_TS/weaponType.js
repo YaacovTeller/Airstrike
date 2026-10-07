@@ -544,6 +544,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         }
         this.playSound();
         this.shotCounter();
+        game.level.noteDroneFlyover();
         let inst = this.activeInstance;
         inst.ready = false;
         inst.blastRadElement.style.visibility = 'hidden'; // the scan has its own ring, once the drone's there

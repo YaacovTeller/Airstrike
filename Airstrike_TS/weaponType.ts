@@ -586,6 +586,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         if (this.ammoCheck() === false) { return }
         this.playSound();
         this.shotCounter();
+        game.level.noteDroneFlyover();
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         inst.ready = false;

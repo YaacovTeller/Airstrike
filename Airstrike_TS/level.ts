@@ -276,6 +276,12 @@ class Level {
         return true;
     }
 
+    // Called every game tick (100ms) while the game is running, so a level can keep time without
+    // counting the time it's been paused
+    public tickClock() { }
+    // The surveillance drone has been sent out
+    public noteDroneFlyover() { }
+
     public continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
         let freq: number;
@@ -339,6 +345,40 @@ class SceneLevel extends Level {
     private staticTargetCount: number = 10;
     private stage: number = 0;
 
+    // What this stage has taken so far, for the message when it's cleared
+    private stageElapsedMs: number = 0;
+    private stageShotsAtStart: number = 0;
+    private stageDroneFlyovers: number = 0;
+
+    public tickClock() { this.stageElapsedMs += 100; }
+    public noteDroneFlyover() { this.stageDroneFlyovers++; }
+
+    private static praise: Array<string> = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
+    private static hurryUp: Array<string> = ["Speed up your game!", "Pick up the pace, soldier!", "Faster! The enemy won't wait!"];
+    private static slowAfterMs: number = 60000;
+
+    private formatTime(ms: number): string {
+        const seconds = Math.round(ms / 1000);
+        return seconds >= 60 ? Math.floor(seconds / 60) + "m " + (seconds % 60) + "s" : seconds + "s";
+    }
+    private plural(count: number, noun: string): string {
+        return count + " " + noun + (count == 1 ? "" : "s");
+    }
+    // The congratulations at the end of a stage: how long it took, how many shots, how many drone
+    // flyovers (which aren't counted as shots), and a nudge if it took more than a minute
+    private stageSummary(): string {
+        const flyovers = this.stageDroneFlyovers;
+        const shots = Math.max(0, game.killStats.shots - this.stageShotsAtStart - flyovers);
+        let text = RandomNumberGen.returnRandomFromArray(SceneLevel.praise) +
+            "<br>Time: " + this.formatTime(this.stageElapsedMs) +
+            "<br>" + this.plural(shots, "shot") + " fired" +
+            "<br>" + this.plural(flyovers, "drone flyover") + " needed";
+        if (this.stageElapsedMs > SceneLevel.slowAfterMs) {
+            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
+        }
+        return text;
+    }
+
     public nextWave() {
         if (game.level !== this) return true; // a stale call from before the game was reset
 
@@ -352,6 +392,9 @@ class SceneLevel extends Level {
             this.registerTarget(this.provideAvailTargets());
         }
         this.infestBuildings(game.drawAllBuildings());
+        this.stageElapsedMs = 0;
+        this.stageShotsAtStart = game.killStats.shots;
+        this.stageDroneFlyovers = 0;
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
         }
@@ -389,7 +432,7 @@ class SceneLevel extends Level {
     }
 
     protected endWave() {
-        PopupHandler.addToArray("", "Stage " + this.stage + " finished!", msgLength.long);
+        PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
         this.nextWavePrepGap(); // then nextWave() builds the next stage
     }
 }

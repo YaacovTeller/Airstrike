@@ -1023,6 +1023,7 @@ class GameHandler {
             this.checkEnd();
             this.updateProgressBar();
             this.fadeAllLights();
+            this.level.tickClock();
             this.level.targets.forEach((trg) => {
                 trg.action();
             });
