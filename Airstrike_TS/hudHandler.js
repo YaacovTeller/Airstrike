@@ -117,7 +117,7 @@ class HudHandler {
         if (wep.name == weaponNames.flare) {
             game.level.currentWave.timeOfDay === Time.day ? wepBox.classList.add("displayNone") : wepBox.classList.remove("displayNone"); // DOUBLED with setWave in Levels. For all weps start.
         }
-        if (wep.name == weaponNames.tactical_Nuke || wep.name == weaponNames.chopper) {
+        if (wep.name == weaponNames.tactical_Nuke || wep.name == weaponNames.chopper || wep.name == weaponNames.carpet_bomb) {
             wepBox.classList.add('specialWeapon');
         }
         this.orderWeaponBoxes();

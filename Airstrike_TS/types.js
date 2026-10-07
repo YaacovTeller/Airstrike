@@ -163,7 +163,8 @@ var weaponNames;
     weaponNames[weaponNames["flare"] = 7] = "flare";
     weaponNames[weaponNames["tactical_Nuke"] = 8] = "tactical_Nuke";
     weaponNames[weaponNames["chopper"] = 9] = "chopper";
-    weaponNames[weaponNames["surveillance"] = 10] = "surveillance"; // the 0 key
+    weaponNames[weaponNames["surveillance"] = 10] = "surveillance";
+    weaponNames[weaponNames["carpet_bomb"] = 11] = "carpet_bomb"; // the - key
 })(weaponNames || (weaponNames = {}));
 //const easy: difficultyLevelInfo = {
 //    newTargetEvery: 3000,
@@ -332,6 +333,33 @@ const nukeInfo = {
         speed: 15,
         duration: 2000,
         delay: 2500
+    }
+};
+// A superweapon, like the nuke: three aircraft sweep the whole width of the screen, right to left,
+// along a band around the mouse, carpeting it with airstrike-sized explosions.
+const carpetBombInfo = {
+    name: weaponNames.carpet_bomb,
+    displayName: "Carpet Strike",
+    class: CarpetBombing,
+    cursor: "cursor4",
+    blastRadius: 150, // half the height of the band it covers
+    explosionInfo: {
+        size: ExplSizes.XL, // same as the airstrike
+        frames: expl_med_imgs,
+        sound: [],
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'f16.svg',
+    sound: airstrikeSounds,
+    speed: 0,
+    cooldown: 30000,
+    noAmmo: bleep_neg,
+    select: [redeemerpickup],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg', // the same shadow, but three of them and slower than the airstrike's
+        speed: 10,
+        duration: 2000,
+        delay: 2000
     }
 };
 const chargeInfo = {

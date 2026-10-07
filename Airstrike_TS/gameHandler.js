@@ -343,7 +343,7 @@ class GameHandler {
             if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') {
                 this.fireFunc();
             }
-            let int = event.key === '0' ? weaponNames.surveillance : parseInt(event.key); // the tenth weapon is on the 0 key
+            let int = event.key === '0' ? weaponNames.surveillance : event.key === '-' ? weaponNames.carpet_bomb : parseInt(event.key); // the tenth and eleventh weapons are on the 0 and - keys
             if (int) {
                 if (conventionalWeapons[int]) {
                     this.changeWeapon(conventionalWeapons[int]);
@@ -391,12 +391,9 @@ class GameHandler {
         this.level.addNewWeapon(surveillanceInfo, false);
     }
     returnOneSuperWeapon() {
-        let supers = [chopperInfo, nukeInfo];
-        let rand = RandomNumberGen.randomNumBetween(0, 1);
-        if (extraWeapons[supers[rand].name]) {
-            rand = rand == 0 ? 1 : 0;
-        }
-        return supers[rand];
+        let supers = [chopperInfo, nukeInfo, carpetBombInfo];
+        let unowned = supers.filter(info => !extraWeapons[info.slot !== undefined ? info.slot : info.name]);
+        return RandomNumberGen.returnRandomFromArray(unowned.length ? unowned : supers);
     }
     addAllWeapons() {
         this.level.addNewWeapon(sniperInfo, false);
@@ -409,6 +406,7 @@ class GameHandler {
         this.level.addNewWeapon(surveillanceInfo, false);
         this.onlyOneSuperInst(chopperInfo);
         this.onlyOneSuperInst(nukeInfo);
+        this.onlyOneSuperInst(carpetBombInfo);
         //this.level.addNewWeapon(chopperInfo, true);
         //this.level.addNewWeapon(nukeInfo, true);
         //   let special = this.returnOneSuperWeapon();

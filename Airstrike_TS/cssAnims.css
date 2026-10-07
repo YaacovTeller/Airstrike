@@ -45,6 +45,16 @@
     }
 }
 
+@keyframes carpetScroll {
+    from {
+        background-position: 0 50%;
+    }
+
+    to {
+        background-position: -150px 50%; /* one arrow's width, so it loops without a jump */
+    }
+}
+
 @keyframes expandContractRotate {
     0% {
         transform: scale(1.5) rotate(0deg);

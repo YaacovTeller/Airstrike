@@ -86,6 +86,7 @@ class WeaponType {
         if (this.blastRadNum()) {
             let el = this.returnBlastRadiusDiv(this.blastRadNum());
             this.name == weaponNames.tactical_Nuke ? el.classList.add('nukeIndicator') : "";
+            this.name == weaponNames.carpet_bomb ? el.classList.add('carpetIndicator') : "";
             inst.blastRadElement = el;
         }
         this.instances.push(inst);
@@ -134,7 +135,7 @@ class WeaponType {
             return true;
     }
     removeWeapon() {
-        if ([weaponNames.tactical_Nuke, weaponNames.chopper].includes(this.name)) {
+        if ([weaponNames.tactical_Nuke, weaponNames.chopper, weaponNames.carpet_bomb].includes(this.name)) {
             let arr = this.getWeaponArray();
             let index = arr.indexOf(this);
             arr[index] = null;
@@ -385,6 +386,79 @@ function inNoStrikeZone(target) {
             let zone = z;
             console.log(CollisionDetection.checkCollisionWithCircle(zone, target.getTargetEl()));
         }
+    }
+}
+// A superweapon. Three aircraft cross the whole screen right to left, and the band across it around the
+// mouse (the height of the weapon's circle) is carpeted with explosions as they go, falling just behind
+// them. The explosions do what the airstrike's do.
+class CarpetBombing extends ExplosiveWeaponType {
+    static tickMs = 100; // how often the aircraft's position steps along, as in beginMoveInterval
+    static bombsPerTick = 3; // one in each third of the band's height
+    static wingmen = [
+        { dx: 0, dy: 0 },
+        { dx: 6, dy: -110 }, // vw behind, and px above or below
+        { dx: 6, dy: 110 },
+    ];
+    constructor(info) {
+        super(info);
+    }
+    fireFunc() {
+        if (this.ammoCheck() === false) {
+            return;
+        }
+        this.playSound();
+        this.shotCounter();
+        let inst = this.activeInstance;
+        inst.ready = false;
+        this.rippleEffect(inst);
+        this.switchBlastIndicatorStyle(true, inst);
+        const bandMiddle = CollisionDetection.getXYfromPoint(inst.blastRadElement).Y; // the circle stays where it was fired
+        this.createFormation(bandMiddle);
+        setTimeout(() => this.sweep(bandMiddle, inst), this.flyoverInfo.delay);
+        this.cooldownTimeout(inst);
+        this.setActiveInstance();
+        this.resetProgress(); // it's used up, like the nuke
+    }
+    createFormation(bandMiddle) {
+        const info = this.flyoverInfo;
+        for (const place of CarpetBombing.wingmen) {
+            let div = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "flyover");
+            let img = document.createElement('img');
+            div.appendChild(img);
+            img.src = info.imageSource;
+            div.style.left = (100 + place.dx) + 'vw';
+            div.style.top = (bandMiddle - 100 + place.dy) + 'px'; // the aircraft is 200px high
+            setTimeout(() => this.beginMoveInterval(div, info.speed, info.duration), info.delay);
+            ContentElHandler.fadeRemoveItem(div, info.delay + info.duration, 10);
+        }
+    }
+    // Follows the lead aircraft across the screen, dropping a few explosions behind it at each step
+    sweep(bandMiddle, inst) {
+        const screenWidth = window.innerWidth;
+        const vw = screenWidth / 100;
+        const halfBand = this.blastRadius;
+        const laneHeight = halfBand * 2 / CarpetBombing.bombsPerTick;
+        let step = 0;
+        const timer = setInterval(() => {
+            step++;
+            const leadMiddle = (100 - this.flyoverInfo.speed * step) * vw + 100; // the lead's left edge, plus half its width
+            if (leadMiddle < -150) {
+                clearInterval(timer);
+                inst.blastRadElement.style.visibility = 'hidden';
+                this.switchBlastIndicatorStyle(false, inst);
+                return;
+            }
+            if (leadMiddle > screenWidth + 40)
+                return; // not on the screen yet
+            if (step % 2 == 0) {
+                SoundPlayer.playSequentialSound(multiExplosions);
+            }
+            for (let lane = 0; lane < CarpetBombing.bombsPerTick; lane++) {
+                const x = Math.min(screenWidth, Math.max(0, leadMiddle + RandomNumberGen.randomNumBetween(0, 160)));
+                const y = bandMiddle - halfBand + lane * laneHeight + RandomNumberGen.randomNumBetween(0, laneHeight);
+                ExplosionHandler.basicExplosion({ X: x, Y: y }, this.explosionInfo.size, this.explosionInfo.frames, weaponNames.airstrike);
+            }
+        }, CarpetBombing.tickMs);
     }
 }
 class Chopper extends ExplosiveWeaponType {

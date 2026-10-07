@@ -170,7 +170,8 @@ enum weaponNames {
     flare = 7,
     tactical_Nuke = 8,
     chopper = 9,
-    surveillance = 10 // the 0 key
+    surveillance = 10, // the 0 key
+    carpet_bomb = 11   // the - key
 }
 type position = {
     X,
@@ -402,6 +403,33 @@ const nukeInfo: ExplosiveWeaponInfo = {
         duration: 2000,
         delay: 2500
     }}
+// A superweapon, like the nuke: three aircraft sweep the whole width of the screen, right to left,
+// along a band around the mouse, carpeting it with airstrike-sized explosions.
+const carpetBombInfo: ExplosiveWeaponInfo = {
+    name: weaponNames.carpet_bomb,
+    displayName: "Carpet Strike",
+    class: CarpetBombing,
+    cursor: "cursor4",
+    blastRadius: 150, // half the height of the band it covers
+    explosionInfo: {
+        size: ExplSizes.XL, // same as the airstrike
+        frames: expl_med_imgs,
+        sound: [],
+        length: 1000,
+    },
+    imageSource: assetsSVGFolder + 'f16.svg',
+    sound: airstrikeSounds,
+    speed: 0,
+    cooldown: 30000,
+    noAmmo: bleep_neg,
+    select: [redeemerpickup],
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg', // the same shadow, but three of them and slower than the airstrike's
+        speed: 10,
+        duration: 2000,
+        delay: 2000
+    }
+}
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnel_Charge,
     class: ChargeWeaponType,
