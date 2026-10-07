@@ -417,7 +417,7 @@ const carpetBombInfo: ExplosiveWeaponInfo = {
         sound: [],
         length: 1000,
     },
-    imageSource: assetsSVGFolder + 'f16.svg',
+    imageSource: assetsSVGFolder + 'missiles.svg',
     sound: airstrikeSounds,
     speed: 0,
     cooldown: 30000,

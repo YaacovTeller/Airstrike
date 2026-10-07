@@ -388,9 +388,9 @@ function inNoStrikeZone(target) {
         }
     }
 }
-// A superweapon. Three aircraft cross the whole screen right to left, and the band across it around the
-// mouse (the height of the weapon's circle) is carpeted with explosions as they go, falling just behind
-// them. The explosions do what the airstrike's do.
+// A superweapon. Three aircraft cross the whole screen right to left, and just after they've gone by the
+// band across it around the mouse (the height of the weapon's circle) is carpeted with explosions, which
+// sweep across the same way, right to left. The explosions do what the airstrike's do.
 class CarpetBombing extends ExplosiveWeaponType {
     static tickMs = 100; // how often the aircraft's position steps along, as in beginMoveInterval
     static bombsPerTick = 3; // one in each third of the band's height
@@ -414,10 +414,17 @@ class CarpetBombing extends ExplosiveWeaponType {
         this.switchBlastIndicatorStyle(true, inst);
         const bandMiddle = CollisionDetection.getXYfromPoint(inst.blastRadElement).Y; // the circle stays where it was fired
         this.createFormation(bandMiddle);
-        setTimeout(() => this.sweep(bandMiddle, inst), this.flyoverInfo.delay);
+        setTimeout(() => this.sweep(bandMiddle, inst), this.flyoverInfo.delay + this.flyoverCrossingTime());
         this.cooldownTimeout(inst);
         this.setActiveInstance();
         this.resetProgress(); // it's used up, like the nuke
+    }
+    // How long, once they set off, until the last of the aircraft has gone off the left of the screen
+    flyoverCrossingTime() {
+        const vw = window.innerWidth / 100;
+        const furthestBack = Math.max(...CarpetBombing.wingmen.map(place => place.dx));
+        const distance = (100 + furthestBack) * vw + 200; // from off the right, to clear of the left (the aircraft is 200px wide)
+        return Math.ceil(distance / (this.flyoverInfo.speed * vw)) * CarpetBombing.tickMs;
     }
     createFormation(bandMiddle) {
         const info = this.flyoverInfo;
@@ -432,7 +439,7 @@ class CarpetBombing extends ExplosiveWeaponType {
             ContentElHandler.fadeRemoveItem(div, info.delay + info.duration, 10);
         }
     }
-    // Follows the lead aircraft across the screen, dropping a few explosions behind it at each step
+    // Moves across the screen at the aircraft's speed, dropping a few explosions at each step
     sweep(bandMiddle, inst) {
         const screenWidth = window.innerWidth;
         const vw = screenWidth / 100;
@@ -441,7 +448,7 @@ class CarpetBombing extends ExplosiveWeaponType {
         let step = 0;
         const timer = setInterval(() => {
             step++;
-            const leadMiddle = (100 - this.flyoverInfo.speed * step) * vw + 100; // the lead's left edge, plus half its width
+            const leadMiddle = (100 - this.flyoverInfo.speed * step) * vw + 100; // where the lead aircraft was, were it going with this
             if (leadMiddle < -150) {
                 clearInterval(timer);
                 inst.blastRadElement.style.visibility = 'hidden';
