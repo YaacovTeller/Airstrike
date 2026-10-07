@@ -1,0 +1,132 @@
+﻿type vectorMoveObj = {
+    elem: HTMLElement,
+    angle: number,  // from the blast to the middle of the target
+    dist: number,   // likewise
+    radius: number,
+    hitDist?: number // from the blast to the nearest point of the target's hit box (see MapEntity.hitBox)
+}
+type Box = {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number
+}
+class CollisionDetection {
+    // The point of the box closest to pos -- pos itself if it's inside.
+    public static nearestPointInBox(pos: position, box: Box): position {
+        return { X: Math.min(Math.max(pos.X, box.left), box.right), Y: Math.min(Math.max(pos.Y, box.top), box.bottom) };
+    }
+
+    public static checkCollisionFromPosition(mousePos: position, targetEl: HTMLElement): boolean {
+        let elems = document.elementsFromPoint(mousePos.X, mousePos.Y);
+        return elems.some(el => el === targetEl);
+    }
+    public static checkCollisionWithElement(element: HTMLElement, targetEl: HTMLElement): boolean {
+        let targetRect = targetEl.getBoundingClientRect();
+        let elementRect = element.getBoundingClientRect();
+        if (elementRect.left >= targetRect.left &&
+            elementRect.left <= targetRect.left + targetRect.width &&
+            elementRect.top >= targetRect.top &&
+            elementRect.top <= targetRect.top + targetRect.height) {
+
+            return true
+        }
+        else return false
+    }
+    public static checkCollisionWithCircle(circleEl: HTMLElement, targetEl: HTMLElement): boolean {
+        const targetRect = targetEl.getBoundingClientRect();
+        const circleRect = circleEl.getBoundingClientRect();
+
+        const circleCenterX = circleRect.left + circleRect.width / 2;
+        const circleCenterY = circleRect.top + circleRect.height / 2;
+        const circleRadius = circleRect.width / 2;
+
+        //const closestX = Math.max(targetRect.left, Math.min(circleCenterX, targetRect.right));
+        //const closestY = Math.max(targetRect.top, Math.min(circleCenterY, targetRect.bottom));
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+
+        const distanceX = circleCenterX - targetCenterX;
+        const distanceY = circleCenterY - targetCenterY;
+        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+        return distanceSquared <= (circleRadius * circleRadius);
+    }
+
+    public static checkCollisionFromPositionWithBlast(blastPos: position, targetEl: HTMLElement, radius: number): boolean {
+        let trgtPos: position = this.getXYfromPoint(targetEl);
+        if (trgtPos.X >= blastPos.X - radius &&
+            trgtPos.X <= blastPos.X + radius &&
+            trgtPos.Y >= blastPos.Y - radius &&
+            trgtPos.Y <= blastPos.Y + radius) {
+            return true
+        }
+    }
+    public static getVectorMove(blastPos: position, targetEl: HTMLElement, radius: number): vectorMoveObj {
+        let trgtPos: position = this.getXYfromPoint(targetEl);
+            let dist = this.distanceBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+            let angle = this.angleBetweenPoints(blastPos.X, blastPos.Y, trgtPos.X, trgtPos.Y);
+            let obj: vectorMoveObj = {
+                elem: targetEl,
+                angle: angle,
+                dist: dist,
+                radius: radius
+            }
+            return obj;
+    }
+
+    public static getXYfromPoint(elem: HTMLElement): position {
+        let rect = elem.getBoundingClientRect();
+        var centerX = rect.left + rect.width / 2;
+        var centerY = rect.top + rect.height / 2;
+        return { X: centerX, Y: centerY } as position;
+    }
+
+    private static distanceBetweenPoints(x1, y1, x2, y2) {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+    private static angleBetweenPoints(x1, y1, x2, y2) {
+        var deltaX = x2 - x1;
+        var deltaY = y2 - y1;
+
+        var angleRadians = Math.atan2(deltaY, deltaX);
+        var angleDegrees = angleRadians * (180 / Math.PI);
+        angleDegrees < 0 ? angleDegrees += 360 : "";
+        return angleDegrees;
+    }
+}
+
+// Horizontal extent of the water across a band of rows, in viewport coordinates.
+type WaterSpan = {
+    left: number,       // water starts here
+    openRight: number,  // water is fully opaque up to here
+    shoreRight: number, // past here is dry land (between openRight and shoreRight the water fades out)
+}
+
+// Works out where the water actually is, so things can be kept clear of it. The .water div is a
+// skewed rectangle (see cssMenus.css), so its shore slants, and its right edge fades out rather
+// than stopping -- a single point hit test against the element can't tell either of those apart.
+class Shoreline {
+    private static openFraction = 0.9; // matches the 90% where .water's mask-image starts fading out
+
+    // Where the water is across the rows from topY to bottomY, or null if no water is showing.
+    // Because the shore slants, a box covering several rows has to respect its most restrictive row.
+    public static waterSpan(topY: number, bottomY: number): WaterSpan | null {
+        const water = document.getElementById("water");
+        if (!water) return null;
+        const rect = water.getBoundingClientRect();
+        if (!rect.width) return null;
+
+        const skew = new DOMMatrix(getComputedStyle(water).transform).c; // sideways shift per row
+        const width = rect.width - Math.abs(skew) * rect.height;          // bounding box minus the skew
+        const centreX = rect.left + rect.width / 2;
+        const centreY = rect.top + rect.height / 2;
+        const edge = (fraction: number, y: number) => centreX + (fraction - 0.5) * width + skew * (y - centreY);
+
+        return {
+            left: Math.max(edge(0, topY), edge(0, bottomY)),
+            openRight: Math.min(edge(this.openFraction, topY), edge(this.openFraction, bottomY)),
+            shoreRight: Math.max(edge(1, topY), edge(1, bottomY)),
+        };
+    }
+}

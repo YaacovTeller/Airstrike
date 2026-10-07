@@ -69,6 +69,25 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="AS_assets\bit.png" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_blue_1.jpeg" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_blue_2___.jpeg" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_blue_3.jpeg" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_brown_1.jpeg" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_brown_2___.jpeg" />
+    <Content Include="AS_assets\buildings\jpgs\Warehouse_brown_3.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_1.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_1.png" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_2.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_2.png" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_3.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_blue_3.png" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_1.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_1.png" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_2.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_2.png" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_3.jpeg" />
+    <Content Include="AS_assets\buildings\Warehouse_brown_3.png" />
     <Content Include="AS_assets\Buildings_1.png" />
     <Content Include="AS_assets\crater_1.png" />
     <Content Include="AS_assets\crater_2.png" />
@@ -185,6 +204,18 @@
     <Content Include="AS_assets\fire_1\frame_4_delay-0.1s.gif" />
     <Content Include="AS_assets\fire_1\frame_5_delay-0.1s.gif" />
     <Content Include="AS_assets\fire_1\frame_6_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_2\frame_00_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_01_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_02_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_03_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_04_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_05_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_06_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_07_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_08_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_09_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_10_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_2\frame_11_delay-0.15s.gif" />
     <Content Include="AS_assets\fire_3\frame_00_delay-0.15s.gif" />
     <Content Include="AS_assets\fire_3\frame_01_delay-0.15s.gif" />
     <Content Include="AS_assets\fire_3\frame_02_delay-0.15s.gif" />
@@ -275,6 +306,20 @@
     <Content Include="AS_assets\sound\target_lock.wav" />
     <Content Include="AS_assets\sound\WaitBitzua.mp3" />
     <Content Include="AS_assets\splash.gif" />
+    <Content Include="AS_assets\splash\frame_00_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_01_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_02_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_03_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_04_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_05_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_06_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_07_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_08_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_09_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_10_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_11_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_12_delay-0.1s.gif" />
+    <Content Include="AS_assets\splash\frame_13_delay-0.1s.gif" />
     <Content Include="AS_assets\SVG\bomb_nuke.svg" />
     <Content Include="AS_assets\SVG\chopper.png" />
     <Content Include="AS_assets\SVG\chopper.svg" />
@@ -287,6 +332,7 @@
     <Content Include="AS_assets\SVG\jet_grey.ico" />
     <Content Include="AS_assets\SVG\jet_grey.svg" />
     <Content Include="AS_assets\SVG\lock_red.svg" />
+    <Content Include="AS_assets\SVG\missiles.svg" />
     <Content Include="AS_assets\SVG\reaper3.svg" />
     <Content Include="AS_assets\SVG\target-box.svg" />
     <Content Include="AS_assets\truck__green.png" />

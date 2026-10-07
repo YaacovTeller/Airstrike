@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "airstrike-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "Airstrike_TS", "-p", "10202", "-c-1"],
+      "port": 10202
+    }
+  ]
+}

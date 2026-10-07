@@ -1,0 +1,14 @@
+const assetsFolder = "./AS_assets/";
+const assetsSVGFolder = assetsFolder + "SVG/";
+const classicExplosion = 'expl1.gif';
+const strikeExplosion = 'expl_big.gif';
+const mushroomExplosion = 'mushroom_1.gif';
+const crashTimeout = 600;
+const destroyedTargetStayConst = 20000;
+var destroyedTargetStay = 20000;
+const damagedTargetStay = 40000;
+const itemStay = 15000;
+var fireStay = itemStay;
+const fadeAnimTime = 8000;
+var lightID = 1;
+//# sourceMappingURL=const.js.map

@@ -1,0 +1,57 @@
+﻿:root {
+    --borderRad: 5px;
+    --crashTimeout: 600ms;
+    --chargeSelected: hidden;
+    --hebDisplay: none;
+    --engDisplay: block;
+    --halfOpacGrey: rgba(224,255,255, 0.5);
+    --halfOpacRed: rgba(255,100,100, 0.5);
+    --selected: #3ca3ff7a;
+    --shake_small: 5px;
+    --shake_med: 10px;
+    --shake_heavy: 15px;
+    --lightGrad_small: radial-gradient(circle, rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 0.90) 40%);
+
+    --rainFallHeight: 100vh;
+}
+.heb {
+    display: var(--hebDisplay);
+}
+.eng {
+    display: var(--engDisplay);
+}
+img {
+    visibility: hidden;
+    user-select: none;
+}
+
+    img[src] {
+        visibility: visible;
+    }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    margin: 0px;
+}
+
+audio {
+    display: none;
+}
+
+#content {
+    display: grid;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-repeat: round;
+    z-index: 0;
+}
+#background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-repeat: round;
+}

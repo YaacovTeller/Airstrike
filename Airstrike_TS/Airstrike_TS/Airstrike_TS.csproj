@@ -1,0 +1,449 @@
+﻿<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{2574F603-4B6C-4A30-BFDD-E3BC09EEDFDF}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TypeScriptHTMLApp1</RootNamespace>
+    <AssemblyName>TypeScriptHTMLApp1</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <Use64BitIISExpress />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TypeScriptTarget>esnext</TypeScriptTarget>
+    <TypeScriptJSXEmit>React</TypeScriptJSXEmit>
+    <TypeScriptModuleKind />
+    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
+    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
+    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+    <TypeScriptOutFile />
+    <TypeScriptOutDir />
+    <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
+    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+    <TypeScriptSourceMap>True</TypeScriptSourceMap>
+    <TypeScriptMapRoot />
+    <TypeScriptSourceRoot />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TypeScriptTarget>esnext</TypeScriptTarget>
+    <TypeScriptJSXEmit>None</TypeScriptJSXEmit>
+    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
+    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
+    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <TypeScriptRemoveComments>True</TypeScriptRemoveComments>
+    <TypeScriptOutFile />
+    <TypeScriptOutDir />
+    <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
+    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+    <TypeScriptSourceMap>False</TypeScriptSourceMap>
+    <TypeScriptMapRoot />
+    <TypeScriptSourceRoot />
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="AS_assets\Buildings_1.png" />
+    <Content Include="AS_assets\crater_1.png" />
+    <Content Include="AS_assets\crater_2.png" />
+    <Content Include="AS_assets\crater_3.png" />
+    <Content Include="AS_assets\DS_sand_.png" />
+    <Content Include="AS_assets\DS_water.png" />
+    <Content Include="AS_assets\expl_big\frame_00_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_01_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_02_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_03_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_04_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_05_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_06_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_07_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_08_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_09_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_10_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_11_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_12_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_13_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_14_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_15_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_16_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_17_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_18_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_19_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_20_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_21_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_22_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_23_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_24_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_25_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_big\frame_26_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med\frame_00_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_01_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_02_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_03_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_04_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_05_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_06_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_07_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_08_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_09_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_10_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_11_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_12_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_13_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_14_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_15_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_16_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_17_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_18_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_19_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_20_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_21_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_22_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_23_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med\frame_24_delay-0.08s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_00_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_01_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_02_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_03_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_04_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_05_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_06_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_07_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_08_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_09_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_10_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_11_delay-0.06s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_12_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_13_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_14_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_15_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_16_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_17_delay-0.09s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_18_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_19_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_20_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_21_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_22_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_23_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_med_\frame_24_delay-0.1s.gif" />
+    <Content Include="AS_assets\expl_small\frame_00_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_01_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_02_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_03_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_04_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_05_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_06_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_07_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_08_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_09_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_10_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_11_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_12_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_13_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_14_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_15_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_16_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_17_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_18_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_19_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_20_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_21_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_22_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_23_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_24_delay-0.05s.gif" />
+    <Content Include="AS_assets\expl_small\frame_25_delay-0.05s.gif" />
+    <Content Include="AS_assets\fire_1\frame_0_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_1_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_2_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_3_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_4_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_5_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_1\frame_6_delay-0.1s.gif" />
+    <Content Include="AS_assets\fire_3\frame_00_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_01_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_02_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_03_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_04_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_05_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_06_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_07_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_08_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_09_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_10_delay-0.15s.gif" />
+    <Content Include="AS_assets\fire_3\frame_11_delay-0.15s.gif" />
+    <Content Include="AS_assets\Jeep2__.png" />
+    <Content Include="AS_assets\Jeep2__grey.png" />
+    <Content Include="AS_assets\Jeep2__light.png" />
+    <Content Include="AS_assets\Jeep2__lightgrey.png" />
+    <Content Include="AS_assets\Jeep2__tan.png" />
+    <Content Include="AS_assets\Jeep__.png" />
+    <Content Include="AS_assets\Jeep__grey.png" />
+    <Content Include="AS_assets\Jeep__light.png" />
+    <Content Include="AS_assets\launcher.png" />
+    <Content Include="AS_assets\rockets.png" />
+    <Content Include="AS_assets\ruin_1.png" />
+    <Content Include="AS_assets\ruin_2.png" />
+    <Content Include="AS_assets\Sand.png" />
+    <Content Include="AS_assets\Sand_crater.png" />
+    <Content Include="AS_assets\Sand_crater_1.png" />
+    <Content Include="AS_assets\Sand_scrub.png" />
+    <Content Include="AS_assets\ship1.png" />
+    <Content Include="AS_assets\ship2.png" />
+    <Content Include="AS_assets\smoke_3\frame_00_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_01_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_02_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_03_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_04_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_05_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_06_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_07_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_08_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_09_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_10_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_11_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_12_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_13_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_14_delay-0.1s.gif" />
+    <Content Include="AS_assets\smoke_3\frame_15_delay-0.1s.gif" />
+    <Content Include="AS_assets\sound\4_3.mp3" />
+    <Content Include="AS_assets\sound\5sec.mp3" />
+    <Content Include="AS_assets\sound\ambience\ambient_1_q.mp3" />
+    <Content Include="AS_assets\sound\ambience\ambient_2_q.mp3" />
+    <Content Include="AS_assets\sound\ambience\ambient_4_q.mp3" />
+    <Content Include="AS_assets\sound\ambience\ambient_5_q.mp3" />
+    <Content Include="AS_assets\sound\ambience\crickets.mp3" />
+    <Content Include="AS_assets\sound\ambience\jackal_1.mp3" />
+    <Content Include="AS_assets\sound\ambience\jackal_2.mp3" />
+    <Content Include="AS_assets\sound\ambience\owl.mp3" />
+    <Content Include="AS_assets\sound\ambience\owl_2.mp3" />
+    <Content Include="AS_assets\sound\ambience\owl_3.mp3" />
+    <Content Include="AS_assets\sound\ambience\owl_4.mp3" />
+    <Content Include="AS_assets\sound\ambience\rain.mp3" />
+    <Content Include="AS_assets\sound\ambience\rain_heavy.mp3" />
+    <Content Include="AS_assets\sound\ambience\rain_pouring.mp3" />
+    <Content Include="AS_assets\sound\ambience\thunder_big.mp3" />
+    <Content Include="AS_assets\sound\ambience\thunder_small.mp3" />
+    <Content Include="AS_assets\sound\bleepbleep.mp3" />
+    <Content Include="AS_assets\sound\cannonActivate.wav" />
+    <Content Include="AS_assets\sound\cheers_gib.mp3" />
+    <Content Include="AS_assets\sound\gib_1.mp3" />
+    <Content Include="AS_assets\sound\gib_2.mp3" />
+    <Content Include="AS_assets\sound\gib_3.mp3" />
+    <Content Include="AS_assets\sound\gib_4.mp3" />
+    <Content Include="AS_assets\sound\gib_5.mp3" />
+    <Content Include="AS_assets\sound\gib_6.mp3" />
+    <Content Include="AS_assets\sound\hshot_small.mp3" />
+    <Content Include="AS_assets\sound\jet_pass.mp3" />
+    <Content Include="AS_assets\sound\Kibalti.mp3" />
+    <Content Include="AS_assets\sound\Kibalti2.mp3" />
+    <Content Include="AS_assets\sound\MeaAchuz.mp3" />
+    <Content Include="AS_assets\sound\MeUle.mp3" />
+    <Content Include="AS_assets\sound\Muchan.mp3" />
+    <Content Include="AS_assets\sound\nachon.mp3" />
+    <Content Include="AS_assets\sound\radio_1.mp3" />
+    <Content Include="AS_assets\sound\radio_2.mp3" />
+    <Content Include="AS_assets\sound\Rashai.mp3" />
+    <Content Include="AS_assets\sound\rev_1.mp3" />
+    <Content Include="AS_assets\sound\rev_2.mp3" />
+    <Content Include="AS_assets\sound\rev_3.mp3" />
+    <Content Include="AS_assets\sound\target_lock.wav" />
+    <Content Include="AS_assets\sound\WaitBitzua.mp3" />
+    <Content Include="AS_assets\splash.gif" />
+    <Content Include="AS_assets\SVG\bomb_nuke.svg" />
+    <Content Include="AS_assets\SVG\chopper.png" />
+    <Content Include="AS_assets\SVG\chopper.svg" />
+    <Content Include="AS_assets\SVG\chopper_base.png" />
+    <Content Include="AS_assets\SVG\chopper_blades.png" />
+    <Content Include="AS_assets\SVG\chopper_full.png" />
+    <Content Include="AS_assets\SVG\drone.svg" />
+    <Content Include="AS_assets\SVG\f16.svg" />
+    <Content Include="AS_assets\SVG\flame5.svg" />
+    <Content Include="AS_assets\SVG\jet_grey.ico" />
+    <Content Include="AS_assets\SVG\jet_grey.svg" />
+    <Content Include="AS_assets\SVG\lock_red.svg" />
+    <Content Include="AS_assets\SVG\reaper3.svg" />
+    <Content Include="AS_assets\SVG\target-box.svg" />
+    <Content Include="AS_assets\truck__green.png" />
+    <Content Include="AS_assets\truck__grey.png" />
+    <Content Include="AS_assets\truck__tan2.png" />
+    <Content Include="AS_assets\wheel.png" />
+    <Content Include="cssAnims.css" />
+    <Content Include="icons\bomb.ico" />
+    <Content Include="icons\jet.ico" />
+    <Content Include="icons\missile.ico" />
+    <Content Include="icons\tank-mortar.ico" />
+    <Content Include="icons\tank.ico" />
+    <Content Include="icons\target.ico" />
+    <None Include="Properties\PublishProfiles\AirstrikeTS - Web Deploy.pubxml" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AS_assets\crater.png" />
+    <Content Include="AS_assets\cursors\battlefieldH.cur" />
+    <Content Include="AS_assets\cursors\bazooka.cur" />
+    <Content Include="AS_assets\cursors\crosshair.cur" />
+    <Content Include="AS_assets\cursors\sniper.cur" />
+    <Content Include="AS_assets\cursors\target.cur" />
+    <Content Include="AS_assets\cursors\unbounded.cur" />
+    <Content Include="AS_assets\expl1.gif" />
+    <Content Include="AS_assets\explode_unused.gif" />
+    <Content Include="AS_assets\expl_big.gif" />
+    <Content Include="AS_assets\expl_big_fast.gif" />
+    <Content Include="AS_assets\fire_1.gif" />
+    <Content Include="AS_assets\fire_3.gif" />
+    <Content Include="AS_assets\mushroom_1.gif" />
+    <Content Include="AS_assets\smoke_1.gif" />
+    <Content Include="AS_assets\smoke_2.gif" />
+    <Content Include="AS_assets\smoke_3.gif" />
+    <Content Include="AS_assets\sound\alarm3.wav" />
+    <Content Include="AS_assets\sound\aluAk.mp3" />
+    <Content Include="AS_assets\sound\automag_reload.wav" />
+    <Content Include="AS_assets\sound\Beep.wav" />
+    <Content Include="AS_assets\sound\beep_tiny.mp3" />
+    <Content Include="AS_assets\sound\BigExpl.mp3" />
+    <Content Include="AS_assets\sound\chopper.mp3" />
+    <Content Include="AS_assets\sound\click_1.mp3" />
+    <Content Include="AS_assets\sound\click_2.mp3" />
+    <Content Include="AS_assets\sound\crash_1.mp3" />
+    <Content Include="AS_assets\sound\crash_2.mp3" />
+    <Content Include="AS_assets\sound\crash_3.mp3" />
+    <Content Include="AS_assets\sound\crash_4.mp3" />
+    <Content Include="AS_assets\sound\crash_5.mp3" />
+    <Content Include="AS_assets\sound\expl_dull.mp3" />
+    <Content Include="AS_assets\sound\expl_dull2.mp3" />
+    <Content Include="AS_assets\sound\expl_many.mp3" />
+    <Content Include="AS_assets\sound\flak_cannon_ready.wav" />
+    <Content Include="AS_assets\sound\gun_1.mp3" />
+    <Content Include="AS_assets\sound\gun_2.mp3" />
+    <Content Include="AS_assets\sound\gun_3.mp3" />
+    <Content Include="AS_assets\sound\gun_5.mp3" />
+    <Content Include="AS_assets\sound\gun_6.mp3" />
+    <Content Include="AS_assets\sound\gun_7.mp3" />
+    <Content Include="AS_assets\sound\gun_8.mp3" />
+    <Content Include="AS_assets\sound\jet_fly.mp3" />
+    <Content Include="AS_assets\sound\matara_shmd.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_3.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_grander.mp3" />
+    <Content Include="AS_assets\sound\Messy_bomb_shot.mp3" />
+    <Content Include="AS_assets\sound\mortar_1.mp3" />
+    <Content Include="AS_assets\sound\mortar_2.mp3" />
+    <Content Include="AS_assets\sound\mortar_3.mp3" />
+    <Content Include="AS_assets\sound\mortar_4.mp3" />
+    <Content Include="AS_assets\sound\mortar_5.mp3" />
+    <Content Include="AS_assets\sound\pgia.mp3" />
+    <Content Include="AS_assets\sound\pop_click.wav" />
+    <Content Include="AS_assets\sound\redAlert7.mp3" />
+    <Content Include="AS_assets\sound\redeemerpickup.wav" />
+    <Content Include="AS_assets\sound\ricochet_1.mp3" />
+    <Content Include="AS_assets\sound\ricochet_2.mp3" />
+    <Content Include="AS_assets\sound\ricochet_3.mp3" />
+    <Content Include="AS_assets\sound\ricochet_4.mp3" />
+    <Content Include="AS_assets\sound\ricochet_5.mp3" />
+    <Content Include="AS_assets\sound\rpg_fire.mp3" />
+    <Content Include="AS_assets\sound\shager_1.mp3" />
+    <Content Include="AS_assets\sound\shager_2.mp3" />
+    <Content Include="AS_assets\sound\shager_3.mp3" />
+    <Content Include="AS_assets\sound\shager_4.mp3" />
+    <Content Include="AS_assets\sound\shager_5.mp3" />
+    <Content Include="AS_assets\sound\stopwatch_3.mp3" />
+    <Content Include="AS_assets\sound\strike_1.mp3" />
+    <Content Include="AS_assets\sound\strike_2.mp3" />
+    <Content Include="AS_assets\sound\strike_3.mp3" />
+    <Content Include="AS_assets\sound\tank_fire.mp3" />
+    <Content Include="AS_assets\sound\target_lost.mp3" />
+    <Content Include="AS_assets\sound\weapon_pickup.wav" />
+    <Content Include="AS_assets\sound\yoRE_Eish.mp3" />
+    <Content Include="AS_assets\SVG\dynamite.svg" />
+    <Content Include="AS_assets\SVG\gun.svg" />
+    <Content Include="AS_assets\SVG\jet.svg" />
+    <Content Include="AS_assets\SVG\missile.svg" />
+    <Content Include="AS_assets\SVG\mortar.svg" />
+    <Content Include="AS_assets\SVG\rad.svg" />
+    <Content Include="AS_assets\SVG\tank.svg" />
+    <Content Include="AS_assets\trans.png" />
+    <Content Include="cssMenus.css" />
+    <Content Include="cssApp.css" />
+    <Content Include="cssTags.css" />
+    <Content Include="index.html" />
+    <Content Include="Web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="app.ts" />
+    <TypeScriptCompile Include="collisionDetection.ts" />
+    <TypeScriptCompile Include="const.ts" />
+    <TypeScriptCompile Include="explosionHandler.ts" />
+    <TypeScriptCompile Include="throwHandler.ts" />
+    <TypeScriptCompile Include="gameHandler.ts" />
+    <TypeScriptCompile Include="hudHandler.ts" />
+    <TypeScriptCompile Include="level.ts" />
+    <TypeScriptCompile Include="types.ts" />
+    <TypeScriptCompile Include="sound.ts" />
+    <TypeScriptCompile Include="target.ts" />
+    <TypeScriptCompile Include="users.ts" />
+    <TypeScriptCompile Include="utilities.ts" />
+    <TypeScriptCompile Include="weaponType.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AS_assets\sound\unused\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>10202</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:10202/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
