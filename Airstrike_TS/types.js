@@ -438,7 +438,7 @@ const surveillanceInfo = {
     displayName: "Surveillance Drone",
     class: SurveillanceDrone,
     cursor: "cursor4",
-    blastRadius: 90, // how far around the mouse it can pick up a heat signature
+    blastRadius: 110, // how far around the mouse it can pick up a heat signature
     explosionInfo: {
         size: ExplSizes.tiny,
         frames: [],
@@ -453,8 +453,8 @@ const surveillanceInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 3, // vw per 100ms, so a pass of 4s crosses the screen with a bit to spare
-        duration: 4000,
+        speed: 2, // vw per 100ms, so a pass of 6s crosses the screen with a bit to spare
+        duration: 6000, // how long the scan lasts too
         delay: 1000 // a second to arrive
     }
 };
