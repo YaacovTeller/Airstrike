@@ -57,14 +57,38 @@ function villaInfo(letter, width, height, hide) {
 // The mosques (AS_assets/buildings/mosques): three of them, a village has one. Undamaged, damaged (the tower half
 // broken) and destroyed (the tower gone); there's also a complete ruin, _4, that nothing uses yet. Sizes are 0.36
 // of natural.
-function mosqueInfo(letter, width, height, hide) {
-    const name = (stage) => "mosques/Mosque_" + letter + "_" + stage + ".png";
+function mosqueInfo(letter, width, height, hide, folder = "mosques/") {
+    const name = (stage) => folder + "Mosque_" + letter + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
 }
 const allMosqueInfo = [
     mosqueInfo("A", 76, 101, { x: [42, 50], y: [48, 76] }),
     mosqueInfo("B", 76, 107, { x: [20, 51], y: [49, 77] }),
     mosqueInfo("C", 81, 109, { x: [18, 50], y: [52, 72] }),
+];
+// The other mosques, for the bigger villages: the second sheet's small and medium for the medium ones, and for the
+// large ones its large and the grander pictures in mosques/fancy (the fancy large is too much to use). Sizes are
+// each picture's own scale, from 0.3 to 0.42 of natural.
+const mediumMosqueInfo = [
+    mosqueInfo("Small", 87, 101, { x: [44, 58], y: [47, 65] }),
+    mosqueInfo("Medium", 76, 102, { x: [29, 52], y: [56, 68] }),
+];
+const largeMosqueInfo = [
+    mosqueInfo("Large", 124, 136, { x: [49, 69], y: [82, 92] }),
+    mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, "mosques/fancy/"),
+    mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, "mosques/fancy/"),
+];
+// The apartment blocks (AS_assets/buildings/blocks): four kinds, each intact, really damaged and destroyed.
+// Sizes are 0.28 of natural, the same as the villas'.
+function blockInfo(number, width, height, hide) {
+    const name = (stage) => "blocks/Block_" + number + "_" + stage + ".png";
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+}
+const allBlockInfo = [
+    blockInfo(1, 87, 87, { x: [15, 60], y: [19, 60] }),
+    blockInfo(2, 81, 85, { x: [13, 58], y: [15, 60] }),
+    blockInfo(3, 95, 88, { x: [12, 77], y: [19, 55] }),
+    blockInfo(4, 115, 91, { x: [15, 89], y: [23, 59] }),
 ];
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.

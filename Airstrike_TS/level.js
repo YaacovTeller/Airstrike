@@ -444,8 +444,14 @@ class SceneLevel extends Level {
 // some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
 // scans them. Stages follow on from each other like the port's.
 class HillsLevel extends SceneLevel {
-    static minVillas = 20; // in the village itself
-    static maxVillas = 26;
+    // What a village is made of, which varies from stage to stage: a small one is villas as it always was (with the odd
+    // block), a medium one has a couple of the apartment blocks among them, and a large one is mostly blocks with
+    // a few villas. The bigger the village, the bigger its mosque.
+    static villageSizes = [
+        { chance: 40, villas: [20, 26], blocks: [0, 1], mosques: allMosqueInfo },
+        { chance: 35, villas: [14, 18], blocks: [2, 3], mosques: mediumMosqueInfo },
+        { chance: 25, villas: [4, 6], blocks: [9, 12], mosques: largeMosqueInfo },
+    ];
     static minOutliers = 1; // and standing off from it
     static maxOutliers = 2;
     static villageGap = 22; // between the buildings in the village
@@ -530,8 +536,20 @@ class HillsLevel extends SceneLevel {
             }
             return false;
         };
-        // the big ones first, while there's room: the village's mosque, which there's only the one of
-        place(RandomNumberGen.returnRandomFromArray(allMosqueInfo), false);
+        // how big a village this one is
+        let roll = RandomNumberGen.randomNumBetween(1, 100);
+        let size = HillsLevel.villageSizes[0];
+        for (const candidate of HillsLevel.villageSizes) {
+            size = candidate;
+            if ((roll -= candidate.chance) <= 0)
+                break;
+        }
+        // the big ones first, while there's room: the village's mosque, which there's only the one of, and the blocks
+        place(RandomNumberGen.returnRandomFromArray(size.mosques), false);
+        const blocks = RandomNumberGen.randomNumBetween(size.blocks[0], size.blocks[1]);
+        for (let i = 0; i < blocks; i++) {
+            place(RandomNumberGen.returnRandomFromArray(allBlockInfo), false);
+        }
         const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
         for (let i = 0; i < towers; i++) {
             place(this.typeFor(HillsLevel.waterTowerCodes, true, HillsLevel.waterTowerScale), false);
@@ -544,7 +562,7 @@ class HillsLevel extends SceneLevel {
                 place(this.typeFor([code]), false);
             }
         }
-        const villas = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
+        const villas = RandomNumberGen.randomNumBetween(size.villas[0], size.villas[1]);
         for (let i = 0; i < villas; i++) {
             place(RandomNumberGen.returnRandomFromArray(allVillaInfo), false);
         }
