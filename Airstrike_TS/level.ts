@@ -225,11 +225,12 @@ class Level {
                 this.endWave();
             }
             checkIndex++;
-            if (checkIndex >= 100) {
+            if (checkIndex >= 200) { // every 20 seconds
                 checkIndex = 0;
-                if (this.checkForDamagedActiveTargets()) {
+                // a hint about the drone, if there's one to use
+                if (this.checkForDamagedActiveTargets() && extraWeapons[weaponNames.surveillance]) {
                     PopupHandler.addToArray(
-                        "Press 'S' to scan for survivors..."
+                        "Use the surveillance drone (10) to check for survivors..."
                     );
                 }
             }

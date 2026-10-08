@@ -397,7 +397,7 @@ class GameHandler {
                     this.changeWeapon(extraWeapons[int])
                 }
             }
-            else if (event.key.toLowerCase() === 's') { this.level.showActiveTargets(); }
+            else if (event.shiftKey && event.key === 'S') { this.level.showActiveTargets(); } // a cheat, like Shift+A: marks every active target
             else if (event.key.toLowerCase() === 't') {
                 game.changeTime(RandomNumberGen.randomNumBetween(0, 2));
             }
