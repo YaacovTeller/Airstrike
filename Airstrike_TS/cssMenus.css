@@ -607,6 +607,36 @@ input[type=radio]:checked ~ label {
 #popupText {
     font-size: 30px;
 }
+
+/* The pause message: the same look as the popups, but big and in the middle of the screen. The screen
+   itself is shaded by #overlay. */
+#pauseBox {
+    pointer-events: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-family: monospace;
+    background-color: rgba(255, 255, 255, 0.4);
+    padding: 30px 70px;
+    color: #333333;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 12;
+}
+#pauseTitle {
+    font-size: 140px;
+    font-weight: 900;
+    letter-spacing: 12px;
+}
+#pauseText {
+    font-size: 30px;
+}
+.gamePaused * {
+    animation-play-state: paused !important;
+}
 .directionalFluidContainer {
     display: flex;
     flex-direction: column;

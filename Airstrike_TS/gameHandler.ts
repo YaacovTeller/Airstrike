@@ -357,7 +357,7 @@ class GameHandler {
     }
 
     private fireFunc() {
-        if (!game.gameInProgress) {
+        if (!game.gameInProgress || this.paused) {
             return;
         }
         if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
@@ -368,9 +368,17 @@ class GameHandler {
     }
 
     private handleKeyPress(event) {
+        if (this.paused) { // nothing else works while paused
+            if (event.key.toLowerCase() === 'p' || event.key === 'Escape') { this.togglePause(); }
+            return;
+        }
         if (event.key === 'Escape') {
             this.toggleGamePause();
         }
+        else if (event.key.toLowerCase() === 'p') {
+            this.togglePause();
+        }
+        if (this.menuIsOpen()) return; // the game's keys don't work while the menu's up
         if (game.gameInProgress) {
             if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') { this.fireFunc(); }
 
@@ -481,6 +489,7 @@ class GameHandler {
     }
 
     public changeWeapon(wep: WeaponType) {
+        if (this.paused) return;
         let wepArr = wep.getWeaponArray();
         if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return
@@ -682,15 +691,12 @@ class GameHandler {
         }
     }
 
+    // The menu (Escape) freezes the whole game the way the P key does -- every timer, sound and animation --
+    // and when it's closed again the game carries on from that moment.
     public toggleGamePause() {
         if (this.gameInProgress) {
-            if (this.gameTimer) {
-                this.pause();
-            }
-            else {
-                this.start_unpause();
-                this.level.continueWave(); // UNPAUSE
-            }
+            this.freeze(!this.menuIsOpen());
+            this.toggleModal();
         }
         else if (this.gameWasPlayed) {  // FOR WHAT SITU??
             this.pause();
@@ -745,17 +751,86 @@ class GameHandler {
         this.cutGameFuncs();
         this.toggleModal();
     }
+    // Clears the last game right out, so nothing of it carries into the next: every pending timer (a
+    // tunnel still producing cars, a weapon in flight, the game loop, flyovers, messages...), every
+    // sound, the targets and what they own, the messages, weather, lights, and the state of the screen.
     public reset() {
-        this.level.resetTargets();
+        GameTimers.clearAll();
+        Sound.stopAll();
+        this.hidePauseDisplay();
+        this.gameTimer = undefined;
+        this.soundTimer = undefined;
+
+        this.level.resetState(); // also clears away the targets, with anything of their own that was running
         this.resetBuildings();
-        this.level.pauseWave();
         this.level = null;
         ContentElHandler.clearContent();
         this.clearLights();
+        allObjects = [];
 
+        PopupHandler.reset();
+        WeatherHandler.createRain(noRain);
+        this.resetScreenEffects();
+
+        fireStay = itemStay; // the weather changes these
+        destroyedTargetStay = destroyedTargetStayConst;
+        this.weapon = null;
+        this.strikesRestricted = false;
+        this.sequentialHits = 0;
+        this.progressNumber = 0;
+        this.fullProgress = false;
+        this.daytime = true;
         conventionalWeapons = [];
         extraWeapons = [];
         this.resetStats();
+    }
+    private resetScreenEffects() {
+        const overlay = document.getElementById("overlay");
+        overlay.classList.remove("flash");
+        const shaken = ContentElHandler.returnContentEl().parentElement;
+        for (const shake of [screenShakeTimeouts.shake_1, screenShakeTimeouts.shake_2, screenShakeTimeouts.shake_3]) {
+            shaken.classList.remove(screenShakeTimeouts[shake]);
+        }
+        if (this.progressBar) {
+            this.progressBar.classList.remove("full");
+        }
+    }
+
+    // ---- Pause (the P key): everything freezes, the screen is shaded and PAUSED is shown ----
+    private paused: boolean = false;
+
+    public togglePause() {
+        if (!this.gameInProgress || this.menuIsOpen()) return; // nothing's running to pause (the menu is open, or the game's over)
+        this.paused = !this.paused;
+        this.freeze(this.paused);
+        this.showPauseDisplay(this.paused);
+    }
+    private menuIsOpen(): boolean {
+        return !document.getElementById("modal").classList.contains("displayNone");
+    }
+    // Stops (or sets going again) everything that's running: timers, sounds and CSS animations
+    private freeze(on: boolean) {
+        if (on) {
+            GameTimers.pause();
+            Sound.pauseAll();
+        }
+        else {
+            GameTimers.resume();
+            Sound.resumeAll();
+        }
+        document.body.classList.toggle("gamePaused", on);
+    }
+    // The shade and the PAUSED message that go with the P key (the menu has its own)
+    private showPauseDisplay(show: boolean) {
+        document.getElementById("overlay").classList.toggle("displayNone", !show);
+        document.getElementById("pauseBox").classList.toggle("displayNone", !show);
+    }
+    private hidePauseDisplay() {
+        if (this.paused) {
+            this.paused = false;
+            this.showPauseDisplay(false);
+        }
+        document.body.classList.remove("gamePaused"); // as it is if it was the menu that had frozen the game
     }
     private resetBuildings() {
         for (let x of allBuildings) {

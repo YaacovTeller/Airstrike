@@ -2,7 +2,34 @@
     private sound;
     public title;
     public volume;
+
+    // Every sound there is, and the clones that have been played, so they can all be stopped or paused together
+    private static all: Array<Sound> = [];
+    private static clones: Array<HTMLAudioElement> = [];
+    private static heldByPause: Array<HTMLAudioElement> = [];
+
+    public static stopAll() {
+        for (const s of Sound.all) {
+            s.sound.onended = null; // otherwise the ambience would carry on to its next track
+            s.sound.pause();
+            s.sound.currentTime = 0;
+        }
+        Sound.clones.forEach(c => c.pause());
+        Sound.clones = [];
+        Sound.heldByPause = [];
+    }
+    public static pauseAll() {
+        const playing = [...Sound.all.map(s => s.sound as HTMLAudioElement), ...Sound.clones].filter(a => !a.paused && !a.ended);
+        playing.forEach(a => a.pause());
+        Sound.heldByPause = playing;
+    }
+    public static resumeAll() {
+        Sound.heldByPause.forEach(a => a.play());
+        Sound.heldByPause = [];
+    }
+
     constructor(src: string) {
+        Sound.all.push(this);
         let arr = src.split('/');
         this.title = arr[arr.length - 1] //arr[arr.length - 2] + "/" + arr[arr.length - 1]
         this.sound = document.createElement("audio");
@@ -22,7 +49,10 @@
         this.sound.pause();
     }
     public playClone() {
-        this.sound.cloneNode(true).play();
+        const clone = this.sound.cloneNode(true) as HTMLAudioElement;
+        Sound.clones = Sound.clones.filter(c => !c.ended); // forget the ones that have finished
+        Sound.clones.push(clone);
+        clone.play();
     }
     public addEndEvent(func: Function) {
         this.sound.onended = null;

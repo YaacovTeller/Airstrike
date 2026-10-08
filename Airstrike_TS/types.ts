@@ -594,6 +594,12 @@ type popupMsg = {
 }
 class PopupHandler {
     static popUpArray: Array<popupMsg> = [];
+    // Drops anything queued or showing
+    static reset() {
+        this.popUpArray = [];
+        const popup = document.getElementById("popupBox");
+        if (popup) popup.classList.add("hide");
+    }
     static addToArray(txt, title?, lngth?) {
         let msg: popupMsg = {
             text: txt,

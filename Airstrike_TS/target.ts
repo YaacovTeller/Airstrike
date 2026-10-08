@@ -322,6 +322,10 @@ class Target extends MapEntity {
         this.targetEl.classList.toggle('heatSig', show);
     }
 
+    // Called when a target is cleared away without having run its course (a new stage or a new game),
+    // for any that has something of its own still going
+    public dispose() { }
+
     protected move(posX: number) {
         if (posX > ContentElHandler.contentElWidth()) {
             this.status = Status.escaped;
@@ -445,6 +449,10 @@ class TunnelTarget extends Target {
         this.trail.style.width = this.targetEl.getBoundingClientRect().width + parseInt(this.targetEl.style.left) + 'px';
     }
     private produceTargetCheck() {
+        if (!this.targetEl.isConnected) { // cleared off the screen: whatever's left of it mustn't keep producing
+            this.stopTargetProduction();
+            return;
+        }
         let num = RandomNumberGen.randomNumBetween(1, 100);
         if (num >= 90) {
             let rect = this.getTargetEl().getBoundingClientRect();
@@ -465,6 +473,9 @@ class TunnelTarget extends Target {
     }
     private stopTargetProduction() {
         clearInterval(this.targetTimer);
+    }
+    public dispose() {
+        this.stopTargetProduction();
     }
 
     public hit(severity: strikeSeverity, wepName: weaponNames) {

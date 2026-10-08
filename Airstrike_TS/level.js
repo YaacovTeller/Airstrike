@@ -54,6 +54,14 @@ class Level {
         };
         this.provideAvailTargets = this.info.targetFunc;
     }
+    // Back to how a level starts, for a level that's played again (the standard levels are reused)
+    resetState() {
+        this.resetTargets();
+        this.pauseWave();
+        this.waveIndex = -1;
+        this.pauseTargetProduction = false;
+        this.passedHalfTargetProduction = false;
+    }
     provideAvailTargets() { return; } // FIX?
     armingUp() { }
     ;
@@ -68,6 +76,8 @@ class Level {
         this.targets = [];
         for (let x of allTargets) {
             x.getTargetEl().remove();
+            if (x.dispose)
+                x.dispose();
         }
         allTargets = [];
         this.allTargetsDeployed = false;
