@@ -94,16 +94,16 @@ const largeMosqueInfo: Array<BuildingInfo> = [
 ];
 
 // The apartment blocks (AS_assets/buildings/blocks): four kinds, each intact, really damaged and destroyed.
-// Sizes are 0.28 of natural, the same as the villas'.
+// Sizes are 0.4 of natural: they're meant to tower over the villas (0.28).
 function blockInfo(number: number, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "blocks/Block_" + number + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
 }
 const allBlockInfo: Array<BuildingInfo> = [
-    blockInfo(1, 87, 87, { x: [15, 60], y: [19, 60] }),
-    blockInfo(2, 81, 85, { x: [13, 58], y: [15, 60] }),
-    blockInfo(3, 95, 88, { x: [12, 77], y: [19, 55] }),
-    blockInfo(4, 115, 91, { x: [15, 89], y: [23, 59] }),
+    blockInfo(1, 124, 124, { x: [20, 92], y: [28, 88] }),
+    blockInfo(2, 115, 122, { x: [19, 84], y: [20, 92] }),
+    blockInfo(3, 136, 126, { x: [14, 113], y: [29, 84] }),
+    blockInfo(4, 164, 130, { x: [27, 125], y: [28, 92] }),
 ];
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.

@@ -450,7 +450,7 @@ class HillsLevel extends SceneLevel {
     static villageSizes = [
         { chance: 40, villas: [20, 26], blocks: [0, 1], mosques: allMosqueInfo },
         { chance: 35, villas: [14, 18], blocks: [2, 3], mosques: mediumMosqueInfo },
-        { chance: 25, villas: [4, 6], blocks: [9, 12], mosques: largeMosqueInfo },
+        { chance: 25, villas: [4, 6], blocks: [7, 9], mosques: largeMosqueInfo },
     ];
     static minOutliers = 1; // and standing off from it
     static maxOutliers = 2;
@@ -464,8 +464,9 @@ class HillsLevel extends SceneLevel {
     // The structure types the village borrows from the other set, at the villas' scale (theirs is 0.28 of
     // their pictures' size, the others' 0.4)
     static borrowedScale = 0.7;
-    // The odd ones out: fenced yards, a shelter and a checkpoint, each put down a couple of times or three...
-    static oddCodes = ["r5c4", "r5c5", "r5c6", "r5c7"];
+    // The odd ones out: the checkpoint booth (the fenced yards and the little shelter didn't suit), put down a couple
+    // of times or three...
+    static oddCodes = ["r5c6"];
     static minOfEachOdd = 2;
     static maxOfEachOdd = 3;
     // ...and (no warehouses: they don't suit the sand) one or two water towers (of the three kinds), at a larger
