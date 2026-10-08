@@ -934,13 +934,14 @@ class GameHandler {
         water.style.transform = "skewX(" + RandomNumberGen.randomNumBetween(18, 38) + "deg)";
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets:
+    // Where to put up to maxCount buildings, none of them in the water, laid out in 4 or 5 lines like streets:
     // each line is a row of blocks along its own baseline (which wanders from game to game), buildings
     // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
     // buildings are, so sizes aren't mixed in one:
     //  - the big ones (warehouses) go singly or two or three side by side, and sometimes two deep
     //  - the middling ones go like that too
-    //  - the small ones (huts, sheds, little houses) are always on their own
+    //  - the small ones (huts, sheds, little houses) mostly go in twos, sometimes threes and only rarely
+    //    on their own, and a block of them is always followed by something bigger, so they never run on
     // and the same type isn't put down twice running in a line.
     public streetBlockSlots(
     maxCount: number,
@@ -966,22 +967,25 @@ class GameHandler {
     const medium = allBuildingInfo.filter(info => info.width >= 70 && info.width < 90);
     const small = allBuildingInfo.filter(info => info.width < 70);
 
-    const lines = RandomNumberGen.randomNumBetween(3, 4);
+    const lines = RandomNumberGen.randomNumBetween(4, 5);
     const pitch = (bottom - top) / lines;
+    const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
 
     for (let line = 0; line < lines && slots.length < maxCount; line++) {
         // where the buildings in this line stand: its baseline, which moves about from one game to the next
-        const baseline = top + pitch * (line + 1) - RandomNumberGen.randomNumBetween(0, 14) + RandomNumberGen.randomNumBetween(-14, 6);
+        const baseline = top + pitch * (line + 1) - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
         let x = 0;
         let previous: BuildingInfo = null;
+        let previousWasSmall = false;
 
         for (let tries = 0; slots.length < maxCount && tries < 80; tries++) {
             const roll = RandomNumberGen.randomNumBetween(1, 100);
-            const pool = roll <= 40 ? large : roll <= 65 ? medium : small;
+            const pool = previousWasSmall ? (roll <= 60 ? large : medium) : (roll <= 40 ? large : roll <= 65 ? medium : small);
             const choices = pool.filter(info => info !== previous);
             const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : pool);
             const isSmall = pool === small;
-            let cols = isSmall ? 1 : RandomNumberGen.randomNumBetween(1, 3);
+            const smallRoll = RandomNumberGen.randomNumBetween(1, 100);
+            let cols = isSmall ? (smallRoll <= 12 ? 1 : smallRoll <= 80 ? 2 : 3) : RandomNumberGen.randomNumBetween(1, 3);
             let rows = !isSmall && cols >= 2 && RandomNumberGen.randomNumBetween(1, 100) <= 30 ? 2 : 1;
 
             const stepX = info.width * (1 + buildingGap);
@@ -993,7 +997,7 @@ class GameHandler {
             // little things stand about a bit more loosely than the rest, so they don't line up like soldiers
             const lift = RandomNumberGen.randomNumBetween(0, isSmall ? 26 : 10);
             const blockTop = baseline - lift - blockHeight;
-            if (blockTop < top - 20) continue;
+            if (blockTop < top - 20 || blockHeight + lift > pitch - 8) continue; // too tall for the room between the lines
 
             // right of the shore, for the rows this block covers
             x = Math.max(x, this.firstDryX(blockTop, blockHeight));
@@ -1010,6 +1014,7 @@ class GameHandler {
                 }
             }
             previous = info;
+            previousWasSmall = isSmall;
             x += info.width + (cols - 1) * stepX + RandomNumberGen.randomNumBetween(14, 34); // and a narrow street
         }
     }

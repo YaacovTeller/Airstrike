@@ -17,7 +17,9 @@ function structureInfo(code: string, width: number, height: number, hide?: Build
     const name = (stage: number) => "Structure_" + code + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
 }
-// Add new building types here to get them into the random rotation. (The sizes are the pictures' at
+// Add new building types here to get them into the random rotation. Enemies only hide in the proper buildings
+// (rows 1 to 4 of the sheet, bar the open shed): the fences, towers, tanks, huts and crates have nowhere to hide
+// that the picture would cover. (The sizes are the pictures' at
 // 0.4 of their natural size. Warehouse_blue_* and Warehouse_brown_* are the older pictures of
 // Structure_r1c1 and Structure_r1c5, and aren't used now.)
 const allBuildingInfo: Array<BuildingInfo> = [
@@ -40,7 +42,7 @@ const allBuildingInfo: Array<BuildingInfo> = [
     structureInfo("r3c6", 55, 50, { x: [10, 31], y: [10, 35] }),
     structureInfo("r3c7", 57, 52, { x: [13, 30], y: [17, 35] }),
     structureInfo("r3c8", 50, 52, { x: [9, 27], y: [17, 35] }),
-    structureInfo("r3c9", 66, 50, { x: [13, 38], y: [15, 35] }),
+    structureInfo("r3c9", 66, 50, undefined),
     structureInfo("r4c1", 71, 52, { x: [13, 48], y: [3, 37] }),
     structureInfo("r4c2", 66, 56, { x: [8, 44], y: [5, 40] }),
     structureInfo("r4c3", 67, 57, { x: [9, 44], y: [10, 41] }),
@@ -49,15 +51,15 @@ const allBuildingInfo: Array<BuildingInfo> = [
     structureInfo("r4c6", 66, 57, { x: [7, 46], y: [15, 42] }),
     structureInfo("r4c7", 56, 56, { x: [8, 35], y: [11, 42] }),
     structureInfo("r4c8", 78, 59, { x: [7, 55], y: [16, 44] }),
-    structureInfo("r5c1", 55, 60, { x: [15, 24], y: [8, 44] }),
-    structureInfo("r5c2", 48, 61, { x: [10, 21], y: [6, 46] }),
-    structureInfo("r5c3", 54, 55, { x: [11, 27], y: [12, 39] }),
-    structureInfo("r5c4", 71, 46, { x: [8, 52], y: [5, 32] }),
-    structureInfo("r5c5", 66, 57, { x: [9, 44], y: [11, 42] }),
-    structureInfo("r5c6", 68, 46, { x: [16, 22], y: [10, 31] }),
-    structureInfo("r5c7", 56, 45, { x: [9, 32], y: [6, 30] }),
-    structureInfo("r5c8", 63, 47, { x: [13, 28], y: [5, 33] }),
-    structureInfo("r5c9", 66, 40, { x: [11, 35], y: [10, 20] }),
+    structureInfo("r5c1", 55, 60, undefined),
+    structureInfo("r5c2", 48, 61, undefined),
+    structureInfo("r5c3", 54, 55, undefined),
+    structureInfo("r5c4", 71, 46, undefined),
+    structureInfo("r5c5", 66, 57, undefined),
+    structureInfo("r5c6", 68, 46, undefined),
+    structureInfo("r5c7", 56, 45, undefined),
+    structureInfo("r5c8", 63, 47, undefined),
+    structureInfo("r5c9", 66, 40, undefined),
 ];
 
 // The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
