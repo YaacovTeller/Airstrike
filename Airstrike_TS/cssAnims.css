@@ -55,6 +55,16 @@
     }
 }
 
+@keyframes tunnelFlash {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
 @keyframes expandContractRotate {
     0% {
         transform: scale(1.5) rotate(0deg);

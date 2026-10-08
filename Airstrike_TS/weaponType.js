@@ -566,7 +566,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
                 if (!(target instanceof Target))
                     continue; // buildings give off nothing themselves
                 const dist = target.heatDistanceFrom(mouse);
-                target.setHeatSignature(dist !== null && dist <= radius);
+                target.setHeatSignature(dist !== null && dist <= radius, mouse, radius);
             }
         };
         const timer = setInterval(sweep, SurveillanceDrone.scanInterval);

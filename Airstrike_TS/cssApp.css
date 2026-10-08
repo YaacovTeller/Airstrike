@@ -271,7 +271,8 @@
     display: none;
 }
 
-/* A tunnel you can't see: its path is only drawn when a surveillance drone's scan reaches it (heatSig), or while it's going up (blown) */
+/* A tunnel you can't see: its path is only drawn where a surveillance drone's scan is over it (heatSig, with the picture masked to the scan),
+   and in brief flashes as it goes up (tunnelFlash) */
 .hiddenTunnel .tunnelPath {
     position: absolute;
     overflow: visible;
@@ -286,13 +287,15 @@
     stroke-linejoin: round;
     transition: stroke 0.3s;
 }
-.target.hiddenTunnel.heatSig .tunnelPath polyline,
-.target.hiddenTunnel.blown .tunnelPath polyline {
+.target.hiddenTunnel.heatSig .tunnelPath polyline {
     stroke: rgba(255, 150, 30, 0.85);
     filter: drop-shadow(0 0 6px rgba(255, 90, 0, 0.9));
 }
-.target.hiddenTunnel.blown .tunnelPath polyline {
-    stroke: rgba(255, 70, 20, 0.9);
+.hiddenTunnel .tunnelPath polyline.tunnelFlash {
+    stroke: rgba(255, 110, 30, 0.95);
+    stroke-width: 18;
+    filter: drop-shadow(0 0 8px rgba(255, 70, 0, 1));
+    animation: tunnelFlash 0.5s ease-out forwards;
 }
 /* Picked up by a surveillance drone's scan: glowing like a heat signature */
 .target.heatSig > .picEl {

@@ -412,7 +412,8 @@ class Target extends MapEntity {
     public heatSignatureBox(): Box | null {
         return null;
     }
-    public setHeatSignature(show: boolean) {
+    // around and radius say where the scan is, for something it only lights the part of
+    public setHeatSignature(show: boolean, around?: position, radius?: number) {
         this.targetEl.classList.toggle('heatSig', show);
     }
     // How far a scan point is from where this gives off heat, or null if it isn't giving any off. Most
@@ -658,6 +659,7 @@ class HiddenTunnel extends Target {
     private static bigBlastRadius: number = 140; // a blast this big (an airstrike's is 100) set off right on it does for it
 
     private path: Array<position> = [];        // where it runs, in page coordinates, from the head to well off the screen
+    private pathEl: SVGSVGElement;
 
     constructor() {
         super(hiddenTunnelTarget);
@@ -719,6 +721,18 @@ class HiddenTunnel extends Target {
         line.setAttribute("points", this.path.map(p => p.X + "," + p.Y).join(" "));
         svg.appendChild(line);
         this.targetEl.appendChild(svg);
+        this.pathEl = svg as SVGSVGElement;
+    }
+
+    // A scan only picks up the section of tunnel beneath it: the path is drawn through a soft-edged circle at the
+    // scan (the picture is laid over the whole screen, so the circle's position is the scan's own)
+    public setHeatSignature(show: boolean, around?: position, radius?: number) {
+        super.setHeatSignature(show);
+        if (show && around && radius && this.pathEl) {
+            const mask = "radial-gradient(circle at " + around.X + "px " + around.Y + "px, black " + Math.round(radius * 0.65) + "px, transparent " + radius + "px)";
+            this.pathEl.style.maskImage = mask;
+            this.pathEl.style.webkitMaskImage = mask;
+        }
     }
 
     // The nearest point to p on the path (the part that's on the screen), and how far off that is
@@ -758,43 +772,78 @@ class HiddenTunnel extends Target {
     }
 
     // Counts as destroyed straight away; the explosions follow along its length from the head, a string of
-    // them, turns and all. What's on the screen of it is shown while it goes.
+    // them, turns and all, and the tunnel is only seen for a moment at each, as a flash that dies away fast.
     private blowUp() {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
         game.assessKillPoints(priorStatus, this.damage);
-        this.targetEl.classList.add('blown');
         this.targetEl.classList.remove('heatSig');
+        this.pathEl.style.maskImage = "none"; // the flashes aren't confined to where a scan last was
+        this.pathEl.style.webkitMaskImage = "none";
 
-        const points = this.pointsAlongPath();
-        points.forEach((point, i) => {
+        const stops = this.stopsAlongPath();
+        stops.forEach((stop, i) => {
             setTimeout(() => {
                 if (i == 0) {
-                    ExplosionHandler.basicExplosion(point, ExplSizes.XL, expl_med_imgs, weaponNames.airstrike);
+                    ExplosionHandler.basicExplosion(stop.point, ExplSizes.XL, expl_med_imgs, weaponNames.airstrike);
                 }
-                ExplosionHandler.basicExplosion(point, ExplSizes.small, expl_small_imgs, weaponNames.mortar);
+                ExplosionHandler.basicExplosion(stop.point, ExplSizes.small, expl_small_imgs, weaponNames.mortar);
+                // the stretch of tunnel the blast has just come along, and a little of what's next
+                this.flashPath(i == 0 ? 0 : stops[i - 1].along, stop.along + HiddenTunnel.explosionSpacing / 3);
             }, (i + 1) * 150);
         });
-        ContentElHandler.fadeRemoveItem(this.targetEl, points.length * 150 + 2000, fadeAnimTime);
+        ContentElHandler.fadeRemoveItem(this.targetEl, stops.length * 150 + 1500, fadeAnimTime);
     }
 
-    // Points all along the part of the path that's on the screen, from the head
-    private pointsAlongPath(): Array<position> {
+    // A bright stretch of the path, between these distances from the head, that fades out at once
+    private flashPath(from: number, to: number) {
+        const ns = "http://www.w3.org/2000/svg";
+        const flash = document.createElementNS(ns, "polyline");
+        flash.setAttribute("class", "tunnelFlash");
+        flash.setAttribute("points", this.pathBetween(from, to).map(p => p.X + "," + p.Y).join(" "));
+        flash.addEventListener("animationend", () => flash.remove());
+        this.pathEl.appendChild(flash);
+    }
+
+    // The points of the path from one distance along it to another, corners included
+    private pathBetween(from: number, to: number): Array<position> {
         const points: Array<position> = [];
+        let walked = 0;
+        for (let i = 0; i < this.path.length - 1; i++) {
+            const a = this.path[i], b = this.path[i + 1];
+            const length = Math.hypot(b.X - a.X, b.Y - a.Y);
+            const at = (d: number) => ({ X: a.X + (b.X - a.X) * d / length, Y: a.Y + (b.Y - a.Y) * d / length });
+            if (walked + length > from && walked < to) {
+                if (!points.length) points.push(at(Math.max(0, from - walked)));
+                if (to < walked + length) {
+                    points.push(at(to - walked));
+                    break;
+                }
+                points.push(b);
+            }
+            walked += length;
+        }
+        return points.length > 1 ? points : [this.path[0], this.path[0]];
+    }
+
+    // Stops all along the part of the path that's on the screen, from the head, and how far along each is
+    private stopsAlongPath(): Array<{ point: position, along: number }> {
+        const stops: Array<{ point: position, along: number }> = [{ point: this.path[0], along: 0 }];
         const onScreen = (p: position) => p.X >= 0 && p.X <= window.innerWidth && p.Y >= 0 && p.Y <= window.innerHeight;
+        let walked = 0;
         let carried = 0; // how far into the next gap we already are, so the spacing runs on round the corners
-        points.push(this.path[0]);
         for (let i = 0; i < this.path.length - 1; i++) {
             const a = this.path[i], b = this.path[i + 1];
             const length = Math.hypot(b.X - a.X, b.Y - a.Y);
             for (let d = HiddenTunnel.explosionSpacing - carried; d < length; d += HiddenTunnel.explosionSpacing) {
                 const p = { X: a.X + (b.X - a.X) * d / length, Y: a.Y + (b.Y - a.Y) * d / length };
-                if (onScreen(p)) points.push(p);
+                if (onScreen(p)) stops.push({ point: p, along: walked + d });
             }
             carried = (carried + length) % HiddenTunnel.explosionSpacing;
+            walked += length;
         }
-        return points;
+        return stops;
     }
 }
 
