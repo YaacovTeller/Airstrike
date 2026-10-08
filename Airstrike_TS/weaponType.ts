@@ -104,6 +104,7 @@ class WeaponType {
     }
     protected shotCounter() {
         game.updateKillStats(killStatDisplayOptions.shots)
+        game.level.noteShot(this.slot);
     }
     protected returnBlastRadiusDiv(radius: number) {
         let el = document.createElement('div');
