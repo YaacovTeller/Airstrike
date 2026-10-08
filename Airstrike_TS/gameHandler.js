@@ -638,7 +638,22 @@ class GameHandler {
     // Everything on the ground that a stage leaves behind (craters, splashes, thrown debris, anything in
     // flight, the glow of its fires), so the next stage starts on bare ground
     clearStageLeftovers() {
-        ContentElHandler.clearContent();
+        // the weapons' aiming circles live in the content too, and have to stay: they belong to the weapons, not the stage
+        const aimers = new Set();
+        for (const weapons of [conventionalWeapons, extraWeapons]) {
+            for (const weapon of weapons) {
+                if (!weapon)
+                    continue;
+                for (const inst of weapon.instances) {
+                    if (inst.blastRadElement)
+                        aimers.add(inst.blastRadElement);
+                }
+            }
+        }
+        for (const el of Array.from(ContentElHandler.returnContentEl().children)) {
+            if (!aimers.has(el))
+                el.remove();
+        }
         allObjects = [];
         this.clearLights();
     }
