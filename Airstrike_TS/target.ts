@@ -59,6 +59,21 @@ const allBuildingInfo: Array<BuildingInfo> = [
     structureInfo("r5c9", 66, 40, { x: [11, 35], y: [10, 20] }),
 ];
 
+// The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
+// the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
+function villaInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
+    const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+}
+const allVillaInfo: Array<BuildingInfo> = [
+    villaInfo("A", 68, 59, { x: [15, 44], y: [10, 39] }),
+    villaInfo("B", 64, 62, { x: [11, 40], y: [10, 39] }),
+    villaInfo("C", 85, 63, { x: [10, 54], y: [15, 40] }),
+    villaInfo("D", 76, 67, { x: [10, 53], y: [11, 44] }),
+    villaInfo("E", 71, 66, { x: [9, 46], y: [12, 42] }),
+    villaInfo("F", 74, 65, { x: [12, 49], y: [12, 45] }),
+];
+
 // Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
 const buildingRuinSources: Array<string> = [
     assetsFolder + "ruin_1.png",
@@ -390,6 +405,23 @@ class Target extends MapEntity {
     public setHeatSignature(show: boolean) {
         this.targetEl.classList.toggle('heatSig', show);
     }
+    // How far a scan point is from where this gives off heat, or null if it isn't giving any off. Most
+    // things give it off across their box; a tunnel along its whole length.
+    public heatDistanceFrom(p: position): number | null {
+        const box = this.heatSignatureBox();
+        if (!box) return null;
+        const nearest = CollisionDetection.nearestPointInBox(p, box);
+        return Math.hypot(nearest.X - p.X, nearest.Y - p.Y);
+    }
+    // For something that isn't a single place (a tunnel): the point of it that a blast at this position is
+    // measured from, if it isn't to be measured to its middle
+    public blastFocus(blastCenter: position): position | null {
+        return null;
+    }
+    // Whether a tunnel charge can be set on this
+    public takesCharge(): boolean {
+        return false;
+    }
 
     // Called when a target is cleared away without having run its course (a new stage or a new game),
     // for any that has something of its own still going
@@ -546,6 +578,9 @@ class TunnelTarget extends Target {
     public dispose() {
         this.stopTargetProduction();
     }
+    public takesCharge(): boolean {
+        return this.damage !== Damage.destroyed;
+    }
 
     public hit(severity: strikeSeverity, wepName: weaponNames) {
         if (wepName < weaponNames.airstrike) {
@@ -600,10 +635,174 @@ class TunnelTarget extends Target {
     }
 }
 
+// A tunnel you can't see. It has a head on the screen -- which is all there is to hover over with a tunnel
+// charge -- and runs from there under the ground, with a turn or two, and off the edge of the screen. The
+// path only shows on a surveillance drone's scan (the 'heatSig' class), which lights the whole of it.
+// It's finished with a tunnel charge on its head, or a direct hit from a really big blast, and then it goes
+// up along its whole length, turns and all.
+class HiddenTunnel extends Target {
+    private static legMin: number = 110;       // how long each straight run is, before it turns
+    private static legMax: number = 240;
+    private static edgeMargin: number = 70;    // it doesn't turn closer than this to the edge of the screen
+    private static explosionSpacing: number = 55;
+    private static bigBlastRadius: number = 140; // a blast this big (an airstrike's is 100) set off right on it does for it
+
+    private path: Array<position> = [];        // where it runs, in page coordinates, from the head to well off the screen
+
+    constructor() {
+        super(hiddenTunnelTarget);
+        this.targetEl.classList.add('smallSquare', 'tunnelHead', 'hiddenTunnel');
+        this.targetEl.classList.remove('flexCenter');
+    }
+    protected get picSources(): Array<string> {
+        return ['trans.png'];
+    }
+
+    public decidePosition(pos: position) {
+        this.placeAt(pos.X, pos.Y);
+        const head: position = { X: pos.X + this.targetEl.offsetWidth / 2, Y: pos.Y + this.targetEl.offsetHeight / 2 };
+        this.path = HiddenTunnel.makePath(head, window.innerWidth, window.innerHeight, RandomNumberGen.randomNumBetween(0, 2));
+        this.drawPath(pos);
+    }
+    public action() { } // it stays put
+
+    // The head, then a straight run, and so on with `turns` right-angle turns, and a last run that carries on off the screen
+    private static makePath(head: position, width: number, height: number, turns: number): Array<position> {
+        const margin = HiddenTunnel.edgeMargin;
+        const directions = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }];
+        // how far it can go from here in a direction before it's near the edge
+        const room = (p: position, d: { x: number, y: number }) => {
+            if (d.x > 0) return width - margin - p.X;
+            if (d.x < 0) return p.X - margin;
+            if (d.y > 0) return height - margin - p.Y;
+            return p.Y - margin;
+        };
+        let here = head;
+        const roomy = directions.filter(d => room(here, d) >= HiddenTunnel.legMin);
+        let dir = RandomNumberGen.returnRandomFromArray(roomy.length ? roomy : directions);
+        const points: Array<position> = [head];
+        for (let t = 0; t < turns; t++) {
+            const available = room(here, dir);
+            if (available < HiddenTunnel.legMin) break;
+            const length = RandomNumberGen.randomNumBetween(HiddenTunnel.legMin, Math.min(HiddenTunnel.legMax, available));
+            here = { X: here.X + dir.x * length, Y: here.Y + dir.y * length };
+            points.push(here);
+            const turnsAvailable = [{ x: -dir.y, y: dir.x }, { x: dir.y, y: -dir.x }].filter(d => room(here, d) >= HiddenTunnel.legMin);
+            if (!turnsAvailable.length) break;
+            dir = RandomNumberGen.returnRandomFromArray(turnsAvailable);
+        }
+        const far = width + height; // far enough to be off the screen from anywhere on it
+        points.push({ X: here.X + dir.x * far, Y: here.Y + dir.y * far });
+        return points;
+    }
+
+    private drawPath(headPos: position) {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("class", "tunnelPath");
+        // the picture is laid over the whole screen, whatever it's a child of, so the points are page coordinates
+        svg.style.left = -headPos.X + "px";
+        svg.style.top = -headPos.Y + "px";
+        svg.style.width = window.innerWidth + "px";
+        svg.style.height = window.innerHeight + "px";
+        const line = document.createElementNS(ns, "polyline");
+        line.setAttribute("points", this.path.map(p => p.X + "," + p.Y).join(" "));
+        svg.appendChild(line);
+        this.targetEl.appendChild(svg);
+    }
+
+    // The nearest point to p on the path (the part that's on the screen), and how far off that is
+    private nearestOnPath(p: position): { point: position, dist: number } {
+        let best = { point: this.path[0], dist: Infinity };
+        for (let i = 0; i < this.path.length - 1; i++) {
+            const a = this.path[i], b = this.path[i + 1];
+            const dx = b.X - a.X, dy = b.Y - a.Y;
+            const lengthSquared = dx * dx + dy * dy;
+            const along = lengthSquared ? Math.max(0, Math.min(1, ((p.X - a.X) * dx + (p.Y - a.Y) * dy) / lengthSquared)) : 0;
+            const point = { X: a.X + dx * along, Y: a.Y + dy * along };
+            const dist = Math.hypot(point.X - p.X, point.Y - p.Y);
+            if (dist < best.dist) best = { point: point, dist: dist };
+        }
+        return best;
+    }
+
+    // Blasts are measured from the nearest part of the tunnel, not from its head
+    public blastFocus(blastCenter: position): position | null {
+        return this.damage === Damage.destroyed ? null : this.nearestOnPath(blastCenter).point;
+    }
+    // A scan lights the whole tunnel if it reaches any part of it
+    public heatDistanceFrom(p: position): number | null {
+        return this.damage === Damage.destroyed ? null : this.nearestOnPath(p).dist;
+    }
+    public takesCharge(): boolean {
+        return this.damage !== Damage.destroyed;
+    }
+
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        if (this.damage === Damage.destroyed) return;
+        const charge = wepName === weaponNames.tunnel_Charge;
+        const bigDirectHit = severity >= strikeSeverity.catastrophic && !!collisionInfo && collisionInfo.radius >= HiddenTunnel.bigBlastRadius;
+        if (charge || bigDirectHit) {
+            this.blowUp();
+        }
+    }
+
+    // Counts as destroyed straight away; the explosions follow along its length from the head, a string of
+    // them, turns and all. What's on the screen of it is shown while it goes.
+    private blowUp() {
+        this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup
+        const priorStatus = this.status;
+        this.targetDestroyed(priorStatus);
+        game.assessKillPoints(priorStatus, this.damage);
+        this.targetEl.classList.add('blown');
+        this.targetEl.classList.remove('heatSig');
+
+        const points = this.pointsAlongPath();
+        points.forEach((point, i) => {
+            setTimeout(() => {
+                if (i == 0) {
+                    ExplosionHandler.basicExplosion(point, ExplSizes.XL, expl_med_imgs, weaponNames.airstrike);
+                }
+                ExplosionHandler.basicExplosion(point, ExplSizes.small, expl_small_imgs, weaponNames.mortar);
+            }, (i + 1) * 150);
+        });
+        ContentElHandler.fadeRemoveItem(this.targetEl, points.length * 150 + 2000, fadeAnimTime);
+    }
+
+    // Points all along the part of the path that's on the screen, from the head
+    private pointsAlongPath(): Array<position> {
+        const points: Array<position> = [];
+        const onScreen = (p: position) => p.X >= 0 && p.X <= window.innerWidth && p.Y >= 0 && p.Y <= window.innerHeight;
+        let carried = 0; // how far into the next gap we already are, so the spacing runs on round the corners
+        points.push(this.path[0]);
+        for (let i = 0; i < this.path.length - 1; i++) {
+            const a = this.path[i], b = this.path[i + 1];
+            const length = Math.hypot(b.X - a.X, b.Y - a.Y);
+            for (let d = HiddenTunnel.explosionSpacing - carried; d < length; d += HiddenTunnel.explosionSpacing) {
+                const p = { X: a.X + (b.X - a.X) * d / length, Y: a.Y + (b.Y - a.Y) * d / length };
+                if (onScreen(p)) points.push(p);
+            }
+            carried = (carried + length) % HiddenTunnel.explosionSpacing;
+        }
+        return points;
+    }
+}
+
 class VehicleTarget extends Target {
-    // A vehicle that's up and running is hot, one that's been disabled or wrecked isn't
+    // A vehicle that's up and running is hot, one that's been disabled or wrecked isn't, and nor is one that
+    // was only ever parked with its engine off (cold)
     public heatSignatureBox(): Box | null {
-        return this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
+        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
+    }
+    public cold: boolean = false;
+    // A vehicle that's just sitting there. It can still be hit, flipped and blown up like any other.
+    public park() {
+        this.speed = 0;
+    }
+    // Parked ones count as done once they're knocked out, not only when they're wrecked
+    public finishedWhenDisabled: boolean = false;
+    public isFinished(): boolean {
+        return super.isFinished() || (this.finishedWhenDisabled && this.status !== Status.active);
     }
 
     protected wheelSource: string = assetsFolder + 'vehicles/wheel.png';
@@ -868,6 +1067,10 @@ class WaterVehicleTarget extends VehicleTarget {
     private static sinkDuration: number = 6000;
     private static tiltPause: number = 1500;
     private static tiltSinkDuration: number = 7000;
+
+    public isFinished(): boolean {
+        return this.damage === Damage.destroyed;
+    }
 
     // The boat pictures, in AS_assets/vehicles. Ships are big and go down by the bow or stern; tugs are
     // the smaller sort (see .smallBoat in cssApp.css), unarmoured, and go straight down. A new boat is

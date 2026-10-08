@@ -112,6 +112,21 @@ class ExplosionHandler {
     // 0 for a blast that landed on it.
     private static forEachBlastCollision(blastCenter: position, rad: number, onTarget: (target, collisionInfo: vectorMoveObj) => void, onItem: (item, collisionInfo: vectorMoveObj) => void) {
         for (let target of allTargets) {
+            // something long and thin (a tunnel) is measured from the nearest part of it, not from its middle
+            const focus = target.blastFocus ? target.blastFocus(blastCenter) : null;
+            if (focus) {
+                const dist = Math.hypot(focus.X - blastCenter.X, focus.Y - blastCenter.Y);
+                if (dist <= rad) {
+                    onTarget(target, {
+                        elem: target.getTargetEl(),
+                        angle: Math.atan2(focus.Y - blastCenter.Y, focus.X - blastCenter.X) * 180 / Math.PI,
+                        dist: dist,
+                        radius: rad,
+                        hitDist: dist,
+                    } as vectorMoveObj);
+                }
+                continue;
+            }
             let nearest = CollisionDetection.nearestPointInBox(blastCenter, target.hitBox());
             if (Math.abs(nearest.X - blastCenter.X) <= rad && Math.abs(nearest.Y - blastCenter.Y) <= rad) {
                 let collisionInfo: vectorMoveObj = CollisionDetection.getVectorMove(blastCenter, target.getTargetEl(), rad)

@@ -118,6 +118,12 @@ const buildingEnemyTarget = {
     maxSpeed: 0,
     armour: Armour.none,
 };
+// A tunnel you can't see, under the ground: doesn't move, nothing damages it but a charge or a really big blast
+const hiddenTunnelTarget = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+};
 const heavyTarget = {
     minSpeed: 1,
     maxSpeed: 3,
@@ -452,6 +458,8 @@ const surveillanceInfo = {
         delay: 1000 // a second to arrive
     }
 };
+// The tunnel charge in the weapon set Test_3 and the Hills level use: its usual number, 6, is a bomb there, so it's on 8
+const tunnelChargeInfoForHills = { ...chargeInfo, slot: 8, displayName: "Tunnel Charge" };
 const flareInfo = {
     name: weaponNames.flare,
     class: Flare,

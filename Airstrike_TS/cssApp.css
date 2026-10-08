@@ -270,6 +270,30 @@
 .buildingEnemy > * {
     display: none;
 }
+
+/* A tunnel you can't see: its path is only drawn when a surveillance drone's scan reaches it (heatSig), or while it's going up (blown) */
+.hiddenTunnel .tunnelPath {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+}
+.hiddenTunnel .tunnelPath polyline {
+    fill: none;
+    stroke: rgba(255, 140, 30, 0);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.3s;
+}
+.target.hiddenTunnel.heatSig .tunnelPath polyline,
+.target.hiddenTunnel.blown .tunnelPath polyline {
+    stroke: rgba(255, 150, 30, 0.85);
+    filter: drop-shadow(0 0 6px rgba(255, 90, 0, 0.9));
+}
+.target.hiddenTunnel.blown .tunnelPath polyline {
+    stroke: rgba(255, 70, 20, 0.9);
+}
 /* Picked up by a surveillance drone's scan: glowing like a heat signature */
 .target.heatSig > .picEl {
     filter: sepia(1) saturate(5) brightness(1.25) drop-shadow(0 0 4px #ff6a00) drop-shadow(0 0 9px #ffb02e);

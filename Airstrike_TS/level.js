@@ -16,6 +16,7 @@ var Area;
 (function (Area) {
     Area[Area["desert"] = 0] = "desert";
     Area[Area["port"] = 1] = "port";
+    Area[Area["hills"] = 2] = "hills";
 })(Area || (Area = {}));
 class Wave {
     number;
@@ -353,10 +354,7 @@ class SceneLevel extends Level {
             this.waveIndex = 0;
             this.setCurrentWave(); // later stages keep whatever time of day and weather they're in
         }
-        for (let i = 0; i < this.staticTargetCount; i++) {
-            this.registerTarget(this.provideAvailTargets());
-        }
-        this.infestBuildings(game.drawAllBuildings());
+        this.populateStage();
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
@@ -367,6 +365,13 @@ class SceneLevel extends Level {
         return true;
     }
     continueWave() { } // unpausing must not start target production
+    // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
+    populateStage() {
+        for (let i = 0; i < this.staticTargetCount; i++) {
+            this.registerTarget(this.provideAvailTargets());
+        }
+        this.infestBuildings(game.drawAllBuildings());
+    }
     static infestedBuildingCount = 3;
     static minOccupants = 2;
     static maxOccupants = 6;
@@ -396,6 +401,135 @@ class SceneLevel extends Level {
         this.nextWavePrepGap(); // then nextWave() builds the next stage
     }
 }
+// The Hills level: scrubby hills with villas dotted about, a few vehicles parked near them (some running,
+// some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
+// scans them. Stages follow on from each other like the port's.
+class HillsLevel extends SceneLevel {
+    static minVillas = 8;
+    static maxVillas = 12;
+    static minVehicles = 2;
+    static maxVehicles = 8;
+    static minTunnels = 2;
+    static maxTunnels = 4;
+    static screenTop = 120; // clear of the HUD
+    static screenEdge = 70;
+    takenBoxes = []; // where things have been put this stage, so nothing's put on top of anything
+    populateStage() {
+        this.takenBoxes = [];
+        const villas = this.placeVillas();
+        this.infestBuildings(villas);
+        this.placeVehicles(villas);
+        this.placeTunnels();
+    }
+    overlapsTaken(box, room = 0) {
+        return this.takenBoxes.some(b => box.left - room < b.right && box.right + room > b.left && box.top - room < b.bottom && box.bottom + room > b.top);
+    }
+    within(low, high) {
+        return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
+    }
+    // Villas scattered about, with some room between them
+    placeVillas() {
+        const villas = [];
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
+        for (let i = 0; i < count; i++) {
+            const info = RandomNumberGen.returnRandomFromArray(allVillaInfo);
+            for (let attempt = 0; attempt < 60; attempt++) {
+                const x = this.within(HillsLevel.screenEdge, window.innerWidth - HillsLevel.screenEdge - info.width);
+                const y = this.within(HillsLevel.screenTop, window.innerHeight - HillsLevel.screenEdge - info.height);
+                const box = { left: x, top: y, right: x + info.width, bottom: y + info.height };
+                if (this.overlapsTaken(box, 55))
+                    continue;
+                const villa = new Building(info);
+                villa.setPosition({ X: x, Y: y });
+                villas.push(villa);
+                this.takenBoxes.push(box);
+                break;
+            }
+        }
+        return villas;
+    }
+    // A few vehicles just parked, each beside a villa. Some are running (they show on a drone's scan and are
+    // targets that have to be dealt with); the others are cold, and can still be hit, flipped and blown up.
+    placeVehicles(villas) {
+        if (!villas.length)
+            return;
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minVehicles, HillsLevel.maxVehicles);
+        const running = [];
+        for (let i = 0; i < count; i++)
+            running.push(RandomNumberGen.randomNumBetween(0, 1) == 1);
+        if (!running.some(r => r))
+            running[0] = true; // at least one of them is a target
+        for (let i = 0; i < count; i++) {
+            const roll = RandomNumberGen.randomNumBetween(1, 100);
+            const size = roll > 40 ? { w: 65, h: 45 } : { w: 45, h: 45 };
+            const spot = this.spotBesideAVilla(villas, size.w, size.h);
+            if (!spot)
+                continue;
+            const vehicle = roll > 85 ? new HeavyVehicleTarget() : roll > 40 ? new ModVehicleTarget() : new RegVehicleTarget();
+            vehicle.park();
+            this.takenBoxes.push({ left: spot.X, top: spot.Y, right: spot.X + size.w, bottom: spot.Y + size.h });
+            if (running[i]) {
+                vehicle.finishedWhenDisabled = true;
+                this.registerTarget(vehicle, spot);
+            }
+            else {
+                vehicle.cold = true;
+                vehicle.decidePosition(spot);
+                allTargets.push(vehicle); // can be hit like the others, but isn't one of the targets to clear
+            }
+        }
+    }
+    // Somewhere just off one side of a villa that's on the screen and free
+    spotBesideAVilla(villas, width, height) {
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const villa = villas[RandomNumberGen.randomNumBetween(0, villas.length - 1)];
+            const rect = { left: parseInt(villa.getTargetEl().style.left), top: parseInt(villa.getTargetEl().style.top), width: villa.getTargetEl().offsetWidth, height: villa.getTargetEl().offsetHeight };
+            const gap = RandomNumberGen.randomNumBetween(6, 26);
+            let x, y;
+            switch (RandomNumberGen.randomNumBetween(0, 3)) {
+                case 0:
+                    x = rect.left - gap - width;
+                    y = this.within(rect.top, rect.top + rect.height - height);
+                    break; // to the left
+                case 1:
+                    x = rect.left + rect.width + gap;
+                    y = this.within(rect.top, rect.top + rect.height - height);
+                    break; // to the right
+                case 2:
+                    y = rect.top + rect.height + gap;
+                    x = this.within(rect.left - 10, rect.left + rect.width - width + 10);
+                    break; // in front
+                default:
+                    y = rect.top - gap - height;
+                    x = this.within(rect.left - 10, rect.left + rect.width - width + 10);
+                    break; // behind
+            }
+            const box = { left: x, top: y, right: x + width, bottom: y + height };
+            const onScreen = x >= 20 && y >= HillsLevel.screenTop - 30 && x + width <= window.innerWidth - 20 && y + height <= window.innerHeight - 20;
+            if (onScreen && !this.overlapsTaken(box, 4))
+                return { X: x, Y: y };
+        }
+        return null;
+    }
+    // Tunnels: just their heads are placed here, clear of everything else; each works out where it runs
+    placeTunnels() {
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels);
+        const heads = [];
+        for (let i = 0; i < count; i++) {
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const x = this.within(90, window.innerWidth - 135);
+                const y = this.within(HillsLevel.screenTop, window.innerHeight - 135);
+                const box = { left: x, top: y, right: x + 45, bottom: y + 45 };
+                if (this.overlapsTaken(box, 20) || heads.some(h => Math.hypot(h.X - x, h.Y - y) < 120))
+                    continue;
+                heads.push({ X: x, Y: y });
+                this.takenBoxes.push(box);
+                this.registerTarget(new HiddenTunnel(), { X: x, Y: y });
+                break;
+            }
+        }
+    }
+}
 function pickWeightedTarget(options) {
     let roll = RandomNumberGen.randomNumBetween(1, 100);
     for (let option of options) {
@@ -423,6 +557,17 @@ const sceneInfo = {
     startArms: [],
     endArms: [],
     targetFunc: () => new WaterVehicleTarget(),
+};
+const hillsInfo = {
+    number: 0,
+    location: Area.hills,
+    messages: [{ title: "Hills", text: "", length: msgLength.short }],
+    waves: [
+        new Wave(0, WaveType.static, Time.day), // only carries time of day/weather, see SceneLevel
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => new RegVehicleTarget(), // not used: HillsLevel puts its own stage together
 };
 const continuousInfo = {
     number: 0,

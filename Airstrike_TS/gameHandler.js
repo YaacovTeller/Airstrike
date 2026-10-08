@@ -10,6 +10,7 @@ var GameMode;
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
     GameMode[GameMode["test_1"] = 2] = "test_1";
     GameMode[GameMode["test_3"] = 3] = "test_3";
+    GameMode[GameMode["hills"] = 4] = "hills";
 })(GameMode || (GameMode = {}));
 var conventionalWeapons = [];
 var extraWeapons = [];
@@ -101,8 +102,12 @@ class GameHandler {
             url = "url(./AS_assets/Sand.png)"; // SAME so far
             this.extendWater(50, true);
         }
+        else if (num == Area.hills) {
+            url = "url(./AS_assets/Sand_scrub.png)";
+            this.extendWater(0, false);
+        }
         this.setBackground(url);
-        document.getElementById("contentWrapper").style.backgroundImage = `url(./AS_assets/Sand.png)`;
+        document.getElementById("contentWrapper").style.backgroundImage = url;
     }
     createWater() {
         let water = document.createElement('div');
@@ -199,6 +204,7 @@ class GameHandler {
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
+        document.getElementById("startbutton_hills").onclick = () => this.newGame(GameMode.hills);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr);
@@ -789,7 +795,7 @@ class GameHandler {
     // Whether this mode is a series of stages of targets to clear, rather than targets that cross the
     // screen and can escape -- the HUD shows progress through the stage instead of the escape limit.
     hasStages() {
-        return this.gameMode == GameMode.test_3;
+        return this.gameMode == GameMode.test_3 || this.gameMode == GameMode.hills;
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -825,6 +831,13 @@ class GameHandler {
         else if (mode == GameMode.test_3) {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
             this.addScaledWeaponSet();
+        }
+        else if (mode == GameMode.hills) {
+            this.newLevel(new HillsLevel(hillsInfo), mode);
+            this.addScaledWeaponSet();
+            for (let i = 0; i < 3; i++) {
+                this.level.addNewWeapon(tunnelChargeInfoForHills, false);
+            }
         }
         this.hud.drawMultiKill();
         this.killStats.failLimit = this.difficulty.failLimit; // put with level

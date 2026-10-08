@@ -386,9 +386,7 @@ class ChargeWeaponType extends WeaponType {
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
 
-        let tunnels: Array<TunnelTarget> = allTargets.filter((trgt): trgt is TunnelTarget => {
-            return trgt.constructor.name === TunnelTarget.name && trgt.getLockOnStatus() == false;
-        });
+        let tunnels: Array<Target> = allTargets.filter(trgt => trgt.takesCharge && trgt.takesCharge() && trgt.getLockOnStatus() == false);
         let hit: boolean = false;
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
@@ -612,9 +610,8 @@ class SurveillanceDrone extends ExplosiveWeaponType {
             ring.style.top = mouse.Y - radius + 'px';
             for (const target of allTargets) {
                 if (!(target instanceof Target)) continue; // buildings give off nothing themselves
-                const area = target.heatSignatureBox();
-                const nearest = area ? CollisionDetection.nearestPointInBox(mouse, area) : null;
-                target.setHeatSignature(!!nearest && Math.hypot(nearest.X - mouse.X, nearest.Y - mouse.Y) <= radius);
+                const dist = target.heatDistanceFrom(mouse);
+                target.setHeatSignature(dist !== null && dist <= radius);
             }
         };
         const timer = setInterval(sweep, SurveillanceDrone.scanInterval);
