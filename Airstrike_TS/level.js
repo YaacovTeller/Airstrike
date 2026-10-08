@@ -372,7 +372,7 @@ class SceneLevel extends Level {
     static maxOccupants = 6;
     // A few of the buildings have enemies hiding in them, who count as targets for the stage.
     infestBuildings(buildings) {
-        const pool = [...buildings];
+        const pool = buildings.filter(b => b.canHideEnemies());
         for (let n = 0; n < SceneLevel.infestedBuildingCount && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const occupants = RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants);

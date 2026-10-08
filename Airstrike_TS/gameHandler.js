@@ -846,9 +846,7 @@ class GameHandler {
             return building;
         });
     }
-    // How big a building is (see .building in cssApp.css) and how far clear of the water's faded
-    // shallows it has to stay.
-    static buildingSize = 100;
+    // How far clear of the water's faded shallows a building has to stay.
     static shoreMargin = 10;
     // Left-most x for a block of this height starting at topY that is clear of the water across all
     // of its rows.
@@ -858,27 +856,30 @@ class GameHandler {
     }
     // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
     // buildings tucked up together in blocks 2 or 3 across and 2 or 3 deep, with a road's width
-    // between blocks. Every building in a block is the same type. The blocks run along in lines, but
-    // each sits a little higher or lower than its neighbours rather than all on the same level.
+    // between blocks. Every building in a block is the same type (and so the same size, which the type
+    // says -- they aren't all alike). The blocks run along in lines, but each sits a little higher or
+    // lower than its neighbours rather than all on the same level.
     streetBlockSlots(maxCount, options) {
-        const { startX = 100, startY = 100, buildingGap = -6, rowGap = -12, roadWidth = 70, minRows = 2, maxRows = 3, yVariation = 50, padding = 50 } = options || {};
+        const { startX = 100, startY = 100, buildingGap = -0.06, rowGap = -0.12, roadWidth = 70, minRows = 2, maxRows = 3, yVariation = 50, padding = 50 } = options || {};
         const slots = [];
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const size = GameHandler.buildingSize;
-        // How far a run of this many buildings reaches, first edge to last edge
-        const widthOf = (cols) => cols * size + (cols - 1) * buildingGap;
-        const heightOf = (rows) => rows * size + (rows - 1) * rowGap;
-        const fits = (x, cols) => x + widthOf(cols) + padding <= screenWidth;
-        // A 3-wide block that won't fit can be squeezed in as a 2-wide one
-        const fittingCols = (x, cols) => !fits(x, cols) && cols == 3 ? 2 : cols;
         let currentX = startX;
         let lineY = startY; // the top of this line of blocks
         let lineBottom = startY; // how far down the tallest block in the line reaches
         while (slots.length < maxCount) {
+            const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
             let rows = RandomNumberGen.randomNumBetween(minRows, maxRows);
             let cols = RandomNumberGen.randomNumBetween(2, 3);
             let dropY = RandomNumberGen.randomNumBetween(0, yVariation);
+            // This type's buildings: how far apart they stand, and how far a run of them reaches, first edge to last edge
+            const stepX = info.width * (1 + buildingGap);
+            const stepY = info.height * (1 + rowGap);
+            const widthOf = (n) => info.width + (n - 1) * stepX;
+            const heightOf = (n) => info.height + (n - 1) * stepY;
+            const fits = (x, n) => x + widthOf(n) + padding <= screenWidth;
+            // A 3-wide block that won't fit can be squeezed in as a 2-wide one
+            const fittingCols = (x, n) => !fits(x, n) && n == 3 ? 2 : n;
             // Right of the shore, for the rows this block would cover
             const dryX = () => Math.max(currentX, this.firstDryX(lineY + dropY, heightOf(rows)));
             let blockX = dryX();
@@ -910,12 +911,11 @@ class GameHandler {
                 return slots;
             }
             const blockY = lineY + dropY;
-            const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     slots.push({
-                        X: blockX + col * (size + buildingGap),
-                        Y: blockY + row * (size + rowGap),
+                        X: blockX + col * stepX,
+                        Y: blockY + row * stepY,
                         info: info
                     });
                 }

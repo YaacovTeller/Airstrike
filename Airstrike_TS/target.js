@@ -1,16 +1,51 @@
 "use strict";
-const warehouseBlueInfo = {
-    undamaged: "Warehouse_blue_1.png",
-    damaged: "Warehouse_blue_2.png",
-    destroyed: "Warehouse_blue_3.png",
-};
-const warehouseBrownInfo = {
-    undamaged: "Warehouse_brown_1.png",
-    damaged: "Warehouse_brown_2.png",
-    destroyed: "Warehouse_brown_3.png",
-};
-// Add new building types here to get them into the random rotation.
-const allBuildingInfo = [warehouseBlueInfo, warehouseBrownInfo];
+// A type made of the pictures Structure_<code>_1, _2 and _3 (undamaged, damaged, destroyed)
+function structureInfo(code, width, height, hide) {
+    const name = (stage) => "Structure_" + code + "_" + stage + ".png";
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+}
+// Add new building types here to get them into the random rotation. (The sizes are the pictures' at
+// 0.4 of their natural size. Warehouse_blue_* and Warehouse_brown_* are the older pictures of
+// Structure_r1c1 and Structure_r1c5, and aren't used now.)
+const allBuildingInfo = [
+    structureInfo("r1c1", 107, 98, { x: [15, 80], y: [23, 81] }),
+    structureInfo("r1c2", 95, 91, { x: [16, 73], y: [23, 74] }),
+    structureInfo("r1c3", 112, 84, { x: [13, 86], y: [3, 66] }),
+    structureInfo("r1c4", 109, 84, { x: [15, 78], y: [9, 65] }),
+    structureInfo("r1c5", 146, 98, { x: [14, 114], y: [23, 79] }),
+    structureInfo("r2c1", 98, 76, { x: [16, 71], y: [4, 60] }),
+    structureInfo("r2c2", 86, 76, { x: [18, 54], y: [17, 60] }),
+    structureInfo("r2c3", 90, 76, { x: [9, 69], y: [20, 60] }),
+    structureInfo("r2c4", 96, 69, { x: [12, 68], y: [4, 54] }),
+    structureInfo("r2c5", 113, 80, { x: [10, 89], y: [20, 64] }),
+    structureInfo("r2c6", 99, 68, { x: [22, 63], y: [12, 49] }),
+    structureInfo("r3c1", 62, 57, { x: [10, 38], y: [15, 42] }),
+    structureInfo("r3c2", 57, 54, { x: [8, 33], y: [13, 39] }),
+    structureInfo("r3c3", 70, 54, { x: [18, 42], y: [11, 39] }),
+    structureInfo("r3c4", 62, 55, { x: [13, 34], y: [12, 40] }),
+    structureInfo("r3c5", 60, 50, { x: [13, 37], y: [11, 35] }),
+    structureInfo("r3c6", 55, 50, { x: [10, 31], y: [10, 35] }),
+    structureInfo("r3c7", 57, 52, { x: [13, 30], y: [17, 35] }),
+    structureInfo("r3c8", 50, 52, { x: [9, 27], y: [17, 35] }),
+    structureInfo("r3c9", 66, 50, { x: [13, 38], y: [15, 35] }),
+    structureInfo("r4c1", 71, 52, { x: [13, 48], y: [3, 37] }),
+    structureInfo("r4c2", 66, 56, { x: [8, 44], y: [5, 40] }),
+    structureInfo("r4c3", 67, 57, { x: [9, 44], y: [10, 41] }),
+    structureInfo("r4c4", 70, 54, { x: [10, 49], y: [5, 39] }),
+    structureInfo("r4c5", 73, 56, { x: [9, 48], y: [5, 40] }),
+    structureInfo("r4c6", 66, 57, { x: [7, 46], y: [15, 42] }),
+    structureInfo("r4c7", 56, 56, { x: [8, 35], y: [11, 42] }),
+    structureInfo("r4c8", 78, 59, { x: [7, 55], y: [16, 44] }),
+    structureInfo("r5c1", 55, 60, { x: [15, 24], y: [8, 44] }),
+    structureInfo("r5c2", 48, 61, { x: [10, 21], y: [6, 46] }),
+    structureInfo("r5c3", 54, 55, { x: [11, 27], y: [12, 39] }),
+    structureInfo("r5c4", 71, 46, { x: [8, 52], y: [5, 32] }),
+    structureInfo("r5c5", 66, 57, { x: [9, 44], y: [11, 42] }),
+    structureInfo("r5c6", 68, 46, { x: [16, 22], y: [10, 31] }),
+    structureInfo("r5c7", 56, 45, { x: [9, 32], y: [6, 30] }),
+    structureInfo("r5c8", 63, 47, { x: [13, 28], y: [5, 33] }),
+    structureInfo("r5c9", 66, 40, { x: [11, 35], y: [10, 20] }),
+];
 // Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
 const buildingRuinSources = [
     assetsFolder + "ruin_1.png",
@@ -102,15 +137,17 @@ class Building extends MapEntity {
     addOccupant(enemy) {
         this.occupants.push(enemy);
     }
-    // Somewhere within the building's picture to hide (on the page). This is the area of the 100px
-    // box that is solid in both the undamaged and the damaged pictures of every building type so far
-    // (measured from the pngs), so that the enemy's square is never in a transparent gap where it
-    // would show. Revisit if a new building's sprite isn't solid across it.
+    // Somewhere within the building's picture to hide (on the page): anywhere its type says the picture
+    // covers an enemy's square in both its undamaged and damaged states.
     randomHidingSpot() {
+        const hide = this.info.hide;
         return {
-            X: parseInt(this.targetEl.style.left) + RandomNumberGen.randomNumBetween(21, 63),
-            Y: parseInt(this.targetEl.style.top) + RandomNumberGen.randomNumBetween(14, 40),
+            X: parseInt(this.targetEl.style.left) + RandomNumberGen.randomNumBetween(hide.x[0], hide.x[1]),
+            Y: parseInt(this.targetEl.style.top) + RandomNumberGen.randomNumBetween(hide.y[0], hide.y[1]),
         };
+    }
+    canHideEnemies() {
+        return !!this.info.hide;
     }
     // Wrecking the building takes everyone in it with it. A significant hit that only damages it
     // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
@@ -126,6 +163,8 @@ class Building extends MapEntity {
         super();
         this.info = info ? info : RandomNumberGen.returnRandomFromArray(allBuildingInfo);
         this.targetEl = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "building");
+        this.targetEl.style.width = this.info.width + "px";
+        this.targetEl.style.height = this.info.height + "px";
         this.picEl = ElementCreator.returnNewDiv(this.targetEl, "picEl");
         this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", this.getSource());
         this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "", "", true);
