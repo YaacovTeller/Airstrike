@@ -221,38 +221,51 @@ class Building extends MapEntity {
             y = position.Y;
         this.placeAt(x, y);
     }
-    // Three stages (undamaged -> damaged -> destroyed), worn down cumulatively like the vehicles:
-    // every hit adds damage points, and the building is destroyed once it has taken
-    // hitPointsToDestroy. How many a hit adds depends on the weapon and on how close to the blast's
-    // centre it landed (severity):
+    // Stages (undamaged -> damaged -> destroyed -> gone), worn down cumulatively like the vehicles:
+    // every hit adds damage points, the building is destroyed once it has taken hitPointsToDestroy,
+    // and what's left of it is cleared away altogether once it has taken hitPointsToObliterate. How
+    // many a hit adds depends on the weapon, on how close to the blast's centre it landed (severity),
+    // and on how big the blast is:
     //  - bullets do nothing
     //  - a direct hit from a mortar/howitzer shell is half of what it takes, so two destroy it
     //  - a direct hit from an airstrike or nuke is all of it
     //  - further out from the centre it counts for less (half, then a quarter at the edge), but it
     //    all adds up, so a few glancing blows do as much as a direct one
-    // Any hit at all leaves it at least damaged.
+    //  - a blast bigger than an airstrike's counts for more in proportion to its size, so a direct hit
+    //    from a really big bomb takes it from standing to gone in one
+    // Any hit at all leaves it at least damaged. Rubble can be hit again, and goes in the same way.
     private static hitPointsToDestroy: number = 100;
+    private static hitPointsToObliterate: number = 200;
+    private static standardBlastRadius: number = 100; // an airstrike's; smaller blasts are already allowed for above
     private damagePoints: number = 0;
+    private removed: boolean = false;
 
-    private hitPoints(severity: strikeSeverity, wepName: weaponNames): number {
+    private hitPoints(severity: strikeSeverity, wepName: weaponNames, blastRadius?: number): number {
         const flattening = wepName == weaponNames.airstrike || wepName == weaponNames.tactical_Nuke;
         const direct = flattening ? Building.hitPointsToDestroy : Building.hitPointsToDestroy / 2;
+        const bigger = blastRadius ? Math.max(1, blastRadius / Building.standardBlastRadius) : 1;
         switch (severity) {
             case strikeSeverity.light:
-                return direct / 4;
+                return direct / 4 * bigger;
             case strikeSeverity.medium:
-                return direct / 2;
+                return direct / 2 * bigger;
             default:
-                return direct;
+                return direct * bigger;
         }
     }
 
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
-        if (wepName < weaponNames.mortar) {
+        if (wepName < weaponNames.mortar || this.removed) {
             return;
         }
-        this.damagePoints += this.hitPoints(severity, wepName);
+        this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
+        if (this.damagePoints >= Building.hitPointsToObliterate) {
+            this.killOccupants(true);
+            this.throwDebris(collisionInfo, Building.debrisPerHit * 3);
+            this.clearAway();
+            return;
+        }
         this.reAssignSrc();
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
@@ -263,10 +276,20 @@ class Building extends MapEntity {
         this.throwDebris(collisionInfo);
     }
 
+    // Takes the sprite off the map altogether, fading it out
+    private clearAway() {
+        this.removed = true;
+        const index = allTargets.indexOf(this);
+        if (index >= 0) allTargets.splice(index, 1); // nothing's left for blasts to hit
+        this.targetEl.style.transition = "opacity 1.5s ease-out";
+        this.targetEl.style.opacity = "0";
+        setTimeout(() => ContentElHandler.removeFromContentEl(this.targetEl), 1600);
+    }
+
     // The pieces fly out from where the blast hit the building.
-    private throwDebris(collisionInfo?: vectorMoveObj) {
+    private throwDebris(collisionInfo?: vectorMoveObj, pieces: number = Building.debrisPerHit) {
         const origin = this.impactPoint(collisionInfo);
-        for (let i = 0; i < Building.debrisPerHit; i++) {
+        for (let i = 0; i < pieces; i++) {
             this.throwDebrisPiece(origin);
         }
     }
