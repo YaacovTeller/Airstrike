@@ -18,6 +18,10 @@ type light = {
     // instead of the usual size-based glow.
     reach?: number
 }
+// The splash pictures (AS_assets/splash) are on a canvas bigger than the original 351x248, with the ripple rings completed
+// out to the sides and bottom. padSides is the extra width on each of the left and right.
+const splashPicture = { width: 501, height: 309, originalWidth: 351, originalHeight: 248, padSides: 75 };
+
 var lights: Array<light> = [];
 var flares: Array<light> = [];
 var fires: Array<light> = [];
@@ -251,8 +255,19 @@ class ExplosionHandler {
             explosionImgs = splash_imgs;
         }
         const player = new CanvasGifPlayer(explosion, size);
+        let width = size, height = size;
+        let left = blastCenter.X - (size / 2);
+        if (surface == HitSurface.water) {
+            // the splash pictures have room round the original ones for the ripples to finish, so the canvas grows to match, the
+            // original part staying exactly where and as big as it was
+            width = size * splashPicture.width / splashPicture.originalWidth;
+            height = size * splashPicture.height / splashPicture.originalHeight;
+            left -= size * splashPicture.padSides / splashPicture.originalWidth;
+            explosion.width = width;
+            explosion.height = height;
+        }
         player.play(explosionImgs, false);
-        this.setSizeAndPos(explosion, size, size, blastCenter.X - (size / 2), blastCenter.Y - (size * 0.9));
+        this.setSizeAndPos(explosion, width, height, left, blastCenter.Y - (size * 0.9));
         return explosion
     }
 
