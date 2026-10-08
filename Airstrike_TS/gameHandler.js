@@ -9,7 +9,7 @@ var GameMode;
     GameMode[GameMode["regular"] = 0] = "regular";
     GameMode[GameMode["sandbox"] = 1] = "sandbox";
     GameMode[GameMode["test_1"] = 2] = "test_1";
-    GameMode[GameMode["test_3"] = 3] = "test_3";
+    GameMode[GameMode["coast"] = 3] = "coast";
     GameMode[GameMode["hills"] = 4] = "hills";
 })(GameMode || (GameMode = {}));
 var conventionalWeapons = [];
@@ -203,7 +203,7 @@ class GameHandler {
         document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
+        document.getElementById("startbutton_coast").onclick = () => this.newGame(GameMode.coast);
         document.getElementById("startbutton_hills").onclick = () => this.newGame(GameMode.hills);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
@@ -398,7 +398,7 @@ class GameHandler {
         this.level.addNewWeapon(howitzerInfo, false);
         this.level.addNewWeapon(airstrikeInfo, false);
     }
-    // Test_3's own weapons instead of the standard ones. Every game starts from empty weapon lists
+    // The coast level's own weapons instead of the standard ones. Every game starts from empty weapon lists
     // (see reset()), so going back to any other mode gets the standard set again.
     addScaledWeaponSet() {
         for (let i = 0; i < 3; i++) {
@@ -795,7 +795,7 @@ class GameHandler {
     // Whether this mode is a series of stages of targets to clear, rather than targets that cross the
     // screen and can escape -- the HUD shows progress through the stage instead of the escape limit.
     hasStages() {
-        return this.gameMode == GameMode.test_3 || this.gameMode == GameMode.hills;
+        return this.gameMode == GameMode.coast || this.gameMode == GameMode.hills;
     }
     newGame(mode) {
         if (this.gameWasPlayed) {
@@ -828,7 +828,7 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
             this.level.addNewWeapon(flareInfo, false);
         }
-        else if (mode == GameMode.test_3) {
+        else if (mode == GameMode.coast) {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
             this.addScaledWeaponSet();
         }

@@ -458,7 +458,7 @@ const surveillanceInfo = {
         delay: 1000 // a second to arrive
     }
 };
-// The tunnel charge in the weapon set Test_3 and the Hills level use: its usual number, 6, is a bomb there, so it's on 8
+// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on 8
 const tunnelChargeInfoForHills = { ...chargeInfo, slot: 8, displayName: "Tunnel Charge" };
 const flareInfo = {
     name: weaponNames.flare,
@@ -478,7 +478,7 @@ const flareInfo = {
     noAmmo: click_2,
     select: gib
 };
-// ---- The weapon set Test_3 uses instead of the standard weapons above ----
+// ---- The weapon set the Coast level uses instead of the standard weapons above ----
 // Seven bombs on keys 1-7, each one a larger explosion than the last. The first three are the
 // standard mortar, howitzer and airstrike with their explosions a rung down the ExplSizes ladder
 // (so they cover a smaller area and need a closer hit to do the same damage); the rest are airstrikes
