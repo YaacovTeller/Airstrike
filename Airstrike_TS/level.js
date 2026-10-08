@@ -367,6 +367,7 @@ class SceneLevel extends Level {
     continueWave() { } // unpausing must not start target production
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     populateStage() {
+        game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
         for (let i = 0; i < this.staticTargetCount; i++) {
             this.registerTarget(this.provideAvailTargets());
         }

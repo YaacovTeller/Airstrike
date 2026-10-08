@@ -909,7 +909,7 @@ class GameHandler {
         this.start_unpause();
     }
     public drawAllBuildings(): Array<Building> {
-        return this.streetBlockSlots(40).map(slot => {
+        return this.streetBlockSlots(60).map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             return building;
@@ -926,108 +926,92 @@ class GameHandler {
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
-    // buildings tucked up together in blocks 2 or 3 across and 2 or 3 deep, with a road's width
-    // between blocks. Every building in a block is the same type (and so the same size, which the type
-    // says -- they aren't all alike). The blocks run along in lines, but each sits a little higher or
-    // lower than its neighbours rather than all on the same level.
+    // The sea gets a different width, and the coast a different slant, each time
+    public shapeCoast() {
+        const water = document.getElementById("water");
+        if (!water) return;
+        water.style.width = RandomNumberGen.randomNumBetween(38, 56) + "%";
+        water.style.transform = "skewX(" + RandomNumberGen.randomNumBetween(18, 38) + "deg)";
+    }
+
+    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets:
+    // each line is a row of blocks along its own baseline (which wanders from game to game), buildings
+    // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
+    // buildings are, so sizes aren't mixed in one:
+    //  - the big ones (warehouses) go singly or two or three side by side, and sometimes two deep
+    //  - the middling ones go like that too
+    //  - the small ones (huts, sheds, little houses) are always on their own
+    // and the same type isn't put down twice running in a line.
     public streetBlockSlots(
     maxCount: number,
     options?: {
-        startX?: number;
-        startY?: number;
         buildingGap?: number; // between buildings side by side in a block, as a share of a building's width (negative to overlap their empty margins)
         rowGap?: number;      // likewise, between the rows in a block, as a share of a building's height
-        roadWidth?: number;   // between blocks
-        minRows?: number;
-        maxRows?: number;
-        yVariation?: number;  // how much further down than its line a block can start
         padding?: number;     // kept clear at the screen edge
     }
 ): Array<BuildingSlot> {
     const {
-        startX = 100,
-        startY = 100,
-        buildingGap = -0.06,
-        rowGap = -0.12,
-        roadWidth = 70,
-        minRows = 2,
-        maxRows = 3,
-        yVariation = 50,
-        padding = 50
+        buildingGap = -0.1,
+        rowGap = -0.14,
+        padding = 40
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
+    const top = 110;                   // clear of the HUD
+    const bottom = screenHeight - 40;
 
-    let currentX = startX;
-    let lineY = startY;     // the top of this line of blocks
-    let lineBottom = startY; // how far down the tallest block in the line reaches
+    const large = allBuildingInfo.filter(info => info.width >= 90);
+    const medium = allBuildingInfo.filter(info => info.width >= 70 && info.width < 90);
+    const small = allBuildingInfo.filter(info => info.width < 70);
 
-    while (slots.length < maxCount) {
-        const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
-        let rows = RandomNumberGen.randomNumBetween(minRows, maxRows);
-        let cols = RandomNumberGen.randomNumBetween(2, 3);
-        let dropY = RandomNumberGen.randomNumBetween(0, yVariation);
+    const lines = RandomNumberGen.randomNumBetween(3, 4);
+    const pitch = (bottom - top) / lines;
 
-        // This type's buildings: how far apart they stand, and how far a run of them reaches, first edge to last edge
-        const stepX = info.width * (1 + buildingGap);
-        const stepY = info.height * (1 + rowGap);
-        const widthOf = (n: number) => info.width + (n - 1) * stepX;
-        const heightOf = (n: number) => info.height + (n - 1) * stepY;
-        const fits = (x: number, n: number) => x + widthOf(n) + padding <= screenWidth;
-        // A 3-wide block that won't fit can be squeezed in as a 2-wide one
-        const fittingCols = (x: number, n: number) => !fits(x, n) && n == 3 ? 2 : n;
+    for (let line = 0; line < lines && slots.length < maxCount; line++) {
+        // where the buildings in this line stand: its baseline, which moves about from one game to the next
+        const baseline = top + pitch * (line + 1) - RandomNumberGen.randomNumBetween(0, 14) + RandomNumberGen.randomNumBetween(-14, 6);
+        let x = 0;
+        let previous: BuildingInfo = null;
 
-        // Right of the shore, for the rows this block would cover
-        const dryX = () => Math.max(currentX, this.firstDryX(lineY + dropY, heightOf(rows)));
-        let blockX = dryX();
-        cols = fittingCols(blockX, cols);
+        for (let tries = 0; slots.length < maxCount && tries < 80; tries++) {
+            const roll = RandomNumberGen.randomNumBetween(1, 100);
+            const pool = roll <= 40 ? large : roll <= 65 ? medium : small;
+            const choices = pool.filter(info => info !== previous);
+            const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : pool);
+            const isSmall = pool === small;
+            let cols = isSmall ? 1 : RandomNumberGen.randomNumBetween(1, 3);
+            let rows = !isSmall && cols >= 2 && RandomNumberGen.randomNumBetween(1, 100) <= 30 ? 2 : 1;
 
-        // WRAP TO THE NEXT LINE OF BLOCKS IF THIS ONE WOULD GO OFF SCREEN
-        if (!fits(blockX, cols)) {
-            currentX = startX;
-            lineY = lineBottom + roadWidth;
-            lineBottom = lineY;
-            blockX = dryX();
-            cols = fittingCols(blockX, cols);
-            if (!fits(blockX, cols)) {
-                console.warn("Not enough screen space for more blocks");
-                return slots;
+            const stepX = info.width * (1 + buildingGap);
+            const stepY = info.height * (1 + rowGap);
+            // two deep only if it fits between this line's baseline and the one above
+            if (rows == 2 && info.height + stepY > pitch - 12) rows = 1;
+            const blockWidth = info.width + (cols - 1) * stepX;
+            const blockHeight = info.height + (rows - 1) * stepY;
+            // little things stand about a bit more loosely than the rest, so they don't line up like soldiers
+            const lift = RandomNumberGen.randomNumBetween(0, isSmall ? 26 : 10);
+            const blockTop = baseline - lift - blockHeight;
+            if (blockTop < top - 20) continue;
+
+            // right of the shore, for the rows this block covers
+            x = Math.max(x, this.firstDryX(blockTop, blockHeight));
+            if (x + blockWidth + padding > screenWidth) {
+                // doesn't fit: a three-wide block can be squeezed to two, otherwise the line is full
+                if (cols == 3 && x + info.width + stepX + padding <= screenWidth) cols = 2;
+                else break;
             }
-        }
+            if (slots.length + cols * rows > maxCount) break;
 
-        // A block that would run off the bottom of the screen gets a shallower, level try first
-        if (lineY + dropY + heightOf(rows) + padding > screenHeight) {
-            rows = minRows;
-            dropY = 0;
-            blockX = dryX();
-            if (lineY + heightOf(rows) + padding > screenHeight || !fits(blockX, cols)) {
-                console.warn("Not enough screen space for more blocks");
-                return slots;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    slots.push({ X: x + col * stepX, Y: blockTop + row * stepY, info: info });
+                }
             }
+            previous = info;
+            x += info.width + (cols - 1) * stepX + RandomNumberGen.randomNumBetween(14, 34); // and a narrow street
         }
-
-        // Whole blocks only, so the last one isn't left half built
-        if (slots.length + cols * rows > maxCount) {
-            return slots;
-        }
-
-        const blockY = lineY + dropY;
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                slots.push({
-                    X: blockX + col * stepX,
-                    Y: blockY + row * stepY,
-                    info: info
-                });
-            }
-        }
-
-        // The road, then the next block
-        currentX = blockX + widthOf(cols) + roadWidth;
-        lineBottom = Math.max(lineBottom, blockY + heightOf(rows));
     }
     return slots;
 }

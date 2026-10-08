@@ -413,6 +413,7 @@ class SceneLevel extends Level {
 
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     protected populateStage() {
+        game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
         for (let i = 0; i < this.staticTargetCount; i++) {
             this.registerTarget(this.provideAvailTargets());
         }
