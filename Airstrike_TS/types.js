@@ -468,9 +468,6 @@ const surveillanceInfo = {
         delay: 1000 // a second to arrive
     }
 };
-// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on
-// 12, the = key (8 to 0 and - are the drone and the superweapons)
-const tunnelChargeInfoForHills = { ...chargeInfo, slot: 12, displayName: "Tunnel Charge" };
 // Where a weapon sits: its slot, or the number of its name if it hasn't been given one
 function slotOf(info) {
     return info.slot !== undefined ? info.slot : info.name;
