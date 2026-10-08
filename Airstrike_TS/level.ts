@@ -381,7 +381,11 @@ class SceneLevel extends Level {
     private static shotsPerTarget: number = 1.5;       // more than this much shooting for each target and you're told about it
     // How much a shot counts towards that, by the slot it's fired from: the small weapons are cheap, so there's
     // loads of them to spend, the middling ones not quite so many, and the rest (the big ones, the charge) count in full
-    private static shotWeight(slot: number): number {
+    // (That's for the scaled weapon set, where the slots go small to big. In any other every shot counts in full
+    // and there are no big bombs to be told off for.)
+    public scaledSlots: boolean = false;
+    private shotWeight(slot: number): number {
+        if (!this.scaledSlots) return 1;
         if (slot <= 2) return 0.5;
         if (slot <= 5) return 0.75;
         return 1;
@@ -411,12 +415,12 @@ class SceneLevel extends Level {
         }
         let spent = 0;
         for (const slot in this.stageShotsBySlot) {
-            spent += this.stageShotsBySlot[slot] * SceneLevel.shotWeight(Number(slot));
+            spent += this.stageShotsBySlot[slot] * this.shotWeight(Number(slot));
         }
         if (spent > this.targets.length * SceneLevel.shotsPerTarget) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfShots) + "</strong>";
         }
-        if (SceneLevel.bigBombSlots.some(slot => (this.stageShotsBySlot[slot] || 0) > SceneLevel.tooManyBigBombs)) {
+        if (this.scaledSlots && SceneLevel.bigBombSlots.some(slot => (this.stageShotsBySlot[slot] || 0) > SceneLevel.tooManyBigBombs)) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.expensiveBombs) + "</strong>";
         }
         if (flyovers == 0 && extraWeapons[slotOf(surveillanceInfo)]) { // had a drone, and never sent it
