@@ -246,6 +246,11 @@ class Building extends MapEntity {
             y = position.Y;
         this.placeAt(x, y);
     }
+    // Rubble is still a target: it goes on taking damage until it's gone
+    public hitWhenDestroyed(): boolean {
+        return !this.removed;
+    }
+
     // Stages (undamaged -> damaged -> destroyed -> gone), worn down cumulatively like the vehicles:
     // every hit adds damage points, the building is destroyed once it has taken hitPointsToDestroy,
     // and what's left of it is cleared away altogether once it has taken hitPointsToObliterate. How
@@ -258,7 +263,9 @@ class Building extends MapEntity {
     //    all adds up, so a few glancing blows do as much as a direct one
     //  - a blast bigger than an airstrike's counts for more in proportion to its size, so a direct hit
     //    from a really big bomb takes it from standing to gone in one
-    // Any hit at all leaves it at least damaged. Rubble can be hit again, and goes in the same way.
+    // Any hit at all leaves it at least damaged. Rubble can be hit again, throwing more debris, and as it takes
+    // the damage between being destroyed and being cleared away it fades out in step with it, in a straight line:
+    // all there at hitPointsToDestroy, half there half way, gone at hitPointsToObliterate.
     private static hitPointsToDestroy: number = 100;
     private static hitPointsToObliterate: number = 200;
     private static standardBlastRadius: number = 100; // an airstrike's; smaller blasts are already allowed for above
@@ -294,6 +301,9 @@ class Building extends MapEntity {
         this.reAssignSrc();
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
+            const left = 1 - (this.damagePoints - Building.hitPointsToDestroy) / (Building.hitPointsToObliterate - Building.hitPointsToDestroy);
+            this.targetEl.style.transition = "opacity 0.5s ease-out";
+            this.targetEl.style.opacity = String(Math.max(0, Math.min(1, left)));
         }
         else if (severity >= strikeSeverity.medium) { // not just a glancing blow from the edge of a blast
             this.killOccupants(false);

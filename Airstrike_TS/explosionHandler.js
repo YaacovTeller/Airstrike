@@ -138,7 +138,8 @@ class ExplosionHandler {
     static targetStrike(target, weaponName, collisionInfo) {
         let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity = this.determineSeverity(fraction);
-        if (target.damage != Damage.destroyed) {
+        // a destroyed target is left alone, except rubble that's still got something left to be knocked down
+        if (target.damage != Damage.destroyed || (target.hitWhenDestroyed && target.hitWhenDestroyed())) {
             target.hit(severity, weaponName, collisionInfo); // TARGET - Main hit function
         }
     }
