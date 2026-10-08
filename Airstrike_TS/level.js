@@ -259,7 +259,7 @@ class Level {
     tickClock() { }
     // The surveillance drone has been sent out
     noteDroneFlyover() { }
-    noteShot(slot) { }
+    noteShot(slot, cost, bigBomb) { }
     continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
         let freq;
@@ -321,14 +321,17 @@ class SceneLevel extends Level {
     stageElapsedMs = 0;
     stageShotsAtStart = 0;
     stageDroneFlyovers = 0;
-    stageShotsBySlot = {};
+    stageOrdnanceSpent = 0; // the shots so far, each weighed by what it costs
+    stageBigBombsBySlot = {};
     tickClock() { if (!StageTransition.active)
         this.stageElapsedMs += 100; } // the rush between stages isn't the player's time
     noteDroneFlyover() { this.stageDroneFlyovers++; }
-    noteShot(slot) {
+    noteShot(slot, cost, bigBomb) {
         if (slot == slotOf(surveillanceInfo))
             return; // the drone's flyovers are counted on their own
-        this.stageShotsBySlot[slot] = (this.stageShotsBySlot[slot] || 0) + 1;
+        this.stageOrdnanceSpent += cost;
+        if (bigBomb)
+            this.stageBigBombsBySlot[slot] = (this.stageBigBombsBySlot[slot] || 0) + 1;
     }
     static praise = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
     static hurryUp = ["Speed up your game!", "Pick up the pace, soldier!", "That took you a while!"];
@@ -338,21 +341,8 @@ class SceneLevel extends Level {
     static expensiveBombs = ["Hey, those things are expensive!", "I'm not even sure why you have those bombs, really.", "...surgical precision..."];
     static tooManyDroneFlyovers = 4; // more than this and you're told about it
     static shotsPerTarget = 1.5; // more than this much shooting for each target and you're told about it
-    // How much a shot counts towards that, by the slot it's fired from: the small weapons are cheap, so there's
-    // loads of them to spend, the middling ones not quite so many, and the rest (the big ones, the charge) count in full
-    // (That's for the scaled weapon set, where the slots go small to big. In any other every shot counts in full
-    // and there are no big bombs to be told off for.)
-    scaledSlots = false;
-    shotWeight(slot) {
-        if (!this.scaledSlots)
-            return 1;
-        if (slot <= 2)
-            return 0.5;
-        if (slot <= 5)
-            return 0.75;
-        return 1;
-    }
-    static bigBombSlots = [6, 7];
+    // (How much a shot counts towards that is the weapon's own shotCost: small ones are cheap, so there's loads
+    // to spend, the big ones cost more, and the tunnel charge nothing.)
     static tooManyBigBombs = 2; // more than this of either big bomb and you're told about it
     slowAfterMs = 60000; // how long a stage can take before the hurry-up nudge
     formatTime(ms) {
@@ -374,14 +364,10 @@ class SceneLevel extends Level {
         if (this.stageElapsedMs > this.slowAfterMs) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
         }
-        let spent = 0;
-        for (const slot in this.stageShotsBySlot) {
-            spent += this.stageShotsBySlot[slot] * this.shotWeight(Number(slot));
-        }
-        if (spent > this.targets.length * SceneLevel.shotsPerTarget) {
+        if (this.stageOrdnanceSpent > this.targets.length * SceneLevel.shotsPerTarget) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfShots) + "</strong>";
         }
-        if (this.scaledSlots && SceneLevel.bigBombSlots.some(slot => (this.stageShotsBySlot[slot] || 0) > SceneLevel.tooManyBigBombs)) {
+        if (Object.values(this.stageBigBombsBySlot).some(count => count > SceneLevel.tooManyBigBombs)) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.expensiveBombs) + "</strong>";
         }
         if (flyovers == 0 && extraWeapons[slotOf(surveillanceInfo)]) { // had a drone, and never sent it
@@ -406,7 +392,8 @@ class SceneLevel extends Level {
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
-        this.stageShotsBySlot = {};
+        this.stageOrdnanceSpent = 0;
+        this.stageBigBombsBySlot = {};
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
             StageTransition.rush(); // the ground runs past empty, then the new stage slides in with it and stops

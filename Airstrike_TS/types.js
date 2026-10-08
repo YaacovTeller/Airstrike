@@ -248,6 +248,7 @@ const dev = {
 };
 const sniperInfo = {
     name: weaponNames.sniper,
+    shotCost: 0.25,
     class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
@@ -259,6 +260,7 @@ const sniperInfo = {
 };
 const mortarInfo = {
     name: weaponNames.mortar,
+    shotCost: 0.5,
     class: ExplosiveWeaponType,
     blastRadius: 50,
     cursor: "cursor2",
@@ -277,6 +279,7 @@ const mortarInfo = {
 };
 const howitzerInfo = {
     name: weaponNames.tank,
+    shotCost: 0.75,
     class: ExplosiveWeaponType,
     blastRadius: 70,
     cursor: "cursor3",
@@ -296,6 +299,7 @@ const howitzerInfo = {
 };
 const airstrikeInfo = {
     name: weaponNames.airstrike,
+    shotCost: 1.25,
     class: ExplosiveWeaponType,
     blastRadius: 100,
     cursor: "cursor4",
@@ -375,6 +379,7 @@ const carpetBombInfo = {
 };
 const chargeInfo = {
     name: weaponNames.tunnel_Charge,
+    shotCost: 0, // one to a tunnel: never held against you
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -514,6 +519,7 @@ const scaledHowitzerInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
     slot: 2,
+    shotCost: 0.5,
     displayName: "Missile",
     imageSource: assetsSVGFolder + 'Missile_2.png',
     blastRadius: 50,
@@ -523,6 +529,7 @@ const scaledAirstrikeInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
     slot: 3,
+    shotCost: 0.75,
     displayName: "Heavy Missile",
     imageSource: assetsSVGFolder + 'Missile_3.png',
     blastRadius: 70,
@@ -534,6 +541,8 @@ function scaledBigStrike(slot, displayName, icon, size) {
         ...airstrikeInfo,
         ...jetPlaceholder,
         slot: slot,
+        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
+        bigBomb: slot >= 6,
         displayName: displayName,
         imageSource: assetsSVGFolder + icon,
         blastRadius: size / 2,

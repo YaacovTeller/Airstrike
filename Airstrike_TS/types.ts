@@ -216,6 +216,8 @@ type weaponInfo = {
     displayName?: string, // what the HUD tooltip and pickup popups call it, instead of the name above
     slot?: number, // where it sits in the HUD, and which key picks it, if that isn't its name's number. The name still decides how it hurts things
     pickupMessage?: string, // what the popup says when it's picked up, instead of "New weapon: ...".
+    shotCost?: number, // how much a shot counts when a stage is judged for using too much ordnance (1 if not given; 0 never counts)
+    bigBomb?: boolean, // one of the bombs a stage's summary tells you off for using too many of
     class: typeof WeaponType,
     sound: Array<Sound>,
     imageSource: string,
@@ -318,6 +320,7 @@ const dev: difficultyLevelInfo = {
 }
 const sniperInfo: weaponInfo = {
     name: weaponNames.sniper,
+    shotCost: 0.25,
     class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
@@ -329,6 +332,7 @@ const sniperInfo: weaponInfo = {
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
+    shotCost: 0.5,
     class: ExplosiveWeaponType,
     blastRadius: 50,
     cursor: "cursor2",
@@ -347,6 +351,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tank,
+    shotCost: 0.75,
     class: ExplosiveWeaponType,
     blastRadius: 70,
     cursor: "cursor3",
@@ -366,6 +371,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
+    shotCost: 1.25,
     class: ExplosiveWeaponType,
     blastRadius: 100,
     cursor: "cursor4",
@@ -444,6 +450,7 @@ const carpetBombInfo: ExplosiveWeaponInfo = {
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnel_Charge,
+    shotCost: 0, // one to a tunnel: never held against you
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -588,6 +595,7 @@ const scaledHowitzerInfo: ExplosiveWeaponInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
     slot: 2,
+    shotCost: 0.5,
     displayName: "Missile",
     imageSource: assetsSVGFolder + 'Missile_2.png',
     blastRadius: 50,
@@ -597,6 +605,7 @@ const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
     slot: 3,
+    shotCost: 0.75,
     displayName: "Heavy Missile",
     imageSource: assetsSVGFolder + 'Missile_3.png',
     blastRadius: 70,
@@ -608,6 +617,8 @@ function scaledBigStrike(slot: number, displayName: string, icon: string, size: 
         ...airstrikeInfo,
         ...jetPlaceholder,
         slot: slot,
+        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
+        bigBomb: slot >= 6,
         displayName: displayName,
         imageSource: assetsSVGFolder + icon,
         blastRadius: size / 2,

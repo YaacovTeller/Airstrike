@@ -10,6 +10,8 @@ class WeaponType {
     cooldown;
     noAmmo;
     select;
+    shotCost;
+    bigBomb;
     activeInstance;
     instances = [];
     constructor(info) {
@@ -23,6 +25,8 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
+        this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
+        this.bigBomb = !!info.bigBomb;
         let wepArr = this.getWeaponArray();
         wepArr[this.slot] = this;
         game.addHudWeapon(this);
@@ -97,7 +101,7 @@ class WeaponType {
     }
     shotCounter() {
         game.updateKillStats(killStatDisplayOptions.shots);
-        game.level.noteShot(this.slot);
+        game.level.noteShot(this.slot, this.shotCost, this.bigBomb);
     }
     returnBlastRadiusDiv(radius) {
         let el = document.createElement('div');

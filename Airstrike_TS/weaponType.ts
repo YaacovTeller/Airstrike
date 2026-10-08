@@ -10,6 +10,8 @@ class WeaponType {
     public cooldown: number;
     public noAmmo: Sound;
     public select: Array<Sound>;
+    public shotCost: number;
+    public bigBomb: boolean;
 
     public activeInstance: weaponInstance;
     public instances: Array<weaponInstance> = [];
@@ -25,6 +27,8 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
+        this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
+        this.bigBomb = !!info.bigBomb;
 
         let wepArr: Array<WeaponType> = this.getWeaponArray();
         wepArr[this.slot] = this
@@ -104,7 +108,7 @@ class WeaponType {
     }
     protected shotCounter() {
         game.updateKillStats(killStatDisplayOptions.shots)
-        game.level.noteShot(this.slot);
+        game.level.noteShot(this.slot, this.shotCost, this.bigBomb);
     }
     protected returnBlastRadiusDiv(radius: number) {
         let el = document.createElement('div');

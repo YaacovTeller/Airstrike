@@ -402,8 +402,6 @@ class GameHandler {
     // The coast level's own weapons instead of the standard ones. Every game starts from empty weapon lists
     // (see reset()), so going back to any other mode gets the standard set again.
     addScaledWeaponSet() {
-        if (this.level instanceof SceneLevel)
-            this.level.scaledSlots = true; // so the stage summary knows what the slots mean
         for (let i = 0; i < 3; i++) {
             scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
         }
