@@ -380,7 +380,15 @@ class GameHandler {
                 WeatherHandler.createRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]);
             }
             else if (event.shiftKey && event.key === 'A') {
-                this.addAllWeapons();
+                if (this.gameMode == GameMode.coast) { // its own weapons (a charge would land on the bomb's key), and the supers
+                    this.addScaledWeaponSet();
+                    this.onlyOneSuperInst(chopperInfo);
+                    this.onlyOneSuperInst(nukeInfo);
+                    this.onlyOneSuperInst(carpetBombInfo);
+                }
+                else {
+                    this.addAllWeapons();
+                }
             }
             else if (event.shiftKey && event.key === 'Q') {
                 this.progressNumber += 32;
