@@ -366,7 +366,7 @@ class SceneLevel extends Level {
 
     private static praise: Array<string> = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
     private static hurryUp: Array<string> = ["Speed up your game!", "Pick up the pace, soldier!", "Faster! The enemy won't wait!"];
-    private static slowAfterMs: number = 60000;
+    protected slowAfterMs: number = 60000; // how long a stage can take before the hurry-up nudge
 
     private formatTime(ms: number): string {
         const seconds = Math.round(ms / 1000);
@@ -384,7 +384,7 @@ class SceneLevel extends Level {
             "<br>Time: " + this.formatTime(this.stageElapsedMs) +
             "<br>" + this.plural(shots, "shot") + " fired" +
             "<br>" + this.plural(flyovers, "drone flyover") + " needed";
-        if (this.stageElapsedMs > SceneLevel.slowAfterMs) {
+        if (this.stageElapsedMs > this.slowAfterMs) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
         }
         return text;
@@ -473,6 +473,8 @@ class HillsLevel extends SceneLevel {
     private static borrowedScale: number = 0.7;
     private static warehouseCodes = ["r1c1", "r1c2", "r1c3", "r1c4", "r1c5", "r2c1", "r2c2", "r2c3", "r2c4", "r2c5"];
     private static towerCodes = ["r5c1", "r5c2"];
+
+    protected slowAfterMs: number = 90000; // a stage here takes longer: there's a village to search and tunnels to find
 
     private takenBoxes: Array<Box> = [];      // where things have been put this stage, so nothing's put on top of anything
 
