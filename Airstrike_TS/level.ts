@@ -362,7 +362,7 @@ class SceneLevel extends Level {
     private stageShotsAtStart: number = 0;
     private stageDroneFlyovers: number = 0;
 
-    public tickClock() { this.stageElapsedMs += 100; }
+    public tickClock() { if (!StageTransition.active) this.stageElapsedMs += 100; } // the rush between stages isn't the player's time
     public noteDroneFlyover() { this.stageDroneFlyovers++; }
 
     private static praise: Array<string> = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
@@ -406,6 +406,7 @@ class SceneLevel extends Level {
 
         this.stage++;
         this.resetTargets(); // clears the last stage's targets and buildings
+        game.clearStageLeftovers(); // and the craters, debris and the rest they left
         if (this.stage == 1) {
             this.waveIndex = 0;
             this.setCurrentWave(); // later stages keep whatever time of day and weather they're in
@@ -416,6 +417,7 @@ class SceneLevel extends Level {
         this.stageDroneFlyovers = 0;
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
+            StageTransition.rush(); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
         return true;

@@ -363,7 +363,7 @@ class GameHandler {
     }
 
     private fireFunc() {
-        if (!game.gameInProgress || this.paused) {
+        if (!game.gameInProgress || this.paused || StageTransition.active) { // no shooting at the ground as it rushes past
             return;
         }
         if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
@@ -681,6 +681,13 @@ class GameHandler {
             if (arr[i].opac <= 0) arr.splice(i, 1);
         }
     }
+    // Everything on the ground that a stage leaves behind (craters, splashes, thrown debris, anything in
+    // flight, the glow of its fires), so the next stage starts on bare ground
+    public clearStageLeftovers() {
+        ContentElHandler.clearContent();
+        allObjects = [];
+        this.clearLights();
+    }
     private clearLights() {
         lights.length = 0;
         flares.length = 0;
@@ -764,6 +771,7 @@ class GameHandler {
     public reset() {
         GameTimers.clearAll();
         Sound.stopAll();
+        StageTransition.cancel();
         this.hidePauseDisplay();
         this.gameTimer = undefined;
         this.soundTimer = undefined;

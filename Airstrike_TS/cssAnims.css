@@ -181,6 +181,59 @@
         transform: translateX(0);
     }
 }
+/* the rush between stages: see StageTransition. The ground, the sea and the new stage all run on one curve. */
+body.stageRushing #background {
+    animation: rushGround var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+body.stageRushing .water {
+    animation: rushWater var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+body.stageRushing #content {
+    animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+@keyframes rushGround {
+    to { background-position-y: var(--rushGround); }
+}
+@keyframes rushWater {
+    to { background-position-y: var(--rushWater); }
+}
+@keyframes rushContent {
+    from { transform: translateY(var(--rushContent)); }
+    to { transform: translateY(0); }
+}
+/* streaks of speed over it all, strongest in the middle of the rush */
+.rushStreaks {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+.rushStreaks span {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent 0 90px, rgba(255, 255, 255, .55) 90px 230px, transparent 230px 380px);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 29px);
+    mask-image: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 29px);
+    animation: rushStreaks var(--rushDuration) linear both;
+}
+.rushStreaks span + span {
+    background-image: repeating-linear-gradient(0deg, transparent 0 40px, rgba(255, 255, 255, .45) 40px 120px, transparent 120px 310px);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 17px);
+    mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 17px);
+    animation-name: rushStreaksFast;
+}
+@keyframes rushStreaks {
+    0% { opacity: 0; background-position-y: 0; }
+    25% { opacity: .55; }
+    60% { opacity: .35; }
+    100% { opacity: 0; background-position-y: 6000px; }
+}
+@keyframes rushStreaksFast {
+    0% { opacity: 0; background-position-y: 0; }
+    30% { opacity: .5; }
+    65% { opacity: .3; }
+    100% { opacity: 0; background-position-y: 9000px; }
+}
 @keyframes moveDown {
     from {
         transform: translate(0%, -300px);

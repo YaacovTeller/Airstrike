@@ -92,6 +92,67 @@ class ContentElHandler {
     }
 }
 
+// Between one stage and the next: the ground rushes past empty, then the new stage slides in with it and
+// the lot comes to a stop. It's all CSS animation (so pausing freezes it), driven by the numbers set here:
+// the ground and the sea scroll a whole number of their tiles, so when the animation lets go they're exactly
+// where they were, and the new stage rides in on the same curve, so it moves with the ground it stands on.
+class StageTransition {
+    public static active: boolean = false;
+    private static duration: number = 3200;  // ms
+    private static distance: number = 4200;  // px the ground runs past, or near it
+    private static streaks: HTMLElement;
+
+    public static rush() {
+        this.cancel();
+        const root = document.documentElement;
+        const ground = ContentElHandler.returnbackground();
+        const water = document.getElementById("water");
+        const groundRun = this.wholeTiles(this.groundTileHeight(ground));
+        const waterRun = water ? this.wholeTiles(this.naturalHeight(water)) : groundRun;
+        root.style.setProperty("--rushDuration", this.duration + "ms");
+        root.style.setProperty("--rushGround", groundRun + "px");
+        root.style.setProperty("--rushWater", waterRun + "px");
+        root.style.setProperty("--rushContent", -groundRun + "px");
+
+        this.streaks = document.createElement("div");
+        this.streaks.className = "rushStreaks";
+        this.streaks.innerHTML = "<span></span><span></span>"; // two layers of streaks, going at different speeds
+        ContentElHandler.addToContentWrapper(this.streaks);
+        document.body.classList.add("stageRushing");
+        this.active = true;
+        SoundPlayer.playWithVolumeSet(jet_pass);
+        setTimeout(() => this.cancel(), this.duration);
+    }
+
+    // Ends it, wherever it's got to: the ground and the stage are where they'd be at the end anyway
+    public static cancel() {
+        this.active = false;
+        document.body.classList.remove("stageRushing");
+        if (this.streaks) {
+            this.streaks.remove();
+            this.streaks = undefined;
+        }
+    }
+
+    private static wholeTiles(tile: number): number {
+        return tile > 0 ? Math.max(1, Math.round(this.distance / tile)) * tile : this.distance;
+    }
+    // The ground repeats with 'round', so its tile is stretched to fit a whole number into its height
+    private static groundTileHeight(ground: HTMLElement): number {
+        const natural = this.naturalHeight(ground);
+        if (!natural) return 0;
+        return ground.clientHeight / Math.max(1, Math.round(ground.clientHeight / natural));
+    }
+    // The height of the picture an element tiles as its background
+    private static naturalHeight(el: HTMLElement): number {
+        const url = /url\(["']?(.*?)["']?\)/.exec(getComputedStyle(el).backgroundImage);
+        if (!url) return 0;
+        const img = new Image();
+        img.src = url[1];
+        return img.complete ? img.naturalHeight : 0;
+    }
+}
+
 function loadNewImage() {
     return '?' + new Date().getTime();
 }
