@@ -405,7 +405,7 @@
 .blastRadius {
     opacity: 0.5;
     position: fixed;
-    z-index: 7; /* above the buildings and targets (5) and the explosions (6) */
+    z-index: 8; /* above the buildings and targets (5), the explosions (6) and the flyovers (7) */
     border-radius: 50%;
         pointer-events: none;
  /*overflow: hidden;*/
@@ -478,6 +478,7 @@ img#crater { /*to override the img[src]!*/
     width: 200px;
     transition: transform 3s ease, left 100ms linear;
     opacity: 0.6;
+    z-index: 7; /* an aircraft's shadow passes over everything on the ground: buildings and targets (5), explosions (6) */
 }
 
     .flyover.chopper {
