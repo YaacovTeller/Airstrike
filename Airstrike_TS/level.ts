@@ -457,22 +457,30 @@ class SceneLevel extends Level {
 // some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
 // scans them. Stages follow on from each other like the port's.
 class HillsLevel extends SceneLevel {
-    private static minVillas: number = 8;
-    private static maxVillas: number = 12;
+    private static minVillas: number = 12;    // in the village itself
+    private static maxVillas: number = 16;
+    private static minOutliers: number = 1;    // and standing off from it
+    private static maxOutliers: number = 2;
+    private static villageGap: number = 22;    // between the buildings in the village
     private static minVehicles: number = 2;
     private static maxVehicles: number = 8;
     private static minTunnels: number = 2;
     private static maxTunnels: number = 4;
     private static screenTop: number = 120;   // clear of the HUD
     private static screenEdge: number = 70;
+    // The structure types the village borrows from the other set, at the villas' scale (theirs is 0.28 of
+    // their pictures' size, the others' 0.4)
+    private static borrowedScale: number = 0.7;
+    private static warehouseCodes = ["r1c1", "r1c2", "r1c3", "r1c4", "r1c5", "r2c1", "r2c2", "r2c3", "r2c4", "r2c5"];
+    private static towerCodes = ["r5c1", "r5c2"];
 
     private takenBoxes: Array<Box> = [];      // where things have been put this stage, so nothing's put on top of anything
 
     protected populateStage() {
         this.takenBoxes = [];
-        const villas = this.placeVillas();
-        this.infestBuildings(villas);
-        this.placeVehicles(villas);
+        const buildings = this.placeVillage();
+        this.infestBuildings(buildings);    // only the villas have somewhere for anyone to hide
+        this.placeVehicles(buildings);
         this.placeTunnels();
     }
 
@@ -482,31 +490,68 @@ class HillsLevel extends SceneLevel {
     private within(low: number, high: number): number {
         return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
     }
+    private typeFor(codes: Array<string>, noParking?: boolean): BuildingInfo {
+        const name = "Structure_" + RandomNumberGen.returnRandomFromArray(codes) + "_1.png";
+        return { ...resizedBuildingInfo(allBuildingInfo.find(info => info.undamaged === name), HillsLevel.borrowedScale), noParking: noParking };
+    }
 
-    // Villas scattered about, with some room between them
-    private placeVillas(): Array<Building> {
-        const villas: Array<Building> = [];
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
-        for (let i = 0; i < count; i++) {
-            const info = RandomNumberGen.returnRandomFromArray(allVillaInfo);
-            for (let attempt = 0; attempt < 60; attempt++) {
-                const x = this.within(HillsLevel.screenEdge, window.innerWidth - HillsLevel.screenEdge - info.width);
-                const y = this.within(HillsLevel.screenTop, window.innerHeight - HillsLevel.screenEdge - info.height);
+    // A village: the villas bunched up round the middle of the screen, a warehouse and a water tower among them,
+    // and one or two villas out on their own
+    private placeVillage(): Array<Building> {
+        const buildings: Array<Building> = [];
+        const width = window.innerWidth, height = window.innerHeight;
+        const middle = {
+            X: width / 2 + this.within(-70, 70),
+            Y: (height + HillsLevel.screenTop) / 2 + this.within(-40, 40),
+        };
+        const reachX = Math.min(330, width * 0.24);
+        const reachY = Math.min(225, (height - HillsLevel.screenTop) * 0.34);
+
+        // try to put one down: inside the village's ellipse (nearer the middle more often) or, for an outlier, well outside it
+        const place = (info: BuildingInfo, outlier: boolean): boolean => {
+            for (let attempt = 0; attempt < 250; attempt++) {
+                let x: number, y: number;
+                if (outlier) {
+                    x = this.within(HillsLevel.screenEdge, width - HillsLevel.screenEdge - info.width);
+                    y = this.within(HillsLevel.screenTop, height - HillsLevel.screenEdge - info.height);
+                    if (Math.hypot((x + info.width / 2 - middle.X) / reachX, (y + info.height / 2 - middle.Y) / reachY) < 1.5) continue;
+                }
+                else {
+                    const angle = Math.random() * Math.PI * 2;
+                    const pull = Math.random(); // an even spread in distance from the middle, which is thicker the nearer it gets to it
+                    x = middle.X + Math.cos(angle) * reachX * pull - info.width / 2;
+                    y = middle.Y + Math.sin(angle) * reachY * pull - info.height / 2;
+                }
                 const box = { left: x, top: y, right: x + info.width, bottom: y + info.height };
-                if (this.overlapsTaken(box, 55)) continue;
-                const villa = new Building(info);
-                villa.setPosition({ X: x, Y: y });
-                villas.push(villa);
+                const onScreen = x >= HillsLevel.screenEdge && y >= HillsLevel.screenTop && box.right <= width - HillsLevel.screenEdge && box.bottom <= height - HillsLevel.screenEdge;
+                if (!onScreen || this.overlapsTaken(box, HillsLevel.villageGap)) continue;
+                const building = new Building(info);
+                building.setPosition({ X: x, Y: y });
+                buildings.push(building);
                 this.takenBoxes.push(box);
-                break;
+                return true;
             }
+            return false;
+        };
+
+        // the big ones first, while there's room
+        place(this.typeFor(HillsLevel.warehouseCodes), false);
+        place(this.typeFor(HillsLevel.towerCodes, true), false);
+        const villas = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
+        for (let i = 0; i < villas; i++) {
+            place(RandomNumberGen.returnRandomFromArray(allVillaInfo), false);
         }
-        return villas;
+        const outliers = RandomNumberGen.randomNumBetween(HillsLevel.minOutliers, HillsLevel.maxOutliers);
+        for (let i = 0; i < outliers; i++) {
+            place(RandomNumberGen.returnRandomFromArray(allVillaInfo), true);
+        }
+        return buildings;
     }
 
     // A few vehicles just parked, each beside a villa. Some are running (they show on a drone's scan and are
     // targets that have to be dealt with); the others are cold, and can still be hit, flipped and blown up.
-    private placeVehicles(villas: Array<Building>) {
+    private placeVehicles(buildings: Array<Building>) {
+        const villas = buildings.filter(b => !b.isTall());
         if (!villas.length) return;
         const count = RandomNumberGen.randomNumBetween(HillsLevel.minVehicles, HillsLevel.maxVehicles);
         const running: Array<boolean> = [];

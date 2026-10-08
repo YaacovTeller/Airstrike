@@ -10,6 +10,7 @@ type BuildingInfo = {
     // The top-left corners an enemy's square can be put at (within the building's box) and be hidden
     // by the picture, in both its undamaged and damaged states -- measured from the pictures
     hide?: { x: [number, number], y: [number, number] },
+    noParking?: boolean, // nothing parks beside it (a water tower)
 }
 // A type made of the pictures Structure_<code>_1, _2 and _3 (undamaged, damaged, destroyed)
 function structureInfo(code: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
@@ -64,6 +65,11 @@ const allBuildingInfo: Array<BuildingInfo> = [
 function villaInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+}
+// A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
+// hide in it, as the hiding spots were measured at the original size.
+function resizedBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
+    return { ...info, width: Math.round(info.width * factor), height: Math.round(info.height * factor), hide: undefined };
 }
 const allVillaInfo: Array<BuildingInfo> = [
     villaInfo("A", 68, 59, { x: [15, 44], y: [10, 39] }),
@@ -188,6 +194,10 @@ class Building extends MapEntity {
     }
     public canHideEnemies(): boolean {
         return !!this.info.hide;
+    }
+    // A water tower and the like: nothing parks beside it
+    public isTall(): boolean {
+        return !!this.info.noParking;
     }
     // Wrecking the building takes everyone in it with it. A significant hit that only damages it
     // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
@@ -644,7 +654,7 @@ class HiddenTunnel extends Target {
     private static legMin: number = 110;       // how long each straight run is, before it turns
     private static legMax: number = 240;
     private static edgeMargin: number = 70;    // it doesn't turn closer than this to the edge of the screen
-    private static explosionSpacing: number = 55;
+    private static explosionSpacing: number = 150;
     private static bigBlastRadius: number = 140; // a blast this big (an airstrike's is 100) set off right on it does for it
 
     private path: Array<position> = [];        // where it runs, in page coordinates, from the head to well off the screen

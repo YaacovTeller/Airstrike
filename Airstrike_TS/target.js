@@ -52,6 +52,11 @@ function villaInfo(letter, width, height, hide) {
     const name = (stage) => "villas/Villa_" + letter + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
 }
+// A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
+// hide in it, as the hiding spots were measured at the original size.
+function resizedBuildingInfo(info, factor) {
+    return { ...info, width: Math.round(info.width * factor), height: Math.round(info.height * factor), hide: undefined };
+}
 const allVillaInfo = [
     villaInfo("A", 68, 59, { x: [15, 44], y: [10, 39] }),
     villaInfo("B", 64, 62, { x: [11, 40], y: [10, 39] }),
@@ -162,6 +167,10 @@ class Building extends MapEntity {
     }
     canHideEnemies() {
         return !!this.info.hide;
+    }
+    // A water tower and the like: nothing parks beside it
+    isTall() {
+        return !!this.info.noParking;
     }
     // Wrecking the building takes everyone in it with it. A significant hit that only damages it
     // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
@@ -584,7 +593,7 @@ class HiddenTunnel extends Target {
     static legMin = 110; // how long each straight run is, before it turns
     static legMax = 240;
     static edgeMargin = 70; // it doesn't turn closer than this to the edge of the screen
-    static explosionSpacing = 55;
+    static explosionSpacing = 150;
     static bigBlastRadius = 140; // a blast this big (an airstrike's is 100) set off right on it does for it
     path = []; // where it runs, in page coordinates, from the head to well off the screen
     constructor() {
