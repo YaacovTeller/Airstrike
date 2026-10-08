@@ -250,6 +250,7 @@ const sceneChaos = {
     ...chaos,
     enemyFactor: 2,
     parMs: 90000,
+    extraTunnels: 1,
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 };

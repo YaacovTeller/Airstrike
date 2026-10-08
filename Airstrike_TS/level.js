@@ -408,6 +408,15 @@ class SceneLevel extends Level {
         text = (criticised ? userHandler.addressed(praise) : praise) + text;
         return text;
     }
+    // Mostly fine: one stage in five has rain, half of those (one in ten) hard rain, the rest light or medium
+    chooseWeather() {
+        const roll = RandomNumberGen.randomNumBetween(1, 100);
+        if (roll <= 80)
+            return noRain;
+        if (roll <= 90)
+            return RandomNumberGen.returnRandomFromArray([lightRain, medRain]);
+        return heavyRain;
+    }
     nextWave() {
         if (game.level !== this)
             return true; // a stale call from before the game was reset
@@ -416,8 +425,9 @@ class SceneLevel extends Level {
         game.clearStageLeftovers(); // and the craters, debris and the rest they left
         if (this.stage == 1) {
             this.waveIndex = 0;
-            this.setCurrentWave(); // later stages keep whatever time of day and weather they're in
+            this.setCurrentWave(); // later stages keep whatever time of day they're in
         }
+        game.setRain(this.chooseWeather()); // but the weather's chosen afresh for each
         this.populateStage();
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
@@ -669,10 +679,11 @@ class HillsLevel extends SceneLevel {
     }
     // Tunnels: just their heads are placed here, clear of everything else; each works out where it runs
     placeTunnels() {
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels); // however hard, not more of these
+        // however hard, not many more of these
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels) + (game.difficulty.extraTunnels || 0);
         const heads = [];
         for (let i = 0; i < count; i++) {
-            for (let attempt = 0; attempt < 50; attempt++) {
+            for (let attempt = 0; attempt < 400; attempt++) {
                 const x = this.within(90, window.innerWidth - 135);
                 const y = this.within(HillsLevel.screenTop, window.innerHeight - 135);
                 const box = { left: x, top: y, right: x + 45, bottom: y + 45 };

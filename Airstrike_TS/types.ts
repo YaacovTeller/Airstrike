@@ -200,6 +200,7 @@ type difficultyLevelInfo = {
     tunnelTargetSpeed: speedRange,
     enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
     parMs?: number,       // and how long a stage gets before you're told off for being slow
+    extraTunnels?: number, // and how many tunnels more than usual (Hills)
     eng: langInfo,
     heb: langInfo
 }
@@ -324,6 +325,7 @@ const sceneChaos: difficultyLevelInfo = {
     ...chaos,
     enemyFactor: 2,
     parMs: 90000,
+    extraTunnels: 1,
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
