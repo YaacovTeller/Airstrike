@@ -127,7 +127,7 @@ body {
     width: min(1000px, 95vw);
     max-height: 92vh;
     overflow-y: auto;
-    padding: 28px;
+    padding: 18px 24px;
     border-radius: 16px;
     background: linear-gradient( 180deg, rgba(28,34,40,0.96), rgba(14,18,22,0.96) );
     border: 1px solid rgba(120,160,120,0.35);
@@ -143,7 +143,7 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 16px;
-    margin-bottom: 26px;
+    margin-bottom: 14px;
 }
 
 #slider {
@@ -187,7 +187,7 @@ body {
 /* ===== Username ===== */
 
 #input-container {
-    margin-bottom: 28px;
+    margin-bottom: 14px;
 }
 
 #userNameInput {
@@ -223,22 +223,22 @@ body {
 .directionalFluidContainer {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
     .directionalFluidContainer > div {
         background: rgba(255,255,255,0.03);
         border: 1px solid rgba(255,255,255,0.05);
         border-radius: 14px;
-        padding: 20px;
+        padding: 12px 16px;
     }
 
 /* ===== Headings ===== */
 
 h2 {
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     color: #90ffb0;
     font-size: 1.2rem;
     letter-spacing: 0.5px;
@@ -270,7 +270,7 @@ b {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
 }
 
 #difficultiesContainer li {
@@ -297,8 +297,8 @@ b {
 
 /* The test modes, fenced off from the main Start button */
 .testGroup {
-    margin: 22px 0 0;
-    padding: 8px 14px 16px;
+    margin: 14px 0 0;
+    padding: 6px 14px 12px;
     border: 1px dashed rgba(110,255,150,0.4);
     border-radius: 12px;
     background: rgba(255,255,255,0.03);
@@ -350,8 +350,50 @@ b {
 }
 
 .instructionsPanel {
-    margin-bottom: 18px;
+    margin-bottom: 8px;
 }
+
+/* ===== Location ===== */
+
+#locationContainer {
+    display: flex;
+    gap: 12px;
+}
+
+    #locationContainer input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #locationContainer label {
+        flex: 1;
+        text-align: center;
+        padding: 10px 14px;
+        border: 2px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.04);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+        #locationContainer label:hover {
+            border-color: rgba(120,255,170,0.45);
+        }
+
+    #locationContainer input[type="radio"]:checked + label {
+        border-color: #5dff9d;
+        background: rgba(60,160,90,0.28);
+        box-shadow: 0 0 14px rgba(93,255,157,0.45);
+        color: #eaffef;
+    }
+
+    #locationContainer input[type="radio"]:focus-visible + label {
+        outline: 2px dashed #5dff9d;
+        outline-offset: 2px;
+    }
 
 .instructionsToggle {
     width: 100%;

@@ -198,6 +198,8 @@ type difficultyLevelInfo = {
     modTargetSpeed: speedRange,
     heavyTargetSpeed: speedRange,
     tunnelTargetSpeed: speedRange,
+    enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
+    parFactor?: number,   // and how much of the usual time a stage gets before you're told off for being slow
     eng: langInfo,
     heb: langInfo
 }
@@ -301,6 +303,29 @@ const chaos: difficultyLevelInfo = {
         name: "מהומה",
         description: "מטרות נערמות בקצב מגוחך,  <b>אתה לבד</b>"
     }
+}
+// The same three choices for the levels made of stages (Hills and Coast), which have no escapes to count: they
+// differ in how many enemies there are, and how long you get before you're hurried along.
+const sceneNormal: difficultyLevelInfo = {
+    ...normal,
+    enemyFactor: 1,
+    parFactor: 1,
+    eng: { name: "Normal", description: "The usual number of enemies, and the usual time to clear a stage." },
+    heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
+}
+const sceneHard: difficultyLevelInfo = {
+    ...hard,
+    enemyFactor: 1.4,
+    parFactor: 0.75,
+    eng: { name: "Hard", description: "More enemies, and less time before you're told to hurry up." },
+    heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
+}
+const sceneChaos: difficultyLevelInfo = {
+    ...chaos,
+    enemyFactor: 2,
+    parFactor: 0.5,
+    eng: { name: "Chaos", description: "Twice the enemies, and half the time." },
+    heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
 const dev: difficultyLevelInfo = {
     failLimit: 9999,

@@ -200,14 +200,13 @@ class GameHandler {
     }
     menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
+        document.getElementById("startbutton").onclick = () => this.newGame(this.selectedMode());
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        document.getElementById("startbutton_coast").onclick = () => this.newGame(GameMode.coast);
-        document.getElementById("startbutton_hills").onclick = () => this.newGame(GameMode.hills);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
-        this.setMenuDifficulty(arr);
+        this.setMenuDifficulty(arr, [normal, hard, chaos]);
+        this.setLocationButtons(arr);
         this.toggleLang();
         this.toggleModal();
         this.setRadioButtons();
@@ -215,7 +214,7 @@ class GameHandler {
         this.setupInstructionsToggle();
     }
     setRadioButtons() {
-        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        const radioButtons = document.querySelectorAll('#difficultiesContainer input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
             if (radioButton.checked) {
@@ -236,10 +235,34 @@ class GameHandler {
         this.volume = vol / 100;
         sliderValue.textContent = `Volume: ${(vol)}%`;
     }
-    setMenuDifficulty(liOptions) {
-        this.setIndivMenuDifficulty(normal, liOptions[0]);
-        this.setIndivMenuDifficulty(hard, liOptions[1]);
-        this.setIndivMenuDifficulty(chaos, liOptions[2]);
+    setMenuDifficulty(liOptions, set) {
+        for (let i = 0; i < set.length; i++) {
+            this.setIndivMenuDifficulty(set[i], liOptions[i]);
+        }
+    }
+    // The location choice: Desert is the regular game, Hills and Coast the levels made of stages. Each has its own
+    // difficulties, so choosing one rewrites the difficulty options (keeping whichever of the three is picked).
+    setLocationButtons(difficultyLis) {
+        const radios = document.querySelectorAll('#locationContainer input[type="radio"]');
+        radios.forEach(radio => radio.addEventListener('change', () => {
+            const staged = this.selectedLocation() != "desert";
+            for (const li of difficultyLis) {
+                const label = li.getElementsByTagName('label')[0];
+                label.innerHTML = "";
+            }
+            this.setMenuDifficulty(difficultyLis, staged ? [sceneNormal, sceneHard, sceneChaos] : [normal, hard, chaos]);
+            const picked = document.querySelector('#difficultiesContainer input[type="radio"]:checked');
+            if (picked)
+                this.jsonParseRadioDifficulty(picked.value);
+        }));
+    }
+    selectedLocation() {
+        const picked = document.querySelector('#locationContainer input[type="radio"]:checked');
+        return picked ? picked.value : "desert";
+    }
+    selectedMode() {
+        const location = this.selectedLocation();
+        return location == "hills" ? GameMode.hills : location == "coast" ? GameMode.coast : GameMode.regular;
     }
     getMenuLis() {
         let container = document.getElementById("difficultiesContainer");

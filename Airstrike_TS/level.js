@@ -324,8 +324,26 @@ class SceneLevel extends Level {
     stageOrdnanceSpent = 0; // the shots so far, each weighed by what it costs
     stageBigBombsBySlot = {};
     rushDirections = ["down"]; // the ways the ground can rush between stages
-    tickClock() { if (!StageTransition.active)
-        this.stageElapsedMs += 100; } // the rush between stages isn't the player's time
+    // The rush between stages isn't the player's time. Over par, the clock goes red and bleeps once.
+    tickClock() {
+        if (StageTransition.active)
+            return;
+        this.stageElapsedMs += 100;
+        game.hud.updateStageTimer(this.stageElapsedMs, this.parMs());
+        if (!this.overParWarned && this.stageElapsedMs > this.parMs()) {
+            this.overParWarned = true;
+            SoundPlayer.playWithVolumeSet(bleep_neg);
+        }
+    }
+    overParWarned = false;
+    // How long a stage can take before the hurry-up nudge: the level's own time, shortened by the difficulty
+    parMs() {
+        return this.slowAfterMs * (game.difficulty.parFactor || 1);
+    }
+    // How many of something: more of them on the harder difficulties
+    scaled(count) {
+        return Math.max(1, Math.round(count * (game.difficulty.enemyFactor || 1)));
+    }
     noteDroneFlyover() { this.stageDroneFlyovers++; }
     noteShot(slot, cost, bigBomb) {
         if (slot == slotOf(surveillanceInfo))
@@ -362,7 +380,7 @@ class SceneLevel extends Level {
             "<br>Time: " + this.formatTime(this.stageElapsedMs) +
             "<br>" + this.plural(shots, "shot") + " fired" +
             "<br>" + this.plural(flyovers, "drone flyover") + " needed";
-        if (this.stageElapsedMs > this.slowAfterMs) {
+        if (this.stageElapsedMs > this.parMs()) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
         }
         if (this.stageOrdnanceSpent > this.targets.length * SceneLevel.shotsPerTarget) {
@@ -395,6 +413,7 @@ class SceneLevel extends Level {
         this.stageDroneFlyovers = 0;
         this.stageOrdnanceSpent = 0;
         this.stageBigBombsBySlot = {};
+        this.overParWarned = false;
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
@@ -406,7 +425,7 @@ class SceneLevel extends Level {
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     populateStage() {
         game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
-        for (let i = 0; i < this.staticTargetCount; i++) {
+        for (let i = 0; i < this.scaled(this.staticTargetCount); i++) {
             this.registerTarget(this.provideAvailTargets());
         }
         this.infestBuildings(game.drawAllBuildings());
@@ -417,9 +436,9 @@ class SceneLevel extends Level {
     // A few of the buildings have enemies hiding in them, who count as targets for the stage.
     infestBuildings(buildings) {
         const pool = buildings.filter(b => b.canHideEnemies());
-        for (let n = 0; n < SceneLevel.infestedBuildingCount && pool.length; n++) {
+        for (let n = 0; n < this.scaled(SceneLevel.infestedBuildingCount) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
-            const occupants = RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants);
+            const occupants = this.scaled(RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants));
             for (let i = 0; i < occupants; i++) {
                 const enemy = new BuildingEnemy();
                 building.addOccupant(enemy);
@@ -579,7 +598,7 @@ class HillsLevel extends SceneLevel {
         const villas = buildings.filter(b => !b.isTall());
         if (!villas.length)
             return;
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minVehicles, HillsLevel.maxVehicles);
+        const count = this.scaled(RandomNumberGen.randomNumBetween(HillsLevel.minVehicles, HillsLevel.maxVehicles));
         const running = [];
         for (let i = 0; i < count; i++)
             running.push(RandomNumberGen.randomNumBetween(0, 1) == 1);
@@ -639,7 +658,7 @@ class HillsLevel extends SceneLevel {
     }
     // Tunnels: just their heads are placed here, clear of everything else; each works out where it runs
     placeTunnels() {
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels);
+        const count = this.scaled(RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels));
         const heads = [];
         for (let i = 0; i < count; i++) {
             for (let attempt = 0; attempt < 50; attempt++) {

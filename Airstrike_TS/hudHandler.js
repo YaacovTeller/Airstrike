@@ -216,6 +216,12 @@ class HudHandler {
         let span = document.createElement('span');
         span.id = "scoreCounter";
         this.scoreBox.appendChild(span);
+        if (game.hasStages()) { // the levels with stages are against the clock
+            this.scoreBox.appendChild(document.createElement('br'));
+            const timer = document.createElement('span');
+            timer.id = "stageTimer";
+            this.scoreBox.appendChild(timer);
+        }
         this.rightSideContainer.appendChild(this.scoreBox);
         this.updateScore(game.killStats);
     }
@@ -245,6 +251,18 @@ class HudHandler {
         }
         if (title === killStatDisplayOptions.total) {
         }
+    }
+    // The stage clock, in the score box: counts up, and goes red (and keeps counting) once it's over the stage's par
+    updateStageTimer(elapsedMs, parMs) {
+        const timer = document.getElementById("stageTimer");
+        if (!timer)
+            return;
+        const clock = (ms) => {
+            const seconds = Math.floor(ms / 1000);
+            return Math.floor(seconds / 60) + ":" + (seconds % 60 < 10 ? "0" : "") + (seconds % 60);
+        };
+        timer.innerText = "Time: " + clock(elapsedMs) + " / " + clock(parMs);
+        timer.classList.toggle('red', elapsedMs > parMs);
     }
     updateScore(stats) {
         //let span = document.getElementById('scoreCounter')
