@@ -235,22 +235,22 @@ const chaos = {
 const sceneNormal = {
     ...normal,
     enemyFactor: 1,
-    parFactor: 1,
-    eng: { name: "Normal", description: "The usual number of enemies, and the usual time to clear a stage." },
+    parMs: 120000,
+    eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 };
 const sceneHard = {
     ...hard,
     enemyFactor: 1.4,
-    parFactor: 0.75,
-    eng: { name: "Hard", description: "More enemies, and less time before you're told to hurry up." },
+    parMs: 105000,
+    eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 };
 const sceneChaos = {
     ...chaos,
     enemyFactor: 2,
-    parFactor: 0.5,
-    eng: { name: "Chaos", description: "Twice the enemies, and half the time." },
+    parMs: 90000,
+    eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 };
 const dev = {

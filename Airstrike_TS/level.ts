@@ -378,9 +378,9 @@ class SceneLevel extends Level {
         }
     }
     private overParWarned: boolean = false;
-    // How long a stage can take before the hurry-up nudge: the level's own time, shortened by the difficulty
+    // How long a stage can take before the hurry-up nudge: the difficulty's time, or the level's own if it has none
     protected parMs(): number {
-        return this.slowAfterMs * (game.difficulty.parFactor || 1);
+        return game.difficulty.parMs || this.slowAfterMs;
     }
     // How many of something: more of them on the harder difficulties
     protected scaled(count: number): number {
@@ -711,7 +711,7 @@ class HillsLevel extends SceneLevel {
 
     // Tunnels: just their heads are placed here, clear of everything else; each works out where it runs
     private placeTunnels() {
-        const count = this.scaled(RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels));
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels); // however hard, not more of these
         const heads: Array<position> = [];
         for (let i = 0; i < count; i++) {
             for (let attempt = 0; attempt < 50; attempt++) {
