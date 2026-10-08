@@ -508,13 +508,18 @@ class HillsLevel extends SceneLevel {
     // The structure types the village borrows from the other set, at the villas' scale (theirs is 0.28 of
     // their pictures' size, the others' 0.4)
     private static borrowedScale: number = 0.7;
-    private static warehouseCodes = ["r1c1", "r1c2", "r1c3", "r1c4", "r1c5", "r2c1", "r2c2", "r2c3", "r2c4", "r2c5"];
-    // The odd ones out (water towers and tanks, fenced yards, a shelter, a checkpoint, containers, crates), each type
-    // put down a couple of times or three, and which of them nothing parks beside
-    private static oddCodes = ["r5c1", "r5c2", "r5c3", "r5c4", "r5c5", "r5c6", "r5c7", "r5c8", "r5c9"];
-    private static tallOddCodes = ["r5c1", "r5c2", "r5c3"];
+    // The odd ones out: fenced yards, a shelter and a checkpoint, each put down a couple of times or three...
+    private static oddCodes = ["r5c4", "r5c5", "r5c6", "r5c7"];
     private static minOfEachOdd: number = 2;
     private static maxOfEachOdd: number = 3;
+    // ...and (no warehouses: they don't suit the sand) one or two water towers (of the three kinds), at a larger
+    // scale than the rest, and one each of the containers and the stack of crates. Nothing parks beside a water tower.
+    private static waterTowerCodes = ["r5c1", "r5c2", "r5c3"];
+    private static waterTowerScale: number = 1;
+    private static minWaterTowers: number = 1;
+    private static maxWaterTowers: number = 2;
+    private static containerCode = "r5c8";
+    private static cratesCode = "r5c9";
 
     protected rushDirections: Array<RushDirection> = ["up", "right"]; // there's no sea here to keep in place, so it can go either way
     protected slowAfterMs: number = 90000; // a stage here takes longer: there's a village to search and tunnels to find
@@ -535,12 +540,13 @@ class HillsLevel extends SceneLevel {
     private within(low: number, high: number): number {
         return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
     }
-    private typeFor(codes: Array<string>, noParking?: boolean): BuildingInfo {
+    private typeFor(codes: Array<string>, noParking?: boolean, scale: number = HillsLevel.borrowedScale): BuildingInfo {
         const name = "Structure_" + RandomNumberGen.returnRandomFromArray(codes) + "_1.png";
-        return { ...resizedBuildingInfo(allBuildingInfo.find(info => info.undamaged === name), HillsLevel.borrowedScale), noParking: noParking };
+        const info = allBuildingInfo.find(info => info.undamaged === name);
+        return { ...resizedBuildingInfo(info, scale), noParking: noParking };
     }
 
-    // A village: the villas bunched up round the middle of the screen, a warehouse and a few of each of the odd structures among them,
+    // A village: the villas bunched up round the middle of the screen, a couple of water towers, containers, crates and a few of each of the other odd structures among them,
     // and one or two villas out on their own
     private placeVillage(): Array<Building> {
         const buildings: Array<Building> = [];
@@ -580,11 +586,16 @@ class HillsLevel extends SceneLevel {
         };
 
         // the big ones first, while there's room
-        place(this.typeFor(HillsLevel.warehouseCodes), false);
+        const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
+        for (let i = 0; i < towers; i++) {
+            place(this.typeFor(HillsLevel.waterTowerCodes, true, HillsLevel.waterTowerScale), false);
+        }
+        place(this.typeFor([HillsLevel.containerCode]), false);
+        place(this.typeFor([HillsLevel.cratesCode]), false);
         for (const code of HillsLevel.oddCodes) {
             const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachOdd, HillsLevel.maxOfEachOdd);
             for (let i = 0; i < count; i++) {
-                place(this.typeFor([code], HillsLevel.tallOddCodes.includes(code)), false);
+                place(this.typeFor([code]), false);
             }
         }
         const villas = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
