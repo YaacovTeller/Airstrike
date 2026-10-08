@@ -184,7 +184,7 @@ class GameHandler {
     }
     endGame() {
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
-        PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
+        PopupHandler.addToArray("That's the last of them, good work!", userHandler.addressed("You did it!"), msgLength.long);
         PopupHandler.addToArray(`Finished <strong>${GameMode[this.gameMode]}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false; // HACKY??
@@ -699,7 +699,7 @@ class GameHandler {
         if (stats.escaped >= stats.failLimit) {
             this.pause();
             this.gameInProgress = false;
-            PopupHandler.addToArray("", "Game Over!", msgLength.long);
+            PopupHandler.addToArray("", userHandler.addressed("Game Over!"), msgLength.long);
             SoundPlayer.playWithVolumeSet(alarm3);
         }
     }
@@ -858,6 +858,8 @@ class GameHandler {
         }
         this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
+        if (userHandler.userName)
+            PopupHandler.addToArray(userHandler.addressed("Good luck!"));
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();

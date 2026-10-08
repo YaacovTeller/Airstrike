@@ -354,6 +354,7 @@ class SceneLevel extends Level {
     }
     static praise = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
     static hurryUp = ["Speed up your game!", "Pick up the pace, soldier!", "That took you a while!"];
+    static congratulations = ["Not a word of complaint from me!", "Clean, quick and efficient: that's how it's done.", "Couldn't have done it better myself.", "Textbook!", "Flawless work."];
     static lotsOfShots = ["That was a lot of ordnance...", "I think you probably could've got by with fewer munitions.", "Is ammunition free where you come from?"];
     static lotsOfDroneFlyovers = ["You know it costs to keep that thing in the air, right?"];
     static noDroneFlyovers = ["Didn't need to check anything then?", "You were given that drone for a reason, right?"];
@@ -376,24 +377,32 @@ class SceneLevel extends Level {
     stageSummary() {
         const flyovers = this.stageDroneFlyovers;
         const shots = Math.max(0, game.killStats.shots - this.stageShotsAtStart - flyovers);
-        let text = RandomNumberGen.returnRandomFromArray(SceneLevel.praise) +
+        let text = userHandler.addressed(RandomNumberGen.returnRandomFromArray(SceneLevel.praise)) +
             "<br>Time: " + this.formatTime(this.stageElapsedMs) +
             "<br>" + this.plural(shots, "shot") + " fired" +
             "<br>" + this.plural(flyovers, "drone flyover") + " needed";
+        let criticised = false;
+        const criticise = (pool) => {
+            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(pool) + "</strong>";
+            criticised = true;
+        };
         if (this.stageElapsedMs > this.parMs()) {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
+            criticise(SceneLevel.hurryUp);
         }
         if (this.stageOrdnanceSpent > this.targets.length * SceneLevel.shotsPerTarget) {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfShots) + "</strong>";
+            criticise(SceneLevel.lotsOfShots);
         }
         if (Object.values(this.stageBigBombsBySlot).some(count => count > SceneLevel.tooManyBigBombs)) {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.expensiveBombs) + "</strong>";
+            criticise(SceneLevel.expensiveBombs);
         }
         if (flyovers == 0 && extraWeapons[slotOf(surveillanceInfo)]) { // had a drone, and never sent it
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.noDroneFlyovers) + "</strong>";
+            criticise(SceneLevel.noDroneFlyovers);
         }
         if (flyovers > SceneLevel.tooManyDroneFlyovers) {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfDroneFlyovers) + "</strong>";
+            criticise(SceneLevel.lotsOfDroneFlyovers);
+        }
+        if (!criticised) { // nothing to say against it: say something for it
+            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.congratulations) + "</strong>";
         }
         return text;
     }

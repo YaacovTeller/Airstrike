@@ -32,6 +32,12 @@ class userHandler {
     private static inputError() {
         PopupHandler.addToArray("Write your name","Input Error");
     }
+    // Puts the name, if there is one, in front of a message's closing punctuation: "Well done!" becomes "Well done, Sam!"
+    public static addressed(text: string): string {
+        if (!userHandler.userName) return text;
+        const name = userHandler.userName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return text.replace(/([.!?…]*)$/, ", " + name + "$1");
+    }
     public static displayName() {
         document.getElementById("userNameInput").classList.add("displayNone");
         let userDisplay = document.getElementById("userDisplay");

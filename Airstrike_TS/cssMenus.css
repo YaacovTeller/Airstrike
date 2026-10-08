@@ -295,6 +295,13 @@ b {
     justify-content: center;
 }
 
+/* Start is the main button: wider than any of the test ones */
+#startbutton {
+    min-width: 220px;
+    padding: 12px 40px;
+    font-size: 1.05rem;
+}
+
 /* The test modes, fenced off from the main Start button */
 .testGroup {
     margin: 14px 0 0;
