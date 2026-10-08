@@ -491,7 +491,7 @@ class HillsLevel extends SceneLevel {
         const info = allBuildingInfo.find(info => info.undamaged === name);
         return { ...resizedBuildingInfo(info, scale), noParking: noParking };
     }
-    // A village: the villas bunched up round the middle of the screen, a couple of water towers, containers, crates and a few of each of the other odd structures among them,
+    // A village: the villas bunched up round the middle of the screen, the mosque, a couple of water towers, containers, crates and a few of each of the other odd structures among them,
     // and one or two villas out on their own
     placeVillage() {
         const buildings = [];
@@ -530,7 +530,8 @@ class HillsLevel extends SceneLevel {
             }
             return false;
         };
-        // the big ones first, while there's room
+        // the big ones first, while there's room: the village's mosque, which there's only the one of
+        place(RandomNumberGen.returnRandomFromArray(allMosqueInfo), false);
         const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
         for (let i = 0; i < towers; i++) {
             place(this.typeFor(HillsLevel.waterTowerCodes, true, HillsLevel.waterTowerScale), false);

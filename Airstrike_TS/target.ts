@@ -68,6 +68,18 @@ function villaInfo(letter: string, width: number, height: number, hide?: Buildin
     const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
 }
+// The mosques (AS_assets/buildings/mosques): three of them, a village has one. Undamaged, damaged (the tower half
+// broken) and destroyed (the tower gone); there's also a complete ruin, _4, that nothing uses yet. Sizes are 0.36
+// of natural.
+function mosqueInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
+    const name = (stage: number) => "mosques/Mosque_" + letter + "_" + stage + ".png";
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+}
+const allMosqueInfo: Array<BuildingInfo> = [
+    mosqueInfo("A", 76, 101, { x: [42, 50], y: [48, 76] }),
+    mosqueInfo("B", 76, 107, { x: [20, 51], y: [49, 77] }),
+    mosqueInfo("C", 81, 109, { x: [18, 50], y: [52, 72] }),
+];
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.
 function resizedBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
