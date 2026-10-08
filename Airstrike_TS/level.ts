@@ -365,6 +365,8 @@ class SceneLevel extends Level {
     private stageOrdnanceSpent: number = 0;                  // the shots so far, each weighed by what it costs
     private stageBigBombsBySlot: { [slot: number]: number } = {};
 
+    protected rushDirections: Array<RushDirection> = ["down"]; // the ways the ground can rush between stages
+
     public tickClock() { if (!StageTransition.active) this.stageElapsedMs += 100; } // the rush between stages isn't the player's time
     public noteDroneFlyover() { this.stageDroneFlyovers++; }
     public noteShot(slot: number, cost: number, bigBomb: boolean) {
@@ -438,7 +440,7 @@ class SceneLevel extends Level {
         this.stageBigBombsBySlot = {};
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
-            StageTransition.rush(); // the ground runs past empty, then the new stage slides in with it and stops
+            StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
         return true;
@@ -514,6 +516,7 @@ class HillsLevel extends SceneLevel {
     private static minOfEachOdd: number = 2;
     private static maxOfEachOdd: number = 3;
 
+    protected rushDirections: Array<RushDirection> = ["up", "right"]; // there's no sea here to keep in place, so it can go either way
     protected slowAfterMs: number = 90000; // a stage here takes longer: there's a village to search and tunnels to find
 
     private takenBoxes: Array<Box> = [];      // where things have been put this stage, so nothing's put on top of anything

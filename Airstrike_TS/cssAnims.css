@@ -181,7 +181,8 @@
         transform: translateX(0);
     }
 }
-/* the rush between stages: see StageTransition. The ground, the sea and the new stage all run on one curve. */
+/* the rush between stages: see StageTransition. The ground, the sea and the new stage all run on one curve,
+   in the direction the numbers set on the page say (down, up or right). */
 body.stageRushing #background {
     animation: rushGround var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
 }
@@ -192,16 +193,16 @@ body.stageRushing #content {
     animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
 }
 @keyframes rushGround {
-    to { background-position-y: var(--rushGround); }
+    to { background-position: var(--rushGroundX) var(--rushGroundY); }
 }
 @keyframes rushWater {
-    to { background-position-y: var(--rushWater); }
+    to { background-position: var(--rushWaterX) var(--rushWaterY); }
 }
 @keyframes rushContent {
-    from { transform: translateY(var(--rushContent)); }
-    to { transform: translateY(0); }
+    from { transform: translate(var(--rushContentX), var(--rushContentY)); }
+    to { transform: translate(0, 0); }
 }
-/* streaks of speed over it all, strongest in the middle of the rush */
+/* streaks of speed over it all, strongest in the middle of the rush, along the way it's going */
 .rushStreaks {
     position: fixed;
     inset: 0;
@@ -222,17 +223,27 @@ body.stageRushing #content {
     mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 17px);
     animation-name: rushStreaksFast;
 }
+.rushStreaks.sideways span {
+    background-image: repeating-linear-gradient(90deg, transparent 0 90px, rgba(255, 255, 255, .55) 90px 230px, transparent 230px 380px);
+    -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 29px);
+    mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 29px);
+}
+.rushStreaks.sideways span + span {
+    background-image: repeating-linear-gradient(90deg, transparent 0 40px, rgba(255, 255, 255, .45) 40px 120px, transparent 120px 310px);
+    -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 17px);
+    mask-image: repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 17px);
+}
 @keyframes rushStreaks {
-    0% { opacity: 0; background-position-y: 0; }
+    0% { opacity: 0; background-position: 0 0; }
     25% { opacity: .55; }
     60% { opacity: .35; }
-    100% { opacity: 0; background-position-y: 6000px; }
+    100% { opacity: 0; background-position: var(--streakX) var(--streakY); }
 }
 @keyframes rushStreaksFast {
-    0% { opacity: 0; background-position-y: 0; }
+    0% { opacity: 0; background-position: 0 0; }
     30% { opacity: .5; }
     65% { opacity: .3; }
-    100% { opacity: 0; background-position-y: 9000px; }
+    100% { opacity: 0; background-position: calc(var(--streakX) * 1.5) calc(var(--streakY) * 1.5); }
 }
 @keyframes moveDown {
     from {

@@ -102,20 +102,29 @@ class StageTransition {
     private static distance: number = 4200;  // px the ground runs past, or near it
     private static streaks: HTMLElement;
 
-    public static rush() {
+    // direction is the way the ground goes: down (the new stage comes in from the top), up (from the bottom)
+    // or right (from the left)
+    public static rush(direction: RushDirection = "down") {
         this.cancel();
         const root = document.documentElement;
         const ground = ContentElHandler.returnbackground();
         const water = document.getElementById("water");
-        const groundRun = this.wholeTiles(this.groundTileHeight(ground));
-        const waterRun = water ? this.wholeTiles(this.naturalHeight(water)) : groundRun;
+        const sideways = direction == "right";
+        const sign = direction == "up" ? -1 : 1;
+        const run = (el: HTMLElement) => sign * this.wholeTiles(this.tileLength(el, sideways, el === ground));
+        const groundRun = run(ground);
+        const waterRun = water ? run(water) : groundRun;
+        const set = (name: string, px: number, along: boolean) => { // along: on the axis it's moving on, else nothing
+            root.style.setProperty(name, (along ? px : 0) + "px");
+        };
         root.style.setProperty("--rushDuration", this.duration + "ms");
-        root.style.setProperty("--rushGround", groundRun + "px");
-        root.style.setProperty("--rushWater", waterRun + "px");
-        root.style.setProperty("--rushContent", -groundRun + "px");
+        set("--rushGroundX", groundRun, sideways); set("--rushGroundY", groundRun, !sideways);
+        set("--rushWaterX", waterRun, sideways); set("--rushWaterY", waterRun, !sideways);
+        set("--rushContentX", -groundRun, sideways); set("--rushContentY", -groundRun, !sideways);
+        set("--streakX", 6000, sideways); set("--streakY", 6000 * sign, !sideways);
 
         this.streaks = document.createElement("div");
-        this.streaks.className = "rushStreaks";
+        this.streaks.className = "rushStreaks" + (sideways ? " sideways" : "");
         this.streaks.innerHTML = "<span></span><span></span>"; // two layers of streaks, going at different speeds
         ContentElHandler.addToContentWrapper(this.streaks);
         document.body.classList.add("stageRushing");
@@ -137,21 +146,26 @@ class StageTransition {
     private static wholeTiles(tile: number): number {
         return tile > 0 ? Math.max(1, Math.round(this.distance / tile)) * tile : this.distance;
     }
-    // The ground repeats with 'round', so its tile is stretched to fit a whole number into its height
-    private static groundTileHeight(ground: HTMLElement): number {
-        const natural = this.naturalHeight(ground);
-        if (!natural) return 0;
-        return ground.clientHeight / Math.max(1, Math.round(ground.clientHeight / natural));
+    // How far the ground has to go to be where it was: the length of its tile in the direction it's moving.
+    // The ground repeats with 'round', so its tile is stretched to fit a whole number into the element.
+    private static tileLength(el: HTMLElement, sideways: boolean, rounded: boolean): number {
+        const natural = this.naturalSize(el);
+        const natLength = sideways ? natural.width : natural.height;
+        if (!natLength) return 0;
+        if (!rounded) return natLength;
+        const room = sideways ? el.clientWidth : el.clientHeight;
+        return room / Math.max(1, Math.round(room / natLength));
     }
-    // The height of the picture an element tiles as its background
-    private static naturalHeight(el: HTMLElement): number {
+    // The size of the picture an element tiles as its background
+    private static naturalSize(el: HTMLElement): { width: number, height: number } {
         const url = /url\(["']?(.*?)["']?\)/.exec(getComputedStyle(el).backgroundImage);
-        if (!url) return 0;
+        if (!url) return { width: 0, height: 0 };
         const img = new Image();
         img.src = url[1];
-        return img.complete ? img.naturalHeight : 0;
+        return img.complete ? { width: img.naturalWidth, height: img.naturalHeight } : { width: 0, height: 0 };
     }
 }
+type RushDirection = "down" | "up" | "right";
 
 function loadNewImage() {
     return '?' + new Date().getTime();
