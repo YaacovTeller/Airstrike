@@ -179,7 +179,7 @@ enum weaponNames {
     flare = 7,
     tactical_Nuke = 8,
     chopper = 9,
-    surveillance = 10, // the 0 key
+    surveillance = 10, // (it's on key 8: see its slot)
     carpet_bomb = 11   // the - key
 }
 type position = {
@@ -215,6 +215,7 @@ type weaponInfo = {
     name: weaponNames,
     displayName?: string, // what the HUD tooltip and pickup popups call it, instead of the name above
     slot?: number, // where it sits in the HUD, and which key picks it, if that isn't its name's number. The name still decides how it hurts things
+    pickupMessage?: string, // what the popup says when it's picked up, instead of "New weapon: ...".
     class: typeof WeaponType,
     sound: Array<Sound>,
     imageSource: string,
@@ -390,6 +391,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tactical_Nuke,
+    slot: 9,
     class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
@@ -416,6 +418,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
 // along a band around the mouse, carpeting it with airstrike-sized explosions.
 const carpetBombInfo: ExplosiveWeaponInfo = {
     name: weaponNames.carpet_bomb,
+    slot: 11, // the - key
     displayName: "Carpet Strike",
     class: CarpetBombing,
     cursor: "cursor4",
@@ -477,6 +480,7 @@ const droneInfo: ExplosiveWeaponInfo = {
 }
 const chopperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.chopper,
+    slot: 10, // the 0 key
     class: Chopper,
     cursor: "cursor4",
     blastRadius: 20,
@@ -504,7 +508,9 @@ const chopperInfo: ExplosiveWeaponInfo = {
 // A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
 const surveillanceInfo: ExplosiveWeaponInfo = {
     name: weaponNames.surveillance,
+    slot: 8, // on key 8, so the three superweapons (9, 0 and -) are together
     displayName: "Surveillance Drone",
+    pickupMessage: "A surveillance drone has been flown out to scan for active targets.",
     class: SurveillanceDrone,
     cursor: "cursor4",
     blastRadius: 110, // how far around the mouse it can pick up a heat signature
@@ -528,8 +534,14 @@ const surveillanceInfo: ExplosiveWeaponInfo = {
     }
 }
 
-// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on 8
-const tunnelChargeInfoForHills: weaponInfo = { ...chargeInfo, slot: 8, displayName: "Tunnel Charge" };
+// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on
+// 12, the = key (8 to 0 and - are the drone and the superweapons)
+const tunnelChargeInfoForHills: weaponInfo = { ...chargeInfo, slot: 12, displayName: "Tunnel Charge" };
+
+// Where a weapon sits: its slot, or the number of its name if it hasn't been given one
+function slotOf(info: weaponInfo): number {
+    return info.slot !== undefined ? info.slot : info.name;
+}
 
 const flareInfo: ExplosiveWeaponInfo = {
     name: weaponNames.flare,

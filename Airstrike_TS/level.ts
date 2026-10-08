@@ -113,7 +113,7 @@ class Level {
         else {
             new info.class(info);
             if (showMsg != false) {
-                PopupHandler.addToArray("New weapon:\n" + wepName)
+                PopupHandler.addToArray(info.pickupMessage || "New weapon:\n" + wepName)
             }
         }
     }
@@ -228,9 +228,9 @@ class Level {
             if (checkIndex >= 200) { // every 20 seconds
                 checkIndex = 0;
                 // a hint about the drone, if there's one to use
-                if (this.checkForDamagedActiveTargets() && extraWeapons[weaponNames.surveillance]) {
+                if (this.checkForDamagedActiveTargets() && extraWeapons[slotOf(surveillanceInfo)]) {
                     PopupHandler.addToArray(
-                        "Use the surveillance drone (10) to check for survivors..."
+                        "Use the surveillance drone (" + slotOf(surveillanceInfo) + ") to check for survivors..."
                     );
                 }
             }
@@ -366,7 +366,11 @@ class SceneLevel extends Level {
     public noteDroneFlyover() { this.stageDroneFlyovers++; }
 
     private static praise: Array<string> = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
-    private static hurryUp: Array<string> = ["Speed up your game!", "Pick up the pace, soldier!", "Faster! The enemy won't wait!"];
+    private static hurryUp: Array<string> = ["Speed up your game!", "Pick up the pace, soldier!", "That took you a while!"];
+    private static lotsOfShots: Array<string> = ["That was a lot of ordnance...", "I think you probably could've got by with fewer munitions.", "Is ammunition free where you come from?"];
+    private static lotsOfDroneFlyovers: Array<string> = ["You know it costs to keep that thing in the air, right?"];
+    private static tooManyDroneFlyovers: number = 4;  // more than this and you're told about it
+    private static shotsPerTarget: number = 1.5;       // more than this many shots for each target and you're told about it
     protected slowAfterMs: number = 60000; // how long a stage can take before the hurry-up nudge
 
     private formatTime(ms: number): string {
@@ -387,6 +391,12 @@ class SceneLevel extends Level {
             "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         if (this.stageElapsedMs > this.slowAfterMs) {
             text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.hurryUp) + "</strong>";
+        }
+        if (shots > this.targets.length * SceneLevel.shotsPerTarget) {
+            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfShots) + "</strong>";
+        }
+        if (flyovers > SceneLevel.tooManyDroneFlyovers) {
+            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.lotsOfDroneFlyovers) + "</strong>";
         }
         return text;
     }
@@ -787,7 +797,7 @@ const allLevelInfo: Array<LevelInfo> = [
         ],
         startArms: [howitzerInfo, airstrikeInfo],
      //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
-        endArms: [howitzerInfo, airstrikeInfo],
+        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo], // and a drone, to find the tunnels that come next
         targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {

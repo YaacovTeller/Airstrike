@@ -321,6 +321,7 @@ const airstrikeInfo = {
 };
 const nukeInfo = {
     name: weaponNames.tactical_Nuke,
+    slot: 9,
     class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
@@ -348,6 +349,7 @@ const nukeInfo = {
 // along a band around the mouse, carpeting it with airstrike-sized explosions.
 const carpetBombInfo = {
     name: weaponNames.carpet_bomb,
+    slot: 11, // the - key
     displayName: "Carpet Strike",
     class: CarpetBombing,
     cursor: "cursor4",
@@ -409,6 +411,7 @@ const droneInfo = {
 };
 const chopperInfo = {
     name: weaponNames.chopper,
+    slot: 10, // the 0 key
     class: Chopper,
     cursor: "cursor4",
     blastRadius: 20,
@@ -435,7 +438,9 @@ const chopperInfo = {
 // A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
 const surveillanceInfo = {
     name: weaponNames.surveillance,
+    slot: 8, // on key 8, so the three superweapons (9, 0 and -) are together
     displayName: "Surveillance Drone",
+    pickupMessage: "A surveillance drone has been flown out to scan for active targets.",
     class: SurveillanceDrone,
     cursor: "cursor4",
     blastRadius: 110, // how far around the mouse it can pick up a heat signature
@@ -458,8 +463,13 @@ const surveillanceInfo = {
         delay: 1000 // a second to arrive
     }
 };
-// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on 8
-const tunnelChargeInfoForHills = { ...chargeInfo, slot: 8, displayName: "Tunnel Charge" };
+// The tunnel charge in the weapon set the Coast and Hills levels use: its usual number, 6, is a bomb there, so it's on
+// 12, the = key (8 to 0 and - are the drone and the superweapons)
+const tunnelChargeInfoForHills = { ...chargeInfo, slot: 12, displayName: "Tunnel Charge" };
+// Where a weapon sits: its slot, or the number of its name if it hasn't been given one
+function slotOf(info) {
+    return info.slot !== undefined ? info.slot : info.name;
+}
 const flareInfo = {
     name: weaponNames.flare,
     class: Flare,
