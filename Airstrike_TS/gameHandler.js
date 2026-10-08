@@ -207,7 +207,6 @@ class GameHandler {
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
         this.setMenuDifficulty(arr, [normal, hard, chaos]);
         this.setLocationButtons(arr);
-        this.toggleLang();
         this.toggleModal();
         this.setRadioButtons();
         this.setVolumeSlider();

@@ -230,7 +230,6 @@ class GameHandler {
 
         this.setMenuDifficulty(arr, [normal, hard, chaos]);
         this.setLocationButtons(arr);
-        this.toggleLang();
         this.toggleModal();
 
         this.setRadioButtons();

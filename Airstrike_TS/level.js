@@ -353,8 +353,8 @@ class SceneLevel extends Level {
             this.stageBigBombsBySlot[slot] = (this.stageBigBombsBySlot[slot] || 0) + 1;
     }
     static praise = ["Well done!", "Nice work!", "Target area cleared!", "Excellent shooting!"];
-    static hurryUp = ["Speed up your game!", "Pick up the pace, soldier!", "That took you a while!"];
-    static congratulations = ["Not a word of complaint from me!", "Clean, quick and efficient: that's how it's done.", "Couldn't have done it better myself.", "Textbook!", "Flawless work."];
+    static hurryUp = ["Speed up your game!", "Pick up the pace!", "That took you a while!", "You took your time on that one."];
+    static congratulations = ["Perfectly executed!", "Fantastic work!", "Great job!", "Clean and efficient!"];
     static lotsOfShots = ["That was a lot of ordnance...", "I think you probably could've got by with fewer munitions.", "Is ammunition free where you come from?"];
     static lotsOfDroneFlyovers = ["You know it costs to keep that thing in the air, right?"];
     static noDroneFlyovers = ["Didn't need to check anything then?", "You were given that drone for a reason, right?"];
@@ -377,8 +377,8 @@ class SceneLevel extends Level {
     stageSummary() {
         const flyovers = this.stageDroneFlyovers;
         const shots = Math.max(0, game.killStats.shots - this.stageShotsAtStart - flyovers);
-        let text = userHandler.addressed(RandomNumberGen.returnRandomFromArray(SceneLevel.praise)) +
-            "<br>Time: " + this.formatTime(this.stageElapsedMs) +
+        const praise = RandomNumberGen.returnRandomFromArray(SceneLevel.praise);
+        let text = "<br>Time: " + this.formatTime(this.stageElapsedMs) +
             "<br>" + this.plural(shots, "shot") + " fired" +
             "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         let criticised = false;
@@ -401,9 +401,11 @@ class SceneLevel extends Level {
         if (flyovers > SceneLevel.tooManyDroneFlyovers) {
             criticise(SceneLevel.lotsOfDroneFlyovers);
         }
+        // the name goes in once: with the congratulations if there are any, otherwise the plain praise
         if (!criticised) { // nothing to say against it: say something for it
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(SceneLevel.congratulations) + "</strong>";
+            text += "<br><strong>" + userHandler.addressed(RandomNumberGen.returnRandomFromArray(SceneLevel.congratulations)) + "</strong>";
         }
+        text = (criticised ? userHandler.addressed(praise) : praise) + text;
         return text;
     }
     nextWave() {
