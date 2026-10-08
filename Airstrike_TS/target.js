@@ -233,9 +233,8 @@ class Building extends MapEntity {
     //    all adds up, so a few glancing blows do as much as a direct one
     //  - a blast bigger than an airstrike's counts for more in proportion to its size, so a direct hit
     //    from a really big bomb takes it from standing to gone in one
-    // Any hit at all leaves it at least damaged. Rubble can be hit again, throwing more debris, and as it takes
-    // the damage between being destroyed and being cleared away it fades out in step with it, in a straight line:
-    // all there at hitPointsToDestroy, half there half way, gone at hitPointsToObliterate.
+    // Any hit at all leaves it at least damaged. Rubble can be hit again, throwing more debris on every hit, and
+    // stays as it is until the damage reaches hitPointsToObliterate, when it's gone.
     static hitPointsToDestroy = 100;
     static hitPointsToObliterate = 200;
     static standardBlastRadius = 100; // an airstrike's; smaller blasts are already allowed for above
@@ -269,9 +268,6 @@ class Building extends MapEntity {
         this.reAssignSrc();
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
-            const left = 1 - (this.damagePoints - Building.hitPointsToDestroy) / (Building.hitPointsToObliterate - Building.hitPointsToDestroy);
-            this.targetEl.style.transition = "opacity 0.5s ease-out";
-            this.targetEl.style.opacity = String(Math.max(0, Math.min(1, left)));
         }
         else if (severity >= strikeSeverity.medium) { // not just a glancing blow from the edge of a blast
             this.killOccupants(false);
