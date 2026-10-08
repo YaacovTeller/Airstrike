@@ -492,8 +492,8 @@ class SceneLevel extends Level {
 // some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
 // scans them. Stages follow on from each other like the port's.
 class HillsLevel extends SceneLevel {
-    private static minVillas: number = 12;    // in the village itself
-    private static maxVillas: number = 16;
+    private static minVillas: number = 20;    // in the village itself
+    private static maxVillas: number = 26;
     private static minOutliers: number = 1;    // and standing off from it
     private static maxOutliers: number = 2;
     private static villageGap: number = 22;    // between the buildings in the village
@@ -507,7 +507,12 @@ class HillsLevel extends SceneLevel {
     // their pictures' size, the others' 0.4)
     private static borrowedScale: number = 0.7;
     private static warehouseCodes = ["r1c1", "r1c2", "r1c3", "r1c4", "r1c5", "r2c1", "r2c2", "r2c3", "r2c4", "r2c5"];
-    private static towerCodes = ["r5c1", "r5c2"];
+    // The odd ones out (water towers and tanks, fenced yards, a shelter, a checkpoint, containers, crates), each type
+    // put down a couple of times or three, and which of them nothing parks beside
+    private static oddCodes = ["r5c1", "r5c2", "r5c3", "r5c4", "r5c5", "r5c6", "r5c7", "r5c8", "r5c9"];
+    private static tallOddCodes = ["r5c1", "r5c2", "r5c3"];
+    private static minOfEachOdd: number = 2;
+    private static maxOfEachOdd: number = 3;
 
     protected slowAfterMs: number = 90000; // a stage here takes longer: there's a village to search and tunnels to find
 
@@ -532,7 +537,7 @@ class HillsLevel extends SceneLevel {
         return { ...resizedBuildingInfo(allBuildingInfo.find(info => info.undamaged === name), HillsLevel.borrowedScale), noParking: noParking };
     }
 
-    // A village: the villas bunched up round the middle of the screen, a warehouse and a water tower among them,
+    // A village: the villas bunched up round the middle of the screen, a warehouse and a few of each of the odd structures among them,
     // and one or two villas out on their own
     private placeVillage(): Array<Building> {
         const buildings: Array<Building> = [];
@@ -541,8 +546,8 @@ class HillsLevel extends SceneLevel {
             X: width / 2 + this.within(-70, 70),
             Y: (height + HillsLevel.screenTop) / 2 + this.within(-40, 40),
         };
-        const reachX = Math.min(330, width * 0.24);
-        const reachY = Math.min(225, (height - HillsLevel.screenTop) * 0.34);
+        const reachX = Math.min(540, width * 0.39);   // room for a good few more than a hamlet's worth
+        const reachY = Math.min(340, (height - HillsLevel.screenTop) * 0.5);
 
         // try to put one down: inside the village's ellipse (nearer the middle more often) or, for an outlier, well outside it
         const place = (info: BuildingInfo, outlier: boolean): boolean => {
@@ -573,7 +578,12 @@ class HillsLevel extends SceneLevel {
 
         // the big ones first, while there's room
         place(this.typeFor(HillsLevel.warehouseCodes), false);
-        place(this.typeFor(HillsLevel.towerCodes, true), false);
+        for (const code of HillsLevel.oddCodes) {
+            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachOdd, HillsLevel.maxOfEachOdd);
+            for (let i = 0; i < count; i++) {
+                place(this.typeFor([code], HillsLevel.tallOddCodes.includes(code)), false);
+            }
+        }
         const villas = RandomNumberGen.randomNumBetween(HillsLevel.minVillas, HillsLevel.maxVillas);
         for (let i = 0; i < villas; i++) {
             place(RandomNumberGen.returnRandomFromArray(allVillaInfo), false);
