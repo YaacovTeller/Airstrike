@@ -96,6 +96,9 @@ class ExplosionHandler {
         else if (size == ExplSizes.XL) {
             this.shake(screenShakeTimeouts.shake_2);
         }
+        else if (size > ExplSizes.XL && size < ExplSizes.XXL) { // the bigger explosions between: a heavy shake, but no flash
+            this.shake(screenShakeTimeouts.shake_3);
+        }
         if (size >= ExplSizes.XXL) {
             this.flash();
             this.shake(screenShakeTimeouts.shake_3);
@@ -216,6 +219,9 @@ class ExplosionHandler {
                     explosionImgs = expl_med_imgs;
                     break;
 
+                case ExplSizes.huge:
+                case ExplSizes.massive:
+                case ExplSizes.colossal:
                 case ExplSizes.XXL:
                     explosionImgs = expl_big_imgs;
                     break;

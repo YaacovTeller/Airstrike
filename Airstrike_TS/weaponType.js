@@ -28,7 +28,7 @@ class WeaponType {
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {

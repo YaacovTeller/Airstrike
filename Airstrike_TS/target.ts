@@ -537,7 +537,7 @@ class VehicleTarget extends Target {
         return this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
     }
 
-    protected wheelSource: string = assetsFolder + 'wheel.png';
+    protected wheelSource: string = assetsFolder + 'vehicles/wheel.png';
     protected wheelSizeClass: string;
     public movesAtBlast: boolean = true;
     public angle: number = 0;
@@ -800,13 +800,16 @@ class WaterVehicleTarget extends VehicleTarget {
     private static tiltPause: number = 1500;
     private static tiltSinkDuration: number = 7000;
 
-    // The boat pictures that are the smaller sort of boat (see .smallBoat in cssApp.css)
-    private static smallBoatPics: Array<string> = ['ship2.png'];
+    // The boat pictures, in AS_assets/vehicles. Ships are big and go down by the bow or stern; tugs are
+    // the smaller sort (see .smallBoat in cssApp.css), unarmoured, and go straight down. A new boat is
+    // as likely to be either sort, whatever the number of pictures of each.
+    private static shipPics: Array<string> = ['Ship_1.png', 'Ship_2.png', 'Ship_3.png', 'Ship_5.png', 'Ship_6.png', 'Ship_7.png', 'Ship_8.png', 'Ship_10.png', 'Ship_11.png', 'Ship_12.png', 'Ship_13.png'];
+    private static tugPics: Array<string> = ['Tug_1.png', 'Tug_2.png', 'Tug_3.png'];
 
     constructor() {
         super(boatTarget);
         this.targetEl.classList.add('longTarget');
-        if (WaterVehicleTarget.smallBoatPics.some(pic => this.baseImgEl.src.endsWith(pic))) {
+        if (WaterVehicleTarget.tugPics.some(pic => this.baseImgEl.src.endsWith('/' + pic))) {
             this.targetEl.classList.add('smallBoat');
             this.armour = smallBoatTarget.armour;
         }
@@ -828,7 +831,8 @@ class WaterVehicleTarget extends VehicleTarget {
         this.throwBit(direction.backward);
     }
     protected get picSources(): Array<string> {
-        return ['ship1.png', 'ship2.png']; // an even chance of each
+        const sort = RandomNumberGen.randomNumBetween(0, 1) ? WaterVehicleTarget.tugPics : WaterVehicleTarget.shipPics;
+        return ['vehicles/' + RandomNumberGen.returnRandomFromArray(sort)];
     }
 
     // A wrecked boat's fire burns out in half the time -- it's sitting on water.
@@ -1032,7 +1036,7 @@ class RegVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('smallSquare');
     }
     protected get picSources(): Array<string> {
-        return ['jeep__.png', 'jeep__light.png', 'jeep__grey.png', 'jeep2__.png', 'jeep2__light.png', 'Jeep2__lightgrey.png', 'jeep2__tan.png'];// 'jeep2__grey.png', 
+        return ['Jeep__.png', 'Jeep__light.png', 'Jeep__grey.png', 'Jeep2__.png', 'Jeep2__light.png', 'Jeep2__lightgrey.png', 'Jeep2__tan.png'].map(pic => 'vehicles/' + pic);// 'Jeep2__grey.png', 
       //  return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
     }
 }
@@ -1043,7 +1047,7 @@ class ModVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('medRectTarget');
     }
     protected get picSources(): Array<string> {
-        return ['truck__tan2.png', 'truck__green.png'];
+        return ['vehicles/truck__tan2.png', 'vehicles/truck__green.png'];
     }
 }
 class HeavyVehicleTarget extends VehicleTarget {
@@ -1053,7 +1057,7 @@ class HeavyVehicleTarget extends VehicleTarget {
         this.targetEl.classList.add('medRectTarget');
     }
     protected get picSources(): Array<string> {
-        return ['truck__grey.png'];
+        return ['vehicles/truck__grey.png'];
     }
 }
 
@@ -1068,10 +1072,10 @@ class RocketLauncher extends VehicleTarget {
         super(rocketLauncher);
         this.targetEl.classList.add('medRectTarget');
         this.stopPos = RandomNumberGen.randomNumBetween(50, 200);
-        this.launcherEl = ElementCreator.returnNewImageEl(this.picEl, 'rocketPack', assetsFolder + "rockets.png");
+        this.launcherEl = ElementCreator.returnNewImageEl(this.picEl, 'rocketPack', assetsFolder + "vehicles/rockets.png");
     }
     protected get picSources(): Array<string> {
-        return ['launcher.png'];
+        return ['vehicles/launcher.png'];
        // return ['rocketVehicle.jpg'];
          //   picSources: ['rocketVehicle_undeployed.jpg']
     }

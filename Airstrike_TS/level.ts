@@ -102,7 +102,7 @@ class Level {
     public addNewWeapon(info: weaponInfo, showMsg?: boolean) {
         let wepName = info.displayName || weaponNames[info.name];
         let slot = info.slot !== undefined ? info.slot : info.name;
-        let wepArr: Array<WeaponType> = slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        let wepArr: Array<WeaponType> = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
         if (wepArr[slot]) {
             wepArr[slot].pushNewWeaponInstance();
             if (showMsg != false) {

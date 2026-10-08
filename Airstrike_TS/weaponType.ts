@@ -31,7 +31,7 @@ class WeaponType {
         game.addHudWeapon(this)
     }
     public getWeaponArray() {
-        return this.slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
     }
 
     public switchFrom() {

@@ -80,6 +80,9 @@ enum ExplSizes {
     small = 100,
     large = 140,
     XL = 200,
+    huge = 280,
+    massive = 360,
+    colossal = 450,
     XXL = 800,
 }
 enum Status {
@@ -417,7 +420,7 @@ const carpetBombInfo: ExplosiveWeaponInfo = {
         sound: [],
         length: 1000,
     },
-    imageSource: assetsSVGFolder + 'missiles.svg',
+    imageSource: assetsSVGFolder + 'CarpetBomb.png',
     sound: airstrikeSounds,
     speed: 0,
     cooldown: 30000,
@@ -538,15 +541,15 @@ const flareInfo: ExplosiveWeaponInfo = {
     select: gib
 }
 
-// ---- Scaled-down weapon set, used by Test_3 instead of the standard weapons above ----
-// Each one is a standard weapon with a smaller explosion -- one rung down the ExplSizes ladder -- so it
-// covers a smaller area and needs a closer hit to do the same damage, and it keeps that weapon's name,
-// so it hurts things the way that weapon does. There's no gun: it can't hurt anything in this mode, so
-// the bombs take slots 1-3 (the "slot" setting, which is separate from the name), and the guided strike
-// keeps 5. Everything else (cooldowns, flight times, flyovers, impact sounds) is inherited.
-// The jet icon and aircraft noises (from the airstrike) are placeholders for the bombs.
+// ---- The weapon set Test_3 uses instead of the standard weapons above ----
+// Seven bombs on keys 1-7, each one a larger explosion than the last. The first three are the
+// standard mortar, howitzer and airstrike with their explosions a rung down the ExplSizes ladder
+// (so they cover a smaller area and need a closer hit to do the same damage); the rest are airstrikes
+// with ever bigger explosions. They keep the name of the weapon they're made from, so they hurt things
+// the way that weapon does; the "slot" is just their key and place in the HUD. There's no gun: it can't
+// hurt anything in this mode. Everything else (cooldowns, flight times, flyovers) is inherited, and the
+// aircraft noises (from the airstrike) are placeholders. The icons are in AS_assets/SVG.
 const jetPlaceholder = {
-    imageSource: airstrikeInfo.imageSource,
     sound: airstrikeInfo.sound,
     select: airstrikeInfo.select,
     noAmmo: airstrikeInfo.noAmmo,
@@ -555,7 +558,8 @@ const scaledMortarInfo: ExplosiveWeaponInfo = {
     ...mortarInfo,
     ...jetPlaceholder,
     slot: 1,
-    displayName: "Light Bomb",
+    displayName: "Light Missile",
+    imageSource: assetsSVGFolder + 'Missile_1.png',
     blastRadius: 30,
     explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
 }
@@ -563,7 +567,8 @@ const scaledHowitzerInfo: ExplosiveWeaponInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
     slot: 2,
-    displayName: "Bomb",
+    displayName: "Missile",
+    imageSource: assetsSVGFolder + 'Missile_2.png',
     blastRadius: 50,
     explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
 }
@@ -571,16 +576,32 @@ const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
     slot: 3,
-    displayName: "Heavy Bomb",
+    displayName: "Heavy Missile",
+    imageSource: assetsSVGFolder + 'Missile_3.png',
     blastRadius: 70,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 }
-const scaledDroneInfo: ExplosiveWeaponInfo = {
-    ...droneInfo, // with its own drone icon
-    displayName: "Guided Strike",
-    explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
+// A bigger airstrike, in the given slot, whose explosion is this size (and so its circle is half of that)
+function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes): ExplosiveWeaponInfo {
+    return {
+        ...airstrikeInfo,
+        ...jetPlaceholder,
+        slot: slot,
+        displayName: displayName,
+        imageSource: assetsSVGFolder + icon,
+        blastRadius: size / 2,
+        explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
+    };
 }
-const scaledWeapons: Array<weaponInfo> = [scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];
+const scaledWeapons: Array<weaponInfo> = [
+    scaledMortarInfo,
+    scaledHowitzerInfo,
+    scaledAirstrikeInfo,
+    scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),         // as big as the standard airstrike
+    scaledBigStrike(5, "Cruise Missile", 'missile_5.png', ExplSizes.huge),
+    scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
+    scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
+];
 
 
 enum msgLength {
