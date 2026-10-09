@@ -196,6 +196,8 @@ class Building extends MapEntity {
         assetsFolder + "bit.png",
     ];
     static debrisPerHit = 2;
+    static debrisWhenGone = 18; // when it's brought down completely: a lot of pieces, three times what it used to be
+    static loudPieces = 4; // of which only this many make a noise landing
     static ownBitChance = 60; // percent of the pieces, for the buildings that have bits of their own
     // A bunker beneath it (see Bunker), if it has one
     bunker;
@@ -309,7 +311,7 @@ class Building extends MapEntity {
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
-            this.throwDebris(collisionInfo, Building.debrisPerHit * 3);
+            this.throwDebris(collisionInfo, Building.debrisWhenGone);
             this.clearAway();
             return;
         }
@@ -329,30 +331,28 @@ class Building extends MapEntity {
         this.damagePoints = Building.hitPointsToObliterate;
         this.damage = Damage.destroyed;
         this.killOccupants(true);
-        this.throwDebris(undefined, Building.debrisPerHit * 4);
+        this.throwDebris(undefined, Building.debrisWhenGone);
         this.clearAway();
     }
     isStanding() {
         return !this.removed;
     }
-    // Takes the sprite off the map altogether, fading it out
+    // Takes the sprite off the map altogether, at once: it's all been blown to pieces
     clearAway() {
         this.removed = true;
         const index = allTargets.indexOf(this);
         if (index >= 0)
             allTargets.splice(index, 1); // nothing's left for blasts to hit
-        this.targetEl.style.transition = "opacity 1.5s ease-out";
-        this.targetEl.style.opacity = "0";
-        setTimeout(() => ContentElHandler.removeFromContentEl(this.targetEl), 1600);
+        ContentElHandler.removeFromContentEl(this.targetEl);
     }
     // The pieces fly out from where the blast hit the building.
     throwDebris(collisionInfo, pieces = Building.debrisPerHit) {
         const origin = this.impactPoint(collisionInfo);
         for (let i = 0; i < pieces; i++) {
-            this.throwDebrisPiece(origin);
+            this.throwDebrisPiece(origin, i < Building.loudPieces);
         }
     }
-    throwDebrisPiece(origin) {
+    throwDebrisPiece(origin, loud = true) {
         // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
         // (a building that's been brought down has no roof or dome left to throw, so only the generic rubble)
         const own = this.info.bits && this.info.bits.length && this.damage !== Damage.destroyed && RandomNumberGen.randomNumBetween(1, 100) <= Building.ownBitChance;
@@ -360,7 +360,7 @@ class Building extends MapEntity {
         let piece = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.lob(piece, direc, crashes, ThrowHandler.removeIfLandedInWater);
+        ThrowHandler.lob(piece, direc, loud ? crashes : null, ThrowHandler.removeIfLandedInWater);
     }
 }
 class Target extends MapEntity {
