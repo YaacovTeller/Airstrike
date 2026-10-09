@@ -1,3 +1,4 @@
+"use strict";
 class userHandler {
     static userName;
     static key = 'Airstrike_TS USER';
@@ -22,6 +23,13 @@ class userHandler {
     //}
     static inputError() {
         PopupHandler.addToArray("Write your name", "Input Error");
+    }
+    // Puts the name, if there is one, in front of a message's closing punctuation: "Well done!" becomes "Well done, Sam!"
+    static addressed(text) {
+        if (!userHandler.userName)
+            return text;
+        const name = userHandler.userName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return text.replace(/([.!?…]*)$/, ", " + name + "$1");
     }
     static displayName() {
         document.getElementById("userNameInput").classList.add("displayNone");

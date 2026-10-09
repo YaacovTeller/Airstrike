@@ -257,7 +257,16 @@
     width: 14px;
 }
 .buildingDebris {
-    width: 20px;
+    width: 12px;
+}
+.buildingChunk { /* the big pieces, when a building's brought down completely */
+    width: 26px;
+}
+.vehicleBit {
+    width: 10px;
+}
+.boatBit {
+    width: 16px;
 }
 /* A tiny enemy hiding under a building (which is z-index 5): just a small square for now */
 .target.buildingEnemy {
@@ -269,6 +278,33 @@
 }
 .buildingEnemy > * {
     display: none;
+}
+
+/* A tunnel you can't see: its path is only drawn where a surveillance drone's scan is over it (heatSig, with the picture masked to the scan),
+   and in brief flashes as it goes up (tunnelFlash) */
+.hiddenTunnel .tunnelPath {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+}
+.hiddenTunnel .tunnelPath polyline {
+    fill: none;
+    stroke: rgba(255, 140, 30, 0);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.3s;
+}
+.target.hiddenTunnel.heatSig .tunnelPath polyline {
+    stroke: rgba(255, 150, 30, 0.85);
+    filter: drop-shadow(0 0 6px rgba(255, 90, 0, 0.9));
+}
+.hiddenTunnel .tunnelPath polyline.tunnelFlash {
+    stroke: rgba(255, 110, 30, 0.95);
+    stroke-width: 18;
+    filter: drop-shadow(0 0 8px rgba(255, 70, 0, 1));
+    animation: tunnelFlash 0.5s ease-out forwards;
 }
 /* Picked up by a surveillance drone's scan: glowing like a heat signature */
 .target.heatSig > .picEl {
@@ -284,6 +320,47 @@
     background: #ffb02e;
     border-color: #ff4500;
     box-shadow: 0 0 6px 3px rgba(255, 120, 0, 0.9);
+}
+/* The special enemies show up in another colour: a hot pink... */
+.target.buildingEnemy.special.heatSig {
+    background: #ff5fd8;
+    border-color: #8a0068;
+    box-shadow: 0 0 6px 3px rgba(255, 60, 200, 0.9);
+}
+.target.special.heatSig > .picEl { /* ...and so does the vehicle he's making off in */
+    filter: sepia(1) saturate(5) hue-rotate(290deg) brightness(1.25) drop-shadow(0 0 4px #e000b0) drop-shadow(0 0 9px #ff5fd8);
+}
+/* one down in a bunker has nothing over him: he's only there when a scan finds him */
+.target.buildingEnemy.underground:not(.heatSig) {
+    visibility: hidden;
+}
+/* A bunker: the shaft down from the building and the room at the foot of it, drawn only where a scan is */
+.bunker .bunkerPlan {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+}
+.bunker .bunkerPlan line {
+    stroke: rgba(90, 220, 255, 0);
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke 0.3s;
+}
+.bunker .bunkerPlan rect {
+    fill: rgba(40, 140, 200, 0);
+    stroke: rgba(90, 220, 255, 0);
+    stroke-width: 3;
+    transition: stroke 0.3s, fill 0.3s;
+}
+.target.bunker.heatSig .bunkerPlan line {
+    stroke: rgba(90, 220, 255, 0.8);
+    filter: drop-shadow(0 0 5px rgba(0, 180, 255, 0.9));
+}
+.target.bunker.heatSig .bunkerPlan rect {
+    stroke: rgba(90, 220, 255, 0.95);
+    fill: rgba(40, 140, 200, 0.35);
+    filter: drop-shadow(0 0 5px rgba(0, 180, 255, 0.9));
 }
 /* The area a surveillance drone is scanning, around the mouse */
 .blastRadius.scanRing {
@@ -378,7 +455,7 @@
 .blastRadius {
     opacity: 0.5;
     position: fixed;
-    z-index: 7; /* above the buildings and targets (5) and the explosions (6) */
+    z-index: 8; /* above the buildings and targets (5), the explosions (6) and the flyovers (7) */
     border-radius: 50%;
         pointer-events: none;
  /*overflow: hidden;*/
@@ -451,6 +528,7 @@ img#crater { /*to override the img[src]!*/
     width: 200px;
     transition: transform 3s ease, left 100ms linear;
     opacity: 0.6;
+    z-index: 7; /* an aircraft's shadow passes over everything on the ground: buildings and targets (5), explosions (6) */
 }
 
     .flyover.chopper {

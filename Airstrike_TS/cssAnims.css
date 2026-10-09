@@ -55,6 +55,16 @@
     }
 }
 
+@keyframes tunnelFlash {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
 @keyframes expandContractRotate {
     0% {
         transform: scale(1.5) rotate(0deg);
@@ -170,6 +180,84 @@
     100% {
         transform: translateX(0);
     }
+}
+/* the rush between stages: see StageTransition. The ground, the sea and the new stage all run on one curve,
+   in the direction the numbers set on the page say (down, up or right). */
+body.stageRushing #background {
+    animation: rushGround var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+body.stageRushing .water {
+    animation: rushWater var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+body.stageRushing #content {
+    animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+/* the stage that's leaving rides off with the ground, on the same curve, and is gone by the time it stops */
+#exitingStage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+body.stageRushing #exitingStage {
+    animation: rushExit var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+@keyframes rushExit {
+    to { transform: translate(var(--rushGroundX), var(--rushGroundY)); }
+}
+@keyframes rushGround {
+    to { background-position: var(--rushGroundX) var(--rushGroundY); }
+}
+@keyframes rushWater {
+    to { background-position: var(--rushWaterX) var(--rushWaterY); }
+}
+@keyframes rushContent {
+    from { transform: translate(var(--rushContentX), var(--rushContentY)); }
+    to { transform: translate(0, 0); }
+}
+/* streaks of speed over it all, strongest in the middle of the rush, along the way it's going */
+.rushStreaks {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+.rushStreaks span {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent 0 90px, rgba(255, 255, 255, .55) 90px 230px, transparent 230px 380px);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 29px);
+    mask-image: repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 29px);
+    animation: rushStreaks var(--rushDuration) linear both;
+}
+.rushStreaks span + span {
+    background-image: repeating-linear-gradient(0deg, transparent 0 40px, rgba(255, 255, 255, .45) 40px 120px, transparent 120px 310px);
+    -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 17px);
+    mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 17px);
+    animation-name: rushStreaksFast;
+}
+.rushStreaks.sideways span {
+    background-image: repeating-linear-gradient(90deg, transparent 0 90px, rgba(255, 255, 255, .55) 90px 230px, transparent 230px 380px);
+    -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 29px);
+    mask-image: repeating-linear-gradient(0deg, #000 0 2px, transparent 2px 29px);
+}
+.rushStreaks.sideways span + span {
+    background-image: repeating-linear-gradient(90deg, transparent 0 40px, rgba(255, 255, 255, .45) 40px 120px, transparent 120px 310px);
+    -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 17px);
+    mask-image: repeating-linear-gradient(0deg, #000 0 1px, transparent 1px 17px);
+}
+@keyframes rushStreaks {
+    0% { opacity: 0; background-position: 0 0; }
+    25% { opacity: .55; }
+    60% { opacity: .35; }
+    100% { opacity: 0; background-position: var(--streakX) var(--streakY); }
+}
+@keyframes rushStreaksFast {
+    0% { opacity: 0; background-position: 0 0; }
+    30% { opacity: .5; }
+    65% { opacity: .3; }
+    100% { opacity: 0; background-position: calc(var(--streakX) * 1.5) calc(var(--streakY) * 1.5); }
 }
 @keyframes moveDown {
     from {

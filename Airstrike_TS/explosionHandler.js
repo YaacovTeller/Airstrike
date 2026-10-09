@@ -5,6 +5,9 @@ var screenShakeTimeouts;
     screenShakeTimeouts[screenShakeTimeouts["shake_2"] = 300] = "shake_2";
     screenShakeTimeouts[screenShakeTimeouts["shake_3"] = 400] = "shake_3";
 })(screenShakeTimeouts || (screenShakeTimeouts = {}));
+// The splash pictures (AS_assets/splash) are on a canvas bigger than the original 351x248, with the ripple rings completed
+// out to the sides and bottom. padSides is the extra width on each of the left and right.
+const splashPicture = { width: 501, height: 309, originalWidth: 351, originalHeight: 248, padSides: 75 };
 var lights = [];
 var flares = [];
 var fires = [];
@@ -22,7 +25,17 @@ class ExplosionHandler {
         fallingFlare.style.top = blastCenter.Y + 'px';
         ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
     }
+    // Just a crater, with no explosion over it
+    static createCrater(blastCenter, size) {
+        this.presentAndFadeout(this.setAndReturnCrater(blastCenter, size), this.craterDecalStay, this.craterFadingTillRemoval);
+    }
+    // The biggest shake there is, as the largest bomb gives
+    static bigShake() {
+        this.shake(screenShakeTimeouts.shake_3);
+    }
     static basicExplosion(blastCenter, size, explFrames, weaponName) {
+        if (game.level)
+            game.level.noteExplosion(); // the first one starts the clock on a special enemy's escape
         let water = document.getElementById("water");
         if (water) {
             if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {
@@ -72,6 +85,9 @@ class ExplosionHandler {
         else if (size == ExplSizes.XL) {
             this.shake(screenShakeTimeouts.shake_2);
         }
+        else if (size > ExplSizes.XL && size < ExplSizes.XXL) { // the bigger explosions between: a heavy shake, but no flash
+            this.shake(screenShakeTimeouts.shake_3);
+        }
         if (size >= ExplSizes.XXL) {
             this.flash();
             this.shake(screenShakeTimeouts.shake_3);
@@ -83,8 +99,25 @@ class ExplosionHandler {
     // still down to how far the blast is from the target's middle (collisionInfo.dist), as a share of
     // the blast's radius. collisionInfo.hitDist is the distance to the nearest point of the hit box,
     // 0 for a blast that landed on it.
+    // (It walks copies of the lists: a building brought down by the blast takes itself out of allTargets as it goes,
+    // and walking the list itself would then skip whichever one came next, leaving it untouched in the middle of the blast.)
     static forEachBlastCollision(blastCenter, rad, onTarget, onItem) {
-        for (let target of allTargets) {
+        for (let target of allTargets.slice()) {
+            // something long and thin (a tunnel) is measured from the nearest part of it, not from its middle
+            const focus = target.blastFocus ? target.blastFocus(blastCenter) : null;
+            if (focus) {
+                const dist = Math.hypot(focus.X - blastCenter.X, focus.Y - blastCenter.Y);
+                if (dist <= rad) {
+                    onTarget(target, {
+                        elem: target.getTargetEl(),
+                        angle: Math.atan2(focus.Y - blastCenter.Y, focus.X - blastCenter.X) * 180 / Math.PI,
+                        dist: dist,
+                        radius: rad,
+                        hitDist: dist,
+                    });
+                }
+                continue;
+            }
             let nearest = CollisionDetection.nearestPointInBox(blastCenter, target.hitBox());
             if (Math.abs(nearest.X - blastCenter.X) <= rad && Math.abs(nearest.Y - blastCenter.Y) <= rad) {
                 let collisionInfo = CollisionDetection.getVectorMove(blastCenter, target.getTargetEl(), rad);
@@ -92,7 +125,7 @@ class ExplosionHandler {
                 onTarget(target, collisionInfo);
             }
         }
-        for (let item of allObjects) {
+        for (let item of allObjects.slice()) {
             if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, item, rad)) {
                 let collisionInfo = CollisionDetection.getVectorMove(blastCenter, item, rad);
                 onItem(item, collisionInfo);
@@ -120,7 +153,8 @@ class ExplosionHandler {
     static targetStrike(target, weaponName, collisionInfo) {
         let fraction = collisionInfo.dist / collisionInfo.radius;
         let severity = this.determineSeverity(fraction);
-        if (target.damage != Damage.destroyed) {
+        // a destroyed target is left alone, except rubble that's still got something left to be knocked down
+        if (target.damage != Damage.destroyed || (target.hitWhenDestroyed && target.hitWhenDestroyed())) {
             target.hit(severity, weaponName, collisionInfo); // TARGET - Main hit function
         }
     }
@@ -180,6 +214,9 @@ class ExplosionHandler {
                 case ExplSizes.XL:
                     explosionImgs = expl_med_imgs;
                     break;
+                case ExplSizes.huge:
+                case ExplSizes.massive:
+                case ExplSizes.colossal:
                 case ExplSizes.XXL:
                     explosionImgs = expl_big_imgs;
                     break;
@@ -192,8 +229,19 @@ class ExplosionHandler {
             explosionImgs = splash_imgs;
         }
         const player = new CanvasGifPlayer(explosion, size);
+        let width = size, height = size;
+        let left = blastCenter.X - (size / 2);
+        if (surface == HitSurface.water) {
+            // the splash pictures have room round the original ones for the ripples to finish, so the canvas grows to match, the
+            // original part staying exactly where and as big as it was
+            width = size * splashPicture.width / splashPicture.originalWidth;
+            height = size * splashPicture.height / splashPicture.originalHeight;
+            left -= size * splashPicture.padSides / splashPicture.originalWidth;
+            explosion.width = width;
+            explosion.height = height;
+        }
         player.play(explosionImgs, false);
-        this.setSizeAndPos(explosion, size, size, blastCenter.X - (size / 2), blastCenter.Y - (size * 0.9));
+        this.setSizeAndPos(explosion, width, height, left, blastCenter.Y - (size * 0.9));
         return explosion;
     }
     static setAndReturnCrater(blastCenter, size) {

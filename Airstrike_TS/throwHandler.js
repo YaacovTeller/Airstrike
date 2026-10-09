@@ -9,6 +9,41 @@ class ThrowHandler {
         }
         return deg;
     }
+    // A lobbed piece of debris: up in a slow, high arc and down some way off, turning over as it goes (the picture inside
+    // it, if it has one). It keeps still while the game is paused, and lands with a sound if it's given any.
+    static lob(elem, direc, impactSounds, onLanded) {
+        const startX = parseFloat(elem.style.left) || 0;
+        const startY = parseFloat(elem.style.top) || 0;
+        const distance = RandomNumberGen.randomNumBetween(50, 130) * (direc == direction.forward ? 1 : -1);
+        const apex = RandomNumberGen.randomNumBetween(80, 150); // how high above where it started
+        const drop = RandomNumberGen.randomNumBetween(-10, 20); // and it comes down a little above or below that
+        const duration = RandomNumberGen.randomNumBetween(1500, 2200); // ms: slower than a quick toss
+        const spin = RandomNumberGen.randomNumBetween(1, 3) * 360 * (RandomNumberGen.randomNumBetween(0, 1) ? 1 : -1);
+        const spinEl = elem.querySelector("img") || elem;
+        let last = null;
+        let elapsed = 0;
+        const step = (timestamp) => {
+            if (last === null)
+                last = timestamp;
+            if (!document.body.classList.contains("gamePaused"))
+                elapsed += timestamp - last;
+            last = timestamp;
+            const u = Math.min(1, elapsed / duration);
+            elem.style.left = startX + distance * u + "px";
+            elem.style.top = startY - 4 * apex * u * (1 - u) + drop * u + "px";
+            spinEl.style.transform = "rotate(" + spin * (1 - (1 - u) * (1 - u)) + "deg)"; // the turning slows as it comes down
+            if (u < 1) {
+                requestAnimationFrame(step);
+            }
+            else {
+                if (impactSounds && impactSounds.length)
+                    SoundPlayer.playRandomSound(impactSounds);
+                if (onLanded)
+                    onLanded(elem);
+            }
+        };
+        requestAnimationFrame(step);
+    }
     static crashSound(sounds) {
         setTimeout(() => {
             SoundPlayer.playRandomSound(sounds);

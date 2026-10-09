@@ -10,6 +10,8 @@ class WeaponType {
     cooldown;
     noAmmo;
     select;
+    shotCost;
+    bigBomb;
     activeInstance;
     instances = [];
     constructor(info) {
@@ -23,12 +25,14 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
+        this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
+        this.bigBomb = !!info.bigBomb;
         let wepArr = this.getWeaponArray();
         wepArr[this.slot] = this;
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -97,6 +101,7 @@ class WeaponType {
     }
     shotCounter() {
         game.updateKillStats(killStatDisplayOptions.shots);
+        game.level.noteShot(this.slot, this.shotCost, this.bigBomb);
     }
     returnBlastRadiusDiv(radius) {
         let el = document.createElement('div');
@@ -322,6 +327,66 @@ class ExplosiveWeaponType extends WeaponType {
         blastRadiusEl.appendChild(circle);
     }
 }
+// Number 5 in the Coast set. It lands quietly (a thud), and a second later goes off deep below: the shake and the
+// blast sound come then, with nothing but a big crater at the surface. There's no area to it: it has to land on a
+// building's picture, and brings that building down entirely, with the bunker under it if there is one. A bunker as
+// it's drawn on a scan is only where it is underground, so landing on that does nothing.
+class BunkerBusterWeaponType extends ExplosiveWeaponType {
+    static detonationDelay = 1000; // from the thud to the blast, as if it went off below ground
+    static craterScale = 0.5; // of a massive explosion's crater (240 by 120), so 120 by 60
+    constructor(info) {
+        super(info);
+    }
+    fireResultsTimeout(inst) {
+        setTimeout(() => {
+            const aimed = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            this.switchBlastIndicatorStyle(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
+            SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            if (this.onWater(aimed))
+                ExplosionHandler.createSplash(aimed); // into the sea, it's just a small splash
+            setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
+        }, this.speed);
+    }
+    onWater(at) {
+        const water = document.getElementById("water");
+        return !!water && CollisionDetection.checkCollisionFromPosition(at, water);
+    }
+    detonate(at) {
+        ExplosionHandler.bigShake();
+        SoundPlayer.playSequentialSound(bigExplosions);
+        // the building the aim point is on (the one whose middle is nearest, if pictures overlap there)
+        let hit = null;
+        let nearest = Infinity;
+        for (const target of allTargets) {
+            if (!(target instanceof Building) || !target.isStanding())
+                continue;
+            const area = target.getPicEl().getBoundingClientRect();
+            if (at.X < area.left || at.X > area.right || at.Y < area.top || at.Y > area.bottom)
+                continue;
+            const dist = Math.hypot((area.left + area.right) / 2 - at.X, (area.top + area.bottom) / 2 - at.Y);
+            if (dist < nearest) {
+                hit = target;
+                nearest = dist;
+            }
+        }
+        if (hit) {
+            if (hit.bunker)
+                hit.bunker.destroy();
+            hit.obliterate();
+        }
+        // a bunker whose building has already gone can still be got at, where the building stood
+        for (const target of allTargets.slice()) {
+            if (target instanceof Bunker && target.isUnder(at)) {
+                target.destroy();
+                target.building.obliterate(); // (nothing to do if it's already gone)
+            }
+        }
+        if (!this.onWater(at)) { // (nothing to leave a crater in at sea)
+            ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
+        }
+    }
+}
 class Flare extends ExplosiveWeaponType {
     constructor(info) {
         super(info);
@@ -336,6 +401,8 @@ class Flare extends ExplosiveWeaponType {
     }
 }
 class ChargeWeaponType extends WeaponType {
+    static recordedFuseMs = 3750; // the recording's blast comes in 3.75 seconds after it starts
+    static recordedChance = 70; // percent of the time it's the recording that counts down
     constructor(info) {
         super(info);
         this.pushNewWeaponInstance();
@@ -353,9 +420,7 @@ class ChargeWeaponType extends WeaponType {
             return;
         }
         let inst = this.activeInstance;
-        let tunnels = allTargets.filter((trgt) => {
-            return trgt.constructor.name === TunnelTarget.name && trgt.getLockOnStatus() == false;
-        });
+        let tunnels = allTargets.filter(trgt => trgt.takesCharge && trgt.takesCharge() && trgt.getLockOnStatus() == false);
         let hit = false;
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
@@ -366,12 +431,16 @@ class ChargeWeaponType extends WeaponType {
                 this.shotCounter();
                 this.cooldownTimeout(inst);
                 SoundPlayer.playSequentialSound(beeps);
-                SoundPlayer.playSequentialSound(ticks);
+                // Half the time the countdown is a recording (voices, then the blast), which sets the length
+                // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
+                const recorded = RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance;
+                SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
                     tunnel.hit(strikeSeverity.catastrophic, this.name); // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
-                    SoundPlayer.playSequentialSound(multiExplosions);
-                }, this.speed);
+                    if (!recorded)
+                        SoundPlayer.playSequentialSound(multiExplosions);
+                }, recorded ? ChargeWeaponType.recordedFuseMs : this.speed);
             }
             ;
         }
@@ -544,6 +613,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         }
         this.playSound();
         this.shotCounter();
+        game.level.noteDroneFlyover();
         let inst = this.activeInstance;
         inst.ready = false;
         inst.blastRadElement.style.visibility = 'hidden'; // the scan has its own ring, once the drone's there
@@ -566,9 +636,8 @@ class SurveillanceDrone extends ExplosiveWeaponType {
             for (const target of allTargets) {
                 if (!(target instanceof Target))
                     continue; // buildings give off nothing themselves
-                const area = target.heatSignatureBox();
-                const nearest = area ? CollisionDetection.nearestPointInBox(mouse, area) : null;
-                target.setHeatSignature(!!nearest && Math.hypot(nearest.X - mouse.X, nearest.Y - mouse.Y) <= radius);
+                const dist = target.heatDistanceFrom(mouse);
+                target.setHeatSignature(dist !== null && dist <= radius, mouse, radius);
             }
         };
         const timer = setInterval(sweep, SurveillanceDrone.scanInterval);

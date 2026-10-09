@@ -6,7 +6,8 @@ enum GameMode {
     'regular',
     'sandbox',
     'test_1',
-    'test_3'
+    'coast',
+    'hills'
 }
 
 // Where a building goes, and which type it is
@@ -114,8 +115,12 @@ class GameHandler {
             url = "url(./AS_assets/Sand.png)"; // SAME so far
             this.extendWater(50, true);
         }
+        else if (num == Area.hills) {
+            url = "url(./AS_assets/Sand_scrub.png)";
+            this.extendWater(0, false);
+        }
         this.setBackground(url);
-        document.getElementById("contentWrapper").style.backgroundImage = `url(./AS_assets/Sand.png)`;
+        document.getElementById("contentWrapper").style.backgroundImage = url;
 
     }
 
@@ -200,7 +205,7 @@ class GameHandler {
     }
     private endGame() {
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
-        PopupHandler.addToArray("That's the last of them, good work!", "You did it!", msgLength.long);
+        PopupHandler.addToArray("That's the last of them, good work!", userHandler.addressed("You did it!"), msgLength.long);
         PopupHandler.addToArray(`Finished <strong>${GameMode[this.gameMode]}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false // HACKY??
@@ -217,15 +222,14 @@ class GameHandler {
     }
     public menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame(GameMode.regular);
+        document.getElementById("startbutton").onclick = () => this.newGame(this.selectedMode());
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
-        document.getElementById("startbutton_test_3").onclick = () => this.newGame(GameMode.test_3);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
         document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
 
-        this.setMenuDifficulty(arr);
-        this.toggleLang();
+        this.setMenuDifficulty(arr, [normal, hard, chaos]);
+        this.setLocationButtons(arr);
         this.toggleModal();
 
         this.setRadioButtons();
@@ -233,7 +237,7 @@ class GameHandler {
         this.setupInstructionsToggle();
     }
     private setRadioButtons() {
-        const radioButtons = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+        const radioButtons = document.querySelectorAll<HTMLInputElement>('#difficultiesContainer input[type="radio"]');
         radioButtons.forEach(radioButton => {
             radioButton.addEventListener('change', (event) => this.handleOptionChange(event));
             if (radioButton.checked) {
@@ -254,10 +258,33 @@ class GameHandler {
         this.volume = vol / 100;
         sliderValue.textContent = `Volume: ${(vol)}%`;
     }
-    private setMenuDifficulty(liOptions) {
-        this.setIndivMenuDifficulty(normal, liOptions[0]);
-        this.setIndivMenuDifficulty(hard, liOptions[1]);
-        this.setIndivMenuDifficulty(chaos, liOptions[2]);
+    private setMenuDifficulty(liOptions, set: Array<difficultyLevelInfo>) {
+        for (let i = 0; i < set.length; i++) {
+            this.setIndivMenuDifficulty(set[i], liOptions[i]);
+        }
+    }
+    // The location choice: Desert is the regular game, Hills and Coast the levels made of stages. Each has its own
+    // difficulties, so choosing one rewrites the difficulty options (keeping whichever of the three is picked).
+    private setLocationButtons(difficultyLis) {
+        const radios = document.querySelectorAll<HTMLInputElement>('#locationContainer input[type="radio"]');
+        radios.forEach(radio => radio.addEventListener('change', () => {
+            const staged = this.selectedLocation() != "desert";
+            for (const li of difficultyLis) {
+                const label = li.getElementsByTagName('label')[0];
+                label.innerHTML = "";
+            }
+            this.setMenuDifficulty(difficultyLis, staged ? [sceneNormal, sceneHard, sceneChaos] : [normal, hard, chaos]);
+            const picked = document.querySelector<HTMLInputElement>('#difficultiesContainer input[type="radio"]:checked');
+            if (picked) this.jsonParseRadioDifficulty(picked.value);
+        }));
+    }
+    private selectedLocation(): string {
+        const picked = document.querySelector<HTMLInputElement>('#locationContainer input[type="radio"]:checked');
+        return picked ? picked.value : "desert";
+    }
+    private selectedMode(): GameMode {
+        const location = this.selectedLocation();
+        return location == "hills" ? GameMode.hills : location == "coast" ? GameMode.coast : GameMode.regular;
     }
     private getMenuLis() {
         let container = document.getElementById("difficultiesContainer");
@@ -357,7 +384,7 @@ class GameHandler {
     }
 
     private fireFunc() {
-        if (!game.gameInProgress) {
+        if (!game.gameInProgress || this.paused || StageTransition.active) { // no shooting at the ground as it rushes past
             return;
         }
         if (this.strikesRestricted && this.weapon.name > weaponNames.tank) {
@@ -368,13 +395,22 @@ class GameHandler {
     }
 
     private handleKeyPress(event) {
+        if (this.paused) { // nothing else works while paused
+            if (event.key.toLowerCase() === 'p' || event.key === 'Escape') { this.togglePause(); }
+            return;
+        }
         if (event.key === 'Escape') {
             this.toggleGamePause();
         }
+        else if (event.key.toLowerCase() === 'p') {
+            this.togglePause();
+        }
+        if (this.menuIsOpen()) return; // the game's keys don't work while the menu's up
         if (game.gameInProgress) {
             if (event.code === 'Space' || event.key.toLowerCase() === 'z' || event.key === 'Control') { this.fireFunc(); }
 
-            let int = event.key === '0' ? weaponNames.surveillance : event.key === '-' ? weaponNames.carpet_bomb : parseInt(event.key); // the tenth and eleventh weapons are on the 0 and - keys
+            const beyondNine = { '0': 10, '-': 11, '=': 12 }; // the weapons after 9 are on the keys that follow it
+            let int = beyondNine[event.key] || parseInt(event.key);
             if (int) {
                 if (conventionalWeapons[int]) {
                     this.changeWeapon(conventionalWeapons[int]);
@@ -383,7 +419,7 @@ class GameHandler {
                     this.changeWeapon(extraWeapons[int])
                 }
             }
-            else if (event.key.toLowerCase() === 's') { this.level.showActiveTargets(); }
+            else if (event.shiftKey && event.key === 'S') { this.level.showActiveTargets(); } // a cheat, like Shift+A: marks every active target
             else if (event.key.toLowerCase() === 't') {
                 game.changeTime(RandomNumberGen.randomNumBetween(0, 2));
             }
@@ -391,7 +427,15 @@ class GameHandler {
                 WeatherHandler.createRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]);
             }
             else if (event.shiftKey && event.key === 'A') {
-                this.addAllWeapons();
+                if (this.gameMode == GameMode.coast) { // its own weapons (a charge would land on the bomb's key), and the supers
+                    this.addScaledWeaponSet();
+                    this.onlyOneSuperInst(chopperInfo);
+                    this.onlyOneSuperInst(nukeInfo);
+                    this.onlyOneSuperInst(carpetBombInfo);
+                }
+                else {
+                    this.addAllWeapons();
+                }
             }
             else if (event.shiftKey && event.key === 'Q') {
                 this.progressNumber += 32;
@@ -412,18 +456,21 @@ class GameHandler {
         this.level.addNewWeapon(airstrikeInfo, false);
         
     }
-    // Test_3's own weapons instead of the standard ones. Every game starts from empty weapon lists
+    // The coast level's own weapons instead of the standard ones. Every game starts from empty weapon lists
     // (see reset()), so going back to any other mode gets the standard set again.
     private addScaledWeaponSet() {
-        for (let i = 0; i < 3; i++) {
-            scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
-        }
+        // three of each, but more of the small and fewer of the big ones
+        const howMany: { [slot: number]: number } = { 1: 4, 4: 2, 5: 1, 6: 2, 7: 1 };
+        scaledWeapons.forEach(info => {
+            const count = howMany[info.slot] || 3;
+            for (let i = 0; i < count; i++) this.level.addNewWeapon(info, false);
+        });
         this.level.addNewWeapon(surveillanceInfo, false);
         this.level.addNewWeapon(surveillanceInfo, false);
     }
     private returnOneSuperWeapon() {
         let supers = [chopperInfo, nukeInfo, carpetBombInfo];
-        let unowned = supers.filter(info => !extraWeapons[info.slot !== undefined ? info.slot : info.name]);
+        let unowned = supers.filter(info => !extraWeapons[slotOf(info)]);
         return RandomNumberGen.returnRandomFromArray(unowned.length ? unowned : supers);
     }
 
@@ -449,7 +496,7 @@ class GameHandler {
 
     }
     private onlyOneSuperInst(info) {
-        if (!extraWeapons[info.name]) {
+        if (!extraWeapons[slotOf(info)]) {
             this.level.addNewWeapon(info, true);
         }
     }
@@ -481,6 +528,7 @@ class GameHandler {
     }
 
     public changeWeapon(wep: WeaponType) {
+        if (this.paused) return;
         let wepArr = wep.getWeaponArray();
         if (!wepArr.includes(wep) || wep.name == weaponNames.flare && this.level.currentWave.timeOfDay == Time.day)
             return
@@ -530,7 +578,7 @@ class GameHandler {
     private fullProgressBar() {
         this.progressBar.classList.add("full");
         let special = this.returnOneSuperWeapon();
-        if (!extraWeapons[special.name]) {
+        if (!extraWeapons[slotOf(special)]) {
             this.level.addNewWeapon(special, false);
         }
     }
@@ -665,6 +713,42 @@ class GameHandler {
             if (arr[i].opac <= 0) arr.splice(i, 1);
         }
     }
+    // Everything on the ground that a stage leaves behind (craters, splashes, thrown debris, anything in
+    // flight, the glow of its fires), so the next stage starts on bare ground
+    // the weapons' aiming circles live in the content too, and have to stay: they belong to the weapons, not the stage
+    private aimingCircles(): Set<Element> {
+        const aimers = new Set<Element>();
+        for (const weapons of [conventionalWeapons, extraWeapons]) {
+            for (const weapon of weapons) {
+                if (!weapon) continue;
+                for (const inst of weapon.instances) {
+                    if (inst.blastRadElement) aimers.add(inst.blastRadElement);
+                }
+            }
+        }
+        return aimers;
+    }
+    public clearStageLeftovers() {
+        const aimers = this.aimingCircles();
+        for (const el of Array.from(ContentElHandler.returnContentEl().children)) {
+            if (!aimers.has(el)) el.remove();
+        }
+        allObjects = [];
+        this.clearLights();
+    }
+    // Everything of the stage that's ending (its buildings, craters, wrecks, debris) goes into a layer of its own, which
+    // the rush between stages carries off the screen along with the ground (see StageTransition), instead of it vanishing
+    public moveStageToExit() {
+        const content = ContentElHandler.returnContentEl();
+        const exiting = document.createElement("div");
+        exiting.id = "exitingStage";
+        content.parentElement.appendChild(exiting);
+        const aimers = this.aimingCircles();
+        for (const el of Array.from(content.children)) {
+            if (!aimers.has(el)) exiting.appendChild(el);
+        }
+        StageTransition.exiting = exiting;
+    }
     private clearLights() {
         lights.length = 0;
         flares.length = 0;
@@ -675,22 +759,24 @@ class GameHandler {
     public checkEnd() {
         let stats = this.killStats;
         if (stats.escaped >= stats.failLimit) {
-            this.pause();
-            this.gameInProgress = false;
-            PopupHandler.addToArray("", "Game Over!", msgLength.long);
-            SoundPlayer.playWithVolumeSet(alarm3);
+            this.failGame("");
         }
     }
+    // The game's lost, with a message as to why if there is one
+    public failGame(message: string) {
+        if (!this.gameInProgress) return;
+        this.pause();
+        this.gameInProgress = false;
+        PopupHandler.addToArray(message, userHandler.addressed("Game Over!"), msgLength.long);
+        SoundPlayer.playWithVolumeSet(alarm3);
+    }
 
+    // The menu (Escape) freezes the whole game the way the P key does -- every timer, sound and animation --
+    // and when it's closed again the game carries on from that moment.
     public toggleGamePause() {
         if (this.gameInProgress) {
-            if (this.gameTimer) {
-                this.pause();
-            }
-            else {
-                this.start_unpause();
-                this.level.continueWave(); // UNPAUSE
-            }
+            this.freeze(!this.menuIsOpen());
+            this.toggleModal();
         }
         else if (this.gameWasPlayed) {  // FOR WHAT SITU??
             this.pause();
@@ -745,17 +831,87 @@ class GameHandler {
         this.cutGameFuncs();
         this.toggleModal();
     }
+    // Clears the last game right out, so nothing of it carries into the next: every pending timer (a
+    // tunnel still producing cars, a weapon in flight, the game loop, flyovers, messages...), every
+    // sound, the targets and what they own, the messages, weather, lights, and the state of the screen.
     public reset() {
-        this.level.resetTargets();
+        GameTimers.clearAll();
+        Sound.stopAll();
+        StageTransition.cancel();
+        this.hidePauseDisplay();
+        this.gameTimer = undefined;
+        this.soundTimer = undefined;
+
+        this.level.resetState(); // also clears away the targets, with anything of their own that was running
         this.resetBuildings();
-        this.level.pauseWave();
         this.level = null;
         ContentElHandler.clearContent();
         this.clearLights();
+        allObjects = [];
 
+        PopupHandler.reset();
+        WeatherHandler.createRain(noRain);
+        this.resetScreenEffects();
+
+        fireStay = itemStay; // the weather changes these
+        destroyedTargetStay = destroyedTargetStayConst;
+        this.weapon = null;
+        this.strikesRestricted = false;
+        this.sequentialHits = 0;
+        this.progressNumber = 0;
+        this.fullProgress = false;
+        this.daytime = true;
         conventionalWeapons = [];
         extraWeapons = [];
         this.resetStats();
+    }
+    private resetScreenEffects() {
+        const overlay = document.getElementById("overlay");
+        overlay.classList.remove("flash");
+        const shaken = ContentElHandler.returnContentEl().parentElement;
+        for (const shake of [screenShakeTimeouts.shake_1, screenShakeTimeouts.shake_2, screenShakeTimeouts.shake_3]) {
+            shaken.classList.remove(screenShakeTimeouts[shake]);
+        }
+        if (this.progressBar) {
+            this.progressBar.classList.remove("full");
+        }
+    }
+
+    // ---- Pause (the P key): everything freezes, the screen is shaded and PAUSED is shown ----
+    private paused: boolean = false;
+
+    public togglePause() {
+        if (!this.gameInProgress || this.menuIsOpen()) return; // nothing's running to pause (the menu is open, or the game's over)
+        this.paused = !this.paused;
+        this.freeze(this.paused);
+        this.showPauseDisplay(this.paused);
+    }
+    private menuIsOpen(): boolean {
+        return !document.getElementById("modal").classList.contains("displayNone");
+    }
+    // Stops (or sets going again) everything that's running: timers, sounds and CSS animations
+    private freeze(on: boolean) {
+        if (on) {
+            GameTimers.pause();
+            Sound.pauseAll();
+        }
+        else {
+            GameTimers.resume();
+            Sound.resumeAll();
+        }
+        document.body.classList.toggle("gamePaused", on);
+    }
+    // The shade and the PAUSED message that go with the P key (the menu has its own)
+    private showPauseDisplay(show: boolean) {
+        document.getElementById("overlay").classList.toggle("displayNone", !show);
+        document.getElementById("pauseBox").classList.toggle("displayNone", !show);
+    }
+    private hidePauseDisplay() {
+        if (this.paused) {
+            this.paused = false;
+            this.showPauseDisplay(false);
+        }
+        document.body.classList.remove("gamePaused"); // as it is if it was the menu that had frozen the game
     }
     private resetBuildings() {
         for (let x of allBuildings) {
@@ -767,7 +923,7 @@ class GameHandler {
     // Whether this mode is a series of stages of targets to clear, rather than targets that cross the
     // screen and can escape -- the HUD shows progress through the stage instead of the escape limit.
     public hasStages(): boolean {
-        return this.gameMode == GameMode.test_3;
+        return this.gameMode == GameMode.coast || this.gameMode == GameMode.hills;
     }
 
     public newGame(mode: GameMode) {
@@ -776,6 +932,7 @@ class GameHandler {
         }
         this.gameMode = mode;
         PopupHandler.addToArray(game.difficulty.eng.name);
+        if (userHandler.userName) PopupHandler.addToArray(userHandler.addressed("Good luck!"));
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();
@@ -802,9 +959,21 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
             this.level.addNewWeapon(flareInfo, false);
         }
-        else if (mode == GameMode.test_3) {
+        else if (mode == GameMode.coast) {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
             this.addScaledWeaponSet();
+        }
+        else if (mode == GameMode.hills) {
+            this.newLevel(new HillsLevel(hillsInfo), mode);
+            this.addStarterWeapons(); // the standard weapons here: the gun, mortars, tank, airstrike, tunnel charge and the drone
+            this.level.addNewWeapon(howitzerInfo, false);
+            this.level.addNewWeapon(howitzerInfo, false);
+            for (let i = 0; i < 3; i++) {
+                this.level.addNewWeapon(airstrikeInfo, false);
+                this.level.addNewWeapon(chargeInfo, false);
+            }
+            this.level.addNewWeapon(surveillanceInfo, false);
+            this.level.addNewWeapon(surveillanceInfo, false);
         }
 
         this.hud.drawMultiKill();
@@ -821,16 +990,14 @@ class GameHandler {
         this.start_unpause();
     }
     public drawAllBuildings(): Array<Building> {
-        return this.streetBlockSlots(40).map(slot => {
+        return this.streetBlockSlots(60).map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             return building;
         });
     }
 
-    // How big a building is (see .building in cssApp.css) and how far clear of the water's faded
-    // shallows it has to stay.
-    private static buildingSize = 100;
+    // How far clear of the water's faded shallows a building has to stay.
     private static shoreMargin = 10;
 
     // Left-most x for a block of this height starting at topY that is clear of the water across all
@@ -840,106 +1007,118 @@ class GameHandler {
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out like city blocks:
-    // buildings tucked up together in blocks 2 or 3 across and 2 or 3 deep, with a road's width
-    // between blocks. Every building in a block is the same type. The blocks run along in lines, but
-    // each sits a little higher or lower than its neighbours rather than all on the same level.
+    // The sea gets a different width, and the coast a different slant, each time
+    public shapeCoast() {
+        const water = document.getElementById("water");
+        if (!water) return;
+        water.style.width = RandomNumberGen.randomNumBetween(38, 56) + "%";
+        water.style.transform = "skewX(" + RandomNumberGen.randomNumBetween(18, 38) + "deg)";
+    }
+
+    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets,
+    // most of them wide enough for blocks two buildings deep (a street that's only one building high is the
+    // rarity): each line is a row of blocks along its own baseline (which wanders from game to game), buildings
+    // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
+    // buildings are, so sizes aren't mixed in one:
+    //  - the big ones (warehouses) go singly or two or three side by side, and mostly two deep
+    //  - the middling ones go like that too
+    //  - the small ones (huts, sheds, little houses) mostly go in twos, sometimes threes and only rarely
+    //    on their own, and a block of them is always followed by something bigger, so they never run on
+    // and the same type isn't put down twice running in a line.
     public streetBlockSlots(
     maxCount: number,
     options?: {
-        startX?: number;
-        startY?: number;
-        buildingGap?: number; // between buildings side by side in a block (negative to overlap their empty margins)
-        rowGap?: number;      // likewise, between the rows in a block
-        roadWidth?: number;   // between blocks
-        minRows?: number;
-        maxRows?: number;
-        yVariation?: number;  // how much further down than its line a block can start
+        buildingGap?: number; // between buildings side by side in a block, as a share of a building's width (negative to overlap their empty margins)
+        rowGap?: number;      // likewise, between the rows in a block, as a share of a building's height
         padding?: number;     // kept clear at the screen edge
     }
 ): Array<BuildingSlot> {
     const {
-        startX = 100,
-        startY = 100,
-        buildingGap = -6,
-        rowGap = -12,
-        roadWidth = 70,
-        minRows = 2,
-        maxRows = 3,
-        yVariation = 50,
-        padding = 50
+        buildingGap = -0.1,
+        rowGap = -0.14,
+        padding = 40
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
-    const size = GameHandler.buildingSize;
+    const top = 110;                   // clear of the HUD
+    const bottom = screenHeight - 40;
 
-    // How far a run of this many buildings reaches, first edge to last edge
-    const widthOf = (cols: number) => cols * size + (cols - 1) * buildingGap;
-    const heightOf = (rows: number) => rows * size + (rows - 1) * rowGap;
-    const fits = (x: number, cols: number) => x + widthOf(cols) + padding <= screenWidth;
-    // A 3-wide block that won't fit can be squeezed in as a 2-wide one
-    const fittingCols = (x: number, cols: number) => !fits(x, cols) && cols == 3 ? 2 : cols;
+    const large = allBuildingInfo.filter(info => info.width >= 90);
+    const medium = allBuildingInfo.filter(info => info.width >= 70 && info.width < 90);
+    const small = allBuildingInfo.filter(info => info.width < 70);
 
-    let currentX = startX;
-    let lineY = startY;     // the top of this line of blocks
-    let lineBottom = startY; // how far down the tallest block in the line reaches
+    // The lines: bands across the screen, mostly deep ones with room for two rows of buildings, now and then a
+    // shallow one with room for one. Three deep ones about half the time, two deep and a shallow one most of the
+    // rest, and rarely four lines, two of each.
+    const shallowHeight = 120;
+    const plan = RandomNumberGen.randomNumBetween(1, 100);
+    const deepFlags: Array<boolean> = plan <= 55 ? [true, true, true] : plan <= 90 ? [true, true, false] : [true, true, false, false];
+    for (let i = deepFlags.length - 1; i > 0; i--) { // in a random order
+        const j = RandomNumberGen.randomNumBetween(0, i);
+        [deepFlags[i], deepFlags[j]] = [deepFlags[j], deepFlags[i]];
+    }
+    const deepCount = deepFlags.filter(f => f).length;
+    const deepHeight = ((bottom - top) - shallowHeight * (deepFlags.length - deepCount)) / deepCount;
+    let cursor = top;
+    const bands = deepFlags.map(deep => {
+        const band = { top: cursor, height: deep ? deepHeight : shallowHeight, deep: deep };
+        cursor += band.height;
+        return band;
+    });
 
-    while (slots.length < maxCount) {
-        let rows = RandomNumberGen.randomNumBetween(minRows, maxRows);
-        let cols = RandomNumberGen.randomNumBetween(2, 3);
-        let dropY = RandomNumberGen.randomNumBetween(0, yVariation);
+    for (const band of bands) {
+        if (slots.length >= maxCount) break;
+        const pitch = band.height;
+        const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
+        // where the buildings in this line stand: its baseline, which moves about from one game to the next
+        const baseline = band.top + pitch - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
+        let x = 0;
+        let previous: BuildingInfo = null;
+        let previousWasSmall = false;
 
-        // Right of the shore, for the rows this block would cover
-        const dryX = () => Math.max(currentX, this.firstDryX(lineY + dropY, heightOf(rows)));
-        let blockX = dryX();
-        cols = fittingCols(blockX, cols);
+        for (let tries = 0; slots.length < maxCount && tries < 80; tries++) {
+            const roll = RandomNumberGen.randomNumBetween(1, 100);
+            const pool = previousWasSmall ? (roll <= 60 ? large : medium) : (roll <= 40 ? large : roll <= 65 ? medium : small);
+            const choices = pool.filter(info => info !== previous);
+            const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : pool);
+            const isSmall = pool === small;
+            const smallRoll = RandomNumberGen.randomNumBetween(1, 100);
+            let cols = isSmall ? (smallRoll <= 12 ? 1 : smallRoll <= 80 ? 2 : 3) : RandomNumberGen.randomNumBetween(1, 3);
+            // in a deep line most blocks are two deep, the little ones less often and only as pairs or more
+            const deepRoll = RandomNumberGen.randomNumBetween(1, 100);
+            let rows = band.deep && (isSmall ? cols >= 2 && deepRoll <= 60 : deepRoll <= 88) ? 2 : 1;
 
-        // WRAP TO THE NEXT LINE OF BLOCKS IF THIS ONE WOULD GO OFF SCREEN
-        if (!fits(blockX, cols)) {
-            currentX = startX;
-            lineY = lineBottom + roadWidth;
-            lineBottom = lineY;
-            blockX = dryX();
-            cols = fittingCols(blockX, cols);
-            if (!fits(blockX, cols)) {
-                console.warn("Not enough screen space for more blocks");
-                return slots;
+            const stepX = info.width * (1 + buildingGap);
+            const stepY = info.height * (1 + rowGap);
+            // two deep only if it fits between this line's baseline and the one above
+            if (rows == 2 && info.height + stepY > pitch - 12) rows = 1;
+            const blockWidth = info.width + (cols - 1) * stepX;
+            const blockHeight = info.height + (rows - 1) * stepY;
+            // little things stand about a bit more loosely than the rest, so they don't line up like soldiers
+            const lift = RandomNumberGen.randomNumBetween(0, isSmall ? 26 : 10);
+            const blockTop = baseline - lift - blockHeight;
+            if (blockTop < top - 20 || blockHeight + lift > pitch - 8) continue; // too tall for the room between the lines
+
+            // right of the shore, for the rows this block covers
+            x = Math.max(x, this.firstDryX(blockTop, blockHeight));
+            if (x + blockWidth + padding > screenWidth) {
+                // doesn't fit: a three-wide block can be squeezed to two, otherwise the line is full
+                if (cols == 3 && x + info.width + stepX + padding <= screenWidth) cols = 2;
+                else break;
             }
-        }
+            if (slots.length + cols * rows > maxCount) break;
 
-        // A block that would run off the bottom of the screen gets a shallower, level try first
-        if (lineY + dropY + heightOf(rows) + padding > screenHeight) {
-            rows = minRows;
-            dropY = 0;
-            blockX = dryX();
-            if (lineY + heightOf(rows) + padding > screenHeight || !fits(blockX, cols)) {
-                console.warn("Not enough screen space for more blocks");
-                return slots;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    slots.push({ X: x + col * stepX, Y: blockTop + row * stepY, info: info });
+                }
             }
+            previous = info;
+            previousWasSmall = isSmall;
+            x += info.width + (cols - 1) * stepX + RandomNumberGen.randomNumBetween(14, 34); // and a narrow street
         }
-
-        // Whole blocks only, so the last one isn't left half built
-        if (slots.length + cols * rows > maxCount) {
-            return slots;
-        }
-
-        const blockY = lineY + dropY;
-        const info = RandomNumberGen.returnRandomFromArray(allBuildingInfo);
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                slots.push({
-                    X: blockX + col * (size + buildingGap),
-                    Y: blockY + row * (size + rowGap),
-                    info: info
-                });
-            }
-        }
-
-        // The road, then the next block
-        currentX = blockX + widthOf(cols) + roadWidth;
-        lineBottom = Math.max(lineBottom, blockY + heightOf(rows));
     }
     return slots;
 }
@@ -1023,6 +1202,7 @@ class GameHandler {
             this.checkEnd();
             this.updateProgressBar();
             this.fadeAllLights();
+            this.level.tickClock();
             this.level.targets.forEach((trg) => {
                 trg.action();
             });

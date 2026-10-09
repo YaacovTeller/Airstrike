@@ -10,6 +10,8 @@ class WeaponType {
     public cooldown: number;
     public noAmmo: Sound;
     public select: Array<Sound>;
+    public shotCost: number;
+    public bigBomb: boolean;
 
     public activeInstance: weaponInstance;
     public instances: Array<weaponInstance> = [];
@@ -25,13 +27,15 @@ class WeaponType {
         this.cooldown = info.cooldown;
         this.noAmmo = info.noAmmo;
         this.select = info.select;
+        this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
+        this.bigBomb = !!info.bigBomb;
 
         let wepArr: Array<WeaponType> = this.getWeaponArray();
         wepArr[this.slot] = this
         game.addHudWeapon(this)
     }
     public getWeaponArray() {
-        return this.slot <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
     }
 
     public switchFrom() {
@@ -104,6 +108,7 @@ class WeaponType {
     }
     protected shotCounter() {
         game.updateKillStats(killStatDisplayOptions.shots)
+        game.level.noteShot(this.slot, this.shotCost, this.bigBomb);
     }
     protected returnBlastRadiusDiv(radius: number) {
         let el = document.createElement('div');
@@ -353,6 +358,63 @@ class ExplosiveWeaponType extends WeaponType {
         blastRadiusEl.appendChild(circle);
     }
 }
+// Number 5 in the Coast set. It lands quietly (a thud), and a second later goes off deep below: the shake and the
+// blast sound come then, with nothing but a big crater at the surface. There's no area to it: it has to land on a
+// building's picture, and brings that building down entirely, with the bunker under it if there is one. A bunker as
+// it's drawn on a scan is only where it is underground, so landing on that does nothing.
+class BunkerBusterWeaponType extends ExplosiveWeaponType {
+    private static detonationDelay: number = 1000; // from the thud to the blast, as if it went off below ground
+    private static craterScale: number = 0.5; // of a massive explosion's crater (240 by 120), so 120 by 60
+    constructor(info: ExplosiveWeaponInfo) {
+        super(info);
+    }
+    protected fireResultsTimeout(inst: weaponInstance) {
+        setTimeout(() => {
+            const aimed: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            this.switchBlastIndicatorStyle(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
+            SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            if (this.onWater(aimed)) ExplosionHandler.createSplash(aimed); // into the sea, it's just a small splash
+            setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
+        }, this.speed);
+    }
+    private onWater(at: position): boolean {
+        const water = document.getElementById("water");
+        return !!water && CollisionDetection.checkCollisionFromPosition(at, water);
+    }
+    private detonate(at: position) {
+        ExplosionHandler.bigShake();
+        SoundPlayer.playSequentialSound(bigExplosions);
+        // the building the aim point is on (the one whose middle is nearest, if pictures overlap there)
+        let hit: Building = null;
+        let nearest = Infinity;
+        for (const target of allTargets) {
+            if (!(target instanceof Building) || !target.isStanding()) continue;
+            const area = target.getPicEl().getBoundingClientRect();
+            if (at.X < area.left || at.X > area.right || at.Y < area.top || at.Y > area.bottom) continue;
+            const dist = Math.hypot((area.left + area.right) / 2 - at.X, (area.top + area.bottom) / 2 - at.Y);
+            if (dist < nearest) {
+                hit = target;
+                nearest = dist;
+            }
+        }
+        if (hit) {
+            if (hit.bunker) hit.bunker.destroy();
+            hit.obliterate();
+        }
+        // a bunker whose building has already gone can still be got at, where the building stood
+        for (const target of allTargets.slice()) {
+            if (target instanceof Bunker && target.isUnder(at)) {
+                target.destroy();
+                target.building.obliterate(); // (nothing to do if it's already gone)
+            }
+        }
+        if (!this.onWater(at)) { // (nothing to leave a crater in at sea)
+            ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
+        }
+    }
+}
+
 class Flare extends ExplosiveWeaponType {
     constructor(info: ExplosiveWeaponInfo) {
         super(info);
@@ -368,6 +430,8 @@ class Flare extends ExplosiveWeaponType {
 }
 
 class ChargeWeaponType extends WeaponType {
+    private static recordedFuseMs: number = 3750; // the recording's blast comes in 3.75 seconds after it starts
+    private static recordedChance: number = 70;   // percent of the time it's the recording that counts down
     constructor(info: weaponInfo) {
         super(info);
         this.pushNewWeaponInstance();
@@ -386,9 +450,7 @@ class ChargeWeaponType extends WeaponType {
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
 
-        let tunnels: Array<TunnelTarget> = allTargets.filter((trgt): trgt is TunnelTarget => {
-            return trgt.constructor.name === TunnelTarget.name && trgt.getLockOnStatus() == false;
-        });
+        let tunnels: Array<Target> = allTargets.filter(trgt => trgt.takesCharge && trgt.takesCharge() && trgt.getLockOnStatus() == false);
         let hit: boolean = false;
         for (let tunnel of tunnels) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, tunnel.getTargetEl())) {
@@ -400,13 +462,16 @@ class ChargeWeaponType extends WeaponType {
                 this.shotCounter();
                 this.cooldownTimeout(inst);
                 SoundPlayer.playSequentialSound(beeps);
-                SoundPlayer.playSequentialSound(ticks);
+                // Half the time the countdown is a recording (voices, then the blast), which sets the length
+                // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
+                const recorded = RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance;
+                SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
 
                     tunnel.hit(strikeSeverity.catastrophic, this.name);       // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
-                    SoundPlayer.playSequentialSound(multiExplosions);
-                }, this.speed)
+                    if (!recorded) SoundPlayer.playSequentialSound(multiExplosions);
+                }, recorded ? ChargeWeaponType.recordedFuseMs : this.speed)
             };
         }
         hit === false ? SoundPlayer.playWithVolumeSet(bleep_neg) : "";
@@ -586,6 +651,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         if (this.ammoCheck() === false) { return }
         this.playSound();
         this.shotCounter();
+        game.level.noteDroneFlyover();
 
         let inst: weaponInstance = this.activeInstance as weaponInstance;
         inst.ready = false;
@@ -611,9 +677,8 @@ class SurveillanceDrone extends ExplosiveWeaponType {
             ring.style.top = mouse.Y - radius + 'px';
             for (const target of allTargets) {
                 if (!(target instanceof Target)) continue; // buildings give off nothing themselves
-                const area = target.heatSignatureBox();
-                const nearest = area ? CollisionDetection.nearestPointInBox(mouse, area) : null;
-                target.setHeatSignature(!!nearest && Math.hypot(nearest.X - mouse.X, nearest.Y - mouse.Y) <= radius);
+                const dist = target.heatDistanceFrom(mouse);
+                target.setHeatSignature(dist !== null && dist <= radius, mouse, radius);
             }
         };
         const timer = setInterval(sweep, SurveillanceDrone.scanInterval);

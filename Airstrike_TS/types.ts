@@ -80,6 +80,9 @@ enum ExplSizes {
     small = 100,
     large = 140,
     XL = 200,
+    huge = 280,
+    massive = 360,
+    colossal = 450,
     XXL = 800,
 }
 enum Status {
@@ -119,6 +122,12 @@ const modTarget: TargetInfo = {
 }
 // Enemies hiding in a building: they don't move, and only the building's fate can touch them
 const buildingEnemyTarget: TargetInfo = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+}
+// A tunnel you can't see, under the ground: doesn't move, nothing damages it but a charge or a really big blast
+const hiddenTunnelTarget: TargetInfo = {
     minSpeed: 0,
     maxSpeed: 0,
     armour: Armour.none,
@@ -170,7 +179,7 @@ enum weaponNames {
     flare = 7,
     tactical_Nuke = 8,
     chopper = 9,
-    surveillance = 10, // the 0 key
+    surveillance = 10, // (it's on key 8: see its slot)
     carpet_bomb = 11   // the - key
 }
 type position = {
@@ -189,6 +198,10 @@ type difficultyLevelInfo = {
     modTargetSpeed: speedRange,
     heavyTargetSpeed: speedRange,
     tunnelTargetSpeed: speedRange,
+    enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
+    parMs?: number,       // and how long a stage gets before you're told off for being slow
+    extraTunnels?: number, // and how many tunnels more than usual (Hills)
+    fleeSpeed?: number,   // how fast a special enemy makes off in a vehicle (Hills), in px every 100ms
     eng: langInfo,
     heb: langInfo
 }
@@ -206,6 +219,9 @@ type weaponInfo = {
     name: weaponNames,
     displayName?: string, // what the HUD tooltip and pickup popups call it, instead of the name above
     slot?: number, // where it sits in the HUD, and which key picks it, if that isn't its name's number. The name still decides how it hurts things
+    pickupMessage?: string, // what the popup says when it's picked up, instead of "New weapon: ...".
+    shotCost?: number, // how much a shot counts when a stage is judged for using too much ordnance (1 if not given; 0 never counts)
+    bigBomb?: boolean, // one of the bombs a stage's summary tells you off for using too many of
     class: typeof WeaponType,
     sound: Array<Sound>,
     imageSource: string,
@@ -290,6 +306,33 @@ const chaos: difficultyLevelInfo = {
         description: "מטרות נערמות בקצב מגוחך,  <b>אתה לבד</b>"
     }
 }
+// The same three choices for the levels made of stages (Hills and Coast), which have no escapes to count: they
+// differ in how many enemies there are, and how long you get before you're hurried along.
+const sceneNormal: difficultyLevelInfo = {
+    ...normal,
+    enemyFactor: 1,
+    parMs: 120000,
+    fleeSpeed: 2,
+    eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
+    heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
+}
+const sceneHard: difficultyLevelInfo = {
+    ...hard,
+    enemyFactor: 1.4,
+    parMs: 105000,
+    fleeSpeed: 3.5,
+    eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
+    heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
+}
+const sceneChaos: difficultyLevelInfo = {
+    ...chaos,
+    enemyFactor: 2,
+    parMs: 90000,
+    extraTunnels: 1,
+    fleeSpeed: 5,
+    eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
+    heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
+}
 const dev: difficultyLevelInfo = {
     failLimit: 9999,
     newTargetEvery: 300,
@@ -308,6 +351,7 @@ const dev: difficultyLevelInfo = {
 }
 const sniperInfo: weaponInfo = {
     name: weaponNames.sniper,
+    shotCost: 0.25,
     class: BulletWeaponType,
     cursor: "cursor1",
     imageSource: assetsSVGFolder + 'gun.svg',
@@ -319,6 +363,7 @@ const sniperInfo: weaponInfo = {
 }
 const mortarInfo: ExplosiveWeaponInfo = {
     name: weaponNames.mortar,
+    shotCost: 0.5,
     class: ExplosiveWeaponType,
     blastRadius: 50,
     cursor: "cursor2",
@@ -337,6 +382,7 @@ const mortarInfo: ExplosiveWeaponInfo = {
 }
 const howitzerInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tank,
+    shotCost: 0.75,
     class: ExplosiveWeaponType,
     blastRadius: 70,
     cursor: "cursor3",
@@ -356,6 +402,7 @@ const howitzerInfo: ExplosiveWeaponInfo = {
 }
 const airstrikeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.airstrike,
+    shotCost: 1.25,
     class: ExplosiveWeaponType,
     blastRadius: 100,
     cursor: "cursor4",
@@ -381,6 +428,7 @@ const airstrikeInfo: ExplosiveWeaponInfo = {
 }
 const nukeInfo: ExplosiveWeaponInfo = {
     name: weaponNames.tactical_Nuke,
+    slot: 9,
     class: ExplosiveWeaponType,
     blastRadius: 400,
     cursor: "cursor4",
@@ -407,6 +455,7 @@ const nukeInfo: ExplosiveWeaponInfo = {
 // along a band around the mouse, carpeting it with airstrike-sized explosions.
 const carpetBombInfo: ExplosiveWeaponInfo = {
     name: weaponNames.carpet_bomb,
+    slot: 11, // the - key
     displayName: "Carpet Strike",
     class: CarpetBombing,
     cursor: "cursor4",
@@ -417,7 +466,7 @@ const carpetBombInfo: ExplosiveWeaponInfo = {
         sound: [],
         length: 1000,
     },
-    imageSource: assetsSVGFolder + 'missiles.svg',
+    imageSource: assetsSVGFolder + 'CarpetBomb.png',
     sound: airstrikeSounds,
     speed: 0,
     cooldown: 30000,
@@ -432,6 +481,7 @@ const carpetBombInfo: ExplosiveWeaponInfo = {
 }
 const chargeInfo: weaponInfo = {
     name: weaponNames.tunnel_Charge,
+    shotCost: 0, // one to a tunnel: never held against you
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -468,6 +518,7 @@ const droneInfo: ExplosiveWeaponInfo = {
 }
 const chopperInfo: ExplosiveWeaponInfo = {
     name: weaponNames.chopper,
+    slot: 10, // the 0 key
     class: Chopper,
     cursor: "cursor4",
     blastRadius: 20,
@@ -495,10 +546,12 @@ const chopperInfo: ExplosiveWeaponInfo = {
 // A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
 const surveillanceInfo: ExplosiveWeaponInfo = {
     name: weaponNames.surveillance,
+    slot: 8, // on key 8, so the three superweapons (9, 0 and -) are together
     displayName: "Surveillance Drone",
+    pickupMessage: "A surveillance drone has been flown out to scan for active targets.",
     class: SurveillanceDrone,
     cursor: "cursor4",
-    blastRadius: 90, // how far around the mouse it can pick up a heat signature
+    blastRadius: 110, // how far around the mouse it can pick up a heat signature
     explosionInfo: { // it doesn't explode, but the weapon classes expect one
         size: ExplSizes.tiny,
         frames: [],
@@ -513,10 +566,15 @@ const surveillanceInfo: ExplosiveWeaponInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 3,       // vw per 100ms, so a pass of 4s crosses the screen with a bit to spare
-        duration: 4000,
+        speed: 2,       // vw per 100ms, so a pass of 6s crosses the screen with a bit to spare
+        duration: 6000, // how long the scan lasts too
         delay: 1000     // a second to arrive
     }
+}
+
+// Where a weapon sits: its slot, or the number of its name if it hasn't been given one
+function slotOf(info: weaponInfo): number {
+    return info.slot !== undefined ? info.slot : info.name;
 }
 
 const flareInfo: ExplosiveWeaponInfo = {
@@ -538,15 +596,15 @@ const flareInfo: ExplosiveWeaponInfo = {
     select: gib
 }
 
-// ---- Scaled-down weapon set, used by Test_3 instead of the standard weapons above ----
-// Each one is a standard weapon with a smaller explosion -- one rung down the ExplSizes ladder -- so it
-// covers a smaller area and needs a closer hit to do the same damage, and it keeps that weapon's name,
-// so it hurts things the way that weapon does. There's no gun: it can't hurt anything in this mode, so
-// the bombs take slots 1-3 (the "slot" setting, which is separate from the name), and the guided strike
-// keeps 5. Everything else (cooldowns, flight times, flyovers, impact sounds) is inherited.
-// The jet icon and aircraft noises (from the airstrike) are placeholders for the bombs.
+// ---- The weapon set the Coast level uses instead of the standard weapons above ----
+// Seven bombs on keys 1-7, each one a larger explosion than the last. The first three are the
+// standard mortar, howitzer and airstrike with their explosions a rung down the ExplSizes ladder
+// (so they cover a smaller area and need a closer hit to do the same damage); the rest are airstrikes
+// with ever bigger explosions. They keep the name of the weapon they're made from, so they hurt things
+// the way that weapon does; the "slot" is just their key and place in the HUD. There's no gun: it can't
+// hurt anything in this mode. Everything else (cooldowns, flight times, flyovers) is inherited, and the
+// aircraft noises (from the airstrike) are placeholders. The icons are in AS_assets/SVG.
 const jetPlaceholder = {
-    imageSource: airstrikeInfo.imageSource,
     sound: airstrikeInfo.sound,
     select: airstrikeInfo.select,
     noAmmo: airstrikeInfo.noAmmo,
@@ -555,7 +613,8 @@ const scaledMortarInfo: ExplosiveWeaponInfo = {
     ...mortarInfo,
     ...jetPlaceholder,
     slot: 1,
-    displayName: "Light Bomb",
+    displayName: "Light Missile",
+    imageSource: assetsSVGFolder + 'Missile_1.png',
     blastRadius: 30,
     explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
 }
@@ -563,7 +622,9 @@ const scaledHowitzerInfo: ExplosiveWeaponInfo = {
     ...howitzerInfo,
     ...jetPlaceholder,
     slot: 2,
-    displayName: "Bomb",
+    shotCost: 0.5,
+    displayName: "Missile",
+    imageSource: assetsSVGFolder + 'Missile_2.png',
     blastRadius: 50,
     explosionInfo: { ...howitzerInfo.explosionInfo, size: ExplSizes.small }, // about the standard mortar
 }
@@ -571,16 +632,44 @@ const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     ...airstrikeInfo,
     ...jetPlaceholder,
     slot: 3,
-    displayName: "Heavy Bomb",
+    shotCost: 0.75,
+    displayName: "Heavy Missile",
+    imageSource: assetsSVGFolder + 'Missile_3.png',
     blastRadius: 70,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 }
-const scaledDroneInfo: ExplosiveWeaponInfo = {
-    ...droneInfo, // with its own drone icon
-    displayName: "Guided Strike",
-    explosionInfo: { ...droneInfo.explosionInfo, size: ExplSizes.tiny },
+// A bigger airstrike, in the given slot, whose explosion is this size (and so its circle is half of that)
+function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes): ExplosiveWeaponInfo {
+    return {
+        ...airstrikeInfo,
+        ...jetPlaceholder,
+        slot: slot,
+        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
+        bigBomb: slot >= 6,
+        displayName: displayName,
+        imageSource: assetsSVGFolder + icon,
+        blastRadius: size / 2,
+        explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
+    };
 }
-const scaledWeapons: Array<weaponInfo> = [scaledMortarInfo, scaledHowitzerInfo, scaledAirstrikeInfo, scaledDroneInfo];
+// Slot 5 of the Coast set. It goes through the ground, with a thud, and a second later goes off far below: no
+// explosion at the surface, but a shake as big as the largest bomb's, and the building it's over comes down
+// with the bunker beneath it.
+const bunkerBusterInfo: ExplosiveWeaponInfo = {
+    ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    class: BunkerBusterWeaponType,
+    blastRadius: 12, // just a marker: it's the point it lands on that counts
+    explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
+};
+const scaledWeapons: Array<weaponInfo> = [
+    scaledMortarInfo,
+    scaledHowitzerInfo,
+    scaledAirstrikeInfo,
+    scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),         // as big as the standard airstrike
+    bunkerBusterInfo,
+    scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
+    scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
+];
 
 
 enum msgLength {
@@ -594,6 +683,12 @@ type popupMsg = {
 }
 class PopupHandler {
     static popUpArray: Array<popupMsg> = [];
+    // Drops anything queued or showing
+    static reset() {
+        this.popUpArray = [];
+        const popup = document.getElementById("popupBox");
+        if (popup) popup.classList.add("hide");
+    }
     static addToArray(txt, title?, lngth?) {
         let msg: popupMsg = {
             text: txt,
