@@ -1555,7 +1555,7 @@ function announceElimination(name, portrait) {
     const html = portrait
         ? '<div class="eliminatedMessage"><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="eliminatedText">' + text + '</div></div>'
         : text;
-    PopupHandler.addToArray(html, "Target eliminated", msgLength.long);
+    PopupHandler.addToArray(html, '<span class="eliminatedTitle">Target eliminated</span>', msgLength.long);
 }
 class SpecialEnemy extends BuildingEnemy {
     name = SpecialNames.random();

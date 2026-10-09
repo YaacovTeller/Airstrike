@@ -660,14 +660,18 @@ input[type=radio]:checked ~ label {
 .eliminatedMessage {
     display: flex;
     align-items: center;
-    gap: 30px;
-    max-width: 560px;
+    gap: 24px;
+    max-width: 400px;
+    font-size: 21px;
+}
+.eliminatedTitle { /* a smaller heading than the usual popup's, so this one doesn't take over the screen */
+    font-size: 34px;
 }
 .eliminatedCard {
     position: relative;
-    flex: 0 0 120px;
-    width: 120px;
-    height: 120px;
+    flex: 0 0 90px;
+    width: 90px;
+    height: 90px;
 }
 .eliminatedPortrait {
     position: absolute;
