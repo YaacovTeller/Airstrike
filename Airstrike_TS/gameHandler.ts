@@ -460,7 +460,7 @@ class GameHandler {
     // (see reset()), so going back to any other mode gets the standard set again.
     private addScaledWeaponSet() {
         // three of each, but more of the small and fewer of the big ones
-        const howMany: { [slot: number]: number } = { 1: 4, 5: 2, 6: 2, 7: 1 };
+        const howMany: { [slot: number]: number } = { 1: 4, 4: 2, 5: 1, 6: 2, 7: 1 };
         scaledWeapons.forEach(info => {
             const count = howMany[info.slot] || 3;
             for (let i = 0; i < count; i++) this.level.addNewWeapon(info, false);
