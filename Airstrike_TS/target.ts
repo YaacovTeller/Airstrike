@@ -390,12 +390,13 @@ class Building extends MapEntity {
     }
     private throwDebrisPiece(origin: position) {
         // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
-        const own = this.info.bits && this.info.bits.length && RandomNumberGen.randomNumBetween(1, 100) <= Building.ownBitChance;
+        // (a building that's been brought down has no roof or dome left to throw, so only the generic rubble)
+        const own = this.info.bits && this.info.bits.length && this.damage !== Damage.destroyed && RandomNumberGen.randomNumBetween(1, 100) <= Building.ownBitChance;
         let imageSrc = RandomNumberGen.returnRandomFromArray(own ? this.info.bits : Building.debrisSources);
         let piece = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.flip(piece, direc, crashes, undefined, undefined, ThrowHandler.removeIfLandedInWater);
+        ThrowHandler.lob(piece, direc, crashes, ThrowHandler.removeIfLandedInWater);
     }
 }
 
@@ -1230,7 +1231,7 @@ class VehicleTarget extends Target {
             const bit = this.returnBit(RandomNumberGen.returnRandomFromArray(sources), "wheel", "wheelPic", origin);
             bit.classList.add(sizeClass);
             const direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-            ThrowHandler.flip(bit, direc, null, undefined, undefined, ThrowHandler.removeIfLandedInWater);
+            ThrowHandler.lob(bit, direc, null, ThrowHandler.removeIfLandedInWater);
         }
     }
     protected destructionBits() {

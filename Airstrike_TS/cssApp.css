@@ -257,13 +257,13 @@
     width: 14px;
 }
 .buildingDebris {
-    width: 20px;
+    width: 16px;
 }
 .vehicleBit {
-    width: 18px;
+    width: 14px;
 }
 .boatBit {
-    width: 28px;
+    width: 22px;
 }
 /* A tiny enemy hiding under a building (which is z-index 5): just a small square for now */
 .target.buildingEnemy {
