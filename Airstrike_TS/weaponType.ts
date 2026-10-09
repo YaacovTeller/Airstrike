@@ -364,6 +364,7 @@ class ExplosiveWeaponType extends WeaponType {
 // it's drawn on a scan is only where it is underground, so landing on that does nothing.
 class BunkerBusterWeaponType extends ExplosiveWeaponType {
     private static detonationDelay: number = 1000; // from the thud to the blast, as if it went off below ground
+    private static craterScale: number = 0.5; // of a massive explosion's crater (240 by 120), so 120 by 60
     constructor(info: ExplosiveWeaponInfo) {
         super(info);
     }
@@ -396,7 +397,7 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             if (hit.bunker) hit.bunker.destroy();
             hit.obliterate();
         }
-        ExplosionHandler.createCrater(at, ExplSizes.massive);
+        ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
     }
 }
 
