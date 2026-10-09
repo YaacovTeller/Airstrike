@@ -879,10 +879,14 @@ class VehicleTarget extends Target {
     // that's the game lost, and if it's stopped (disabled or destroyed) that's him eliminated.
     specialName;
     specialPortrait;
-    startFleeing(name, speed, portrait) {
+    // Makes this the special target, whoever's driving: it glows his colour on a scan, and what happens to it is what happens to him
+    makeSpecial(name, portrait) {
         this.specialName = name;
         this.specialPortrait = portrait;
         this.targetEl.classList.add('special');
+    }
+    startFleeing(name, speed, portrait) {
+        this.makeSpecial(name, portrait);
         this.speed = speed;
         SoundPlayer.playSequentialSound(revs);
     }

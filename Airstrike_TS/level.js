@@ -285,7 +285,7 @@ class Level {
         if (this.pauseTargetProduction == true) {
             return;
         }
-        let target = tgt ? tgt : this.provideAvailTargets();
+        let target = tgt ? tgt : this.specialDue() ? this.provideSpecialTarget() : this.provideAvailTargets();
         this.registerTarget(target, pos);
         if (this.currentWave.type == WaveType.double && this.passedHalfTargetProduction == false && this.targets.length == this.currentWave.number / 2) {
             this.pauseTargetProduction = this.passedHalfTargetProduction = true;
@@ -300,6 +300,21 @@ class Level {
             this.pauseWave();
             this.winLimitCheck();
         }
+    }
+    // In the regular game, the last wave of each level has a special enemy in it, about a third of the way through, in
+    // a vehicle (a plain one for now). If he gets off the screen it's game over, and if he's stopped he's eliminated.
+    specialWave = -1; // the wave he's already been sent in
+    specialDue() {
+        return game.gameMode == GameMode.regular
+            && this.waveIndex === this.info.waves.length - 1
+            && this.specialWave !== this.waveIndex
+            && this.targets.length >= Math.floor(this.currentWave.number / 3);
+    }
+    provideSpecialTarget() {
+        this.specialWave = this.waveIndex;
+        const vehicle = new ModVehicleTarget();
+        vehicle.makeSpecial(SpecialNames.random(), SpecialPortraits.random());
+        return vehicle;
     }
     pauseWave() {
         clearInterval(this.targetTimer);
