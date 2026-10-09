@@ -1715,6 +1715,7 @@ class Bunker extends Target {
     public occupant?: SpecialEnemy;
     private shaft: { from: position, to: position };
     private room: Box;
+    private surfaceBox: Box; // where its building stood: still there to be hit by a buster once the building has gone
     private planEl: SVGSVGElement;
 
     constructor(building: Building) {
@@ -1738,6 +1739,8 @@ class Bunker extends Target {
             X: Math.max(size, Math.min(window.innerWidth - size, rect.left + rect.width / 2)),
             Y: Math.min(window.innerHeight - size, rect.bottom + Bunker.shaftDrop),
         };
+        // (the building's own box, which has its size from the start; its picture may not have loaded yet)
+        this.surfaceBox = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
         this.shaft = { from: { X: centre.X, Y: rect.top + rect.height * 0.6 }, to: centre };
         this.room = { left: centre.X - size / 2, top: centre.Y - size / 2, right: centre.X + size / 2, bottom: centre.Y + size / 2 };
         this.placeAt(this.room.left, this.room.top);
@@ -1790,6 +1793,11 @@ class Bunker extends Target {
             this.planEl.style.maskImage = mask;
             this.planEl.style.webkitMaskImage = mask;
         }
+    }
+    // An invisible hitbox where the building above it stood (or still stands): that's what a bunker buster has to land on,
+    // whether or not the building's still there. (The bunker as it's drawn on a scan is just where it is underground.)
+    public isUnder(p: position): boolean {
+        return this.damage !== Damage.destroyed && p.X >= this.surfaceBox.left && p.X <= this.surfaceBox.right && p.Y >= this.surfaceBox.top && p.Y <= this.surfaceBox.bottom;
     }
     // Nothing else does anything to it
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) { }

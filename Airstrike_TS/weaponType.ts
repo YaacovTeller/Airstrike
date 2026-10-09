@@ -402,6 +402,13 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             if (hit.bunker) hit.bunker.destroy();
             hit.obliterate();
         }
+        // a bunker whose building has already gone can still be got at, where the building stood
+        for (const target of allTargets.slice()) {
+            if (target instanceof Bunker && target.isUnder(at)) {
+                target.destroy();
+                target.building.obliterate(); // (nothing to do if it's already gone)
+            }
+        }
         if (!this.onWater(at)) { // (nothing to leave a crater in at sea)
             ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
         }
