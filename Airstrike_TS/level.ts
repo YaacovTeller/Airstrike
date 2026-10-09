@@ -294,6 +294,8 @@ class Level {
     // The surveillance drone has been sent out
     public noteDroneFlyover() { }
     public noteShot(slot: number, cost: number, bigBomb: boolean) { }
+    // Something has exploded (a drone flyover or a gunshot hasn't)
+    public noteExplosion() { }
 
     public continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
@@ -493,7 +495,24 @@ class SceneLevel extends Level {
         for (let i = 0; i < this.scaled(this.staticTargetCount); i++) {
             this.registerTarget(this.provideAvailTargets());
         }
-        this.infestBuildings(game.drawAllBuildings());
+        const buildings = game.drawAllBuildings();
+        this.infestBuildings(buildings);
+        this.placeBunkers(buildings);
+    }
+
+    // The special enemies here are in bunkers, one under a building, who only a bunker buster can get at
+    protected placeBunkers(buildings: Array<Building>) {
+        const pool = buildings.slice();
+        for (let n = 0; n < this.scaled(1) && pool.length; n++) {
+            const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
+            const bunker = new Bunker(building);
+            const room = bunker.setUp();
+            const enemy = new SpecialEnemy();
+            enemy.goUnderground();
+            enemy.bunker = bunker;
+            bunker.occupant = enemy;
+            this.registerTarget(enemy, { X: room.X - 4, Y: room.Y - 4 });
+        }
     }
 
     private static infestedBuildingCount: number = 3;
@@ -577,8 +596,56 @@ class HillsLevel extends SceneLevel {
         this.takenBoxes = [];
         const buildings = this.placeVillage();
         this.infestBuildings(buildings);    // only the villas have somewhere for anyone to hide
+        this.placeSpecialEnemies(buildings);
         this.placeVehicles(buildings);
         this.placeTunnels();
+    }
+
+    // The special enemies here hide in buildings, and once the first explosion has gone off they'll try to get away
+    // in a vehicle, between 10 and 20 seconds later (see startFlee), if there's one still running.
+    private specials: Array<SpecialEnemy> = [];
+    private fleeScheduled: boolean = false;
+    private stageNumber: number = 0; // which stage's special enemies a timer set going belongs to
+
+    private placeSpecialEnemies(buildings: Array<Building>) {
+        this.specials = [];
+        this.fleeScheduled = false;
+        this.stageNumber++;
+        const pool = buildings.filter(b => b.canHideEnemies());
+        for (let n = 0; n < this.scaled(1) && pool.length; n++) {
+            const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
+            const enemy = new SpecialEnemy();
+            building.addOccupant(enemy);
+            this.registerTarget(enemy, building.randomHidingSpot());
+            this.specials.push(enemy);
+        }
+    }
+    public noteExplosion() {
+        if (this.fleeScheduled || !this.specials.length) return;
+        this.fleeScheduled = true;
+        const stage = this.stageNumber;
+        setTimeout(() => {
+            if (stage === this.stageNumber && game.level === this) this.startFlee();
+        }, RandomNumberGen.randomNumBetween(10000, 20000));
+    }
+    // Each special enemy still in a building gets into the nearest vehicle that's running, and starts it up
+    private startFlee() {
+        const taken: Array<VehicleTarget> = [];
+        for (const special of this.specials) {
+            if (special.isFinished()) continue;
+            const here = CollisionDetection.getXYfromPoint(special.getTargetEl());
+            let nearest: VehicleTarget = null, nearestDist = Infinity;
+            for (const target of allTargets) {
+                if (!(target instanceof VehicleTarget) || target instanceof RocketLauncher || taken.includes(target) || !target.isRunning()) continue;
+                const there = CollisionDetection.getXYfromPoint(target.getTargetEl());
+                const dist = Math.hypot(there.X - here.X, there.Y - here.Y);
+                if (dist < nearestDist) { nearest = target; nearestDist = dist; }
+            }
+            if (!nearest) return; // nothing left to get away in
+            taken.push(nearest);
+            special.board();
+            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 2);
+        }
     }
 
     private overlapsTaken(box: Box, room: number = 0): boolean {

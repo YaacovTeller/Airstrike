@@ -226,6 +226,9 @@ class Building extends MapEntity {
     private static debrisPerHit: number = 2;
     private static ownBitChance: number = 60; // percent of the pieces, for the buildings that have bits of their own
 
+    // A bunker beneath it (see Bunker), if it has one
+    public bunker?: Bunker;
+
     // Enemies hiding inside, under the picture. The building's damage is what decides their fate.
     private occupants: Array<BuildingEnemy> = [];
     public addOccupant(enemy: BuildingEnemy) {
@@ -353,6 +356,19 @@ class Building extends MapEntity {
             this.killOccupants(false);
         }
         this.throwDebris(collisionInfo);
+    }
+
+    // Brought down completely and at once, whatever state it was in, with everyone in it: what a bunker buster does
+    public obliterate() {
+        if (this.removed) return;
+        this.damagePoints = Building.hitPointsToObliterate;
+        this.damage = Damage.destroyed;
+        this.killOccupants(true);
+        this.throwDebris(undefined, Building.debrisPerHit * 4);
+        this.clearAway();
+    }
+    public isStanding(): boolean {
+        return !this.removed;
     }
 
     // Takes the sprite off the map altogether, fading it out
@@ -910,6 +926,45 @@ class VehicleTarget extends Target {
         return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed ? this.targetEl.getBoundingClientRect() : null;
     }
     public cold: boolean = false;
+
+    // A vehicle that's up and running and could be driven off: not parked cold, not knocked out or burning
+    public isRunning(): boolean {
+        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed && !this.wrecked;
+    }
+    // The special enemy making off in it, if there is one: this vehicle is then the special target, and glows its
+    // colour on a scan. It's driven off to the right at the speed given (px every 100ms); if it gets off the screen
+    // that's the game lost, and if it's stopped (disabled or destroyed) that's him eliminated.
+    public specialName?: string;
+    public startFleeing(name: string, speed: number) {
+        this.specialName = name;
+        this.targetEl.classList.add('special');
+        this.speed = speed;
+        SoundPlayer.playSequentialSound(revs);
+    }
+    private specialDown() {
+        if (!this.specialName) return;
+        const name = this.specialName;
+        this.specialName = undefined;
+        this.targetEl.classList.remove('special');
+        announceElimination(name);
+    }
+    protected targetDisabled() {
+        super.targetDisabled();
+        this.specialDown();
+    }
+    protected targetDestroyed(priorStatus: Status) {
+        super.targetDestroyed(priorStatus);
+        this.specialDown();
+    }
+    protected move(posX: number) {
+        if (this.specialName && posX > ContentElHandler.contentElWidth()) {
+            this.status = Status.escaped;
+            this.specialName = undefined;
+            game.failGame("You shouldn't have let that one get away!");
+            return;
+        }
+        super.move(posX);
+    }
     // A vehicle that's just sitting there. It can still be hit, flipped and blown up like any other.
     public park() {
         this.speed = 0;
@@ -1562,5 +1617,164 @@ class RocketLauncher extends VehicleTarget {
     }
     private leaveNoStrikeZone() {
         game.strikesRestricted = false;
+    }
+}
+
+// The special enemies: a name each, and a different colour on a scan. One hides in a building (Hills) or in a bunker
+// under one (Coast). The Hills one tries to get away in a vehicle (see HillsLevel.startFlee), when he stops being
+// a separate target and the vehicle is the special target.
+class SpecialNames {
+    private static first: Array<string> = ["Abu", "Jabar", "Ali", "Amir", "Mahmoud", "Muhammad", "Omar", "Ahmed", "Abdul", "Hassan"];
+    private static last: Array<string> = ["Abbas", "Sinwar", "Deif", "Haniyeh", "ibn Rashid", "ibn Khalid", "ibn Walid", "ibn Tariq",
+        "ibn Saleh", "ibn Mansour", "Haddad", "Hamdan", "Qasim", "Barakat", "Khalil", "Nasser"];
+    // two to four first names and a last
+    public static random(): string {
+        const pool = SpecialNames.first.slice();
+        const count = RandomNumberGen.randomNumBetween(2, 4);
+        const names: Array<string> = [];
+        for (let i = 0; i < count; i++) {
+            names.push(pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0]);
+        }
+        names.push(RandomNumberGen.returnRandomFromArray(SpecialNames.last));
+        return names.join(" ");
+    }
+}
+function announceElimination(name: string) {
+    PopupHandler.addToArray("Well done, you eliminated " + name + "!", "Target eliminated", msgLength.long);
+}
+
+class SpecialEnemy extends BuildingEnemy {
+    public readonly name: string = SpecialNames.random();
+    public boarded: boolean = false;      // he's got into a vehicle: that's the target now
+    public bunker?: Bunker;
+    constructor() {
+        super();
+        this.targetEl.classList.add('special');
+    }
+    public isFinished(): boolean {
+        return this.boarded || super.isFinished();
+    }
+    public heatSignatureBox(): Box | null {
+        return this.boarded ? null : super.heatSignatureBox();
+    }
+    public eliminate() {
+        if (this.boarded || this.damage === Damage.destroyed) return;
+        super.eliminate();
+        announceElimination(this.name);
+    }
+    // Down in a bunker, so he's only to be seen where a scan has found him
+    public goUnderground() {
+        this.targetEl.classList.add('underground');
+    }
+    // Gets into a vehicle: he's out of the building, and no longer a target on his own
+    public board() {
+        this.boarded = true;
+        this.setHeatSignature(false);
+        this.targetEl.style.display = "none";
+    }
+}
+
+// A bunker under a building: a shaft down from the building to a square room, drawn only where a surveillance drone's
+// scan reaches. Nothing that goes bang above ground touches it, or the one in it: only a bunker buster does anything,
+// and brings it down with the building above it.
+class Bunker extends Target {
+    private static shaftDrop: number = 55;     // how far below the building's foot the room is
+    private static roomSize: number = 44;
+    public building: Building;
+    public occupant?: SpecialEnemy;
+    private shaft: { from: position, to: position };
+    private room: Box;
+    private planEl: SVGSVGElement;
+
+    constructor(building: Building) {
+        super(hiddenTunnelTarget);
+        this.building = building;
+        building.bunker = this;
+        this.targetEl.classList.add('smallSquare', 'bunker');
+        this.targetEl.classList.remove('flexCenter');
+        allTargets.push(this);
+    }
+    protected get picSources(): Array<string> {
+        return ['trans.png'];
+    }
+    public action() { }
+
+    // Lays the bunker out beneath its building and draws it; returns the middle of the room
+    public setUp(): position {
+        const rect = this.building.getTargetEl().getBoundingClientRect();
+        const size = Bunker.roomSize;
+        const centre: position = {
+            X: Math.max(size, Math.min(window.innerWidth - size, rect.left + rect.width / 2)),
+            Y: Math.min(window.innerHeight - size, rect.bottom + Bunker.shaftDrop),
+        };
+        this.shaft = { from: { X: centre.X, Y: rect.top + rect.height * 0.6 }, to: centre };
+        this.room = { left: centre.X - size / 2, top: centre.Y - size / 2, right: centre.X + size / 2, bottom: centre.Y + size / 2 };
+        this.placeAt(this.room.left, this.room.top);
+        this.draw();
+        return centre;
+    }
+
+    private draw() {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("class", "bunkerPlan");
+        // laid over the whole screen, whatever it's a child of, so everything's in page coordinates
+        svg.style.left = -this.room.left + "px";
+        svg.style.top = -this.room.top + "px";
+        svg.style.width = window.innerWidth + "px";
+        svg.style.height = window.innerHeight + "px";
+        const line = document.createElementNS(ns, "line");
+        line.setAttribute("x1", String(this.shaft.from.X));
+        line.setAttribute("y1", String(this.shaft.from.Y));
+        line.setAttribute("x2", String(this.shaft.to.X));
+        line.setAttribute("y2", String(this.shaft.to.Y));
+        svg.appendChild(line);
+        const room = document.createElementNS(ns, "rect");
+        room.setAttribute("x", String(this.room.left));
+        room.setAttribute("y", String(this.room.top));
+        room.setAttribute("width", String(this.room.right - this.room.left));
+        room.setAttribute("height", String(this.room.bottom - this.room.top));
+        svg.appendChild(room);
+        this.targetEl.appendChild(svg);
+        this.planEl = svg as SVGSVGElement;
+    }
+
+    // How far a point is from the shaft or the room, whichever is nearer
+    private distanceFrom(p: position): number {
+        const inRoom = CollisionDetection.nearestPointInBox(p, this.room);
+        const a = this.shaft.from, b = this.shaft.to;
+        const dx = b.X - a.X, dy = b.Y - a.Y;
+        const lengthSquared = dx * dx + dy * dy;
+        const along = lengthSquared ? Math.max(0, Math.min(1, ((p.X - a.X) * dx + (p.Y - a.Y) * dy) / lengthSquared)) : 0;
+        const onShaft = Math.hypot(a.X + dx * along - p.X, a.Y + dy * along - p.Y);
+        return Math.min(Math.hypot(inRoom.X - p.X, inRoom.Y - p.Y), onShaft);
+    }
+    public heatDistanceFrom(p: position): number | null {
+        return this.damage === Damage.destroyed ? null : this.distanceFrom(p);
+    }
+    public setHeatSignature(show: boolean, around?: position, radius?: number) {
+        super.setHeatSignature(show);
+        if (show && around && radius && this.planEl) {
+            const mask = "radial-gradient(circle at " + around.X + "px " + around.Y + "px, black " + Math.round(radius * 0.65) + "px, transparent " + radius + "px)";
+            this.planEl.style.maskImage = mask;
+            this.planEl.style.webkitMaskImage = mask;
+        }
+    }
+    // Whether a bunker buster landing at this point reaches the shaft or the room
+    public reachedBy(p: position, radius: number): boolean {
+        return this.damage !== Damage.destroyed && this.distanceFrom(p) <= radius;
+    }
+    // Nothing else does anything to it
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) { }
+
+    // Brought down: whoever's in it goes too
+    public destroy() {
+        if (this.damage === Damage.destroyed) return;
+        this.damage = Damage.destroyed;
+        this.setHeatSignature(false);
+        const index = allTargets.indexOf(this);
+        if (index >= 0) allTargets.splice(index, 1);
+        if (this.occupant) this.occupant.eliminate();
+        ContentElHandler.removeFromContentEl(this.targetEl);
     }
 }

@@ -327,6 +327,44 @@ class ExplosiveWeaponType extends WeaponType {
         blastRadiusEl.appendChild(circle);
     }
 }
+// Number 5 in the Coast set. It lands quietly (a thud), and a second later goes off deep below: the shake and the
+// blast sound come then, with nothing at the surface, and anything standing within its circle comes down --
+// buildings entirely, and the bunkers under them, and any bunker whose shaft or room it reaches, and its building.
+class BunkerBusterWeaponType extends ExplosiveWeaponType {
+    static detonationDelay = 1000; // from the thud to the blast, as if it went off below ground
+    constructor(info) {
+        super(info);
+    }
+    fireResultsTimeout(inst) {
+        setTimeout(() => {
+            const aimed = CollisionDetection.getXYfromPoint(inst.blastRadElement);
+            this.switchBlastIndicatorStyle(false, inst);
+            inst.blastRadElement.style.visibility = 'hidden';
+            SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
+        }, this.speed);
+    }
+    detonate(at) {
+        ExplosionHandler.bigShake();
+        SoundPlayer.playSequentialSound(bigExplosions);
+        const radius = this.blastRadius;
+        for (const target of allTargets.slice()) {
+            if (target instanceof Building) {
+                const area = target.getTargetEl().getBoundingClientRect();
+                const near = CollisionDetection.nearestPointInBox(at, area);
+                if (target.isStanding() && Math.hypot(near.X - at.X, near.Y - at.Y) <= radius) {
+                    if (target.bunker)
+                        target.bunker.destroy();
+                    target.obliterate();
+                }
+            }
+            else if (target instanceof Bunker && target.reachedBy(at, radius)) {
+                target.destroy();
+                target.building.obliterate();
+            }
+        }
+    }
+}
 class Flare extends ExplosiveWeaponType {
     constructor(info) {
         super(info);
@@ -342,6 +380,7 @@ class Flare extends ExplosiveWeaponType {
 }
 class ChargeWeaponType extends WeaponType {
     static recordedFuseMs = 3750; // the recording's blast comes in 3.75 seconds after it starts
+    static recordedChance = 70; // percent of the time it's the recording that counts down
     constructor(info) {
         super(info);
         this.pushNewWeaponInstance();
@@ -372,7 +411,7 @@ class ChargeWeaponType extends WeaponType {
                 SoundPlayer.playSequentialSound(beeps);
                 // Half the time the countdown is a recording (voices, then the blast), which sets the length
                 // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
-                const recorded = RandomNumberGen.randomNumBetween(0, 1) === 1;
+                const recorded = RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance;
                 SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
                     tunnel.hit(strikeSeverity.catastrophic, this.name); // TARGET - Main hit function

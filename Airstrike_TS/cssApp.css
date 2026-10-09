@@ -318,6 +318,47 @@
     border-color: #ff4500;
     box-shadow: 0 0 6px 3px rgba(255, 120, 0, 0.9);
 }
+/* The special enemies show up in another colour: a hot pink... */
+.target.buildingEnemy.special.heatSig {
+    background: #ff5fd8;
+    border-color: #8a0068;
+    box-shadow: 0 0 6px 3px rgba(255, 60, 200, 0.9);
+}
+.target.special.heatSig > .picEl { /* ...and so does the vehicle he's making off in */
+    filter: sepia(1) saturate(5) hue-rotate(290deg) brightness(1.25) drop-shadow(0 0 4px #e000b0) drop-shadow(0 0 9px #ff5fd8);
+}
+/* one down in a bunker has nothing over him: he's only there when a scan finds him */
+.target.buildingEnemy.underground:not(.heatSig) {
+    visibility: hidden;
+}
+/* A bunker: the shaft down from the building and the room at the foot of it, drawn only where a scan is */
+.bunker .bunkerPlan {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+}
+.bunker .bunkerPlan line {
+    stroke: rgba(90, 220, 255, 0);
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke 0.3s;
+}
+.bunker .bunkerPlan rect {
+    fill: rgba(40, 140, 200, 0);
+    stroke: rgba(90, 220, 255, 0);
+    stroke-width: 3;
+    transition: stroke 0.3s, fill 0.3s;
+}
+.target.bunker.heatSig .bunkerPlan line {
+    stroke: rgba(90, 220, 255, 0.8);
+    filter: drop-shadow(0 0 5px rgba(0, 180, 255, 0.9));
+}
+.target.bunker.heatSig .bunkerPlan rect {
+    stroke: rgba(90, 220, 255, 0.95);
+    fill: rgba(40, 140, 200, 0.35);
+    filter: drop-shadow(0 0 5px rgba(0, 180, 255, 0.9));
+}
 /* The area a surveillance drone is scanning, around the mouse */
 .blastRadius.scanRing {
     border: 2px dashed rgba(255, 160, 50, 0.9);

@@ -43,7 +43,12 @@ class ExplosionHandler {
         ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
 
     }
+    // The biggest shake there is, as the largest bomb gives
+    public static bigShake() {
+        this.shake(screenShakeTimeouts.shake_3);
+    }
     public static basicExplosion(blastCenter: position, size: ExplSizes, explFrames: Array<HTMLImageElement>, weaponName: weaponNames) {
+        if (game.level) game.level.noteExplosion(); // the first one starts the clock on a special enemy's escape
         let water = document.getElementById("water")
         if (water) {
             if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {

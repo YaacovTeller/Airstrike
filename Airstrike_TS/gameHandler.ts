@@ -459,9 +459,12 @@ class GameHandler {
     // The coast level's own weapons instead of the standard ones. Every game starts from empty weapon lists
     // (see reset()), so going back to any other mode gets the standard set again.
     private addScaledWeaponSet() {
-        for (let i = 0; i < 3; i++) {
-            scaledWeapons.forEach(info => this.level.addNewWeapon(info, false));
-        }
+        // three of each, but more of the small and fewer of the big ones
+        const howMany: { [slot: number]: number } = { 1: 4, 5: 2, 6: 2, 7: 1 };
+        scaledWeapons.forEach(info => {
+            const count = howMany[info.slot] || 3;
+            for (let i = 0; i < count; i++) this.level.addNewWeapon(info, false);
+        });
         this.level.addNewWeapon(surveillanceInfo, false);
         this.level.addNewWeapon(surveillanceInfo, false);
     }
@@ -739,11 +742,16 @@ class GameHandler {
     public checkEnd() {
         let stats = this.killStats;
         if (stats.escaped >= stats.failLimit) {
-            this.pause();
-            this.gameInProgress = false;
-            PopupHandler.addToArray("", userHandler.addressed("Game Over!"), msgLength.long);
-            SoundPlayer.playWithVolumeSet(alarm3);
+            this.failGame("");
         }
+    }
+    // The game's lost, with a message as to why if there is one
+    public failGame(message: string) {
+        if (!this.gameInProgress) return;
+        this.pause();
+        this.gameInProgress = false;
+        PopupHandler.addToArray(message, userHandler.addressed("Game Over!"), msgLength.long);
+        SoundPlayer.playWithVolumeSet(alarm3);
     }
 
     // The menu (Escape) freezes the whole game the way the P key does -- every timer, sound and animation --

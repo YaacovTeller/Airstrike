@@ -201,6 +201,7 @@ type difficultyLevelInfo = {
     enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
     parMs?: number,       // and how long a stage gets before you're told off for being slow
     extraTunnels?: number, // and how many tunnels more than usual (Hills)
+    fleeSpeed?: number,   // how fast a special enemy makes off in a vehicle (Hills), in px every 100ms
     eng: langInfo,
     heb: langInfo
 }
@@ -311,6 +312,7 @@ const sceneNormal: difficultyLevelInfo = {
     ...normal,
     enemyFactor: 1,
     parMs: 120000,
+    fleeSpeed: 2,
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
@@ -318,6 +320,7 @@ const sceneHard: difficultyLevelInfo = {
     ...hard,
     enemyFactor: 1.4,
     parMs: 105000,
+    fleeSpeed: 3.5,
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
@@ -326,6 +329,7 @@ const sceneChaos: difficultyLevelInfo = {
     enemyFactor: 2,
     parMs: 90000,
     extraTunnels: 1,
+    fleeSpeed: 5,
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
@@ -648,12 +652,21 @@ function scaledBigStrike(slot: number, displayName: string, icon: string, size: 
         explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
     };
 }
+// Slot 5 of the Coast set. It goes through the ground, with a thud, and a second later goes off far below: no
+// explosion at the surface, but a shake as big as the largest bomb's, and the building it's over comes down
+// with the bunker beneath it.
+const bunkerBusterInfo: ExplosiveWeaponInfo = {
+    ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    class: BunkerBusterWeaponType,
+    blastRadius: 45,
+    explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
+};
 const scaledWeapons: Array<weaponInfo> = [
     scaledMortarInfo,
     scaledHowitzerInfo,
     scaledAirstrikeInfo,
     scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),         // as big as the standard airstrike
-    scaledBigStrike(5, "Cruise Missile", 'missile_5.png', ExplSizes.huge),
+    bunkerBusterInfo,
     scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
     scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
 ];
