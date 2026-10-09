@@ -123,8 +123,10 @@ class ExplosionHandler {
     // still down to how far the blast is from the target's middle (collisionInfo.dist), as a share of
     // the blast's radius. collisionInfo.hitDist is the distance to the nearest point of the hit box,
     // 0 for a blast that landed on it.
+    // (It walks copies of the lists: a building brought down by the blast takes itself out of allTargets as it goes,
+    // and walking the list itself would then skip whichever one came next, leaving it untouched in the middle of the blast.)
     private static forEachBlastCollision(blastCenter: position, rad: number, onTarget: (target, collisionInfo: vectorMoveObj) => void, onItem: (item, collisionInfo: vectorMoveObj) => void) {
-        for (let target of allTargets) {
+        for (let target of allTargets.slice()) {
             // something long and thin (a tunnel) is measured from the nearest part of it, not from its middle
             const focus = target.blastFocus ? target.blastFocus(blastCenter) : null;
             if (focus) {
@@ -147,7 +149,7 @@ class ExplosionHandler {
                 onTarget(target, collisionInfo);
             }
         }
-        for (let item of allObjects) {
+        for (let item of allObjects.slice()) {
             if (CollisionDetection.checkCollisionFromPositionWithBlast(blastCenter, item, rad)) {
                 let collisionInfo: vectorMoveObj = CollisionDetection.getVectorMove(blastCenter, item, rad)
                 onItem(item, collisionInfo);
