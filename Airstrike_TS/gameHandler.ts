@@ -998,11 +998,12 @@ class GameHandler {
         water.style.transform = "skewX(" + RandomNumberGen.randomNumBetween(18, 38) + "deg)";
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out in 4 or 5 lines like streets:
-    // each line is a row of blocks along its own baseline (which wanders from game to game), buildings
+    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets,
+    // most of them wide enough for blocks two buildings deep (a street that's only one building high is the
+    // rarity): each line is a row of blocks along its own baseline (which wanders from game to game), buildings
     // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
     // buildings are, so sizes aren't mixed in one:
-    //  - the big ones (warehouses) go singly or two or three side by side, and sometimes two deep
+    //  - the big ones (warehouses) go singly or two or three side by side, and mostly two deep
     //  - the middling ones go like that too
     //  - the small ones (huts, sheds, little houses) mostly go in twos, sometimes threes and only rarely
     //    on their own, and a block of them is always followed by something bigger, so they never run on
@@ -1031,13 +1032,31 @@ class GameHandler {
     const medium = allBuildingInfo.filter(info => info.width >= 70 && info.width < 90);
     const small = allBuildingInfo.filter(info => info.width < 70);
 
-    const lines = RandomNumberGen.randomNumBetween(4, 5);
-    const pitch = (bottom - top) / lines;
-    const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
+    // The lines: bands across the screen, mostly deep ones with room for two rows of buildings, now and then a
+    // shallow one with room for one. Three deep ones about half the time, two deep and a shallow one most of the
+    // rest, and rarely four lines, two of each.
+    const shallowHeight = 120;
+    const plan = RandomNumberGen.randomNumBetween(1, 100);
+    const deepFlags: Array<boolean> = plan <= 55 ? [true, true, true] : plan <= 90 ? [true, true, false] : [true, true, false, false];
+    for (let i = deepFlags.length - 1; i > 0; i--) { // in a random order
+        const j = RandomNumberGen.randomNumBetween(0, i);
+        [deepFlags[i], deepFlags[j]] = [deepFlags[j], deepFlags[i]];
+    }
+    const deepCount = deepFlags.filter(f => f).length;
+    const deepHeight = ((bottom - top) - shallowHeight * (deepFlags.length - deepCount)) / deepCount;
+    let cursor = top;
+    const bands = deepFlags.map(deep => {
+        const band = { top: cursor, height: deep ? deepHeight : shallowHeight, deep: deep };
+        cursor += band.height;
+        return band;
+    });
 
-    for (let line = 0; line < lines && slots.length < maxCount; line++) {
+    for (const band of bands) {
+        if (slots.length >= maxCount) break;
+        const pitch = band.height;
+        const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
         // where the buildings in this line stand: its baseline, which moves about from one game to the next
-        const baseline = top + pitch * (line + 1) - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
+        const baseline = band.top + pitch - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
         let x = 0;
         let previous: BuildingInfo = null;
         let previousWasSmall = false;
@@ -1050,7 +1069,9 @@ class GameHandler {
             const isSmall = pool === small;
             const smallRoll = RandomNumberGen.randomNumBetween(1, 100);
             let cols = isSmall ? (smallRoll <= 12 ? 1 : smallRoll <= 80 ? 2 : 3) : RandomNumberGen.randomNumBetween(1, 3);
-            let rows = !isSmall && cols >= 2 && RandomNumberGen.randomNumBetween(1, 100) <= 30 ? 2 : 1;
+            // in a deep line most blocks are two deep, the little ones less often and only as pairs or more
+            const deepRoll = RandomNumberGen.randomNumBetween(1, 100);
+            let rows = band.deep && (isSmall ? cols >= 2 && deepRoll <= 60 : deepRoll <= 88) ? 2 : 1;
 
             const stepX = info.width * (1 + buildingGap);
             const stepY = info.height * (1 + rowGap);
