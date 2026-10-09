@@ -343,8 +343,14 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
             SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            if (this.onWater(aimed))
+                ExplosionHandler.createSplash(aimed); // into the sea, it's just a small splash
             setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
         }, this.speed);
+    }
+    onWater(at) {
+        const water = document.getElementById("water");
+        return !!water && CollisionDetection.checkCollisionFromPosition(at, water);
     }
     detonate(at) {
         ExplosionHandler.bigShake();
@@ -369,7 +375,9 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
                 hit.bunker.destroy();
             hit.obliterate();
         }
-        ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
+        if (!this.onWater(at)) { // (nothing to leave a crater in at sea)
+            ExplosionHandler.createCrater(at, ExplSizes.massive * BunkerBusterWeaponType.craterScale); // with the blast: it's the ground falling in above it
+        }
     }
 }
 class Flare extends ExplosiveWeaponType {
