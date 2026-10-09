@@ -259,6 +259,12 @@
 .buildingDebris {
     width: 20px;
 }
+.vehicleBit {
+    width: 18px;
+}
+.boatBit {
+    width: 28px;
+}
 /* A tiny enemy hiding under a building (which is z-index 5): just a small square for now */
 .target.buildingEnemy {
     width: 8px;

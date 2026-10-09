@@ -11,11 +11,18 @@ type BuildingInfo = {
     // by the picture, in both its undamaged and damaged states -- measured from the pictures
     hide?: { x: [number, number], y: [number, number] },
     noParking?: boolean, // nothing parks beside it (a water tower)
+    bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
+}
+// The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
+function bitPath(name: string): string {
+    return assetsFolder + "bits/Bit_" + name + ".png";
 }
 // A type made of the pictures Structure_<code>_1, _2 and _3 (undamaged, damaged, destroyed)
 function structureInfo(code: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "Structure_" + code + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+    // the warehouses (rows 1 and 2) throw chunks of their own coloured roofs
+    const bits = /^r[12]c\d$/.test(code) ? [bitPath("roof_" + code)] : undefined;
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: bits };
 }
 // Add new building types here to get them into the random rotation. Enemies can hide in all of them but the two
 // fences (r5c4 and r5c7), which are open mesh the picture wouldn't hide anyone behind -- a `hide` of undefined
@@ -66,14 +73,15 @@ const allBuildingInfo: Array<BuildingInfo> = [
 // the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
 function villaInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")] };
 }
 // The mosques (AS_assets/buildings/mosques): three of them, a village has one. Undamaged, damaged (the tower half
 // broken) and destroyed (the tower gone); there's also a complete ruin, _4, that nothing uses yet. Sizes are 0.36
 // of natural.
 function mosqueInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"], folder: string = "mosques/"): BuildingInfo {
     const name = (stage: number) => folder + "Mosque_" + letter + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+    const bit = bitPath("mosque_" + (folder.endsWith("fancy/") ? "fancy_" : "") + letter); // a piece of its dome
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bit] };
 }
 const allMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("A", 76, 101, { x: [42, 50], y: [48, 76] }),
@@ -216,6 +224,7 @@ class Building extends MapEntity {
         assetsFolder + "bit.png",
     ];
     private static debrisPerHit: number = 2;
+    private static ownBitChance: number = 60; // percent of the pieces, for the buildings that have bits of their own
 
     // Enemies hiding inside, under the picture. The building's damage is what decides their fate.
     private occupants: Array<BuildingEnemy> = [];
@@ -364,7 +373,9 @@ class Building extends MapEntity {
         }
     }
     private throwDebrisPiece(origin: position) {
-        let imageSrc = RandomNumberGen.returnRandomFromArray(Building.debrisSources);
+        // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
+        const own = this.info.bits && this.info.bits.length && RandomNumberGen.randomNumBetween(1, 100) <= Building.ownBitChance;
+        let imageSrc = RandomNumberGen.returnRandomFromArray(own ? this.info.bits : Building.debrisSources);
         let piece = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         piece.classList.add("buildingDebris");
         let direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
@@ -1156,10 +1167,22 @@ class VehicleTarget extends Target {
         let wheelPic = wheel.querySelector(".wheelPic") as HTMLElement;
         ThrowHandler.flip(wheelPic, direc, null, wheel, undefined, ThrowHandler.removeIfLandedInWater);
     }
+    // Bits of bodywork, thrown as well as the wheels
+    private static bodyBits: Array<string> = [bitPath("car_1"), bitPath("car_2")];
+    protected throwBodyBits(sources: Array<string>, sizeClass: string, origin?: position) {
+        const count = RandomNumberGen.randomNumBetween(1, 2);
+        for (let i = 0; i < count; i++) {
+            const bit = this.returnBit(RandomNumberGen.returnRandomFromArray(sources), "wheel", "wheelPic", origin);
+            bit.classList.add(sizeClass);
+            const direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
+            ThrowHandler.flip(bit, direc, null, undefined, undefined, ThrowHandler.removeIfLandedInWater);
+        }
+    }
     protected destructionBits() {
         this.rollWheel();
         this.throwWheel(direction.forward);
         this.throwWheel(direction.backward);
+        this.throwBodyBits(VehicleTarget.bodyBits, "vehicleBit");
     }
 }
 
@@ -1194,17 +1217,9 @@ class WaterVehicleTarget extends VehicleTarget {
     // remembered from when the boat was hit.
     private strikePoint: position;
 
-    private createScrap() {
-        return this.returnBit(assetsFolder + "bit.png", "wheel", "wheelPic", this.strikePoint);
-    }
-
-    private throwBit(direc: direction) {
-        let bit = this.createScrap();
-        ThrowHandler.flip(bit, direc, null, undefined, undefined, ThrowHandler.removeIfLandedInWater);
-    }
+    private static hullBits: Array<string> = [bitPath("boat_1"), bitPath("boat_2")];
     protected destructionBits() {
-        this.throwBit(direction.forward);
-        this.throwBit(direction.backward);
+        this.throwBodyBits(WaterVehicleTarget.hullBits, "boatBit", this.strikePoint);
     }
     protected get picSources(): Array<string> {
         const sort = RandomNumberGen.randomNumBetween(0, 1) ? WaterVehicleTarget.tugPics : WaterVehicleTarget.shipPics;
