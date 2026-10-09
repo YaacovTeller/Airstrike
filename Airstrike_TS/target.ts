@@ -224,6 +224,7 @@ class Building extends MapEntity {
         assetsFolder + "bit.png",
     ];
     private static debrisPerHit: number = 2;
+    private static debrisOnNewStage: number = 8; // when a hit takes it down a stage (undamaged to damaged, damaged to destroyed)
     private static debrisWhenGone: number = 18; // when it's brought down completely: a lot of pieces, three times what it used to be
     private static loudPieces: number = 4;      // of which only this many make a noise landing
     private static ownBitChance: number = 60; // percent of the pieces, for the buildings that have bits of their own
@@ -342,6 +343,7 @@ class Building extends MapEntity {
         if (wepName < weaponNames.mortar || this.removed) {
             return;
         }
+        const stageBefore = this.damage;
         this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         if (this.damagePoints >= Building.hitPointsToObliterate) {
@@ -357,7 +359,8 @@ class Building extends MapEntity {
         else if (severity >= strikeSeverity.medium) { // not just a glancing blow from the edge of a blast
             this.killOccupants(false);
         }
-        this.throwDebris(collisionInfo);
+        // a hit that's taken it down a stage breaks a lot more off than one that only knocks at what's there
+        this.throwDebris(collisionInfo, this.damage !== stageBefore ? Building.debrisOnNewStage : Building.debrisPerHit);
     }
 
     // Brought down completely and at once, whatever state it was in, with everyone in it: what a bunker buster does
