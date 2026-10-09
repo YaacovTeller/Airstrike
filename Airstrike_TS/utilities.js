@@ -99,8 +99,12 @@ class StageTransition {
     static streaks;
     // direction is the way the ground goes: down (the new stage comes in from the top), up (from the bottom)
     // or right (from the left)
+    static exiting; // the old stage's layer, which rides off with the ground and is thrown away at the end
     static rush(direction = "down") {
+        const exiting = this.exiting; // (cancel() would throw it away)
+        this.exiting = undefined;
         this.cancel();
+        this.exiting = exiting;
         const root = document.documentElement;
         const ground = ContentElHandler.returnbackground();
         const water = document.getElementById("water");
@@ -134,6 +138,10 @@ class StageTransition {
     static cancel() {
         this.active = false;
         document.body.classList.remove("stageRushing");
+        if (this.exiting) {
+            this.exiting.remove();
+            this.exiting = undefined;
+        }
         if (this.streaks) {
             this.streaks.remove();
             this.streaks = undefined;

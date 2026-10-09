@@ -192,6 +192,20 @@ body.stageRushing .water {
 body.stageRushing #content {
     animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
 }
+/* the stage that's leaving rides off with the ground, on the same curve, and is gone by the time it stops */
+#exitingStage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+body.stageRushing #exitingStage {
+    animation: rushExit var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+}
+@keyframes rushExit {
+    to { transform: translate(var(--rushGroundX), var(--rushGroundY)); }
+}
 @keyframes rushGround {
     to { background-position: var(--rushGroundX) var(--rushGroundY); }
 }

@@ -73,10 +73,13 @@ class Level {
     returnLocation() {
         return this.info.location;
     }
-    resetTargets() {
+    // keepPictures: leave the targets' pictures where they are (they've been carried off to leave the screen, see
+    // GameHandler.moveStageToExit) instead of taking them away at once
+    resetTargets(keepPictures = false) {
         this.targets = [];
         for (let x of allTargets) {
-            x.getTargetEl().remove();
+            if (!keepPictures)
+                x.getTargetEl().remove();
             if (x.dispose)
                 x.dispose();
         }
@@ -442,8 +445,14 @@ class SceneLevel extends Level {
         if (game.level !== this)
             return true; // a stale call from before the game was reset
         this.stage++;
-        this.resetTargets(); // clears the last stage's targets and buildings
-        game.clearStageLeftovers(); // and the craters, debris and the rest they left
+        if (this.stage > 1) {
+            game.moveStageToExit(); // the last stage's buildings, craters and debris ride off the screen with the ground...
+            this.resetTargets(true);
+        }
+        else {
+            this.resetTargets();
+        }
+        game.clearStageLeftovers(); // ...and nothing of it is left behind in the new one
         if (this.stage == 1) {
             this.waveIndex = 0;
             this.setCurrentWave(); // later stages keep whatever time of day they're in

@@ -671,8 +671,8 @@ class GameHandler {
     }
     // Everything on the ground that a stage leaves behind (craters, splashes, thrown debris, anything in
     // flight, the glow of its fires), so the next stage starts on bare ground
-    clearStageLeftovers() {
-        // the weapons' aiming circles live in the content too, and have to stay: they belong to the weapons, not the stage
+    // the weapons' aiming circles live in the content too, and have to stay: they belong to the weapons, not the stage
+    aimingCircles() {
         const aimers = new Set();
         for (const weapons of [conventionalWeapons, extraWeapons]) {
             for (const weapon of weapons) {
@@ -684,12 +684,30 @@ class GameHandler {
                 }
             }
         }
+        return aimers;
+    }
+    clearStageLeftovers() {
+        const aimers = this.aimingCircles();
         for (const el of Array.from(ContentElHandler.returnContentEl().children)) {
             if (!aimers.has(el))
                 el.remove();
         }
         allObjects = [];
         this.clearLights();
+    }
+    // Everything of the stage that's ending (its buildings, craters, wrecks, debris) goes into a layer of its own, which
+    // the rush between stages carries off the screen along with the ground (see StageTransition), instead of it vanishing
+    moveStageToExit() {
+        const content = ContentElHandler.returnContentEl();
+        const exiting = document.createElement("div");
+        exiting.id = "exitingStage";
+        content.parentElement.appendChild(exiting);
+        const aimers = this.aimingCircles();
+        for (const el of Array.from(content.children)) {
+            if (!aimers.has(el))
+                exiting.appendChild(el);
+        }
+        StageTransition.exiting = exiting;
     }
     clearLights() {
         lights.length = 0;
