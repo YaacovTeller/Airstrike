@@ -596,7 +596,7 @@ class HillsLevel extends SceneLevel {
                 return; // nothing left to get away in
             taken.push(nearest);
             special.board();
-            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 2);
+            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 2, special.portrait);
         }
     }
     overlapsTaken(box, room = 0) {

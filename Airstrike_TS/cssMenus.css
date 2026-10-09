@@ -656,6 +656,32 @@ input[type=radio]:checked ~ label {
 #popupText {
     font-size: 30px;
 }
+/* The headshot of a special enemy who's been eliminated, with the stamp coming down over it */
+.eliminatedCard {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 10px;
+}
+.eliminatedPortrait {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    height: 100%;
+    transform: translateX(-50%);
+}
+.eliminatedStamp {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    width: 120%;
+    transform: translateX(-50%) rotate(-4deg);
+    animation: stampDown 0.35s ease-in 0.5s both;
+}
+@keyframes stampDown {
+    from { opacity: 0; transform: translateX(-50%) rotate(-4deg) scale(2.4); }
+    to { opacity: 1; transform: translateX(-50%) rotate(-4deg) scale(1); }
+}
 
 /* The pause message: the same look as the popups, but big and in the middle of the screen. The screen
    itself is shaded by #overlay. */

@@ -878,8 +878,10 @@ class VehicleTarget extends Target {
     // colour on a scan. It's driven off to the right at the speed given (px every 100ms); if it gets off the screen
     // that's the game lost, and if it's stopped (disabled or destroyed) that's him eliminated.
     specialName;
-    startFleeing(name, speed) {
+    specialPortrait;
+    startFleeing(name, speed, portrait) {
         this.specialName = name;
+        this.specialPortrait = portrait;
         this.targetEl.classList.add('special');
         this.speed = speed;
         SoundPlayer.playSequentialSound(revs);
@@ -890,7 +892,7 @@ class VehicleTarget extends Target {
         const name = this.specialName;
         this.specialName = undefined;
         this.targetEl.classList.remove('special');
-        announceElimination(name);
+        announceElimination(name, this.specialPortrait);
     }
     targetDisabled() {
         super.targetDisabled();
@@ -1539,11 +1541,23 @@ class SpecialNames {
         return names.join(" ");
     }
 }
-function announceElimination(name) {
-    PopupHandler.addToArray("Well done, you eliminated " + name + "!", "Target eliminated", msgLength.long);
+// A headshot (one of the 14 in AS_assets/portraits) for each special enemy, with a red ELIMINATED stamp over it when he's been dealt with
+class SpecialPortraits {
+    static count = 14;
+    static random() {
+        const n = RandomNumberGen.randomNumBetween(1, SpecialPortraits.count);
+        return assetsFolder + "portraits/Portrait_" + (n < 10 ? "0" : "") + n + ".png";
+    }
+}
+function announceElimination(name, portrait) {
+    const card = portrait
+        ? '<div class="eliminatedCard"><img class="eliminatedPortrait" src="' + portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div>'
+        : "";
+    PopupHandler.addToArray(card + "Well done, you eliminated " + name + "!", "Target eliminated", msgLength.long);
 }
 class SpecialEnemy extends BuildingEnemy {
     name = SpecialNames.random();
+    portrait = SpecialPortraits.random();
     boarded = false; // he's got into a vehicle: that's the target now
     bunker;
     constructor() {
@@ -1560,7 +1574,7 @@ class SpecialEnemy extends BuildingEnemy {
         if (this.boarded || this.damage === Damage.destroyed)
             return;
         super.eliminate();
-        announceElimination(this.name);
+        announceElimination(this.name, this.portrait);
     }
     // Down in a bunker, so he's only to be seen where a scan has found him
     goUnderground() {
