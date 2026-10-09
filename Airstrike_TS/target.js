@@ -903,7 +903,7 @@ class VehicleTarget extends Target {
         this.specialDown();
     }
     move(posX) {
-        if (this.specialName && posX > ContentElHandler.contentElWidth()) {
+        if (this.specialName && (posX > ContentElHandler.contentElWidth() || posX + this.targetEl.offsetWidth < 0)) {
             this.status = Status.escaped;
             this.specialName = undefined;
             game.failGame("You shouldn't have let that one get away!");
@@ -1198,6 +1198,45 @@ class WaterVehicleTarget extends VehicleTarget {
     // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
     // remembered from when the boat was hit.
     strikePoint;
+    // A boat the special enemy in a bunker is making for. It goes slowly to the coast, where he gets aboard, and turns
+    // (the picture flips) to run for the open sea, off the left of the screen, at the speed the difficulty gives. From
+    // then on he is the special target, as well as the boat being just another target. If the boat is put out of action
+    // on the way to the shore he's still to get away, and the level sends another.
+    shoreRun;
+    isRunningToShore() {
+        return !!this.shoreRun;
+    }
+    runToShore(special, speed, onFail) {
+        this.shoreRun = { special: special, speed: speed, onFail: onFail };
+    }
+    action() {
+        if (this.shoreRun) {
+            this.shoreStep();
+            return;
+        }
+        super.action();
+    }
+    shoreStep() {
+        const run = this.shoreRun;
+        if (!this.isRunning()) { // knocked out before it got there
+            this.shoreRun = undefined;
+            run.onFail();
+            return;
+        }
+        // (worked out from where it's been put, not from where it's drawn: a moving boat's picture is on its way there)
+        const left = parseFloat(this.targetEl.style.left) || 0;
+        const top = parseFloat(this.targetEl.style.top) || 0;
+        const span = Shoreline.waterSpan(top, top + this.targetEl.offsetHeight);
+        const landing = span ? span.openRight + (span.shoreRight - span.openRight) * 0.5 : window.innerWidth;
+        if (left + this.targetEl.offsetWidth >= landing) {
+            this.shoreRun = undefined;
+            this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
+            run.special.board();
+            this.startFleeing(run.special.name, -run.speed, run.special.portrait);
+            return;
+        }
+        this.targetEl.style.left = left + run.speed * 0.6 + "px";
+    }
     static hullBits = [bitPath("boat_1"), bitPath("boat_2")];
     destructionBits() {
         this.throwBodyBits(WaterVehicleTarget.hullBits, "boatBit", this.strikePoint);

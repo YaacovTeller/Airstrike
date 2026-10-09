@@ -373,6 +373,10 @@ class SceneLevel extends Level {
     public tickClock() {
         if (StageTransition.active) return;
         this.stageElapsedMs += 100;
+        if (++this.ticksSinceRetreatCheck >= 10) { // once a second: has there been enough destruction for the special in the bunker to run for it?
+            this.ticksSinceRetreatCheck = 0;
+            this.checkForRetreat();
+        }
         game.hud.updateStageTimer(this.stageElapsedMs, this.parMs());
         if (!this.overParWarned && this.stageElapsedMs > this.parMs()) {
             this.overParWarned = true;
@@ -502,6 +506,10 @@ class SceneLevel extends Level {
 
     // The special enemies here are in bunkers, one under a building, who only a bunker buster can get at
     protected placeBunkers(buildings: Array<Building>) {
+        this.stageBuildings = buildings;
+        this.bunkerSpecials = [];
+        this.retreatScheduled = false;
+        this.stageToken++;
         const pool = buildings.slice();
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
@@ -512,7 +520,47 @@ class SceneLevel extends Level {
             enemy.bunker = bunker;
             bunker.occupant = enemy;
             this.registerTarget(enemy, { X: room.X - 4, Y: room.Y - 4 });
+            this.bunkerSpecials.push(enemy);
         }
+    }
+
+    // Once there's been a lot of destruction (more than half of the targets gone, or more than half of the buildings
+    // down) the specials in the bunkers try to get away by sea: after 10 to 20 seconds a boat that's still running
+    // heads slowly for the coast, and the special gets aboard and turns for open water (see WaterVehicleTarget.runToShore).
+    private stageBuildings: Array<Building> = [];
+    private bunkerSpecials: Array<SpecialEnemy> = [];
+    private retreatScheduled: boolean = false;
+    private stageToken: number = 0;
+    private ticksSinceRetreatCheck: number = 0;
+
+    private heavilyDestroyed(): boolean {
+        const progress = this.stageProgress();
+        if (progress.total && progress.done * 2 > progress.total) return true;
+        const down = this.stageBuildings.filter(b => !b.isStanding() || b.damage === Damage.destroyed).length;
+        return this.stageBuildings.length > 0 && down * 2 > this.stageBuildings.length;
+    }
+    private checkForRetreat() {
+        if (this.retreatScheduled || !this.bunkerSpecials.length || !this.heavilyDestroyed()) return;
+        if (this.bunkerSpecials.every(s => s.isFinished())) return;
+        this.retreatScheduled = true;
+        const stage = this.stageToken;
+        setTimeout(() => {
+            if (stage !== this.stageToken || game.level !== this) return;
+            for (const special of this.bunkerSpecials) {
+                if (!special.isFinished()) this.sendBoat(special, stage);
+            }
+        }, RandomNumberGen.randomNumBetween(10000, 20000));
+    }
+    private sendBoat(special: SpecialEnemy, stage: number) {
+        const boats = allTargets.filter(t => t instanceof WaterVehicleTarget && t.isRunning() && !t.isRunningToShore()) as Array<WaterVehicleTarget>;
+        if (!boats.length) return;
+        const boat = RandomNumberGen.returnRandomFromArray(boats);
+        boat.runToShore(special, game.difficulty.fleeSpeed || 2, () => {
+            // that one was knocked out on the way: another, a moment later
+            setTimeout(() => {
+                if (stage === this.stageToken && game.level === this && !special.isFinished()) this.sendBoat(special, stage);
+            }, 3000);
+        });
     }
 
     private static infestedBuildingCount: number = 3;
