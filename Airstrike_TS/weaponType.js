@@ -328,8 +328,9 @@ class ExplosiveWeaponType extends WeaponType {
     }
 }
 // Number 5 in the Coast set. It lands quietly (a thud), and a second later goes off deep below: the shake and the
-// blast sound come then, with nothing at the surface, and anything standing within its circle comes down --
-// buildings entirely, and the bunkers under them, and any bunker whose shaft or room it reaches, and its building.
+// blast sound come then, with nothing but a big crater at the surface. There's no area to it: it has to land on a
+// building's picture, and brings that building down entirely, with the bunker under it if there is one. A bunker as
+// it's drawn on a scan is only where it is underground, so landing on that does nothing.
 class BunkerBusterWeaponType extends ExplosiveWeaponType {
     static detonationDelay = 1000; // from the thud to the blast, as if it went off below ground
     constructor(info) {
@@ -347,22 +348,27 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
     detonate(at) {
         ExplosionHandler.bigShake();
         SoundPlayer.playSequentialSound(bigExplosions);
-        const radius = this.blastRadius;
-        for (const target of allTargets.slice()) {
-            if (target instanceof Building) {
-                const area = target.getTargetEl().getBoundingClientRect();
-                const near = CollisionDetection.nearestPointInBox(at, area);
-                if (target.isStanding() && Math.hypot(near.X - at.X, near.Y - at.Y) <= radius) {
-                    if (target.bunker)
-                        target.bunker.destroy();
-                    target.obliterate();
-                }
-            }
-            else if (target instanceof Bunker && target.reachedBy(at, radius)) {
-                target.destroy();
-                target.building.obliterate();
+        // the building the aim point is on (the one whose middle is nearest, if pictures overlap there)
+        let hit = null;
+        let nearest = Infinity;
+        for (const target of allTargets) {
+            if (!(target instanceof Building) || !target.isStanding())
+                continue;
+            const area = target.getPicEl().getBoundingClientRect();
+            if (at.X < area.left || at.X > area.right || at.Y < area.top || at.Y > area.bottom)
+                continue;
+            const dist = Math.hypot((area.left + area.right) / 2 - at.X, (area.top + area.bottom) / 2 - at.Y);
+            if (dist < nearest) {
+                hit = target;
+                nearest = dist;
             }
         }
+        if (hit) {
+            if (hit.bunker)
+                hit.bunker.destroy();
+            hit.obliterate();
+        }
+        ExplosionHandler.createCrater(at, ExplSizes.massive);
     }
 }
 class Flare extends ExplosiveWeaponType {

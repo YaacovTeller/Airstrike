@@ -579,7 +579,7 @@ function scaledBigStrike(slot, displayName, icon, size) {
 const bunkerBusterInfo = {
     ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
     class: BunkerBusterWeaponType,
-    blastRadius: 45,
+    blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };
 const scaledWeapons = [

@@ -1761,10 +1761,6 @@ class Bunker extends Target {
             this.planEl.style.webkitMaskImage = mask;
         }
     }
-    // Whether a bunker buster landing at this point reaches the shaft or the room
-    public reachedBy(p: position, radius: number): boolean {
-        return this.damage !== Damage.destroyed && this.distanceFrom(p) <= radius;
-    }
     // Nothing else does anything to it
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) { }
 

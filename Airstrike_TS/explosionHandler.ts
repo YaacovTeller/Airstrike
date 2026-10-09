@@ -43,6 +43,10 @@ class ExplosionHandler {
         ContentElHandler.fadeRemoveItem(fallingFlare, flareFade, 1);
 
     }
+    // Just a crater, with no explosion over it
+    public static createCrater(blastCenter: position, size: ExplSizes) {
+        this.presentAndFadeout(this.setAndReturnCrater(blastCenter, size), this.craterDecalStay, this.craterFadingTillRemoval);
+    }
     // The biggest shake there is, as the largest bomb gives
     public static bigShake() {
         this.shake(screenShakeTimeouts.shake_3);
