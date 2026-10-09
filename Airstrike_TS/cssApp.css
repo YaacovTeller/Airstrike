@@ -259,6 +259,9 @@
 .buildingDebris {
     width: 12px;
 }
+.buildingChunk { /* the big pieces, when a building's brought down completely */
+    width: 26px;
+}
 .vehicleBit {
     width: 10px;
 }

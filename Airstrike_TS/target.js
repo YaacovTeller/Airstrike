@@ -351,6 +351,17 @@ class Building extends MapEntity {
         for (let i = 0; i < pieces; i++) {
             this.throwDebrisPiece(origin, i < Building.loudPieces);
         }
+        if (pieces >= Building.debrisWhenGone) { // brought down completely: some big pieces as well, one of each of the generic ones
+            for (const source of Building.debrisSources) {
+                this.throwChunk(origin, source);
+            }
+        }
+    }
+    throwChunk(origin, imageSrc) {
+        const chunk = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
+        chunk.classList.add("buildingChunk");
+        const direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
+        ThrowHandler.lob(chunk, direc, crashes, ThrowHandler.removeIfLandedInWater);
     }
     throwDebrisPiece(origin, loud = true) {
         // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
