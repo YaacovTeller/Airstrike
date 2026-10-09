@@ -373,6 +373,7 @@ class Flare extends ExplosiveWeaponType {
 }
 
 class ChargeWeaponType extends WeaponType {
+    private static recordedFuseMs: number = 3750; // the recording's blast comes in 3.75 seconds after it starts
     constructor(info: weaponInfo) {
         super(info);
         this.pushNewWeaponInstance();
@@ -403,13 +404,16 @@ class ChargeWeaponType extends WeaponType {
                 this.shotCounter();
                 this.cooldownTimeout(inst);
                 SoundPlayer.playSequentialSound(beeps);
-                SoundPlayer.playSequentialSound(ticks);
+                // Half the time the countdown is a recording (voices, then the blast), which sets the length
+                // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
+                const recorded = RandomNumberGen.randomNumBetween(0, 1) === 1;
+                SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
 
                     tunnel.hit(strikeSeverity.catastrophic, this.name);       // TARGET - Main hit function
                     tunnel.toggleLockOn(false);
-                    SoundPlayer.playSequentialSound(multiExplosions);
-                }, this.speed)
+                    if (!recorded) SoundPlayer.playSequentialSound(multiExplosions);
+                }, recorded ? ChargeWeaponType.recordedFuseMs : this.speed)
             };
         }
         hit === false ? SoundPlayer.playWithVolumeSet(bleep_neg) : "";

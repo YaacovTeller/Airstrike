@@ -166,6 +166,7 @@ const multiExplosions: Array<Sound> = [];
 const crashes: Array<Sound> = [];
 const beeps: Array<Sound> = [];
 const ticks: Array<Sound> = [];
+const bombCountdowns: Array<Sound> = []; // a recorded countdown that ends in a blast, in place of the ticks and the usual explosion
 const clicks: Array<Sound> = [];
 const ricochet: Array<Sound> = [];
 const strikePrep: Array<Sound> = [];
@@ -261,6 +262,11 @@ function loadSound() {
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3"),
         new Sound(soundFolder + "stopwatch_3.mp3")
+    )
+    bombCountdowns.push(
+        new Sound(soundFolder + "bomb countdown.mp3"),
+        new Sound(soundFolder + "bomb countdown.mp3"),
+        new Sound(soundFolder + "bomb countdown.mp3")
     )
     beeps.push(
         new Sound(soundFolder + "beep_tiny.mp3"),
