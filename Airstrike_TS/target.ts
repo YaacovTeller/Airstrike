@@ -1665,10 +1665,12 @@ class SpecialPortraits {
     }
 }
 function announceElimination(name: string, portrait?: string) {
-    const card = portrait
-        ? '<div class="eliminatedCard"><img class="eliminatedPortrait" src="' + portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div>'
-        : "";
-    PopupHandler.addToArray(card + "Well done, you eliminated " + name + "!", "Target eliminated", msgLength.long);
+    const text = "Well done, you eliminated " + name + "!";
+    // the headshot with the stamp right across it, at the side of the text, which wraps if it has to
+    const html = portrait
+        ? '<div class="eliminatedMessage"><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="eliminatedText">' + text + '</div></div>'
+        : text;
+    PopupHandler.addToArray(html, "Target eliminated", msgLength.long);
 }
 
 class SpecialEnemy extends BuildingEnemy {
