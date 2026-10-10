@@ -265,6 +265,8 @@ class Level {
     noteShot(slot, cost, bigBomb) { }
     // Something has exploded (a drone flyover or a gunshot hasn't)
     noteExplosion() { }
+    // A tunnel charge has been set; true if it's the first of the stage
+    noteChargeSet() { return false; }
     continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
         let freq;
@@ -369,6 +371,8 @@ class SceneLevel extends Level {
         return Math.max(1, Math.round(count * (game.difficulty.enemyFactor || 1)));
     }
     noteDroneFlyover() { this.stageDroneFlyovers++; }
+    stageChargesSet = 0;
+    noteChargeSet() { return this.stageChargesSet++ === 0; }
     noteShot(slot, cost, bigBomb) {
         if (slot == slotOf(surveillanceInfo))
             return; // the drone's flyovers are counted on their own
@@ -463,6 +467,7 @@ class SceneLevel extends Level {
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
         this.stageOrdnanceSpent = 0;
+        this.stageChargesSet = 0;
         this.stageBigBombsBySlot = {};
         this.overParWarned = false;
         if (this.stage > 1) {

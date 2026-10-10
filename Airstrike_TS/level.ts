@@ -298,6 +298,8 @@ class Level {
     public noteShot(slot: number, cost: number, bigBomb: boolean) { }
     // Something has exploded (a drone flyover or a gunshot hasn't)
     public noteExplosion() { }
+    // A tunnel charge has been set; true if it's the first of the stage
+    public noteChargeSet(): boolean { return false; }
 
     public continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
@@ -410,6 +412,8 @@ class SceneLevel extends Level {
         return Math.max(1, Math.round(count * (game.difficulty.enemyFactor || 1)));
     }
     public noteDroneFlyover() { this.stageDroneFlyovers++; }
+    private stageChargesSet: number = 0;
+    public noteChargeSet(): boolean { return this.stageChargesSet++ === 0; }
     public noteShot(slot: number, cost: number, bigBomb: boolean) {
         if (slot == slotOf(surveillanceInfo)) return; // the drone's flyovers are counted on their own
         this.stageOrdnanceSpent += cost;
@@ -505,6 +509,7 @@ class SceneLevel extends Level {
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
         this.stageOrdnanceSpent = 0;
+        this.stageChargesSet = 0;
         this.stageBigBombsBySlot = {};
         this.overParWarned = false;
         if (this.stage > 1) {

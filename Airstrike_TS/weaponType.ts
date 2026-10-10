@@ -432,7 +432,6 @@ class Flare extends ExplosiveWeaponType {
 class ChargeWeaponType extends WeaponType {
     private static recordedFuseMs: number = 3750; // the recording's blast comes in 3.75 seconds after it starts
     private static recordedChance: number = 70;   // percent of the time it's the recording that counts down
-    private chargesSet: number = 0;               // how many have been set on a tunnel this game: the first is always the recording
     constructor(info: weaponInfo) {
         super(info);
         this.pushNewWeaponInstance();
@@ -465,8 +464,9 @@ class ChargeWeaponType extends WeaponType {
                 SoundPlayer.playSequentialSound(beeps);
                 // Half the time the countdown is a recording (voices, then the blast), which sets the length
                 // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
-                const recorded = this.chargesSet === 0 || RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance;
-                this.chargesSet++;
+                // (the recording is only for the Hills level, where the first tunnel of each stage always gets it)
+                const firstOfStage = game.level.noteChargeSet();
+                const recorded = game.gameMode == GameMode.hills && (firstOfStage || RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance);
                 SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
 
