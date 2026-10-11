@@ -1024,28 +1024,22 @@ class GameHandler {
         water.style.transform = "skewX(" + -lean + "deg)";
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets,
-    // most of them wide enough for blocks two buildings deep (a street that's only one building high is the
-    // rarity): each line is a row of blocks along its own baseline (which wanders from game to game), buildings
-    // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
-    // buildings are, so sizes aren't mixed in one:
-    //  - the big ones (warehouses) go singly or two or three side by side, and mostly two deep
-    //  - the middling ones go like that too
-    //  - the small ones (huts, sheds, little houses) mostly go in twos, sometimes threes and only rarely
-    //    on their own, and a block of them is always followed by something bigger, so they never run on
-    // and the same type isn't put down twice running in a line.
+    // Where to put up to maxCount buildings, none of them in the water, laid out in close-packed rows that run along
+    // the shore, so they go diagonally across the screen the way the coast does. The rows start at the shore and go
+    // inland, each a row of one size class of the port buildings (the biggest compounds, the middling or the
+    // smallest), stood in a line from the bottom of the screen up, each overlapping the one before a little; how far
+    // apart the rows are depends on how wide the buildings in them are. No building is the same as the one before it
+    // in its row, and there's one lighthouse, not several.
     public streetBlockSlots(
     maxCount: number,
     options?: {
-        buildingGap?: number; // between buildings side by side in a block, as a share of a building's width (negative to overlap their empty margins)
-        rowGap?: number;      // likewise, between the rows in a block, as a share of a building's height
-        padding?: number;     // kept clear at the screen edge
+        rowCount?: number;  // how many rows
+        padding?: number;   // kept clear at the screen edge
     }
 ): Array<BuildingSlot> {
     const {
-        buildingGap = -0.05,
-        rowGap = -0.1,
-        padding = 40
+        rowCount = 7,
+        padding = 30
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
@@ -1060,95 +1054,40 @@ class GameHandler {
     const small = allPortBuildingInfo.filter(info => info.width < 80);
     const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four
 
-    // The lines: bands across the screen, mostly deep ones with room for two rows of buildings, now and then a
-    // shallow one with room for one. Three deep ones about half the time, two deep and a shallow one most of the
-    // rest, and rarely four lines, two of each.
-    const shallowHeight = 120;
-    const plan = RandomNumberGen.randomNumBetween(1, 100);
-    const deepFlags: Array<boolean> = plan <= 55 ? [true, true, true] : plan <= 90 ? [true, true, false] : [true, true, false, false];
-    for (let i = deepFlags.length - 1; i > 0; i--) { // in a random order
-        const j = RandomNumberGen.randomNumBetween(0, i);
-        [deepFlags[i], deepFlags[j]] = [deepFlags[j], deepFlags[i]];
+    // what each row is made of, and how wide the widest of it is
+    const rows = [];
+    for (let i = 0; i < rowCount; i++) {
+        const roll = RandomNumberGen.randomNumBetween(1, 100);
+        const pool = roll <= 30 ? large : roll <= 70 ? medium : small;
+        rows.push({ pool: pool, width: Math.max(...pool.map(info => info.width)) });
     }
-    const deepCount = deepFlags.filter(f => f).length;
-    const deepHeight = ((bottom - top) - shallowHeight * (deepFlags.length - deepCount)) / deepCount;
-    let cursor = top;
-    const bands = deepFlags.map(deep => {
-        const band = { top: cursor, height: deep ? deepHeight : shallowHeight, deep: deep };
-        cursor += band.height;
-        return band;
+    // the middle of each row, how far in from the shore: next to the one before, packed close
+    const centres: Array<number> = [];
+    rows.forEach((row, i) => {
+        centres.push(i == 0 ? row.width / 2 + 6 : centres[i - 1] + (rows[i - 1].width + row.width) / 2 * 0.95);
     });
 
-    for (const band of bands) {
-        if (slots.length >= maxCount) break;
-        const pitch = band.height;
-        const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
-        // where the buildings in this line stand: its baseline, which moves about from one game to the next
-        const baseline = band.top + pitch - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
-        let x = 0;
+    const perRow = Math.ceil(maxCount / rowCount); // so the rows furthest inland aren't the ones that run short
+    rows.forEach((row, k) => {
+        let footY = bottom - RandomNumberGen.randomNumBetween(0, 22);   // where the next building's foot goes, working up the screen
         let previous: BuildingInfo = null;
-        let previousWasSmall = false;
-
-        for (let tries = 0; slots.length < maxCount && tries < 80; tries++) {
-            const roll = RandomNumberGen.randomNumBetween(1, 100);
-            const pool = previousWasSmall ? (roll <= 60 ? large : medium) : (roll <= 40 ? large : roll <= 65 ? medium : small);
-            const isSmall = pool === small;
-            const isLarge = pool === large;
-            // how many abreast: the big compounds mostly stand alone, the little ones in twos and threes
-            const colRoll = RandomNumberGen.randomNumBetween(1, 100);
-            let cols = isLarge ? (colRoll <= 55 ? 1 : colRoll <= 90 ? 2 : 3) : isSmall ? (colRoll <= 15 ? 1 : colRoll <= 65 ? 2 : 3) : (colRoll <= 35 ? 1 : colRoll <= 80 ? 2 : 3);
-            // in a deep line most blocks are two deep
-            const deepRoll = RandomNumberGen.randomNumBetween(1, 100);
-            let rows = band.deep && deepRoll <= (isLarge ? 65 : isSmall ? 55 : 75) ? 2 : 1;
-
-            // a building for every place in the block, from the same size class but each its own: not the same as the one
-            // beside it or above it (and one lighthouse, not several)
-            const grid: Array<Array<BuildingInfo>> = [];
-            let last = previous;
-            for (let r = 0; r < rows; r++) {
-                grid.push([]);
-                for (let c = 0; c < cols; c++) {
-                    const above = r > 0 ? grid[r - 1][c] : null;
-                    const taken = (info: BuildingInfo) => info.single && (usedSingles.includes(info) || grid.some(row => row.includes(info)));
-                    const choices = pool.filter(info => info !== last && info !== above && !taken(info));
-                    const anyLeft = pool.filter(info => !taken(info));
-                    const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : pool);
-                    grid[r].push(info);
-                    last = info;
-                }
-            }
-            const cellWidth = Math.max(...grid.map(row => Math.max(...row.map(i => i.width))));
-            const cellHeight = Math.max(...grid.map(row => Math.max(...row.map(i => i.height))));
-            const stepX = cellWidth * (1 + buildingGap);
-            const stepY = cellHeight * (1 + rowGap);
-            // two deep only if it fits between this line's baseline and the one above
-            if (rows == 2 && cellHeight + stepY > pitch - 12) { rows = 1; grid.length = 1; }
-            const blockHeight = cellHeight + (rows - 1) * stepY;
-            // little things stand about a bit more loosely than the rest, so they don't line up like soldiers
-            const lift = RandomNumberGen.randomNumBetween(0, isSmall ? 20 : 8);
-            const blockTop = baseline - lift - blockHeight;
-            if (blockTop < top - 20 || blockHeight + lift > pitch - 8) continue; // too tall for the room between the lines
-
-            // right of the shore, for the rows this block covers; if it doesn't fit, one fewer abreast, and otherwise the line is full
-            x = Math.max(x, this.firstDryX(blockTop, blockHeight));
-            while (cols > 1 && x + cellWidth + (cols - 1) * stepX + padding > screenWidth) cols--;
-            const blockWidth = cellWidth + (cols - 1) * stepX;
-            if (x + blockWidth + padding > screenWidth) break;
-            if (slots.length + cols * rows > maxCount) break;
-
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const info = grid[row][col];
-                    if (info.single) usedSingles.push(info);
-                    // each stands in the middle of its place, with its foot on the bottom of it
-                    slots.push({ X: x + col * stepX + (cellWidth - info.width) / 2, Y: blockTop + row * stepY + (cellHeight - info.height), info: info });
-                }
-            }
-            previous = grid[rows - 1][cols - 1];
-            previousWasSmall = isSmall;
-            x += blockWidth + RandomNumberGen.randomNumBetween(14, 34); // and a narrow street
+        let placed = 0;
+        for (let tries = 0; placed < perRow && slots.length < maxCount && tries < 40; tries++) {
+            const choices = row.pool.filter(info => info !== previous && !(info.single && usedSingles.includes(info)));
+            const anyLeft = row.pool.filter(info => !(info.single && usedSingles.includes(info)));
+            const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : row.pool);
+            const blockTop = footY - info.height;
+            if (blockTop < top - 20) break;                              // the top of the screen
+            // the row follows the shore, so this one's as far from the shore here as the row is
+            const left = this.firstDryX(blockTop, info.height) + centres[k] - info.width / 2 + RandomNumberGen.randomNumBetween(-4, 4);
+            footY -= info.height * 0.78;                                 // the next goes a little over the top of this one
+            if (left + info.width + padding > screenWidth) continue;     // no room this far inland, this high up
+            if (info.single) usedSingles.push(info);
+            slots.push({ X: left, Y: blockTop, info: info });
+            previous = info;
+            placed++;
         }
-    }
+    });
     return slots;
 }
 
