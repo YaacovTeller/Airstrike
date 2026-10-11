@@ -56,25 +56,39 @@ const allBuildingInfo = [
 ];
 // The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
 // with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
-// of natural. There's only ever the one lighthouse, communications tower and mosque.
-const singlePortBuildings = ["Lighthouse", "Comms_Tower", "Port_Mosque"];
+// of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
+const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque", "Repair_Dock"];
 function portInfo(name, width, height, hide) {
     const file = (stage) => "port buildings/" + name + "_" + stage + ".png";
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name) };
 }
 const allPortBuildingInfo = [
+    portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),
     portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
     portInfo("Comms_Tower", 72, 87, { x: [16, 43], y: [45, 66] }),
+    portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }),
+    portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }),
+    portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }),
     portInfo("Customs", 101, 76, { x: [18, 63], y: [31, 52] }),
+    portInfo("Customs_B", 120, 83, { x: [20, 74], y: [39, 59] }),
     portInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
+    portInfo("Fuel_Depot_B", 110, 64, { x: [22, 78], y: [22, 39] }),
     portInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
     portInfo("Guard_Shack", 66, 52, { x: [21, 38], y: [12, 30] }),
+    portInfo("Jetty", 102, 69, { x: [58, 70], y: [33, 37] }),
     portInfo("Lighthouse", 76, 98, { x: [11, 43], y: [66, 77] }),
+    portInfo("Lighthouse_B", 78, 101, { x: [20, 46], y: [68, 80] }),
     portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
     portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
+    portInfo("Port_Office_B", 106, 83, { x: [22, 68], y: [30, 60] }),
+    portInfo("Quay_Corner", 100, 61, undefined),
+    portInfo("Quay_Straight", 133, 77, { x: [87, 98], y: [20, 25] }),
     portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
+    portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
+    portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
     portInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
+    portInfo("Storage_Shed", 113, 65, { x: [27, 69], y: [22, 42] }),
     portInfo("Utility_Shed", 69, 51, { x: [15, 43], y: [14, 29] }),
     portInfo("Warehouse_Adobe", 126, 88, { x: [22, 95], y: [24, 54] }),
     portInfo("Warehouse_Concrete_Metal", 130, 92, { x: [26, 100], y: [23, 57] }),
@@ -87,6 +101,7 @@ const allPortBuildingInfo = [
     portInfo("Warehouse_Stone_Sloped", 113, 80, { x: [24, 87], y: [25, 49] }),
     portInfo("Water_Tank", 79, 57, { x: [17, 48], y: [18, 35] }),
     portInfo("Workshop", 114, 80, { x: [14, 90], y: [22, 50] }),
+    portInfo("Workshop_B", 128, 77, { x: [23, 94], y: [20, 50] }),
     portInfo("Workshop_Small", 82, 62, { x: [11, 53], y: [19, 37] }),
 ];
 // The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
