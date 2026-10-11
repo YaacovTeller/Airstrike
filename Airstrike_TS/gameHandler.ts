@@ -1024,21 +1024,23 @@ class GameHandler {
         water.style.transform = "skewX(" + -lean + "deg)";
     }
 
-    // Where to put up to maxCount buildings, none of them in the water, laid out in close-packed rows that run along
-    // the shore, so they go diagonally across the screen the way the coast does. The rows start at the shore and go
-    // inland, each a row of one size class of the port buildings (the biggest compounds, the middling or the
-    // smallest), stood in a line from the bottom of the screen up, each overlapping the one before a little; how far
-    // apart the rows are depends on how wide the buildings in them are. No building is the same as the one before it
-    // in its row, and there's one lighthouse, not several.
+    // Where to put up to maxCount buildings, none of them in the water, laid out in close-packed rows that run from the
+    // shore inland, left to right and down the screen at a slant (the way the ground runs in the pictures), one row
+    // below the next. Each row is one size class of the port buildings (the biggest compounds, the middling or the
+    // smallest), stood in a line along its slant, each just over the one before; how far apart the rows are depends on
+    // how tall the buildings in them are. No building is the same as the one before it in its row, and there's one
+    // lighthouse, not several.
     public streetBlockSlots(
     maxCount: number,
     options?: {
-        rowCount?: number;  // how many rows
-        padding?: number;   // kept clear at the screen edge
+        rowCount?: number;     // how many rows
+        slantDegrees?: number; // how far the rows go down as they go right
+        padding?: number;      // kept clear at the screen edge
     }
 ): Array<BuildingSlot> {
     const {
         rowCount = 7,
+        slantDegrees = 24,
         padding = 30
     } = options || {};
     const slots: Array<BuildingSlot> = [];
@@ -1047,6 +1049,7 @@ class GameHandler {
     const screenHeight = window.innerHeight;
     const top = 110;                   // clear of the HUD
     const bottom = screenHeight - 40;
+    const slope = Math.tan(slantDegrees * Math.PI / 180);
 
     // the port buildings, by how big they are
     const large = allPortBuildingInfo.filter(info => info.width >= 110);
@@ -1054,40 +1057,48 @@ class GameHandler {
     const small = allPortBuildingInfo.filter(info => info.width < 80);
     const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four
 
-    // what each row is made of, and how wide the widest of it is
+    // what each row is made of, and how tall the tallest of it is
     const rows = [];
     for (let i = 0; i < rowCount; i++) {
         const roll = RandomNumberGen.randomNumBetween(1, 100);
         const pool = roll <= 30 ? large : roll <= 70 ? medium : small;
-        rows.push({ pool: pool, width: Math.max(...pool.map(info => info.width)) });
+        rows.push({ pool: pool, height: Math.max(...pool.map(info => info.height)) });
     }
-    // the middle of each row, how far in from the shore: next to the one before, packed close
-    const centres: Array<number> = [];
-    rows.forEach((row, i) => {
-        centres.push(i == 0 ? row.width / 2 + 6 : centres[i - 1] + (rows[i - 1].width + row.width) / 2 * 0.95);
-    });
+    // where each row starts, down the shore: the first at the top of the land, the rest below it, each packed close to the
+    // one before
+    const spacing = (i: number) => (rows[i - 1].height + rows[i].height) / 2 * 0.85;
+    const offsets: Array<number> = [0];
+    for (let i = 1; i < rowCount; i++) offsets.push(offsets[i - 1] + spacing(i));
 
-    const perRow = Math.ceil(maxCount / rowCount); // so the rows furthest inland aren't the ones that run short
+    const perRow = Math.ceil(maxCount / rowCount); // so the rows furthest down aren't the ones that run short
     rows.forEach((row, k) => {
-        let footY = bottom - RandomNumberGen.randomNumBetween(0, 22);   // where the next building's foot goes, working up the screen
+        // where the row starts, on the shore, and the line the feet of its buildings stand on from there (y = line + slope * x)
+        const startFoot = top + rows[0].height - 10 + offsets[k];
+        const startX = this.firstDryX(startFoot - row.height, row.height);
+        const line = startFoot - slope * startX;
+        let reached = startX;                 // how far along it the last building went to
         let previous: BuildingInfo = null;
         let placed = 0;
-        for (let tries = 0; placed < perRow && slots.length < maxCount && tries < 40; tries++) {
+        for (let tries = 0; placed < perRow && slots.length < maxCount && tries < 60; tries++) {
             const choices = row.pool.filter(info => info !== previous && !(info.single && usedSingles.includes(info)));
             const anyLeft = row.pool.filter(info => !(info.single && usedSingles.includes(info)));
             const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : row.pool);
-            const blockTop = footY - info.height;
-            if (blockTop < top - 20) break;                              // the top of the screen
-            // the row follows the shore, so this one's as far from the shore here as the row is
-            const left = this.firstDryX(blockTop, info.height) + centres[k] - info.width / 2 + RandomNumberGen.randomNumBetween(-4, 4);
-            footY -= info.height * 0.78;                                 // the next goes a little over the top of this one
-            if (left + info.width + padding > screenWidth) continue;     // no room this far inland, this high up
+            // its place along the line: just over the last one, and out of the water. Its foot goes on the line, where its middle is
+            let left = Math.max(reached - info.width * 0.1, startX);
+            let foot = line + slope * (left + info.width / 2);
+            left = Math.max(left, this.firstDryX(foot - info.height, info.height));
+            foot = line + slope * (left + info.width / 2);
+            if (left + info.width + padding > screenWidth || foot > bottom) break; // the end of the row: the edge of the screen or the bottom of it
+            reached = left + info.width;
+            if (foot - info.height < top - 20) continue;                           // still too high up: further along
             if (info.single) usedSingles.push(info);
-            slots.push({ X: left, Y: blockTop, info: info });
+            slots.push({ X: left + RandomNumberGen.randomNumBetween(-3, 3), Y: foot - info.height + RandomNumberGen.randomNumBetween(-3, 3), info: info });
             previous = info;
             placed++;
         }
     });
+    // the nearer ones (lower down) go over the ones behind them
+    slots.sort((a, b) => (a.Y + a.info.height) - (b.Y + b.info.height));
     return slots;
 }
 
