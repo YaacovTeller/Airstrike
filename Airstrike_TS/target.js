@@ -261,11 +261,23 @@ class Building extends MapEntity {
     // Wrecking the building takes everyone in it with it. A significant hit that only damages it
     // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
     // shots can clear a building out without bringing it down.
+    // A strike that takes someone out with the building gets a 'good hit' voice, one of the acknowledge sounds (not every
+    // building in a blast all at once, though)
+    static goodHitAt = 0;
+    static goodHitGap = 900; // ms
     killOccupants(destroyed) {
+        let killed = 0;
         for (const enemy of this.occupants) {
             if (destroyed || RandomNumberGen.randomNumBetween(0, 1) === 1) {
+                const wasLive = !enemy.isFinished();
                 enemy.eliminate();
+                if (wasLive && enemy.isFinished())
+                    killed++;
             }
+        }
+        if (killed && performance.now() - Building.goodHitAt > Building.goodHitGap) {
+            Building.goodHitAt = performance.now();
+            SoundPlayer.playRandomSound(acknowledge);
         }
     }
     constructor(info) {
