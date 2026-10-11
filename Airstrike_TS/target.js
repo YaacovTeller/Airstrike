@@ -57,10 +57,12 @@ const allBuildingInfo = [
 // The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
 // with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
 // of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
+const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Container", "Quay_Straight", "Quay_Corner", "Jetty",
+    "Breakwater", "Repair_Dock", "Lighthouse", "Lighthouse_B"];
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque", "Repair_Dock"];
 function portInfo(name, width, height, hide) {
     const file = (stage) => "port buildings/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name) };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name) };
 }
 const allPortBuildingInfo = [
     portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),

@@ -12,6 +12,7 @@ type BuildingInfo = {
     hide?: { x: [number, number], y: [number, number] },
     noParking?: boolean, // nothing parks beside it (a water tower)
     single?: boolean, // only one of this to a layout (a lighthouse)
+    waterfront?: boolean, // stands along the water's edge, not among the town (cranes, quays, a jetty)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
 }
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
@@ -73,10 +74,12 @@ const allBuildingInfo: Array<BuildingInfo> = [
 // The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
 // with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
 // of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
+const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Container", "Quay_Straight", "Quay_Corner", "Jetty",
+    "Breakwater", "Repair_Dock", "Lighthouse", "Lighthouse_B"];
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque", "Repair_Dock"];
 function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const file = (stage: number) => "port buildings/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name) };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name) };
 }
 const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),

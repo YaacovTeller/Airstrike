@@ -1040,14 +1040,16 @@ class GameHandler {
         slantDegrees?: number; // how far a row goes down as it goes right
         padding?: number;      // kept clear at the screen edge
         road?: number;         // the road between one block and the next, in building widths
+        aboveCorner?: number;  // how much of the town is above the line that runs from the corner of the land
     }
 ): Array<BuildingSlot> {
     const {
         blockLength = 4,
-        lines = 6,
+        lines = 8,
         slantDegrees = 18,
         padding = 30,
-        road = 0.9                       // the road between blocks, in building widths
+        road = 0.9,                      // the road between blocks, in building widths
+        aboveCorner = 260                // how far the first line is above the one that runs from the corner of the land
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
@@ -1060,12 +1062,33 @@ class GameHandler {
     const footRise = 0.25;             // the middle of a building's platform is this share of its width above the bottom of its picture
 
     // the port buildings, by how big they are
-    const large = allPortBuildingInfo.filter(info => info.width >= 110);
-    const medium = allPortBuildingInfo.filter(info => info.width >= 80 && info.width < 110);
-    const small = allPortBuildingInfo.filter(info => info.width < 80);
+    const town = allPortBuildingInfo.filter(info => !info.waterfront);
+    const large = town.filter(info => info.width >= 110);
+    const medium = town.filter(info => info.width >= 80 && info.width < 110);
+    const small = town.filter(info => info.width < 80);
+    const quay = allPortBuildingInfo.filter(info => info.waterfront);
     const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four
 
     const blocksWanted = Math.floor(maxCount / (blockLength * blockDepth));
+
+    // The waterfront: the cranes, quays, jetty and the like stand in a line right along the water's edge, one below the next
+    // from the top of the land to the bottom of the screen, a few overlapping a little; the town is kept back from them
+    const quaySide = 105; // how far in from the shore the town starts
+    {
+        let foot = top + 95;
+        for (let tries = 0; tries < 40 && quay.length; tries++) {
+            const choices = quay.filter(info => !(info.single && usedSingles.includes(info)));
+            const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : quay);
+            if (info.single && usedSingles.includes(info)) { if (tries > 20) break; else continue; }
+            if (foot > bottom) break;
+            const topY = foot - info.height;
+            const left = this.firstDryX(topY, info.height) - 6 + RandomNumberGen.randomNumBetween(-4, 8);
+            if (left + info.width + padding > screenWidth) break;
+            if (info.single) usedSingles.push(info);
+            slots.push({ X: left, Y: topY, info: info });
+            foot += info.height * 0.62;
+        }
+    }
 
     // each line is one size class: how wide its widest building is says how far it is from the line above
     const classes = [];
@@ -1084,7 +1107,9 @@ class GameHandler {
     }
     // where each line is, as how far down the screen it would be at the left edge (y = intercept + slope * x): the first
     // at the top of the land, the others a block's depth and a street below the one before
-    const intercepts: Array<number> = [(top + 85) - slope * (this.firstDryX(top, 80) + 60)];
+    // (the first line is well above the top of the land's corner, so the lines above the corner start further along the top
+    // and fill the top right, and the ones below it the bottom left, like the streets of a town)
+    const intercepts: Array<number> = [(top + 85) - slope * (this.firstDryX(top, 80) + 60) - aboveCorner];
     for (let k = 1; k < lines; k++) {
         intercepts.push(intercepts[k - 1] + (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + road));
     }
@@ -1123,7 +1148,7 @@ class GameHandler {
                     const left = cx - info.width / 2;
                     const placedTop = footBottom - info.height;
                     if (left + info.width + padding > screenWidth || footBottom > bottom) return null;
-                    if (placedTop < top - 20 || left < this.firstDryX(placedTop, info.height)) { tooHigh = true; break; }
+                    if (placedTop < top - 20 || left < this.firstDryX(placedTop, info.height) + quaySide) { tooHigh = true; break; }
                     placed.push({ X: left, Y: placedTop, info: info });
                 }
             }
