@@ -992,7 +992,7 @@ class GameHandler {
     public drawAllBuildings(): Array<Building> {
         // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
         // lower ones, are made first)
-        return this.streetBlockSlots(96).reverse().map(slot => {
+        return this.streetBlockSlots(240).reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             return building;
@@ -1044,8 +1044,8 @@ class GameHandler {
 ): Array<BuildingSlot> {
     const {
         blockLength = 4,
-        lines = 5,
-        slantDegrees = 24,
+        lines = 6,
+        slantDegrees = 18,
         padding = 30,
         road = 0.9                       // the road between blocks, in building widths
     } = options || {};
@@ -1069,9 +1069,17 @@ class GameHandler {
 
     // each line is one size class: how wide its widest building is says how far it is from the line above
     const classes = [];
-    for (let k = 0; k < lines; k++) {
+    // at least two of the lines are the big compounds and warehouses, not all little things; the rest are whatever
+    const kinds = [large, large];
+    for (let k = 2; k < lines; k++) {
         const roll = RandomNumberGen.randomNumBetween(1, 100);
-        const pool = roll <= 30 ? large : roll <= 70 ? medium : small;
+        kinds.push(roll <= 30 ? large : roll <= 70 ? medium : small);
+    }
+    for (let i = kinds.length - 1; i > 0; i--) { // in a random order down the screen
+        const j = RandomNumberGen.randomNumBetween(0, i);
+        [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+    }
+    for (const pool of kinds) {
         classes.push({ pool: pool, width: Math.max(...pool.map(info => info.width)) });
     }
     // where each line is, as how far down the screen it would be at the left edge (y = intercept + slope * x): the first
