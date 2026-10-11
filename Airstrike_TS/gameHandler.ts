@@ -990,7 +990,9 @@ class GameHandler {
         this.start_unpause();
     }
     public drawAllBuildings(): Array<Building> {
-        return this.streetBlockSlots(60).map(slot => {
+        // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
+        // lower ones, are made first)
+        return this.streetBlockSlots(96).reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             return building;
@@ -1037,13 +1039,15 @@ class GameHandler {
         lines?: number;        // how many lines of blocks
         slantDegrees?: number; // how far a row goes down as it goes right
         padding?: number;      // kept clear at the screen edge
+        road?: number;         // the road between one block and the next, in building widths
     }
 ): Array<BuildingSlot> {
     const {
         blockLength = 4,
-        lines = 4,
+        lines = 5,
         slantDegrees = 24,
-        padding = 30
+        padding = 30,
+        road = 0.9                       // the road between blocks, in building widths
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
@@ -1074,7 +1078,7 @@ class GameHandler {
     // at the top of the land, the others a block's depth and a street below the one before
     const intercepts: Array<number> = [(top + 85) - slope * (this.firstDryX(top, 80) + 60)];
     for (let k = 1; k < lines; k++) {
-        intercepts.push(intercepts[k - 1] + (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + 0.35));
+        intercepts.push(intercepts[k - 1] + (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + road));
     }
 
     // the buildings for a block: a grid of them, none the same as the one beside or behind it
@@ -1115,7 +1119,7 @@ class GameHandler {
                     placed.push({ X: left, Y: placedTop, info: info });
                 }
             }
-            if (!tooHigh) return { slots: placed, end: x0 + blockLength * cell / 2 + 0.3 * cell };
+            if (!tooHigh) return { slots: placed, end: x0 + blockLength * cell / 2 + road * cell * 0.6 };
         }
         return null;
     };
@@ -1138,7 +1142,7 @@ class GameHandler {
             blocks++;
         }
     }
-    // the nearer ones (lower down) go over the ones behind them
+    // back to front: the nearer ones (lower down) are the ones that go over the ones behind them
     slots.sort((a, b) => (a.Y + a.info.height) - (b.Y + b.info.height));
     return slots;
 }
