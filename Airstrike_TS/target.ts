@@ -11,6 +11,7 @@ type BuildingInfo = {
     // by the picture, in both its undamaged and damaged states -- measured from the pictures
     hide?: { x: [number, number], y: [number, number] },
     noParking?: boolean, // nothing parks beside it (a water tower)
+    single?: boolean, // only one of this to a layout (a lighthouse)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
 }
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
@@ -67,6 +68,42 @@ const allBuildingInfo: Array<BuildingInfo> = [
     structureInfo("r5c7", 56, 45, undefined),
     structureInfo("r5c8", 63, 47, { x: [14, 27], y: [6, 32] }),
     structureInfo("r5c9", 66, 40, { x: [12, 26], y: [11, 24] }),
+];
+
+// The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
+// with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
+// of natural. There's only ever the one lighthouse, communications tower and mosque.
+const singlePortBuildings = ["Lighthouse", "Comms_Tower", "Port_Mosque"];
+function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
+    const file = (stage: number) => "port buildings/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name) };
+}
+const allPortBuildingInfo: Array<BuildingInfo> = [
+    portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
+    portInfo("Comms_Tower", 72, 87, { x: [16, 43], y: [45, 66] }),
+    portInfo("Customs", 101, 76, { x: [18, 63], y: [31, 52] }),
+    portInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
+    portInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
+    portInfo("Guard_Shack", 66, 52, { x: [21, 38], y: [12, 30] }),
+    portInfo("Lighthouse", 76, 98, { x: [11, 43], y: [66, 77] }),
+    portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
+    portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
+    portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
+    portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
+    portInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
+    portInfo("Utility_Shed", 69, 51, { x: [15, 43], y: [14, 29] }),
+    portInfo("Warehouse_Adobe", 126, 88, { x: [22, 95], y: [24, 54] }),
+    portInfo("Warehouse_Concrete_Metal", 130, 92, { x: [26, 100], y: [23, 57] }),
+    portInfo("Warehouse_Concrete_Sloped", 127, 81, { x: [14, 89], y: [28, 51] }),
+    portInfo("Warehouse_Metal_Rounded", 116, 77, { x: [24, 86], y: [22, 48] }),
+    portInfo("Warehouse_Metal_Sloped", 134, 79, { x: [24, 95], y: [25, 50] }),
+    portInfo("Warehouse_Plain", 86, 60, { x: [19, 60], y: [13, 34] }),
+    portInfo("Warehouse_Quonset", 125, 89, { x: [25, 93], y: [23, 57] }),
+    portInfo("Warehouse_Stone_Brick", 118, 86, { x: [15, 88], y: [19, 54] }),
+    portInfo("Warehouse_Stone_Sloped", 113, 80, { x: [24, 87], y: [25, 49] }),
+    portInfo("Water_Tank", 79, 57, { x: [17, 48], y: [18, 35] }),
+    portInfo("Workshop", 114, 80, { x: [14, 90], y: [22, 50] }),
+    portInfo("Workshop_Small", 82, 62, { x: [11, 53], y: [19, 37] }),
 ];
 
 // The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
