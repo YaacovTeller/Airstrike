@@ -734,6 +734,13 @@ class GameHandler {
             if (!aimers.has(el))
                 exiting.appendChild(el);
         }
+        // the sea goes with it, as it was (the next stage's has a new shape: it comes in again at the end, see .water in cssAnims.css)
+        const water = document.getElementById("water");
+        if (water && !water.classList.contains("displayNone")) {
+            const old = water.cloneNode(true);
+            old.removeAttribute("id");
+            exiting.insertBefore(old, exiting.firstChild);
+        }
         StageTransition.exiting = exiting;
     }
     clearLights() {
@@ -973,8 +980,8 @@ class GameHandler {
     }
     drawAllBuildings() {
         // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
-        // lower ones, are made first)
-        return this.streetBlockSlots(240).reverse().map(slot => {
+        // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end.
+        return this.streetBlockSlots(96).reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             return building;
@@ -1021,7 +1028,7 @@ class GameHandler {
         if (this.coastKind == "lean") {
             const lean = RandomNumberGen.randomNumBetween(44, 54);
             k = -Math.tan(lean * Math.PI / 180);
-            shoreAtMiddle = width * RandomNumberGen.randomNumBetween(50, 62) / 100;
+            shoreAtMiddle = width * RandomNumberGen.randomNumBetween(34, 44) / 100; // (rolled back: not much more than a third of the way across)
             this.coastRowSlant = 18;
             this.coastShoreSlope = 0;
         }
@@ -1068,8 +1075,10 @@ class GameHandler {
         // The waterfront: one kind of crane, three to six of them, stand along the shore, and one kind of jetty or breakwater, three
         // to six of those, goes out into the sea, with the one lighthouse among the cranes. Where the water's faded edge is is the
         // shore: a crane's near corner is put there and a jetty's landward end. The town starts just behind the cranes, a road away.
-        const cranes = coastBuildingInfo.filter(info => info.undamaged.includes("/Crane_"));
-        const seaKinds = coastBuildingInfo.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_"));
+        // (the ones drawn for this slant of coast: the pier a steep coast's runs down to the shore from the top left, a sliced one's from the top right)
+        const seaSet = this.coastKind == "slice" ? seaFacingSW : seaFacingNW;
+        const cranes = seaSet.filter(info => info.undamaged.includes("/Crane_"));
+        const seaKinds = seaSet.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_"));
         const lighthouses = coastBuildingInfo.filter(info => info.undamaged.includes("/Lighthouse"));
         const crane = RandomNumberGen.returnRandomFromArray(cranes);
         const seaKind = RandomNumberGen.returnRandomFromArray(seaKinds);
@@ -1085,10 +1094,13 @@ class GameHandler {
                 const topY = RandomNumberGen.randomNumBetween(top + 20, bottom - seaKind.height - 10);
                 if (seaRanges.some(r => topY < r.bottom - 6 && topY + seaKind.height > r.top + 6))
                     continue;
-                // the pieces run from the top left to the bottom right: the bottom right end is the one on the shore
-                if (shoreOf(topY, seaKind.height) + 16 + padding > screenWidth)
+                // the steep coast's pieces run from the top left to the bottom right, and the bottom right end is the one on the shore. The
+                // sliced coast's run from the top right to the bottom left: the top right end is on the shore, which is further along
+                // lower down, so the whole piece is out in the sea
+                const shoreAtEnd = this.coastKind == "slice" ? shoreOf(topY - seaKind.height * 0.5, seaKind.height) : shoreOf(topY, seaKind.height);
+                if (shoreAtEnd + 16 + padding > screenWidth)
                     continue; // (on a sliced coast the shore is off the screen low down)
-                slots.push({ X: shoreOf(topY, seaKind.height) - seaKind.width + 16, Y: topY, info: seaKind });
+                slots.push({ X: shoreAtEnd - seaKind.width + 16, Y: topY, info: seaKind });
                 seaRanges.push({ top: topY, bottom: topY + seaKind.height });
                 break;
             }

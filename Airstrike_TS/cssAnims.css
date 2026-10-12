@@ -209,8 +209,14 @@
 body.stageRushing #background {
     animation: rushGround var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
 }
-body.stageRushing .water {
-    animation: rushWater var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
+/* the old sea rides off with the old stage (see GameHandler.moveStageToExit), and the new one, which has a different slant,
+   waits off the screen until the end of the rush and then slides in from the side the new stage comes from */
+body.stageRushing #water {
+    animation: rushWater var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both, waterIn var(--rushDuration) linear both;
+}
+@keyframes waterIn {
+    0%, 55% { translate: var(--waterOutX) var(--waterOutY); animation-timing-function: cubic-bezier(.25, .55, .2, 1); }
+    100% { translate: 0 0; }
 }
 body.stageRushing #content {
     animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;

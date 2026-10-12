@@ -125,6 +125,8 @@ class StageTransition {
         set("--rushGroundX", groundRun, sideways); set("--rushGroundY", groundRun, !sideways);
         set("--rushWaterX", waterRun, sideways); set("--rushWaterY", waterRun, !sideways);
         set("--rushContentX", -groundRun, sideways); set("--rushContentY", -groundRun, !sideways);
+        const far = 3 * (window.innerWidth + window.innerHeight); // far enough for the sea to be right off the screen, whichever way it has to go
+        set("--waterOutX", -sign * far, sideways); set("--waterOutY", -sign * far, !sideways);
         set("--streakX", 6000, sideways); set("--streakY", 6000 * sign, !sideways);
 
         this.streaks = document.createElement("div");

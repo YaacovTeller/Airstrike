@@ -78,22 +78,17 @@ const allBuildingInfo: Array<BuildingInfo> = [
 const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Container", "Quay_Straight", "Quay_Corner", "Jetty",
     "Breakwater", "Repair_Dock", "Lighthouse", "Lighthouse_B"];
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque"];
-function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
-    const file = (stage: number) => "port buildings/" + name + "_" + stage + ".png";
+function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"], folder: string = ""): BuildingInfo {
+    const file = (stage: number) => "port buildings/" + folder + name + "_" + stage + ".png";
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
 }
 const allPortBuildingInfo: Array<BuildingInfo> = [
-    portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),
     portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
     portInfo("Comms_Tower", 72, 87, { x: [16, 43], y: [45, 66] }),
-    portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }),
-    portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }),
-    portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }),
     portInfo("Customs", 101, 76, { x: [18, 63], y: [31, 52] }),
     portInfo("Customs_B", 120, 83, { x: [20, 74], y: [39, 59] }),
     portInfo("Fuel_Depot_B", 110, 64, { x: [22, 78], y: [22, 39] }),
     portInfo("Guard_Shack", 66, 52, { x: [21, 38], y: [12, 30] }),
-    portInfo("Jetty", 102, 69, { x: [58, 70], y: [33, 37] }),
     portInfo("Lighthouse", 76, 98, { x: [11, 43], y: [66, 77] }),
     portInfo("Lighthouse_B", 78, 101, { x: [20, 46], y: [68, 80] }),
     portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
@@ -103,7 +98,6 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Quay_Straight", 133, 77, { x: [87, 98], y: [20, 25] }),
     portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
     portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
-    portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
     portInfo("Utility_Shed", 69, 51, { x: [15, 43], y: [14, 29] }),
     portInfo("Warehouse_Adobe", 126, 88, { x: [22, 95], y: [24, 54] }),
@@ -119,6 +113,25 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Workshop_B", 128, 77, { x: [23, 94], y: [20, 50] }),
     portInfo("Workshop_Small", 82, 62, { x: [11, 53], y: [19, 37] }),
 ];
+
+// The cranes, piers and dock that face the sea, which are drawn for one slant of coast or the other and kept in their own folders:
+// coast NW (AS_assets/buildings/port buildings/coast NW) for the steep coast, with the sea to the upper left, whose piers run
+// from the top left down to the shore at the bottom right, and coast SW for the sliced coast, with the sea below and to the left,
+// whose piers run from the shore at the top right down to the left. SW is the NW set turned over, with the better first pictures
+// the user redrew (and no jetty). Each state is the same size as its NW twin, and its hiding spots are mirrored.
+const seaFacingNW: Array<BuildingInfo> = [
+    portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }, "coast NW/"),
+    portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }, "coast NW/"),
+    portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }, "coast NW/"),
+    portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }, "coast NW/"),
+    portInfo("Jetty", 102, 69, { x: [58, 70], y: [33, 37] }, "coast NW/"),
+    portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }, "coast NW/"),
+];
+const seaFacingSW: Array<BuildingInfo> = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
+    const mirrored = info.hide ? { x: [info.width - info.hide.x[1], info.width - info.hide.x[0]] as [number, number], y: info.hide.y } : undefined;
+    const sw = (file: string) => file.replace("coast NW/", "coast SW/");
+    return { ...info, undamaged: sw(info.undamaged), damaged: sw(info.damaged), destroyed: sw(info.destroyed), hide: mirrored };
+});
 
 // Industrial odds and ends (AS_assets/buildings/industrial misc): the fuel station and depot, storage shed and pad, the
 // water tank, four water towers and four container yards. The Hills level uses all but the yards, the Coast level the lot.
@@ -195,6 +208,8 @@ const largeMosqueInfo: Array<BuildingInfo> = [
 // whichever)
 const coastBuildingInfo: Array<BuildingInfo> = [
     ...allPortBuildingInfo,
+    ...seaFacingNW,
+    ...seaFacingSW,
     ...allIndustrialInfo,
     ...largeMosqueInfo.map(info => ({ ...info, single: true, group: "mosque" })),
 ];
@@ -1610,7 +1625,7 @@ class WaterVehicleTarget extends VehicleTarget {
             this.startFleeing(run.special.name, -run.speed, run.special.portrait);
             return;
         }
-        this.targetEl.style.left = left + run.speed * 0.6 + "px";
+        this.targetEl.style.left = left + run.speed * 0.9 + "px"; // (on its way to the coast it's not far off as quick as it will be)
     }
 
     private static hullBits: Array<string> = [bitPath("boat_1"), bitPath("boat_2")];

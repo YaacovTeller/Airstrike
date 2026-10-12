@@ -586,13 +586,24 @@ class SceneLevel extends Level {
             for (const special of this.bunkerSpecials) {
                 if (!special.isFinished()) this.sendBoat(special, stage);
             }
-        }, RandomNumberGen.randomNumBetween(10000, 20000));
+        }, SceneLevel.fleeDelay());
     }
+    // How long after the first strike a special enemy waits before he runs for it (the harder the difficulty, the sooner)
+    public static fleeDelay(): number {
+        const range = game.difficulty.fleeDelay || { min: 8000, max: 15000 };
+        return RandomNumberGen.randomNumBetween(range.min, range.max);
+    }
+    // He calls for the nearest boat that's running
     private sendBoat(special: SpecialEnemy, stage: number) {
         const boats = allTargets.filter(t => t instanceof WaterVehicleTarget && t.isRunning() && !t.isRunningToShore()) as Array<WaterVehicleTarget>;
         if (!boats.length) return;
-        const boat = RandomNumberGen.returnRandomFromArray(boats);
-        boat.runToShore(special, game.difficulty.fleeSpeed || 2, () => {
+        const here = CollisionDetection.getXYfromPoint(special.getTargetEl());
+        const distanceTo = (t: Target) => {
+            const there = CollisionDetection.getXYfromPoint(t.getTargetEl());
+            return Math.hypot(there.X - here.X, there.Y - here.Y);
+        };
+        const boat = boats.reduce((best, t) => distanceTo(t) < distanceTo(best) ? t : best);
+        boat.runToShore(special, game.difficulty.boatFleeSpeed || 3, () => {
             // that one was knocked out on the way: another, a moment later
             setTimeout(() => {
                 if (stage === this.stageToken && game.level === this && !special.isFinished()) this.sendBoat(special, stage);
@@ -706,7 +717,7 @@ class HillsLevel extends SceneLevel {
         const stage = this.stageNumber;
         setTimeout(() => {
             if (stage === this.stageNumber && game.level === this) this.startFlee();
-        }, RandomNumberGen.randomNumBetween(10000, 20000));
+        }, SceneLevel.fleeDelay());
     }
     // Each special enemy still in a building gets into the nearest vehicle that's running, and starts it up
     private startFlee() {
@@ -724,7 +735,7 @@ class HillsLevel extends SceneLevel {
             if (!nearest) return; // nothing left to get away in
             taken.push(nearest);
             special.board();
-            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 2, special.portrait);
+            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 3, special.portrait);
         }
     }
 

@@ -201,7 +201,9 @@ type difficultyLevelInfo = {
     enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
     parMs?: number,       // and how long a stage gets before you're told off for being slow
     extraTunnels?: number, // and how many tunnels more than usual (Hills)
-    fleeSpeed?: number,   // how fast a special enemy makes off in a vehicle (Hills), in px every 100ms
+    fleeSpeed?: number,   // how fast a special enemy makes off in a car (Hills), in px every 100ms
+    boatFleeSpeed?: number, // and in a boat (Coast)
+    fleeDelay?: speedRange, // how long (ms) after the first strike he waits before making a run for it
     eng: langInfo,
     heb: langInfo
 }
@@ -312,7 +314,9 @@ const sceneNormal: difficultyLevelInfo = {
     ...normal,
     enemyFactor: 1,
     parMs: 120000,
-    fleeSpeed: 2,
+    fleeSpeed: 3,
+    boatFleeSpeed: 3,
+    fleeDelay: { min: 8000, max: 15000 },
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
@@ -320,7 +324,9 @@ const sceneHard: difficultyLevelInfo = {
     ...hard,
     enemyFactor: 1.4,
     parMs: 105000,
-    fleeSpeed: 3.5,
+    fleeSpeed: 5.5,
+    boatFleeSpeed: 5,
+    fleeDelay: { min: 6000, max: 11000 },
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
@@ -329,7 +335,9 @@ const sceneChaos: difficultyLevelInfo = {
     enemyFactor: 2,
     parMs: 90000,
     extraTunnels: 1,
-    fleeSpeed: 5,
+    fleeSpeed: 8,                                   // as fast as the fastest car there is (a regular target's top speed on Chaos)
+    boatFleeSpeed: 7,
+    fleeDelay: { min: 4000, max: 8000 },
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
