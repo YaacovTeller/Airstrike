@@ -1149,8 +1149,10 @@ class VehicleTarget extends Target {
     private craterRolled: WeakSet<object> = new WeakSet();
     private craterPosed: boolean = false;
     // An airstrike's crater (the 4) gives a 15% chance of going over forward, anything bigger 30%, anything smaller none
-    private static craterTumbleChance(size: number): number {
-        return size > ExplSizes.XL ? 30 : size >= ExplSizes.XL ? 15 : 0;
+    // and a faster one is a little likelier to go over (about a twelfth more for every step of speed above 4)
+    private static craterTumbleChance(size: number, speed: number): number {
+        const base = size > ExplSizes.XL ? 30 : size >= ExplSizes.XL ? 15 : 0;
+        return base * Math.max(0.7, Math.min(1.4, 1 + (speed - 4) * 0.08));
     }
     // How deep the bottom is, as a share of the crater's half-height (its picture is the crater seen at a slant)
     private static craterDepthShare(size: number): number {
@@ -1183,7 +1185,52 @@ class VehicleTarget extends Target {
         this.baseImgEl.style.transition = "transform " + seconds + "s linear"; // just smooths the steps between one move and the next
         this.baseImgEl.style.transform = (sink ? "translateY(" + sink.toFixed(1) + "px) " : "") + "rotate(" + degrees.toFixed(1) + "deg)";
     }
+    // A vehicle that has gone over: it carries on down the same profile, with what's left of its speed, while it flips onto its roof
+    private tumbling?: { vx: number, flip: number, rate: number, age: number, drag: number, stopAt: number };
+    private stepTumble() {
+        const t = this.tumbling;
+        const size = this.picEl.getBoundingClientRect();
+        if (!size.width) return;
+        t.age++;
+        // it slides on: slowed by the ground and sped by the slope when it's on a wall, and stops when it has run out of speed
+        const here = parseFloat(this.targetEl.style.left) || 0;
+        const foot = (parseFloat(this.targetEl.style.top) || 0) + size.height * 0.85;
+        const frontNow = VehicleTarget.craterTotalDepth(here + size.width * 0.88, foot);
+        const rearNow = VehicleTarget.craterTotalDepth(here + size.width * 0.12, foot);
+        const slope = (frontNow - rearNow) / (size.width * 0.76);
+        t.vx = Math.max(0, t.vx * t.drag + slope * 0.9);
+        const left = here + t.vx;
+        this.targetEl.style.left = left + "px";
+        const front = VehicleTarget.craterTotalDepth(left + size.width * 0.88, foot);
+        const rear = VehicleTarget.craterTotalDepth(left + size.width * 0.12, foot);
+        const middle = VehicleTarget.craterTotalDepth(left + size.width / 2, foot);
+        const pitch = Math.atan2(front - rear, size.width * 0.76) * 180 / Math.PI;
+        // the nose goes down as it would going in, and then it's over
+        if (t.age > 1 && t.flip < 180) t.flip = Math.min(180, t.flip + t.rate);
+        const angle = t.flip > 0 ? t.flip + Math.max(-18, Math.min(18, pitch)) * (1 - t.flip / 180) : Math.max(-18, Math.min(18, pitch));
+        this.pose(angle, middle);
+        if (t.flip >= 180 && t.vx < t.stopAt) {
+            this.tumbling = undefined; // it has come to rest, on its roof, wherever it has got to: part way down the side or at the bottom
+        }
+    }
+    private startTumble(width: number) {
+        this.craterPosed = true;
+        const priorStatus = this.status;
+        // where it ends up is as random as how it goes over: some just fall down the edge, some slide on at the bottom
+        const carried = Math.max(this.speed, 2) * (0.15 + Math.random() * 1.15);
+        this.tumbling = { vx: carried, flip: 0, rate: 30 + Math.random() * 35, age: 0, drag: 0.6 + Math.random() * 0.26, stopAt: 0.2 + Math.random() * 0.85 };
+        this.lightDamage();
+        this.damage = Damage.moderateDamaged;
+        this.targetDisabled();
+        this.speed = 0;
+        game.assessKillPoints(priorStatus, this.damage, false, this);
+        SoundPlayer.playRandomSound(crashes);
+    }
     protected craterEffects() {
+        if (this.tumbling) {
+            this.stepTumble();
+            return;
+        }
         if (this instanceof WaterVehicleTarget || this.status !== Status.active || this.wrecked || this.cold) {
             if (this.craterPosed && this.status === Status.active) { this.craterPosed = false; this.pose(0, 0); }
             return;
@@ -1206,8 +1253,9 @@ class VehicleTarget extends Target {
             for (const c of VehicleTarget.visibleCraters()) {
                 if (this.craterRolled.has(c) || VehicleTarget.craterDepthAt(c, frontX, foot) <= 0) continue;
                 this.craterRolled.add(c);
-                if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size)) {
-                    this.tumble(c, middleX, foot, middle, size.width);
+                if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size, this.speed)) {
+                    this.startTumble(size.width);
+                    this.stepTumble();
                     return;
                 }
             }
@@ -1216,42 +1264,6 @@ class VehicleTarget extends Target {
         const pitch = Math.atan2(front - rear, frontX - rearX) * 180 / Math.PI;
         this.craterPosed = true;
         this.pose(Math.max(-18, Math.min(18, pitch)), middle);
-    }
-    // Over the front and onto its roof, into the pit: it hops off the edge turning forward, lands upside down on the floor of the
-    // crater a little way in, and stays there, disabled. (The picture does the whole flight, then the vehicle itself is moved to
-    // where it landed.)
-    private tumble(crater: { x: number, y: number, rx: number, ry: number, size: number }, fromX: number, foot: number, fromSink: number, width: number) {
-        this.craterPosed = false;
-        const priorStatus = this.status;
-        this.lightDamage();
-        this.damage = Damage.moderateDamaged;
-        this.targetDisabled();
-        this.speed = 0;
-        game.assessKillPoints(priorStatus, this.damage, false, this);
-        SoundPlayer.playRandomSound(crashes);
-
-        // where it comes down: the middle of the vehicle on the crater's floor, between where it is and the middle of the crater
-        const landX = crater.x - crater.rx * 0.1;
-        const dx = Math.max(24, landX - fromX);
-        const floor = VehicleTarget.craterTotalDepth(landX, foot);
-        const hop = Math.min(26, 8 + crater.ry * 0.3);
-        const duration = Math.round(650 + dx * 4);
-        const img = this.baseImgEl;
-        img.style.transition = "none";
-        const flight = img.animate([
-            { transform: "translate(0px, " + fromSink + "px) rotate(0deg)", easing: "ease-out" },
-            { transform: "translate(" + dx * 0.45 + "px, " + (fromSink - hop) + "px) rotate(100deg)", offset: 0.4, easing: "ease-in" },
-            { transform: "translate(" + dx + "px, " + floor + "px) rotate(180deg)" },
-        ], { duration: duration, fill: "forwards" });
-        flight.onfinish = () => {
-            const box = this.targetEl;
-            const previous = box.style.transition;
-            box.style.transition = "none";
-            box.style.left = (parseFloat(box.style.left) || 0) + dx + "px";
-            img.style.transform = "translateY(" + floor + "px) rotate(180deg)";
-            flight.cancel();
-            requestAnimationFrame(() => { box.style.transition = previous; });
-        };
     }
     public action() {
         super.action();
