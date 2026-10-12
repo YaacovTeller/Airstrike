@@ -1141,67 +1141,86 @@ class VehicleTarget extends Target {
     constructor(info: TargetInfo) {
         super(info);
     }
-    // Driving over a crater: the nose goes down as it goes in and comes up as it comes out. A small crater is only a bump; a
-    // medium one (10%) or a really big one (20%) can send a vehicle over on its roof, where it's disabled (still there to be hit,
-    // but it goes no further).
-    private craterPhase: "none" | "down" | "up" = "none";
-    private craterSinkNow: number = 0;
+    // Driving over a crater. How far down a vehicle is, and which way it is tilted, comes from where it is on the crater's
+    // profile and nothing else: not from timers or how long it has been there. So a slow one eases in and out as slowly as it is
+    // going, a fast one drops in quickly, and one that stops in a crater stays where it has got to. The profile of a crater, along
+    // the way a vehicle drives across it: a wall down at the edge of the picture, a flat bottom, and a wall up the other side.
+    // A bigger crater is deeper, and a small one is hardly more than a dent.
+    private craterRolled: WeakSet<object> = new WeakSet();
+    private craterPosed: boolean = false;
     // An airstrike's crater (the 4) gives a 15% chance of going over forward, anything bigger 30%, anything smaller none
     private static craterTumbleChance(size: number): number {
         return size > ExplSizes.XL ? 30 : size >= ExplSizes.XL ? 15 : 0;
     }
-    // How far it sinks to the bottom of the crater, in px: a bigger crater is a deeper one
-    private static craterSink(crater: { ry: number }): number {
-        return Math.round(crater.ry * 0.55);
+    // How deep the bottom is, as a share of the crater's half-height (its picture is the crater seen at a slant)
+    private static craterDepthShare(size: number): number {
+        return size <= ExplSizes.small ? 0.25 : size < ExplSizes.XL ? 0.4 : size <= ExplSizes.XL ? 0.5 : 0.55;
     }
-    private static craterDip(size: number): number { // degrees
-        return size >= ExplSizes.massive ? 13 : size >= ExplSizes.XL ? 9 : size > ExplSizes.small ? 5 : 3;
+    private static craterWall: number = 0.35; // each wall's share of the way across
+    // How far down (px) the ground is at this x, along a line at this height (y): zero off the edge of the crater's picture
+    private static craterDepthAt(c: { x: number, y: number, rx: number, ry: number, size: number }, x: number, y: number): number {
+        const across = (y - c.y) / c.ry;
+        if (Math.abs(across) >= 1) return 0;
+        const half = c.rx * Math.sqrt(1 - across * across);       // the picture's width along this line: narrower towards its top and bottom
+        const u = (x - (c.x - half)) / (2 * half);                  // 0 at its near edge, 1 at the far one
+        if (u <= 0 || u >= 1) return 0;
+        const wall = VehicleTarget.craterWall;
+        const edge = u < wall ? u / wall : u > 1 - wall ? (1 - u) / wall : 1;
+        const smooth = edge * edge * (3 - 2 * edge);                // eased, so the lip and the base are rounded off
+        return c.ry * VehicleTarget.craterDepthShare(c.size) * Math.sqrt(1 - across * across) * smooth;
     }
-    private tilt(degrees: number, sink: number = 0, seconds: number = 0.28) {
-        this.baseImgEl.style.transition = "transform " + seconds + "s ease-out";
-        this.baseImgEl.style.transform = (sink ? "translateY(" + sink + "px) " : "") + "rotate(" + degrees + "deg)";
+    private static visibleCraters() { // (one that has faded away is no longer there to drive into)
+        return ExplosionHandler.liveCraters().filter(c => !c.el.classList.contains("hide"));
+    }
+    private static craterTotalDepth(x: number, y: number): number {
+        let depth = 0;
+        for (const c of VehicleTarget.visibleCraters()) {
+            depth += VehicleTarget.craterDepthAt(c, x, y);
+        }
+        return depth;
+    }
+    private pose(degrees: number, sink: number, seconds: number = 0.1) {
+        this.baseImgEl.style.transition = "transform " + seconds + "s linear"; // just smooths the steps between one move and the next
+        this.baseImgEl.style.transform = (sink ? "translateY(" + sink.toFixed(1) + "px) " : "") + "rotate(" + degrees.toFixed(1) + "deg)";
     }
     protected craterEffects() {
-        if (this instanceof WaterVehicleTarget || this.speed <= 0 || this.status !== Status.active || this.wrecked || this.cold) return;
-        // (from where it has been put, which is where it's going: the picture is on its way there, with a transition)
+        if (this instanceof WaterVehicleTarget || this.status !== Status.active || this.wrecked || this.cold) {
+            if (this.craterPosed && this.status === Status.active) { this.craterPosed = false; this.pose(0, 0); }
+            return;
+        }
         const size = this.picEl.getBoundingClientRect();
         if (!size.width) return;
+        // from where it has been put, which is where it is going: the picture is on its way there, with a transition
         const left = parseFloat(this.targetEl.style.left) || 0;
-        const bottom = (parseFloat(this.targetEl.style.top) || 0) + size.height;
-        const front = { X: left + size.width * 0.88, Y: bottom - size.height * 0.15 };
-        const rear = { X: left + size.width * 0.12, Y: bottom - size.height * 0.15 };
-        const inside = (p: position, c: { x: number, y: number, rx: number, ry: number }) =>
-            ((p.X - c.x) / (c.rx * 1.05)) ** 2 + ((p.Y - c.y) / (c.ry * 1.25)) ** 2 <= 1;
-        let frontIn = null, rearIn = false;
-        for (const c of ExplosionHandler.liveCraters()) {
-            if (inside(front, c)) frontIn = c;
-            if (inside(rear, c)) rearIn = true;
+        const foot = (parseFloat(this.targetEl.style.top) || 0) + size.height * 0.85;
+        const frontX = left + size.width * 0.88, rearX = left + size.width * 0.12, middleX = left + size.width / 2;
+        const front = VehicleTarget.craterTotalDepth(frontX, foot);
+        const rear = VehicleTarget.craterTotalDepth(rearX, foot);
+        const middle = VehicleTarget.craterTotalDepth(middleX, foot);
+        if (front === 0 && rear === 0 && middle === 0) {
+            if (this.craterPosed) { this.craterPosed = false; this.pose(0, 0, 0.2); }
+            return;
         }
-        if (this.craterPhase === "none") {
-            if (!frontIn) return;
-            this.craterPhase = "down";
-            const dip = VehicleTarget.craterDip(frontIn.size);
-            this.craterSinkNow = VehicleTarget.craterSink(frontIn);
-            if (RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(frontIn.size)) {
-                this.tumble();
-                return;
+        // the first time its front is down in a crater it may go over
+        if (front > 0) {
+            for (const c of VehicleTarget.visibleCraters()) {
+                if (this.craterRolled.has(c) || VehicleTarget.craterDepthAt(c, frontX, foot) <= 0) continue;
+                this.craterRolled.add(c);
+                if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size)) {
+                    this.tumble(middle);
+                    return;
+                }
             }
-            this.tilt(dip, this.craterSinkNow);
         }
-        else if (this.craterPhase === "down" && !frontIn) {
-            this.craterPhase = "up";
-            this.tilt(-5, Math.round(this.craterSinkNow * 0.45)); // climbing out: nose up, still down in it
-        }
-        else if (!frontIn && !rearIn) {
-            this.craterPhase = "none";
-            this.tilt(0, 0, 0.4);
-        }
+        // it sits on the ground at its two ends, so it is tilted by the difference between them over its length
+        const pitch = Math.atan2(front - rear, frontX - rearX) * 180 / Math.PI;
+        this.craterPosed = true;
+        this.pose(Math.max(-18, Math.min(18, pitch)), middle);
     }
-    // Over the front and onto its roof, and stopped
-    private tumble() {
-        this.craterPhase = "none";
-        this.tilt(180, this.craterSinkNow, 0.8);
-        this.targetEl.style.left = (parseFloat(this.targetEl.style.left) || 0) + 30 + "px";
+    // Over the front and onto its roof, and stopped, where it is in the crater
+    private tumble(sink: number) {
+        this.craterPosed = false;
+        this.pose(180, sink, 0.8);
         const priorStatus = this.status;
         this.lightDamage();
         this.damage = Damage.moderateDamaged;
