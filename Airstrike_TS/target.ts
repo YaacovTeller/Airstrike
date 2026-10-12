@@ -1081,7 +1081,7 @@ class VehicleTarget extends Target {
 
     // A vehicle that's up and running and could be driven off: not parked cold, not knocked out or burning
     public isRunning(): boolean {
-        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed && !this.wrecked;
+        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed && !this.wrecked && !this.fallen;
     }
     // The special enemy making off in it, if there is one: this vehicle is then the special target, and glows its
     // colour on a scan. It's driven off to the right at the speed given (px every 100ms); if it gets off the screen
@@ -1186,7 +1186,10 @@ class VehicleTarget extends Target {
         this.baseImgEl.style.transform = (sink ? "translateY(" + sink.toFixed(1) + "px) " : "") + "rotate(" + degrees.toFixed(1) + "deg)";
     }
     // A vehicle that has gone over: it carries on down the same profile, with what's left of its speed, while it flips onto its roof
-    private tumbling?: { vx: number, flip: number, rate: number, age: number, drag: number, stopAt: number };
+    private tumbling?: { vx: number, flip: number, rate: number, age: number, drag: number, stopAt: number, crater: { x: number, y: number, rx: number, ry: number, size: number } };
+    // Fallen into a crater and on its roof: still a live target, still there to be hit and destroyed, but it goes no further, and
+    // it stays just where it came to rest, whatever happens to the crater after (when that fades away, say)
+    public fallen: boolean = false;
     private stepTumble() {
         const t = this.tumbling;
         const size = this.picEl.getBoundingClientRect();
@@ -1195,15 +1198,16 @@ class VehicleTarget extends Target {
         // it slides on: slowed by the ground and sped by the slope when it's on a wall, and stops when it has run out of speed
         const here = parseFloat(this.targetEl.style.left) || 0;
         const foot = (parseFloat(this.targetEl.style.top) || 0) + size.height * 0.85;
-        const frontNow = VehicleTarget.craterTotalDepth(here + size.width * 0.88, foot);
-        const rearNow = VehicleTarget.craterTotalDepth(here + size.width * 0.12, foot);
+        const depth = (x: number) => VehicleTarget.craterDepthAt(t.crater, x, foot); // (its own crater, even if that has faded away since)
+        const frontNow = depth(here + size.width * 0.88);
+        const rearNow = depth(here + size.width * 0.12);
         const slope = (frontNow - rearNow) / (size.width * 0.76);
         t.vx = Math.max(0, t.vx * t.drag + slope * 0.9);
         const left = here + t.vx;
         this.targetEl.style.left = left + "px";
-        const front = VehicleTarget.craterTotalDepth(left + size.width * 0.88, foot);
-        const rear = VehicleTarget.craterTotalDepth(left + size.width * 0.12, foot);
-        const middle = VehicleTarget.craterTotalDepth(left + size.width / 2, foot);
+        const front = depth(left + size.width * 0.88);
+        const rear = depth(left + size.width * 0.12);
+        const middle = depth(left + size.width / 2);
         const pitch = Math.atan2(front - rear, size.width * 0.76) * 180 / Math.PI;
         // the nose goes down as it would going in, and then it's over
         if (t.age > 1 && t.flip < 180) t.flip = Math.min(180, t.flip + t.rate);
@@ -1213,17 +1217,14 @@ class VehicleTarget extends Target {
             this.tumbling = undefined; // it has come to rest, on its roof, wherever it has got to: part way down the side or at the bottom
         }
     }
-    private startTumble(width: number) {
+    private startTumble(crater: { x: number, y: number, rx: number, ry: number, size: number }) {
         this.craterPosed = true;
-        const priorStatus = this.status;
+        this.fallen = true;
         // where it ends up is as random as how it goes over: some just fall down the edge, some slide on at the bottom
         const carried = Math.max(this.speed, 2) * (0.15 + Math.random() * 1.15);
-        this.tumbling = { vx: carried, flip: 0, rate: 30 + Math.random() * 35, age: 0, drag: 0.6 + Math.random() * 0.26, stopAt: 0.2 + Math.random() * 0.85 };
-        this.lightDamage();
-        this.damage = Damage.moderateDamaged;
-        this.targetDisabled();
+        this.tumbling = { vx: carried, flip: 0, rate: 30 + Math.random() * 35, age: 0, drag: 0.6 + Math.random() * 0.26, stopAt: 0.2 + Math.random() * 0.85, crater: crater };
+        this.lightDamage(); // smoking, but not out of it: it's still a live target
         this.speed = 0;
-        game.assessKillPoints(priorStatus, this.damage, false, this);
         SoundPlayer.playRandomSound(crashes);
     }
     protected craterEffects() {
@@ -1231,6 +1232,7 @@ class VehicleTarget extends Target {
             this.stepTumble();
             return;
         }
+        if (this.fallen) return; // where it came to rest is where it stays
         if (this instanceof WaterVehicleTarget || this.status !== Status.active || this.wrecked || this.cold) {
             if (this.craterPosed && this.status === Status.active) { this.craterPosed = false; this.pose(0, 0); }
             return;
@@ -1248,16 +1250,16 @@ class VehicleTarget extends Target {
             if (this.craterPosed) { this.craterPosed = false; this.pose(0, 0, 0.2); }
             return;
         }
-        // once it has dipped in and is on its way down the wall (its front a third of the way to the bottom) it may go over
+        // once it has dipped in and is well on its way down the wall (the middle of it less than halfway to the bottom, a bit over a third) it may go over
         if (front > 0) {
             for (const c of VehicleTarget.visibleCraters()) {
                 if (this.craterRolled.has(c)) continue;
                 const across = (foot - c.y) / c.ry;
                 const deepest = Math.abs(across) >= 1 ? 0 : c.ry * VehicleTarget.craterDepthShare(c.size) * Math.sqrt(1 - across * across);
-                if (deepest <= 0 || VehicleTarget.craterDepthAt(c, frontX, foot) < deepest * 0.35) continue;
+                if (deepest <= 0 || VehicleTarget.craterDepthAt(c, middleX, foot) < deepest * 0.4) continue;
                 this.craterRolled.add(c);
                 if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size, this.speed)) {
-                    this.startTumble(size.width);
+                    this.startTumble(c);
                     this.stepTumble();
                     return;
                 }
