@@ -282,6 +282,34 @@ class ExplosionHandler {
         return explosion
     }
 
+    // Every crater there is, with where it is, how big it is and how old: what vehicles driving over it feel (see
+    // VehicleTarget.craterEffects) and what the rain fills
+    public static craters: Array<{ el: HTMLElement, x: number, y: number, rx: number, ry: number, size: number, born: number, wet: boolean }> = [];
+    public static liveCraters() {
+        this.craters = this.craters.filter(c => c.el.isConnected);
+        return this.craters;
+    }
+    // After a few seconds of hard rain the craters that have had time to settle fade into the picture of one full of water
+    public static fillCratersWithRain() {
+        const now = performance.now();
+        for (const crater of this.liveCraters()) {
+            if (crater.wet || now - crater.born < 1500) continue;
+            crater.wet = true;
+            const water = document.createElement("img");
+            water.className = crater.el.className;
+            water.style.cssText = crater.el.style.cssText;
+            water.style.opacity = "0";
+            water.style.transition = "opacity 3s ease-in";
+            (water as HTMLImageElement).src = assetsFolder + "crater_rain.png";
+            crater.el.parentElement.appendChild(water);
+            requestAnimationFrame(() => requestAnimationFrame(() => water.style.opacity = crater.el.style.opacity || "1"));
+            setTimeout(() => { // faded in: the crater itself becomes the wet one, and the overlay's no longer needed
+                (crater.el as HTMLImageElement).src = assetsFolder + "crater_rain.png";
+                water.remove();
+            }, 3100);
+        }
+    }
+
     private static setAndReturnCrater(blastCenter, size) {
         let craterSrc = assetsFolder + RandomNumberGen.returnRandomFromArray(this.craterSources);
         let crater = ElementCreator.returnNewImageEl(ContentElHandler.returnContentEl(), "crater", craterSrc);
@@ -291,6 +319,7 @@ class ExplosionHandler {
         let height = size / 3;
 
         this.setSizeAndPos(crater, width, height, blastCenter.X - width / 2, blastCenter.Y - height / 2);
+        this.craters.push({ el: crater, x: blastCenter.X, y: blastCenter.Y, rx: width / 2, ry: height / 2, size: size, born: performance.now(), wet: false });
         return crater;
     }
     private static setAndReturnSplash(blastCenter, size) {

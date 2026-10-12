@@ -80,11 +80,21 @@ class GameHandler {
         rain.classList.add('rain');
         ContentElHandler.addToContentWrapper(rain);
     }
-    setRain(rain) {
-        if (rain.ambience) {
-            this.switchAmbience(rain.ambience);
+    // The weather and the time of day together decide what's heard: rain (or a storm) over everything else, otherwise the day's
+    // sounds or the night's. Changing either one goes through here, so none of them leaves a stale sound playing (the rain
+    // carrying on once it's stopped, or going back to the day's sounds while it's still raining).
+    rain = noRain;
+    nightSounds = false;
+    updateAmbience() {
+        const wanted = this.rain.ambience ? this.rain.ambience : this.nightSounds ? night : regular_amb;
+        if (wanted !== this.ambience) {
+            this.switchAmbience(wanted);
         }
+    }
+    setRain(rain) {
+        this.rain = rain;
         WeatherHandler.createRain(rain);
+        this.updateAmbience();
     }
     setBackground(url) {
         let back = ContentElHandler.returnbackground();
@@ -128,13 +138,11 @@ class GameHandler {
     changeTime(time) {
         this.daytime = time == Time.day;
         this.hideFlare(time);
+        this.nightSounds = time != Time.day;
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
-            this.switchAmbience(regular_amb);
         }
-        else {
-            this.switchAmbience(night);
-        }
+        this.updateAmbience();
         if (time == Time.dusk) {
             this.darkOverlay.style.opacity = '0.5';
         }
@@ -399,7 +407,7 @@ class GameHandler {
                 game.changeTime(RandomNumberGen.randomNumBetween(0, 2));
             }
             else if (event.key.toLowerCase() === 'w') {
-                WeatherHandler.createRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]);
+                this.setRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]); // the whole weather: the sound and how long things burn too
             }
             else if (event.shiftKey && event.key === 'A') {
                 if (this.gameMode == GameMode.coast) { // its own weapons (a charge would land on the bomb's key), and the supers
@@ -807,6 +815,7 @@ class GameHandler {
         this.clearLights();
         allObjects = [];
         PopupHandler.reset();
+        this.rain = noRain;
         WeatherHandler.createRain(noRain);
         this.resetScreenEffects();
         fireStay = itemStay; // the weather changes these
@@ -1212,6 +1221,7 @@ class GameHandler {
             this.checkEnd();
             this.updateProgressBar();
             this.fadeAllLights();
+            WeatherHandler.tick();
             this.level.tickClock();
             this.level.targets.forEach((trg) => {
                 trg.action();
@@ -1222,27 +1232,39 @@ class GameHandler {
 class WeatherHandler {
     static rains = [noRain, lightRain, medRain, heavyRain];
     static weatherTest() {
-        this.createRain(lightRain);
+        game.setRain(lightRain);
         setTimeout(() => {
-            this.createRain(this.rains[0]);
+            game.setRain(this.rains[0]);
         }, 2000);
         setTimeout(() => {
-            this.createRain(this.rains[3]);
+            game.setRain(this.rains[3]);
         }, 4000);
         setTimeout(() => {
-            this.createRain(this.rains[0]);
+            game.setRain(this.rains[0]);
         }, 6000);
         //setTimeout(() => {
-        //    this.createRain(this.rains[0])
+        //    game.setRain(this.rains[0])
         //}, 8000)
         //setTimeout(() => {
-        //    this.createRain(this.rains[3])
+        //    game.setRain(this.rains[3])
         //}, 12000)
         //setTimeout(() => {
-        //    this.createRain(this.rains[0])
+        //    game.setRain(this.rains[0])
         //}, 15000)
     }
+    // How long it's been raining hard (medium or heavy rain), in ms of game time: after a few seconds of it the craters fill with water
+    static current = noRain;
+    static hardRainMs = 0;
+    static static_ticks = 0;
+    static tick() {
+        const hard = this.current === medRain || this.current === heavyRain;
+        this.hardRainMs = hard ? this.hardRainMs + 100 : 0;
+        if (hard && this.hardRainMs >= 4000 && ++this.static_ticks % 5 == 0) {
+            ExplosionHandler.fillCratersWithRain();
+        }
+    }
     static createRain(rainType) {
+        this.current = rainType;
         const rainContainer = document.querySelector(".rain");
         rainContainer.className = "rain";
         const excess = Array.from(rainContainer.children).slice(0, rainContainer.children.length - rainType.drops);

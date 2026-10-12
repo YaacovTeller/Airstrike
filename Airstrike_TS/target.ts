@@ -1126,6 +1126,73 @@ class VehicleTarget extends Target {
     constructor(info: TargetInfo) {
         super(info);
     }
+    // Driving over a crater: the nose goes down as it goes in and comes up as it comes out. A small crater is only a bump; a
+    // medium one (10%) or a really big one (20%) can send a vehicle over on its roof, where it's disabled (still there to be hit,
+    // but it goes no further).
+    private craterPhase: "none" | "down" | "up" = "none";
+    private static craterTumbleChance(size: number): number {
+        return size >= ExplSizes.massive ? 20 : size >= ExplSizes.XL ? 10 : 0;
+    }
+    private static craterDip(size: number): number { // degrees
+        return size >= ExplSizes.massive ? 13 : size >= ExplSizes.XL ? 9 : size > ExplSizes.small ? 5 : 3;
+    }
+    private tilt(degrees: number, seconds: number = 0.28) {
+        this.baseImgEl.style.transition = "transform " + seconds + "s ease-out";
+        this.baseImgEl.style.transform = "rotate(" + degrees + "deg)";
+    }
+    protected craterEffects() {
+        if (this instanceof WaterVehicleTarget || this.speed <= 0 || this.status !== Status.active || this.wrecked || this.cold) return;
+        // (from where it has been put, which is where it's going: the picture is on its way there, with a transition)
+        const size = this.picEl.getBoundingClientRect();
+        if (!size.width) return;
+        const left = parseFloat(this.targetEl.style.left) || 0;
+        const bottom = (parseFloat(this.targetEl.style.top) || 0) + size.height;
+        const front = { X: left + size.width * 0.88, Y: bottom - size.height * 0.15 };
+        const rear = { X: left + size.width * 0.12, Y: bottom - size.height * 0.15 };
+        const inside = (p: position, c: { x: number, y: number, rx: number, ry: number }) =>
+            ((p.X - c.x) / (c.rx * 1.05)) ** 2 + ((p.Y - c.y) / (c.ry * 1.25)) ** 2 <= 1;
+        let frontIn = null, rearIn = false;
+        for (const c of ExplosionHandler.liveCraters()) {
+            if (inside(front, c)) frontIn = c;
+            if (inside(rear, c)) rearIn = true;
+        }
+        if (this.craterPhase === "none") {
+            if (!frontIn) return;
+            this.craterPhase = "down";
+            const dip = VehicleTarget.craterDip(frontIn.size);
+            if (RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(frontIn.size)) {
+                this.tumble();
+                return;
+            }
+            this.tilt(dip);
+        }
+        else if (this.craterPhase === "down" && !frontIn) {
+            this.craterPhase = "up";
+            this.tilt(-5);
+        }
+        else if (!frontIn && !rearIn) {
+            this.craterPhase = "none";
+            this.tilt(0, 0.4);
+        }
+    }
+    // Over the front and onto its roof, and stopped
+    private tumble() {
+        this.craterPhase = "none";
+        this.tilt(180, 0.8);
+        this.targetEl.style.left = (parseFloat(this.targetEl.style.left) || 0) + 30 + "px";
+        const priorStatus = this.status;
+        this.lightDamage();
+        this.damage = Damage.moderateDamaged;
+        this.targetDisabled();
+        this.speed = 0;
+        game.assessKillPoints(priorStatus, this.damage);
+        SoundPlayer.playRandomSound(crashes);
+    }
+    public action() {
+        super.action();
+        this.craterEffects();
+    }
+
     private ricochetChance(num) {
         RandomNumberGen.randomNumBetween(1, 10) > num ? SoundPlayer.playRandomSound(ricochet) : "";
     }
