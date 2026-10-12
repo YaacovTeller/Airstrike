@@ -15,7 +15,7 @@ const flareFade = 15000;
 const flareReach = 550;
 const strikeLightReachFactor = 4; // a strike lights up this many times its own size
 class ExplosionHandler {
-    static craterDecalStay = 15000;
+    static craterDecalStay = 20000;
     static craterFadingTillRemoval = fadeAnimTime;
     static craterSources = ["crater_1.png", "crater_2.png", "crater_3.png"];
     static createFlare(blastCenter, size) {
@@ -248,15 +248,25 @@ class ExplosionHandler {
     // Every crater there is, with where it is, how big it is and how old: what vehicles driving over it feel (see
     // VehicleTarget.craterEffects) and what the rain fills
     static craters = [];
+    // How much of its effect a crater still has on what drives over it: all of it while its picture is there, and once that starts to
+    // fade it goes the same way, over a few seconds, instead of all at once (which would drop a vehicle sitting in it back up with a hop)
+    static fadeOutMs = 4000;
+    static strengthOf(c) {
+        if (c.el.isConnected && !c.el.classList.contains("hide"))
+            return 1;
+        if (c.fadeStart === undefined)
+            c.fadeStart = performance.now();
+        return Math.max(0, 1 - (performance.now() - c.fadeStart) / this.fadeOutMs);
+    }
     static liveCraters() {
-        this.craters = this.craters.filter(c => c.el.isConnected);
+        this.craters = this.craters.filter(c => this.strengthOf(c) > 0);
         return this.craters;
     }
     // After a few seconds of hard rain the craters that have had time to settle fade into the picture of one full of water
     static fillCratersWithRain() {
         const now = performance.now();
         for (const crater of this.liveCraters()) {
-            if (crater.wet || now - crater.born < 1500)
+            if (crater.wet || !crater.el.isConnected || now - crater.born < 1500)
                 continue;
             crater.wet = true;
             const water = document.createElement("img");

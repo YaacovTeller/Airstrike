@@ -1160,24 +1160,33 @@ class VehicleTarget extends Target {
     }
     private static craterWall: number = 0.35; // each wall's share of the way across
     // How far down (px) the ground is at this x, along a line at this height (y): zero off the edge of the crater's picture
-    private static craterDepthAt(c: { x: number, y: number, rx: number, ry: number, size: number }, x: number, y: number): number {
+    // How much of the crater's depth there is across a line at this height: none off the top or bottom of its picture, and the
+    // lower edge of the picture (the near rim, which is shadow and spoil more than hole) is left out, shaved off at 0.78 of the way
+    private static craterLowerEdge: number = 0.78;
+    private static craterRim(c: { y: number, ry: number }, y: number): number {
         const across = (y - c.y) / c.ry;
-        if (Math.abs(across) >= 1) return 0;
-        const half = c.rx * Math.sqrt(1 - across * across);       // the picture's width along this line: narrower towards its top and bottom
+        const scaled = across > 0 ? across / VehicleTarget.craterLowerEdge : across;
+        return Math.abs(scaled) >= 1 ? 0 : Math.sqrt(1 - scaled * scaled);
+    }
+    // The depth (px) of the ground at this x along a line at this height (y): zero off the edge of the crater's picture
+    private static craterDepthAt(c: { x: number, y: number, rx: number, ry: number, size: number }, x: number, y: number): number {
+        const rim = VehicleTarget.craterRim(c, y);
+        if (rim <= 0) return 0;
+        const half = c.rx * rim;                                    // the picture's width along this line: narrower towards its top and bottom
         const u = (x - (c.x - half)) / (2 * half);                  // 0 at its near edge, 1 at the far one
         if (u <= 0 || u >= 1) return 0;
         const wall = VehicleTarget.craterWall;
         const edge = u < wall ? u / wall : u > 1 - wall ? (1 - u) / wall : 1;
         const smooth = edge * edge * (3 - 2 * edge);                // eased, so the lip and the base are rounded off
-        return c.ry * VehicleTarget.craterDepthShare(c.size) * Math.sqrt(1 - across * across) * smooth;
+        return c.ry * VehicleTarget.craterDepthShare(c.size) * rim * smooth;
     }
-    private static visibleCraters() { // (one that has faded away is no longer there to drive into)
-        return ExplosionHandler.liveCraters().filter(c => !c.el.classList.contains("hide"));
+    private static visibleCraters() { // (one that is fading away still has some of its effect, see ExplosionHandler.strengthOf)
+        return ExplosionHandler.liveCraters();
     }
     private static craterTotalDepth(x: number, y: number): number {
         let depth = 0;
         for (const c of VehicleTarget.visibleCraters()) {
-            depth += VehicleTarget.craterDepthAt(c, x, y);
+            depth += VehicleTarget.craterDepthAt(c, x, y) * ExplosionHandler.strengthOf(c);
         }
         return depth;
     }
@@ -1254,8 +1263,8 @@ class VehicleTarget extends Target {
         if (front > 0) {
             for (const c of VehicleTarget.visibleCraters()) {
                 if (this.craterRolled.has(c)) continue;
-                const across = (foot - c.y) / c.ry;
-                const deepest = Math.abs(across) >= 1 ? 0 : c.ry * VehicleTarget.craterDepthShare(c.size) * Math.sqrt(1 - across * across);
+                if (ExplosionHandler.strengthOf(c) < 1) continue; // (not into one that is going)
+                const deepest = c.ry * VehicleTarget.craterDepthShare(c.size) * VehicleTarget.craterRim(c, foot);
                 if (deepest <= 0 || VehicleTarget.craterDepthAt(c, middleX, foot) < deepest * 0.4) continue;
                 this.craterRolled.add(c);
                 if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size, this.speed)) {
