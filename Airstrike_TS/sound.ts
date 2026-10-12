@@ -218,7 +218,7 @@ function loadSound() {
         waitBitzua
     )
     acknowledge.push(
-        pgia, matara, meUle, pgia, aluak
+        pgia, matara, meUle, pgia
     )
     thunder.push(
         new Sound(ambienceFolder + "thunder_big.mp3"),

@@ -1048,7 +1048,7 @@ class GameHandler {
         lines = 8,
         slantDegrees = 18,
         padding = 30,
-        road = 0.9,                      // the road between blocks, in building widths
+        road = 1.15,                     // the road between blocks, in building widths
         aboveCorner = 260                // how far the first line is above the one that runs from the corner of the land
     } = options || {};
     const slots: Array<BuildingSlot> = [];
@@ -1062,27 +1062,49 @@ class GameHandler {
     const footRise = 0.25;             // the middle of a building's platform is this share of its width above the bottom of its picture
 
     // the port buildings, by how big they are
-    const town = allPortBuildingInfo.filter(info => !info.waterfront);
+    const town = coastBuildingInfo.filter(info => !info.waterfront);
     const large = town.filter(info => info.width >= 110);
     const medium = town.filter(info => info.width >= 80 && info.width < 110);
     const small = town.filter(info => info.width < 80);
-    const quay = allPortBuildingInfo.filter(info => info.waterfront);
-    const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four
+    const seaPieces = coastBuildingInfo.filter(info => info.waterfront && (info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_")));
+    const quay = coastBuildingInfo.filter(info => info.waterfront && !seaPieces.includes(info));
+    const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four, and one mosque
+    const singleTaken = (info: BuildingInfo) => !!info.single && usedSingles.some(u => u === info || (!!u.group && u.group === info.group));
 
     const blocksWanted = Math.floor(maxCount / (blockLength * blockDepth));
 
-    // The waterfront: the cranes, quays, jetty and the like stand in a line right along the water's edge, one below the next
-    // from the top of the land to the bottom of the screen, a few overlapping a little; the town is kept back from them
-    const quaySide = 105; // how far in from the shore the town starts
+    // The waterfront: the cranes, quays and the like stand in a line right on the water's edge, one below the next from the
+    // top of the land to the bottom of the screen, a few overlapping a little; the town is kept back from them. Where the
+    // water's faded edge is is the shore: their near corner is put in it.
+    const quaySide = 125; // how far in from the shore the town starts
+    const shoreOf = (topY: number, height: number) => {
+        const span = Shoreline.waterSpan(topY + height * 0.55, topY + height);
+        return span ? (span.openRight + span.shoreRight) / 2 : 0;
+    };
+    // The jetty and the breakwater go out into the sea from the shore: the end of one that's on the land is at the shore and the
+    // rest of it goes out over the water (they run from the top left to the bottom right in their pictures)
+    const seaRanges: Array<{ top: number, bottom: number }> = [];
+    for (const info of seaPieces) {
+        for (let attempt = 0; attempt < 12; attempt++) {
+            const topY = RandomNumberGen.randomNumBetween(top + 40, bottom - info.height - 20);
+            if (seaRanges.some(r => topY < r.bottom + 30 && topY + info.height > r.top - 30)) continue;
+            const left = shoreOf(topY, info.height) - info.width + 22;
+            slots.push({ X: left, Y: topY, info: info });
+            seaRanges.push({ top: topY, bottom: topY + info.height });
+            break;
+        }
+    }
     {
         let foot = top + 95;
-        for (let tries = 0; tries < 40 && quay.length; tries++) {
-            const choices = quay.filter(info => !(info.single && usedSingles.includes(info)));
-            const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : quay);
-            if (info.single && usedSingles.includes(info)) { if (tries > 20) break; else continue; }
+        for (let tries = 0; tries < 60 && quay.length; tries++) {
+            const choices = quay.filter(info => !singleTaken(info));
+            if (!choices.length) break;
+            const info = RandomNumberGen.returnRandomFromArray(choices);
+            let topY = foot - info.height;
+            const clash = seaRanges.find(r => topY < r.bottom && foot > r.top);
+            if (clash) { foot = clash.bottom + info.height + 6; continue; } // not on top of the jetty
             if (foot > bottom) break;
-            const topY = foot - info.height;
-            const left = this.firstDryX(topY, info.height) - 6 + RandomNumberGen.randomNumBetween(-4, 8);
+            const left = shoreOf(topY, info.height) - 18 + RandomNumberGen.randomNumBetween(-4, 6);
             if (left + info.width + padding > screenWidth) break;
             if (info.single) usedSingles.push(info);
             slots.push({ X: left, Y: topY, info: info });
@@ -1122,7 +1144,7 @@ class GameHandler {
             for (let j = 0; j < blockDepth; j++) {
                 const beside = i > 0 ? grid[i - 1][j] : null;
                 const behind = j > 0 ? grid[i][j - 1] : null;
-                const taken = (info: BuildingInfo) => info.single && (usedSingles.includes(info) || grid.some(col => col.includes(info)));
+                const taken = (info: BuildingInfo) => singleTaken(info) || (!!info.single && grid.some(col => col.some(i => i === info || (!!i.group && i.group === info.group))));
                 const choices = pool.filter(info => info !== beside && info !== behind && !taken(info));
                 const anyLeft = pool.filter(info => !taken(info));
                 grid[i].push(RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : pool));

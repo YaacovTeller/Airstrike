@@ -524,8 +524,17 @@ class SceneLevel extends Level {
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     protected populateStage() {
         game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
+        // make the boats all, then place them together (see WaterVehicleTarget.arrange): the lower ones go in front
+        const made: Array<Target> = [];
         for (let i = 0; i < this.scaled(this.staticTargetCount); i++) {
-            this.registerTarget(this.provideAvailTargets());
+            made.push(this.provideAvailTargets());
+        }
+        if (made.length && made.every(t => t instanceof WaterVehicleTarget)) {
+            const spots = WaterVehicleTarget.arrange(made as Array<WaterVehicleTarget>);
+            made.forEach((t, i) => this.registerTarget(t, spots[i]));
+        }
+        else {
+            made.forEach(t => this.registerTarget(t));
         }
         const buildings = game.drawAllBuildings();
         this.infestBuildings(buildings);
@@ -646,22 +655,16 @@ class HillsLevel extends SceneLevel {
     private static maxTunnels: number = 4;
     private static screenTop: number = 120;   // clear of the HUD
     private static screenEdge: number = 70;
-    // The structure types the village borrows from the other set, at the villas' scale (theirs is 0.28 of
-    // their pictures' size, the others' 0.4)
-    private static borrowedScale: number = 0.7;
-    // The odd ones out: the checkpoint booth (the fenced yards and the little shelter didn't suit), put down a couple
-    // of times or three...
-    private static oddCodes = ["r5c6"];
-    private static minOfEachOdd: number = 2;
-    private static maxOfEachOdd: number = 3;
-    // ...and (no warehouses: they don't suit the sand) one or two water towers (of the three kinds), at a larger
-    // scale than the rest, and one each of the containers and the stack of crates. Nothing parks beside a water tower.
-    private static waterTowerCodes = ["r5c1", "r5c2", "r5c3"];
-    private static waterTowerScale: number = 1;
+    // The industrial odds and ends the village has among the houses (see industrial misc): a couple of each of these...
+    private static miscNames = ["Fuel_Station", "Storage_Shed", "Water_Tank", "Fuel_Depot", "Storage_Pad"];
+    private static minOfEachMisc: number = 1;
+    private static maxOfEachMisc: number = 2;
+    // ...and one or two water towers, of the four kinds. Nothing parks beside a water tower. They're drawn at a bit
+    // under their usual size to go with the villas.
+    private static towerNames = ["Water_Tower_Concrete", "Water_Tower_Metal", "Water_Tower_Box", "Water_Tower_Conical"];
+    private static miscScale: number = 0.85;
     private static minWaterTowers: number = 1;
     private static maxWaterTowers: number = 2;
-    private static containerCode = "r5c8";
-    private static cratesCode = "r5c9";
 
     protected rushDirections: Array<RushDirection> = ["up", "right"]; // there's no sea here to keep in place, so it can go either way
     protected slowAfterMs: number = 90000; // a stage here takes longer: there's a village to search and tunnels to find
@@ -730,13 +733,11 @@ class HillsLevel extends SceneLevel {
     private within(low: number, high: number): number {
         return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
     }
-    private typeFor(codes: Array<string>, noParking?: boolean, scale: number = HillsLevel.borrowedScale): BuildingInfo {
-        const name = "Structure_" + RandomNumberGen.returnRandomFromArray(codes) + "_1.png";
-        const info = allBuildingInfo.find(info => info.undamaged === name);
-        return { ...resizedBuildingInfo(info, scale), noParking: noParking };
+    private miscInfo(name: string): BuildingInfo {
+        return scaledBuildingInfo(industrialByName(name), HillsLevel.miscScale);
     }
 
-    // A village: the villas bunched up round the middle of the screen, the mosque, a couple of water towers, containers, crates and a few of each of the other odd structures among them,
+    // A village: the villas bunched up round the middle of the screen, the mosque, a couple of water towers and some of the fuel stations, sheds and the like among them,
     // and one or two villas out on their own
     private placeVillage(): Array<Building> {
         const buildings: Array<Building> = [];
@@ -791,14 +792,12 @@ class HillsLevel extends SceneLevel {
         }
         const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
         for (let i = 0; i < towers; i++) {
-            place(this.typeFor(HillsLevel.waterTowerCodes, true, HillsLevel.waterTowerScale), false);
+            place(this.miscInfo(RandomNumberGen.returnRandomFromArray(HillsLevel.towerNames)), false);
         }
-        place(this.typeFor([HillsLevel.containerCode]), false);
-        place(this.typeFor([HillsLevel.cratesCode]), false);
-        for (const code of HillsLevel.oddCodes) {
-            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachOdd, HillsLevel.maxOfEachOdd);
+        for (const name of HillsLevel.miscNames) {
+            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachMisc, HillsLevel.maxOfEachMisc);
             for (let i = 0; i < count; i++) {
-                place(this.typeFor([code]), false);
+                place(this.miscInfo(name), false);
             }
         }
         const villas = RandomNumberGen.randomNumBetween(size.villas[0], size.villas[1]);

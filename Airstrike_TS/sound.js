@@ -186,7 +186,7 @@ function loadSound() {
     strikePrep.push(
     //     rashai,  replace rashai?
     kibalti_1, kibalti_2, nachon, meaAchuz, muchan, sec_5, sec_4_3, waitBitzua);
-    acknowledge.push(pgia, matara, meUle, pgia, aluak);
+    acknowledge.push(pgia, matara, meUle, pgia);
     thunder.push(new Sound(ambienceFolder + "thunder_big.mp3"), new Sound(ambienceFolder + "thunder_small.mp3"));
     ambience_1.push(new Sound(ambienceFolder + "ambient_1_q.mp3"), new Sound(ambienceFolder + "ambient_2_q.mp3"), new Sound(ambienceFolder + "ambient_4_q.mp3"), new Sound(ambienceFolder + "ambient_5_q.mp3"));
     nightSounds.push(new Sound(ambienceFolder + "owl.mp3"), new Sound(ambienceFolder + "owl_2.mp3"), new Sound(ambienceFolder + "jackal_1.mp3"), new Sound(ambienceFolder + "owl_3.mp3"), new Sound(ambienceFolder + "owl_4.mp3"), new Sound(ambienceFolder + "jackal_2.mp3"));

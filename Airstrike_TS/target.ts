@@ -13,6 +13,7 @@ type BuildingInfo = {
     noParking?: boolean, // nothing parks beside it (a water tower)
     single?: boolean, // only one of this to a layout (a lighthouse)
     waterfront?: boolean, // stands along the water's edge, not among the town (cranes, quays, a jetty)
+    group?: string, // only one of a group to a layout (a mosque, whichever of the mosques it is)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
 }
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
@@ -79,7 +80,7 @@ const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Conta
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque", "Repair_Dock"];
 function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const file = (stage: number) => "port buildings/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name) };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : undefined };
 }
 const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),
@@ -90,9 +91,7 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }),
     portInfo("Customs", 101, 76, { x: [18, 63], y: [31, 52] }),
     portInfo("Customs_B", 120, 83, { x: [20, 74], y: [39, 59] }),
-    portInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
     portInfo("Fuel_Depot_B", 110, 64, { x: [22, 78], y: [22, 39] }),
-    portInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
     portInfo("Guard_Shack", 66, 52, { x: [21, 38], y: [12, 30] }),
     portInfo("Jetty", 102, 69, { x: [58, 70], y: [33, 37] }),
     portInfo("Lighthouse", 76, 98, { x: [11, 43], y: [66, 77] }),
@@ -106,8 +105,6 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
     portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
-    portInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
-    portInfo("Storage_Shed", 113, 65, { x: [27, 69], y: [22, 42] }),
     portInfo("Utility_Shed", 69, 51, { x: [15, 43], y: [14, 29] }),
     portInfo("Warehouse_Adobe", 126, 88, { x: [22, 95], y: [24, 54] }),
     portInfo("Warehouse_Concrete_Metal", 130, 92, { x: [26, 100], y: [23, 57] }),
@@ -118,11 +115,41 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Warehouse_Quonset", 125, 89, { x: [25, 93], y: [23, 57] }),
     portInfo("Warehouse_Stone_Brick", 118, 86, { x: [15, 88], y: [19, 54] }),
     portInfo("Warehouse_Stone_Sloped", 113, 80, { x: [24, 87], y: [25, 49] }),
-    portInfo("Water_Tank", 79, 57, { x: [17, 48], y: [18, 35] }),
     portInfo("Workshop", 114, 80, { x: [14, 90], y: [22, 50] }),
     portInfo("Workshop_B", 128, 77, { x: [23, 94], y: [20, 50] }),
     portInfo("Workshop_Small", 82, 62, { x: [11, 53], y: [19, 37] }),
 ];
+
+// Industrial odds and ends (AS_assets/buildings/industrial misc): the fuel station and depot, storage shed and pad, the
+// water tank, four water towers and four container yards. The Hills level uses all but the yards, the Coast level the lot.
+// Sizes are 0.36 of natural, but the yards 0.5 (they're a low, wide thing: the sizes are set here, the pictures aren't resaved).
+function industrialInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
+    const file = (stage: number) => "industrial misc/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, noParking: name.startsWith("Water_Tower") };
+}
+const allIndustrialInfo: Array<BuildingInfo> = [
+    industrialInfo("Container_Yard_Circular", 132, 66, { x: [27, 101], y: [20, 45] }),
+    industrialInfo("Container_Yard_Large", 144, 76, { x: [34, 86], y: [25, 44] }),
+    industrialInfo("Container_Yard_Rail", 154, 68, { x: [29, 83], y: [30, 44] }),
+    industrialInfo("Container_Yard_Small", 124, 66, { x: [27, 82], y: [15, 40] }),
+    industrialInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
+    industrialInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
+    industrialInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
+    industrialInfo("Storage_Shed", 113, 65, { x: [27, 69], y: [22, 42] }),
+    industrialInfo("Water_Tank", 79, 57, { x: [17, 48], y: [18, 35] }),
+    industrialInfo("Water_Tower_Box", 83, 78, { x: [28, 41], y: [9, 61] }),
+    industrialInfo("Water_Tower_Concrete", 83, 81, { x: [29, 43], y: [11, 65] }),
+    industrialInfo("Water_Tower_Conical", 82, 80, { x: [30, 42], y: [11, 64] }),
+    industrialInfo("Water_Tower_Metal", 79, 81, { x: [30, 41], y: [11, 65] }),
+];
+function industrialByName(name: string): BuildingInfo {
+    return allIndustrialInfo.find(info => info.undamaged === "industrial misc/" + name + "_1.png");
+}
+// A copy of a building type at another scale, hiding spots and all
+function scaledBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
+    const hide = info.hide ? { x: [Math.round(info.hide.x[0] * factor), Math.round(info.hide.x[1] * factor)] as [number, number], y: [Math.round(info.hide.y[0] * factor), Math.round(info.hide.y[1] * factor)] as [number, number] } : undefined;
+    return { ...info, width: Math.round(info.width * factor), height: Math.round(info.height * factor), hide: hide };
+}
 
 // The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
 // the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
@@ -154,6 +181,14 @@ const largeMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("Large", 124, 136, { x: [49, 69], y: [82, 92] }),
     mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, "mosques/fancy/"),
     mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, "mosques/fancy/"),
+];
+
+// What the Coast level is built of: the port buildings, the industrial ones, and the bigger mosques (one mosque to a layout,
+// whichever)
+const coastBuildingInfo: Array<BuildingInfo> = [
+    ...allPortBuildingInfo,
+    ...allIndustrialInfo,
+    ...largeMosqueInfo.map(info => ({ ...info, single: true, group: "mosque" })),
 ];
 
 // The apartment blocks (AS_assets/buildings/blocks): four kinds, each intact, really damaged and destroyed.
@@ -315,6 +350,7 @@ class Building extends MapEntity {
     // building in a blast all at once, though)
     private static goodHitAt: number = 0;
     private static goodHitGap: number = 900; // ms
+    private static goodHitDelay: number = 1300; // ms after the strike
     private killOccupants(destroyed: boolean) {
         let killed = 0;
         for (const enemy of this.occupants) {
@@ -326,7 +362,8 @@ class Building extends MapEntity {
         }
         if (killed && performance.now() - Building.goodHitAt > Building.goodHitGap) {
             Building.goodHitAt = performance.now();
-            SoundPlayer.playRandomSound(acknowledge);
+            // a moment later, so it comes after the noise of the explosion that did it instead of being lost in it
+            setTimeout(() => SoundPlayer.playRandomSound(acknowledge), Building.goodHitDelay);
         }
     }
 
@@ -1583,7 +1620,37 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     // Anywhere in open water: the whole boat has to fit between the left of the water and the
     // start of the faded shallows at the shore (see Shoreline), not just its top-left corner.
-    public decidePosition() {
+    // Where a number of boats go, together: each at its own height on the screen, no two within 12px of each other (one that
+    // would be is moved up to be 12 clear), and drawn so the lower ones are in front of the ones higher up. They're put
+    // into the content lowest first, which is what puts the later (higher) ones behind.
+    public static arrange(boats: Array<WaterVehicleTarget>): Array<position> {
+        const minY = Math.ceil(window.innerHeight * 0.1);
+        const heights = boats.map(boat => boat.getTargetEl().getBoundingClientRect().height);
+        const ys = boats.map((boat, i) => RandomNumberGen.randomNumBetween(minY, Math.max(minY, Math.floor(window.innerHeight * 0.9 - heights[i]))));
+        const order = boats.map((_, i) => i).sort((p, q) => (ys[q] + heights[q]) - (ys[p] + heights[p])); // lowest first
+        const spots: Array<position> = boats.map(() => null);
+        let previous = Infinity;
+        const content = ContentElHandler.returnContentEl();
+        for (const i of order) {
+            let y = ys[i];
+            if (previous - y < 12) y = previous - 12;   // too close to the one below it: a clear 12 above it
+            y = Math.max(y, minY);
+            previous = y;
+            const span = Shoreline.waterSpan(y, y + heights[i]);
+            if (!span) { spots[i] = { X: 0, Y: y }; continue; }
+            const size = boats[i].getTargetEl().getBoundingClientRect();
+            const lowX = Math.ceil(Math.max(span.left + WaterVehicleTarget.shoreMargin, 0));
+            const highX = Math.floor(Math.min(span.openRight - WaterVehicleTarget.shoreMargin - size.width, window.innerWidth - size.width));
+            spots[i] = { X: highX >= lowX ? RandomNumberGen.randomNumBetween(lowX, highX) : lowX, Y: y };
+            content.prepend(boats[i].getTargetEl()); // lowest first, so the higher ones end up behind
+        }
+        return spots;
+    }
+    public decidePosition(pos?: position) {
+        if (pos) {
+            this.placeAt(pos.X, pos.Y);
+            return;
+        }
         const size = this.targetEl.getBoundingClientRect();
         const minY = Math.ceil(window.innerHeight * 0.1);
         const maxY = Math.floor(window.innerHeight * 0.9 - size.height);
