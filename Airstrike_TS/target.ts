@@ -1803,7 +1803,18 @@ class WaterVehicleTarget extends VehicleTarget {
     public static arrange(boats: Array<WaterVehicleTarget>): Array<position> {
         const minY = Math.ceil(window.innerHeight * 0.1);
         const heights = boats.map(boat => boat.getTargetEl().getBoundingClientRect().height);
-        const ys = boats.map((boat, i) => RandomNumberGen.randomNumBetween(minY, Math.max(minY, Math.floor(window.innerHeight * 0.9 - heights[i]))));
+        // a height where there's room in the water for the boat (near the top of a sliced coast there's hardly any sea)
+        const ys = boats.map((boat, i) => {
+            const maxY = Math.max(minY, Math.floor(window.innerHeight * 0.9 - heights[i]));
+            const width = boat.getTargetEl().getBoundingClientRect().width;
+            let y = RandomNumberGen.randomNumBetween(minY, maxY);
+            for (let attempt = 0; attempt < 40; attempt++) {
+                const span = Shoreline.waterSpan(y, y + heights[i]);
+                if (!span || span.openRight - WaterVehicleTarget.shoreMargin - width >= Math.max(span.left, 0) + WaterVehicleTarget.shoreMargin) break;
+                y = RandomNumberGen.randomNumBetween(minY, maxY);
+            }
+            return y;
+        });
         const order = boats.map((_, i) => i).sort((p, q) => (ys[q] + heights[q]) - (ys[p] + heights[p])); // lowest first
         const spots: Array<position> = boats.map(() => null);
         let previous = Infinity;

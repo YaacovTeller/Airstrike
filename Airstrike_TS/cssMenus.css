@@ -51,7 +51,7 @@ body {
     position: fixed;
     height: 150%;
     background-image: url(./AS_assets/DS_water.png);
-    mask-image: linear-gradient(to right, transparent, black 0%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 0%, black calc(100% - 90px), transparent); /* (90px: see Shoreline.fadePx) */
     left: -10%;
     transform: skewX(30deg);
     /*    transform: rotate(-30deg);

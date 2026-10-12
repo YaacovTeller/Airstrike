@@ -78,7 +78,7 @@ class CollisionDetection {
 // skewed rectangle (see cssMenus.css), so its shore slants, and its right edge fades out rather
 // than stopping -- a single point hit test against the element can't tell either of those apart.
 class Shoreline {
-    static openFraction = 0.9; // matches the 90% where .water's mask-image starts fading out
+    static fadePx = 90; // how wide the faded shallows at the shore are: matches where .water's mask-image starts fading out
     // Where the water is across the rows from topY to bottomY, or null if no water is showing.
     // Because the shore slants, a box covering several rows has to respect its most restrictive row.
     static waterSpan(topY, bottomY) {
@@ -95,7 +95,7 @@ class Shoreline {
         const edge = (fraction, y) => centreX + (fraction - 0.5) * width + skew * (y - centreY);
         return {
             left: Math.max(edge(0, topY), edge(0, bottomY)),
-            openRight: Math.min(edge(this.openFraction, topY), edge(this.openFraction, bottomY)),
+            openRight: Math.min(edge(1 - this.fadePx / width, topY), edge(1 - this.fadePx / width, bottomY)),
             shoreRight: Math.max(edge(1, topY), edge(1, bottomY)),
         };
     }

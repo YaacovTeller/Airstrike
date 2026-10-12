@@ -835,6 +835,7 @@ class GameHandler {
         allObjects = [];
         PopupHandler.reset();
         this.rain = noRain;
+        this.resetCoastKind();
         WeatherHandler.createRain(noRain);
         this.resetScreenEffects();
         fireStay = itemStay; // the weather changes these
@@ -987,22 +988,56 @@ class GameHandler {
         const span = Shoreline.waterSpan(topY, topY + height);
         return span ? span.shoreRight + GameHandler.shoreMargin : 0;
     }
-    // The sea gets a different width, and the coast a different slant, each time
+    // As above, but for a building's picture, which is a diamond: it's the middle of it that's nearest the shore, so it's the rows
+    // from near the top of its middle to near the foot that have to be clear, not its whole height
+    firstDryXFor(topY, height) {
+        const span = Shoreline.waterSpan(topY + height * 0.3, topY + height * 0.75);
+        return span ? span.shoreRight + GameHandler.shoreMargin : 0;
+    }
+    // The coast comes in two kinds, which take it in turns from one stage to the next:
+    //  - "lean": the sea is down the left and the shore goes down and to the left at a good angle (not far off the way the ends of
+    //    the blocks of buildings run), the land open to the top right
+    //  - "slice": the shore comes down from around the top left corner, down and to the right, along the way the rows of buildings
+    //    run, so the town lies along it with the sea beneath
+    // Either way the sea is to the left of the shore, which is a straight line across the screen: the water is a box a half taller
+    // than the screen, skewed about its middle so its right edge is the shore, and placed so that edge is where it's meant to be.
+    coastKind = "lean";
+    nextCoastKind = RandomNumberGen.randomNumBetween(0, 1) ? "lean" : "slice";
+    coastRowSlant = 18; // how steeply down to the right the rows of buildings go, in degrees
+    coastShoreIntercept = 0; // the shore as y = intercept + slope * x (for the sliced coast, where that's a slope down to the right)
+    coastShoreSlope = 0;
+    resetCoastKind() {
+        this.nextCoastKind = RandomNumberGen.randomNumBetween(0, 1) ? "lean" : "slice";
+    }
     shapeCoast() {
         const water = document.getElementById("water");
         if (!water)
             return;
-        // The shore leans to the right (the top of it further right than the bottom): the water is skewed that way about the
-        // middle of its box (which is half as tall again as the screen), and placed so its edge is where it's meant to be across
-        // the middle of the screen, and so it still reaches the left of the screen at the top
-        const lean = RandomNumberGen.randomNumBetween(18, 38);
-        const t = Math.tan(lean * Math.PI / 180);
         const width = window.innerWidth, height = window.innerHeight;
-        const shoreAtMiddle = width * RandomNumberGen.randomNumBetween(30, 44) / 100;
-        const left = -(t * height * 0.75 + 60);
+        this.coastKind = this.nextCoastKind;
+        this.nextCoastKind = this.coastKind == "lean" ? "slice" : "lean";
+        let k; // how far right the shore goes for each px down the screen
+        let shoreAtMiddle;
+        if (this.coastKind == "lean") {
+            const lean = RandomNumberGen.randomNumBetween(44, 54);
+            k = -Math.tan(lean * Math.PI / 180);
+            shoreAtMiddle = width * RandomNumberGen.randomNumBetween(50, 62) / 100;
+            this.coastRowSlant = 18;
+            this.coastShoreSlope = 0;
+        }
+        else {
+            const angle = RandomNumberGen.randomNumBetween(22, 28); // down from the horizontal; the rows are put to match it
+            k = 1 / Math.tan(angle * Math.PI / 180);
+            const topLeft = RandomNumberGen.randomNumBetween(60, 200); // where it comes in at the top of the land
+            shoreAtMiddle = topLeft + (height / 2 - 100) * k;
+            this.coastRowSlant = angle;
+            this.coastShoreSlope = 1 / k;
+            this.coastShoreIntercept = height / 2 - shoreAtMiddle / k;
+        }
+        const left = -(Math.abs(k) * height * 0.75 + 60);
         water.style.left = left + "px";
-        water.style.width = (shoreAtMiddle - t * height * 0.25 - left) + "px";
-        water.style.transform = "skewX(" + -lean + "deg)";
+        water.style.width = (shoreAtMiddle + 0.25 * height * k - left) + "px";
+        water.style.transform = "skewX(" + Math.atan(k) * 180 / Math.PI + "deg)";
     }
     // Where to put up to maxCount buildings, none of them in the water, laid out as blocks: two rows of buildings of
     // similar size, four long, packed edge to edge. The ground runs on a slant in the pictures, so a row goes down the
@@ -1011,7 +1046,7 @@ class GameHandler {
     // from the shore inland with a narrow street between them, a few lines one below the next. Every building in a block
     // is its own type, from the same size class, and there's one lighthouse, not several.
     streetBlockSlots(maxCount, options) {
-        const { blockLength = 4, lines = 10, slantDegrees = 18, padding = 12, road = 1.0, // the road between blocks, in building widths
+        const { blockLength = 4, lines = 10, slantDegrees = this.coastRowSlant, padding = 12, road = 1.0, // the road between blocks, in building widths
         aboveCorner = 420 // how far the first line is above the one that runs from the corner of the land
          } = options || {};
         const slots = [];
@@ -1051,6 +1086,8 @@ class GameHandler {
                 if (seaRanges.some(r => topY < r.bottom - 6 && topY + seaKind.height > r.top + 6))
                     continue;
                 // the pieces run from the top left to the bottom right: the bottom right end is the one on the shore
+                if (shoreOf(topY, seaKind.height) + 16 + padding > screenWidth)
+                    continue; // (on a sliced coast the shore is off the screen low down)
                 slots.push({ X: shoreOf(topY, seaKind.height) - seaKind.width + 16, Y: topY, info: seaKind });
                 seaRanges.push({ top: topY, bottom: topY + seaKind.height });
                 break;
@@ -1059,23 +1096,30 @@ class GameHandler {
         {
             const craneCount = RandomNumberGen.randomNumBetween(3, 6);
             const first = top + 100, step = (bottom - first) / craneCount;
-            const lightAt = RandomNumberGen.randomNumBetween(0, craneCount - 1);
+            const light = RandomNumberGen.returnRandomFromArray(lighthouses);
+            const placedCranes = [];
             for (let n = 0; n < craneCount; n++) {
-                let info = crane;
-                if (n == lightAt) {
-                    const lights = lighthouses.filter(i => !singleTaken(i));
-                    if (lights.length) {
-                        info = RandomNumberGen.returnRandomFromArray(lights);
-                        usedSingles.push(info);
-                    }
-                }
                 const foot = first + step * n + RandomNumberGen.randomNumBetween(0, Math.floor(step * 0.35));
-                const topY = foot - info.height;
-                const left = shoreOf(topY, info.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
-                if (left + info.width + padding > screenWidth)
-                    continue;
-                slots.push({ X: left, Y: topY, info: info });
+                const topY = foot - crane.height;
+                const left = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
+                if (left + crane.width + padding > screenWidth)
+                    continue; // (on a sliced coast the shore is off the screen low down)
+                placedCranes.push({ X: left, Y: topY, info: crane });
             }
+            // the lighthouse is one of them: put on the shore in place of one of the cranes, or, if none are on screen, by itself
+            if (light && !singleTaken(light)) {
+                usedSingles.push(light);
+                const pick = placedCranes.length ? RandomNumberGen.randomNumBetween(0, placedCranes.length - 1) : -1;
+                const foot = pick >= 0 ? placedCranes[pick].Y + crane.height : first + step;
+                const topY = foot - light.height;
+                const left = shoreOf(topY, light.height) + 2;
+                if (left + light.width + padding <= screenWidth) {
+                    if (pick >= 0)
+                        placedCranes.splice(pick, 1);
+                    placedCranes.push({ X: left, Y: topY, info: light });
+                }
+            }
+            slots.push(...placedCranes);
         }
         // each line is one size class: how wide its widest building is says how far it is from the line above
         const classes = [];
@@ -1096,9 +1140,20 @@ class GameHandler {
         // at the top of the land, the others a block's depth and a street below the one before
         // (the first line is well above the top of the land's corner, so the lines above the corner start further along the top
         // and fill the top right, and the ones below it the bottom left, like the streets of a town)
-        const intercepts = [(top + 85) - slope * (this.firstDryX(top, 80) + 60) - aboveCorner];
-        for (let k = 1; k < lines; k++) {
-            intercepts.push(intercepts[k - 1] + (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + road));
+        const spacingAt = (k) => (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + road);
+        const intercepts = [];
+        if (this.coastKind == "slice") {
+            // the rows run along the shore: the first just behind the waterfront and the others further inland, up and to the right
+            // (the first row of a block is the one by the sea: the line is far enough from the waterfront for half a building and a gap)
+            const back = classes[0].width / 2 + 45;
+            intercepts.push(this.coastShoreIntercept - slope * (quaySide + 10 + back));
+            for (let k = 1; k < lines; k++)
+                intercepts.push(intercepts[k - 1] - spacingAt(k));
+        }
+        else {
+            intercepts.push((top + 85) - slope * (this.firstDryX(top, 80) + 60) - aboveCorner);
+            for (let k = 1; k < lines; k++)
+                intercepts.push(intercepts[k - 1] + spacingAt(k));
         }
         // the buildings for a block: a grid of them, none the same as the one beside or behind it
         const chooseBlock = (pool, length) => {
@@ -1129,14 +1184,17 @@ class GameHandler {
                     for (let j = 0; j < blockDepth; j++) {
                         const info = grid[i][j];
                         // the middle of its platform: along the row, a half cell for each step along it, and for each step back
-                        const cx = x0 + (i - j) * cell / 2;
-                        const cy = intercepts[k] + slope * x0 + (i + j) * slope * cell / 2;
+                        // (the second row goes back towards the sea, down and to the left, except along a sliced coast, where the sea is
+                        // that way and it goes back inland instead)
+                        const back = this.coastKind == "slice" ? -j : j;
+                        const cx = x0 + (i - back) * cell / 2;
+                        const cy = intercepts[k] + slope * x0 + (i + back) * slope * cell / 2;
                         const footBottom = cy + footRise * info.width;
                         const left = cx - info.width / 2;
                         const placedTop = footBottom - info.height;
                         if (left + info.width + padding > screenWidth || footBottom > bottom)
                             return null;
-                        if (placedTop < top - 20 || left < this.firstDryX(placedTop, info.height) + quaySide) {
+                        if (placedTop < top - 20 || left < this.firstDryXFor(placedTop, info.height) + quaySide) {
                             tooHigh = true;
                             break;
                         }
@@ -1172,6 +1230,22 @@ class GameHandler {
                 });
                 next[k] = block.end;
                 blocks++;
+            }
+        }
+        // there's always the one mosque: if the blocks didn't happen to draw it, it takes the place of the building closest to it in size
+        const mosques = town.filter(info => info.group === "mosque");
+        if (mosques.length && blocksWanted > 0 && !slots.some(s => s.info.group === "mosque")) {
+            const mosque = RandomNumberGen.returnRandomFromArray(mosques);
+            let best = -1;
+            slots.forEach((s, i) => {
+                if (s.info.single || s.info.waterfront || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged))
+                    return;
+                if (best < 0 || Math.abs(s.info.width - mosque.width) < Math.abs(slots[best].info.width - mosque.width))
+                    best = i;
+            });
+            if (best >= 0) {
+                const old = slots[best];
+                slots[best] = { X: old.X + old.info.width / 2 - mosque.width / 2, Y: old.Y + old.info.height - mosque.height, info: mosque };
             }
         }
         // back to front: the nearer ones (lower down) are the ones that go over the ones behind them
