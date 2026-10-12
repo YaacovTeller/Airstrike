@@ -16,6 +16,29 @@
     }
 }
 
+/* The number that rises from a shot that took out more than one target ("x3", "Hit!"): see HUD.popKillNumber */
+.killPop {
+    position: fixed;
+    z-index: 12;
+    pointer-events: none;
+    font-family: Impact, "Arial Black", "Segoe UI Black", sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    -webkit-text-stroke: 3px #1a1010;
+    paint-order: stroke fill;
+    text-shadow: 0 0 14px var(--popGlow), 0 0 32px var(--popGlow), 0 4px 0 #1a1010, 0 8px 10px rgba(0, 0, 0, 0.6);
+    transform: translate(-50%, -50%);
+    animation: killRise 1.6s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+@keyframes killRise {
+    0% { opacity: 0; transform: translate(-50%, -30%) scale(0.3) rotate(-6deg); }
+    12% { opacity: 1; transform: translate(-50%, -80%) scale(1.5) rotate(3deg); }
+    24% { transform: translate(-50%, -95%) scale(1.0) rotate(0deg); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -260%) scale(1.15) rotate(0deg); }
+}
+
 @keyframes ripple {
     to {
         transform: scale(4);

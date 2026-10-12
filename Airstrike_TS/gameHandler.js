@@ -558,9 +558,16 @@ class GameHandler {
         this.updateProgressBar();
         this.progressBar.classList.remove("full");
     }
-    assessKillPoints(priorStatus, damage) {
+    // Where the latest shot landed, which is where the multi-kill number comes up from
+    lastStrike = null;
+    sequenceOrigin = null;
+    sequenceBuilding = false;
+    assessKillPoints(priorStatus, damage, fromBuilding = false) {
         this.sequentialHits += 1;
+        if (fromBuilding)
+            this.sequenceBuilding = true;
         if (this.sequentialHits === 1) {
+            this.sequenceOrigin = this.lastStrike ? { X: this.lastStrike.X, Y: this.lastStrike.Y } : null;
             this.timeOutForMoreHits(this.sequentialHits);
         }
         this.calcScore(priorStatus, damage);
@@ -571,9 +578,15 @@ class GameHandler {
                 this.timeOutForMoreHits(this.sequentialHits);
             }
             else {
-                this.sequentialHits > 1 ? this.hud.updateMultiKillBox(this.sequentialHits) : "";
+                if (this.sequentialHits > 1) {
+                    this.hud.popKillNumber("x" + this.sequentialHits, this.sequentialHits, this.sequenceOrigin);
+                }
+                else if (this.sequenceBuilding) { // a strike on a building that got just the one: still worth a mention
+                    this.hud.popKillNumber("Hit!", 1, this.sequenceOrigin);
+                }
                 this.calcScore(this.sequentialHits);
                 this.sequentialHits = 0;
+                this.sequenceBuilding = false;
             }
         }, 500);
     }

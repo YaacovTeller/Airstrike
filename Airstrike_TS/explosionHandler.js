@@ -36,6 +36,7 @@ class ExplosionHandler {
     static basicExplosion(blastCenter, size, explFrames, weaponName) {
         if (game.level)
             game.level.noteExplosion(); // the first one starts the clock on a special enemy's escape
+        game.lastStrike = blastCenter;
         let water = document.getElementById("water");
         if (water) {
             if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {

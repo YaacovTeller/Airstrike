@@ -178,6 +178,7 @@ class BulletWeaponType extends WeaponType {
         return severity;
     }
     checkForTargets_instantHit() {
+        game.lastStrike = { X: MouseHandler.mousePos.X, Y: MouseHandler.mousePos.Y };
         for (let target of allTargets) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, target.getPicEl())) {
                 let severity = this.determineSeverity();
@@ -353,6 +354,7 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
         return !!water && CollisionDetection.checkCollisionFromPosition(at, water);
     }
     detonate(at) {
+        game.lastStrike = at;
         ExplosionHandler.bigShake();
         SoundPlayer.playSequentialSound(bigExplosions);
         // the building the aim point is on (the one whose middle is nearest, if pictures overlap there)

@@ -717,7 +717,7 @@ class BuildingEnemy extends Target {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup for each one
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage);
+        game.assessKillPoints(priorStatus, this.damage, true); // (a hit on a building)
         this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
