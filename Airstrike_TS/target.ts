@@ -1207,7 +1207,7 @@ class VehicleTarget extends Target {
                 if (this.craterRolled.has(c) || VehicleTarget.craterDepthAt(c, frontX, foot) <= 0) continue;
                 this.craterRolled.add(c);
                 if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size)) {
-                    this.tumble(middle);
+                    this.tumble(c, middleX, foot, middle, size.width);
                     return;
                 }
             }
@@ -1217,10 +1217,11 @@ class VehicleTarget extends Target {
         this.craterPosed = true;
         this.pose(Math.max(-18, Math.min(18, pitch)), middle);
     }
-    // Over the front and onto its roof, and stopped, where it is in the crater
-    private tumble(sink: number) {
+    // Over the front and onto its roof, into the pit: it hops off the edge turning forward, lands upside down on the floor of the
+    // crater a little way in, and stays there, disabled. (The picture does the whole flight, then the vehicle itself is moved to
+    // where it landed.)
+    private tumble(crater: { x: number, y: number, rx: number, ry: number, size: number }, fromX: number, foot: number, fromSink: number, width: number) {
         this.craterPosed = false;
-        this.pose(180, sink, 0.8);
         const priorStatus = this.status;
         this.lightDamage();
         this.damage = Damage.moderateDamaged;
@@ -1228,6 +1229,29 @@ class VehicleTarget extends Target {
         this.speed = 0;
         game.assessKillPoints(priorStatus, this.damage, false, this);
         SoundPlayer.playRandomSound(crashes);
+
+        // where it comes down: the middle of the vehicle on the crater's floor, between where it is and the middle of the crater
+        const landX = crater.x - crater.rx * 0.1;
+        const dx = Math.max(24, landX - fromX);
+        const floor = VehicleTarget.craterTotalDepth(landX, foot);
+        const hop = Math.min(26, 8 + crater.ry * 0.3);
+        const duration = Math.round(650 + dx * 4);
+        const img = this.baseImgEl;
+        img.style.transition = "none";
+        const flight = img.animate([
+            { transform: "translate(0px, " + fromSink + "px) rotate(0deg)", easing: "ease-out" },
+            { transform: "translate(" + dx * 0.45 + "px, " + (fromSink - hop) + "px) rotate(100deg)", offset: 0.4, easing: "ease-in" },
+            { transform: "translate(" + dx + "px, " + floor + "px) rotate(180deg)" },
+        ], { duration: duration, fill: "forwards" });
+        flight.onfinish = () => {
+            const box = this.targetEl;
+            const previous = box.style.transition;
+            box.style.transition = "none";
+            box.style.left = (parseFloat(box.style.left) || 0) + dx + "px";
+            img.style.transform = "translateY(" + floor + "px) rotate(180deg)";
+            flight.cancel();
+            requestAnimationFrame(() => { box.style.transition = previous; });
+        };
     }
     public action() {
         super.action();
