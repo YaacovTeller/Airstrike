@@ -773,12 +773,15 @@ class GameHandler {
         for (const el of Array.from(content.children)) {
             if (!aimers.has(el)) exiting.appendChild(el);
         }
-        // the sea goes with it, as it was (the next stage's has a new shape: it comes in again at the end, see .water in cssAnims.css)
+        // the sea, as it was, washes away to the left (the next stage's has a new shape: it comes back in from the left at the end,
+        // see .water in cssAnims.css)
         const water = document.getElementById("water");
         if (water && !water.classList.contains("displayNone")) {
             const old = water.cloneNode(true) as HTMLElement;
             old.removeAttribute("id");
-            exiting.insertBefore(old, exiting.firstChild);
+            old.classList.add("oldSea");
+            water.parentElement.insertBefore(old, water);
+            StageTransition.oldSea = old;
         }
         StageTransition.exiting = exiting;
     }
@@ -1156,7 +1159,7 @@ class GameHandler {
         const span = Shoreline.waterSpan(topY + height * 0.55, topY + height);
         return span ? (span.openRight + span.shoreRight) / 2 : 0;
     };
-    const quaySide = crane.width + 6; // how far in from the shore the town starts: the crane's width and a road's worth
+    let quaySide = crane.width + 6; // how far in from the shore the town starts: the crane's width and a road's worth (more, where there are cranes in rows)
     const seaCount = RandomNumberGen.randomNumBetween(3, 6);
     const seaRanges: Array<{ top: number, bottom: number }> = [];
     for (let n = 0; n < seaCount; n++) {
@@ -1174,26 +1177,49 @@ class GameHandler {
         }
     }
     {
+        // The cranes stand in a few groups along the shore, close together: each group has a front row on the shore, with the
+        // others in a row behind it, inland, like the rows of the town
         const craneCount = RandomNumberGen.randomNumBetween(3, 6);
-        const first = top + 100, step = (bottom - first) / craneCount;
+        const groupCount = craneCount <= 3 ? 1 : craneCount <= 5 ? 2 : RandomNumberGen.randomNumBetween(2, 3);
+        const along = crane.height * 0.55;                 // how far down the shore the next in a row is
+        const inland = crane.width * 0.7;                  // and how far in the row behind is: across, and (along the slant of the rows) down or up
+        const inlandDrop = this.coastKind == "slice" ? -slope * inland : slope * inland;
+        // down the shore as far as there's room: a sliced coast's shore runs off the right of the screen part of the way down
+        const first = top + (this.coastKind == "slice" ? 150 : 100);
+        const last = this.coastKind == "slice"
+            ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - inland - 40))
+            : bottom - 60;
+        const groupStep = Math.max(60, (last - first) / groupCount);
         const light = RandomNumberGen.returnRandomFromArray(lighthouses);
         const placedCranes: Array<BuildingSlot> = [];
-        for (let n = 0; n < craneCount; n++) {
-            const foot = first + step * n + RandomNumberGen.randomNumBetween(0, Math.floor(step * 0.35));
-            const topY = foot - crane.height;
-            const left = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
-            if (left + crane.width + padding > screenWidth) continue; // (on a sliced coast the shore is off the screen low down)
-            placedCranes.push({ X: left, Y: topY, info: crane });
+        const frontRow: Array<BuildingSlot> = [];
+        let behind = false;
+        for (let g = 0, remaining = craneCount; g < groupCount; g++) {
+            const size = Math.ceil(remaining / (groupCount - g));
+            remaining -= size;
+            const groupFoot = first + groupStep * g + RandomNumberGen.randomNumBetween(0, Math.floor(groupStep * 0.25));
+            for (let i = 0; i < size; i++) {
+                const row = i % 2, col = Math.floor(i / 2);   // (the second of a group is behind the first, the third next to it)
+                const foot = groupFoot + col * along + (row ? inlandDrop : 0);
+                const topY = foot - crane.height;
+                const x = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3) + (row ? inland : 0);
+                if (x + crane.width + padding > screenWidth || foot > bottom || topY < top - 20) continue; // (on a sliced coast the shore is off the screen low down)
+                const slot = { X: x, Y: topY, info: crane };
+                placedCranes.push(slot);
+                if (row) behind = true; else frontRow.push(slot);
+            }
         }
-        // the lighthouse is one of them: put on the shore in place of one of the cranes, or, if none are on screen, by itself
+        if (behind) quaySide = crane.width + inland + 6;
+        const step = groupStep;
+        // the lighthouse is one of the front row: put on the shore in place of one of those cranes, or, if none are on screen, by itself
         if (light && !singleTaken(light)) {
             usedSingles.push(light);
-            const pick = placedCranes.length ? RandomNumberGen.randomNumBetween(0, placedCranes.length - 1) : -1;
-            const foot = pick >= 0 ? placedCranes[pick].Y + crane.height : first + step;
+            const pick = frontRow.length ? RandomNumberGen.returnRandomFromArray(frontRow) : null;
+            const foot = pick ? pick.Y + crane.height : first + step;
             const topY = foot - light.height;
             const left = shoreOf(topY, light.height) + 2;
             if (left + light.width + padding <= screenWidth) {
-                if (pick >= 0) placedCranes.splice(pick, 1);
+                if (pick) placedCranes.splice(placedCranes.indexOf(pick), 1);
                 placedCranes.push({ X: left, Y: topY, info: light });
             }
         }
