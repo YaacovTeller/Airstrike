@@ -1181,10 +1181,14 @@ class VehicleTarget extends Target {
             }
             return;
         }
-        // the first time its front is down in a crater it may go over
+        // once it has dipped in and is on its way down the wall (its front a third of the way to the bottom) it may go over
         if (front > 0) {
             for (const c of VehicleTarget.visibleCraters()) {
-                if (this.craterRolled.has(c) || VehicleTarget.craterDepthAt(c, frontX, foot) <= 0)
+                if (this.craterRolled.has(c))
+                    continue;
+                const across = (foot - c.y) / c.ry;
+                const deepest = Math.abs(across) >= 1 ? 0 : c.ry * VehicleTarget.craterDepthShare(c.size) * Math.sqrt(1 - across * across);
+                if (deepest <= 0 || VehicleTarget.craterDepthAt(c, frontX, foot) < deepest * 0.35)
                     continue;
                 this.craterRolled.add(c);
                 if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size, this.speed)) {
