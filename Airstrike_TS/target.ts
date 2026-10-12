@@ -334,7 +334,12 @@ class Building extends MapEntity {
     ];
     private static debrisPerHit: number = 2;
     private static debrisOnNewStage: number = 8; // when a hit takes it down a stage (undamaged to damaged, damaged to destroyed)
-    private static debrisWhenGone: number = 18; // when it's brought down completely: a lot of pieces, three times what it used to be
+    private static debrisWhenGone: number = 18;
+    // A blast that brings down a lot of buildings would throw hundreds of pieces and bog the game down, so the more buildings
+    // that have thrown debris in the last moment, the fewer each throws (half, then a third), and there is a limit to how many
+    // pieces there can be in all
+    private static recentDebris: Array<number> = [];
+    private static maxBits: number = 170; // when it's brought down completely: a lot of pieces, three times what it used to be
     private static loudPieces: number = 4;      // of which only this many make a noise landing
     private static ownBitChance: number = 60; // percent of the pieces, for the buildings that have bits of their own
 
@@ -509,20 +514,30 @@ class Building extends MapEntity {
     // The pieces fly out from where the blast hit the building.
     private throwDebris(collisionInfo?: vectorMoveObj, pieces: number = Building.debrisPerHit) {
         const origin = this.impactPoint(collisionInfo);
-        for (let i = 0; i < pieces; i++) {
-            this.throwDebrisPiece(origin, i < Building.loudPieces);
+        const flattened = pieces >= Building.debrisWhenGone;
+        const now = performance.now();
+        Building.recentDebris = Building.recentDebris.filter(t => now - t < 900);
+        Building.recentDebris.push(now);
+        const crowd = Building.recentDebris.length; // buildings throwing at once, this one included
+        const share = crowd <= 1 ? 1 : crowd <= 4 ? 0.5 : 0.33;
+        let room = Building.maxBits - document.querySelectorAll(".buildingDebris, .buildingChunk").length;
+        const count = Math.min(Math.max(1, Math.round(pieces * share)), Math.max(0, room));
+        for (let i = 0; i < count; i++) {
+            this.throwDebrisPiece(origin, crowd <= 1 ? i < Building.loudPieces : i < 1);
         }
-        if (pieces >= Building.debrisWhenGone) { // brought down completely: some big pieces as well, one of each of the generic ones
-            for (const source of Building.debrisSources) {
-                this.throwChunk(origin, source);
+        room -= count;
+        if (flattened) { // brought down completely: some big pieces as well, one of each of the generic ones (fewer in a crowd, and quietly)
+            const chunks = Building.debrisSources.slice(0, Math.min(room, crowd <= 1 ? 3 : crowd <= 4 ? 2 : 1));
+            for (const source of chunks) {
+                this.throwChunk(origin, source, crowd <= 1);
             }
         }
     }
-    private throwChunk(origin: position, imageSrc: string) {
+    private throwChunk(origin: position, imageSrc: string, loud: boolean = true) {
         const chunk = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         chunk.classList.add("buildingChunk");
         const direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.lob(chunk, direc, crashes, ThrowHandler.removeIfLandedInWater);
+        ThrowHandler.lob(chunk, direc, loud ? crashes : null, ThrowHandler.removeIfLandedInWater);
     }
     private throwDebrisPiece(origin: position, loud: boolean = true) {
         // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
@@ -717,7 +732,7 @@ class BuildingEnemy extends Target {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup for each one
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage, true); // (a hit on a building)
+        game.assessKillPoints(priorStatus, this.damage, true, this); // (a hit on a building)
         this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
@@ -986,7 +1001,7 @@ class HiddenTunnel extends Target {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage);
+        game.assessKillPoints(priorStatus, this.damage, false, this);
         this.targetEl.classList.remove('heatSig');
         this.pathEl.style.maskImage = "none"; // the flashes aren't confined to where a scan last was
         this.pathEl.style.webkitMaskImage = "none";
@@ -1130,15 +1145,21 @@ class VehicleTarget extends Target {
     // medium one (10%) or a really big one (20%) can send a vehicle over on its roof, where it's disabled (still there to be hit,
     // but it goes no further).
     private craterPhase: "none" | "down" | "up" = "none";
+    private craterSinkNow: number = 0;
+    // An airstrike's crater (the 4) gives a 15% chance of going over forward, anything bigger 30%, anything smaller none
     private static craterTumbleChance(size: number): number {
-        return size >= ExplSizes.massive ? 20 : size >= ExplSizes.XL ? 10 : 0;
+        return size > ExplSizes.XL ? 30 : size >= ExplSizes.XL ? 15 : 0;
+    }
+    // How far it sinks to the bottom of the crater, in px: a bigger crater is a deeper one
+    private static craterSink(crater: { ry: number }): number {
+        return Math.round(crater.ry * 0.55);
     }
     private static craterDip(size: number): number { // degrees
         return size >= ExplSizes.massive ? 13 : size >= ExplSizes.XL ? 9 : size > ExplSizes.small ? 5 : 3;
     }
-    private tilt(degrees: number, seconds: number = 0.28) {
+    private tilt(degrees: number, sink: number = 0, seconds: number = 0.28) {
         this.baseImgEl.style.transition = "transform " + seconds + "s ease-out";
-        this.baseImgEl.style.transform = "rotate(" + degrees + "deg)";
+        this.baseImgEl.style.transform = (sink ? "translateY(" + sink + "px) " : "") + "rotate(" + degrees + "deg)";
     }
     protected craterEffects() {
         if (this instanceof WaterVehicleTarget || this.speed <= 0 || this.status !== Status.active || this.wrecked || this.cold) return;
@@ -1160,32 +1181,33 @@ class VehicleTarget extends Target {
             if (!frontIn) return;
             this.craterPhase = "down";
             const dip = VehicleTarget.craterDip(frontIn.size);
+            this.craterSinkNow = VehicleTarget.craterSink(frontIn);
             if (RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(frontIn.size)) {
                 this.tumble();
                 return;
             }
-            this.tilt(dip);
+            this.tilt(dip, this.craterSinkNow);
         }
         else if (this.craterPhase === "down" && !frontIn) {
             this.craterPhase = "up";
-            this.tilt(-5);
+            this.tilt(-5, Math.round(this.craterSinkNow * 0.45)); // climbing out: nose up, still down in it
         }
         else if (!frontIn && !rearIn) {
             this.craterPhase = "none";
-            this.tilt(0, 0.4);
+            this.tilt(0, 0, 0.4);
         }
     }
     // Over the front and onto its roof, and stopped
     private tumble() {
         this.craterPhase = "none";
-        this.tilt(180, 0.8);
+        this.tilt(180, this.craterSinkNow, 0.8);
         this.targetEl.style.left = (parseFloat(this.targetEl.style.left) || 0) + 30 + "px";
         const priorStatus = this.status;
         this.lightDamage();
         this.damage = Damage.moderateDamaged;
         this.targetDisabled();
         this.speed = 0;
-        game.assessKillPoints(priorStatus, this.damage);
+        game.assessKillPoints(priorStatus, this.damage, false, this);
         SoundPlayer.playRandomSound(crashes);
     }
     public action() {
@@ -1307,19 +1329,19 @@ class VehicleTarget extends Target {
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
             this.badDamage(direc, collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return
         }
         if (severity == strikeSeverity.heavy) {
             this.damage = Damage.heavyDamaged;
             this.badDamage(direc, collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return
         }
         if (severity == strikeSeverity.catastrophic) {
             this.targetDestroyed(priorStatus);
             this.completeDestruction(collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return
         }
     }
@@ -1572,7 +1594,7 @@ class WaterVehicleTarget extends VehicleTarget {
             // counts now, not when the sinking has finished playing out.
             let priorStatus = this.status;
             this.targetDestroyed(priorStatus);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
 
             if (RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.explodeChance) {
                 this.completeDestruction(); // the same wreck and fireball as a direct hit

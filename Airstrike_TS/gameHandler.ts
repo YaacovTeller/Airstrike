@@ -600,10 +600,15 @@ class GameHandler {
     public lastStrike: position = null;
     private sequenceOrigin: position = null;
     private sequenceBuilding: boolean = false;
-    public assessKillPoints(priorStatus: Status, damage: Damage, fromBuilding: boolean = false) {
-        this.sequentialHits += 1;
+    // The targets in the chain so far: a target that is hit twice (disabled, then destroyed) is still the one target, and what is
+    // counted is real targets, not how many times they were scored
+    private sequenceTargets: Set<object> = new Set();
+    public assessKillPoints(priorStatus: Status, damage: Damage, fromBuilding: boolean = false, target?: object) {
+        const first = this.sequenceTargets.size === 0;
+        this.sequenceTargets.add(target || {});
+        this.sequentialHits = this.sequenceTargets.size;
         if (fromBuilding) this.sequenceBuilding = true;
-        if (this.sequentialHits === 1) {
+        if (first) {
             this.sequenceOrigin = this.lastStrike ? { X: this.lastStrike.X, Y: this.lastStrike.Y } : null;
             this.timeOutForMoreHits(this.sequentialHits);
         }
@@ -624,6 +629,7 @@ class GameHandler {
                 }
                 this.calcScore(this.sequentialHits);
                 this.sequentialHits = 0;
+                this.sequenceTargets.clear();
                 this.sequenceBuilding = false;
             }
         }, 500);
@@ -879,6 +885,7 @@ class GameHandler {
         this.weapon = null;
         this.strikesRestricted = false;
         this.sequentialHits = 0;
+        this.sequenceTargets.clear();
         this.progressNumber = 0;
         this.fullProgress = false;
         this.daytime = true;

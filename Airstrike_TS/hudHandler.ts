@@ -204,7 +204,7 @@ class HudHandler {
         pop.innerText = text + (count > 6 ? "!" : "") + (count > 10 ? "!" : "");
         const colour = HudHandler.popColours[Math.min(count, HudHandler.popColours.length - 1)];
         pop.style.color = colour;
-        pop.style.fontSize = Math.min(150, 46 + count * 16) + "px";
+        pop.style.fontSize = Math.min(96, 26 + count * 9) + "px";
         pop.style.setProperty("--popGlow", colour);
         const x = Math.max(80, Math.min(window.innerWidth - 80, origin ? origin.X : window.innerWidth / 2));
         const y = Math.max(120, Math.min(window.innerHeight - 40, origin ? origin.Y : window.innerHeight / 2));
