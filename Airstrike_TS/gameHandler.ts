@@ -1045,11 +1045,11 @@ class GameHandler {
 ): Array<BuildingSlot> {
     const {
         blockLength = 4,
-        lines = 8,
+        lines = 10,
         slantDegrees = 18,
-        padding = 30,
-        road = 1.15,                     // the road between blocks, in building widths
-        aboveCorner = 260                // how far the first line is above the one that runs from the corner of the land
+        padding = 12,
+        road = 1.0,                      // the road between blocks, in building widths
+        aboveCorner = 420                // how far the first line is above the one that runs from the corner of the land
     } = options || {};
     const slots: Array<BuildingSlot> = [];
 
@@ -1066,49 +1066,51 @@ class GameHandler {
     const large = town.filter(info => info.width >= 110);
     const medium = town.filter(info => info.width >= 80 && info.width < 110);
     const small = town.filter(info => info.width < 80);
-    const seaPieces = coastBuildingInfo.filter(info => info.waterfront && (info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_")));
-    const quay = coastBuildingInfo.filter(info => info.waterfront && !seaPieces.includes(info));
     const usedSingles: Array<BuildingInfo> = []; // there's one lighthouse, say, not four, and one mosque
     const singleTaken = (info: BuildingInfo) => !!info.single && usedSingles.some(u => u === info || (!!u.group && u.group === info.group));
 
     const blocksWanted = Math.floor(maxCount / (blockLength * blockDepth));
 
-    // The waterfront: the cranes, quays and the like stand in a line right on the water's edge, one below the next from the
-    // top of the land to the bottom of the screen, a few overlapping a little; the town is kept back from them. Where the
-    // water's faded edge is is the shore: their near corner is put in it.
-    const quaySide = 125; // how far in from the shore the town starts
+    // The waterfront: one kind of crane, three to six of them, stand along the shore, and one kind of jetty or breakwater, three
+    // to six of those, goes out into the sea, with the one lighthouse among the cranes. Where the water's faded edge is is the
+    // shore: a crane's near corner is put there and a jetty's landward end. The town starts just behind the cranes, a road away.
+    const cranes = coastBuildingInfo.filter(info => info.undamaged.includes("/Crane_"));
+    const seaKinds = coastBuildingInfo.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_"));
+    const lighthouses = coastBuildingInfo.filter(info => info.undamaged.includes("/Lighthouse"));
+    const crane = RandomNumberGen.returnRandomFromArray(cranes);
+    const seaKind = RandomNumberGen.returnRandomFromArray(seaKinds);
     const shoreOf = (topY: number, height: number) => {
         const span = Shoreline.waterSpan(topY + height * 0.55, topY + height);
         return span ? (span.openRight + span.shoreRight) / 2 : 0;
     };
-    // The jetty and the breakwater go out into the sea from the shore: the end of one that's on the land is at the shore and the
-    // rest of it goes out over the water (they run from the top left to the bottom right in their pictures)
+    const quaySide = crane.width + 6; // how far in from the shore the town starts: the crane's width and a road's worth
+    const seaCount = RandomNumberGen.randomNumBetween(3, 6);
     const seaRanges: Array<{ top: number, bottom: number }> = [];
-    for (const info of seaPieces) {
-        for (let attempt = 0; attempt < 12; attempt++) {
-            const topY = RandomNumberGen.randomNumBetween(top + 40, bottom - info.height - 20);
-            if (seaRanges.some(r => topY < r.bottom + 30 && topY + info.height > r.top - 30)) continue;
-            const left = shoreOf(topY, info.height) - info.width + 22;
-            slots.push({ X: left, Y: topY, info: info });
-            seaRanges.push({ top: topY, bottom: topY + info.height });
+    for (let n = 0; n < seaCount; n++) {
+        for (let attempt = 0; attempt < 30; attempt++) {
+            const topY = RandomNumberGen.randomNumBetween(top + 20, bottom - seaKind.height - 10);
+            if (seaRanges.some(r => topY < r.bottom - 6 && topY + seaKind.height > r.top + 6)) continue;
+            // the pieces run from the top left to the bottom right: the bottom right end is the one on the shore
+            slots.push({ X: shoreOf(topY, seaKind.height) - seaKind.width + 16, Y: topY, info: seaKind });
+            seaRanges.push({ top: topY, bottom: topY + seaKind.height });
             break;
         }
     }
     {
-        let foot = top + 95;
-        for (let tries = 0; tries < 60 && quay.length; tries++) {
-            const choices = quay.filter(info => !singleTaken(info));
-            if (!choices.length) break;
-            const info = RandomNumberGen.returnRandomFromArray(choices);
-            let topY = foot - info.height;
-            const clash = seaRanges.find(r => topY < r.bottom && foot > r.top);
-            if (clash) { foot = clash.bottom + info.height + 6; continue; } // not on top of the jetty
-            if (foot > bottom) break;
-            const left = shoreOf(topY, info.height) - 18 + RandomNumberGen.randomNumBetween(-4, 6);
-            if (left + info.width + padding > screenWidth) break;
-            if (info.single) usedSingles.push(info);
+        const craneCount = RandomNumberGen.randomNumBetween(3, 6);
+        const first = top + 100, step = (bottom - first) / craneCount;
+        const lightAt = RandomNumberGen.randomNumBetween(0, craneCount - 1);
+        for (let n = 0; n < craneCount; n++) {
+            let info = crane;
+            if (n == lightAt) {
+                const lights = lighthouses.filter(i => !singleTaken(i));
+                if (lights.length) { info = RandomNumberGen.returnRandomFromArray(lights); usedSingles.push(info); }
+            }
+            const foot = first + step * n + RandomNumberGen.randomNumBetween(0, Math.floor(step * 0.35));
+            const topY = foot - info.height;
+            const left = shoreOf(topY, info.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
+            if (left + info.width + padding > screenWidth) continue;
             slots.push({ X: left, Y: topY, info: info });
-            foot += info.height * 0.62;
         }
     }
 
@@ -1137,15 +1139,17 @@ class GameHandler {
     }
 
     // the buildings for a block: a grid of them, none the same as the one beside or behind it
-    const chooseBlock = (pool: Array<BuildingInfo>): Array<Array<BuildingInfo>> => {
+    const chooseBlock = (pool: Array<BuildingInfo>, length: number): Array<Array<BuildingInfo>> => {
         const grid: Array<Array<BuildingInfo>> = [];
-        for (let i = 0; i < blockLength; i++) {
+        for (let i = 0; i < length; i++) {
             grid.push([]);
             for (let j = 0; j < blockDepth; j++) {
                 const beside = i > 0 ? grid[i - 1][j] : null;
                 const behind = j > 0 ? grid[i][j - 1] : null;
                 const taken = (info: BuildingInfo) => singleTaken(info) || (!!info.single && grid.some(col => col.some(i => i === info || (!!i.group && i.group === info.group))));
-                const choices = pool.filter(info => info !== beside && info !== behind && !taken(info));
+                // (there are a lot of water towers, which would crowd the rest out: they're picked a third as often)
+                const wantTower = RandomNumberGen.randomNumBetween(1, 100) <= 30;
+                const choices = pool.filter(info => info !== beside && info !== behind && !taken(info) && (wantTower || !info.undamaged.includes("Water_Tower")));
                 const anyLeft = pool.filter(info => !taken(info));
                 grid[i].push(RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : pool));
             }
@@ -1160,7 +1164,7 @@ class GameHandler {
         for (let x0 = from; x0 < screenWidth; x0 += 12) {
             const placed: Array<BuildingSlot> = [];
             let tooHigh = false;
-            for (let i = 0; i < blockLength && !tooHigh; i++) {
+            for (let i = 0; i < grid.length && !tooHigh; i++) {
                 for (let j = 0; j < blockDepth; j++) {
                     const info = grid[i][j];
                     // the middle of its platform: along the row, a half cell for each step along it, and for each step back
@@ -1174,7 +1178,7 @@ class GameHandler {
                     placed.push({ X: left, Y: placedTop, info: info });
                 }
             }
-            if (!tooHigh) return { slots: placed, end: x0 + blockLength * cell / 2 + road * cell * 0.6 };
+            if (!tooHigh) return { slots: placed, end: x0 + grid.length * cell / 2 + road * cell * 0.6 };
         }
         return null;
     };
@@ -1186,8 +1190,11 @@ class GameHandler {
     while (blocks < blocksWanted && finished.some(f => !f)) {
         for (let k = 0; k < lines && blocks < blocksWanted; k++) {
             if (finished[k]) continue;
-            const grid = chooseBlock(classes[k].pool);
-            const block = tryBlock(k, grid, next[k]);
+            // a block of the full length if it fits, and if not a shorter one in what's left of the line, out to the edge of the screen
+            let block = null;
+            for (let length = blockLength; length >= 2 && !block; length--) {
+                block = tryBlock(k, chooseBlock(classes[k].pool, length), next[k]);
+            }
             if (!block) { finished[k] = true; continue; }
             block.slots.forEach(slot => {
                 if (slot.info.single) usedSingles.push(slot.info);

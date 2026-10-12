@@ -616,7 +616,7 @@ class HillsLevel extends SceneLevel {
     static maxOfEachMisc = 2;
     // ...and one or two water towers, of the four kinds. Nothing parks beside a water tower. They're drawn at a bit
     // under their usual size to go with the villas.
-    static towerNames = ["Water_Tower_Concrete", "Water_Tower_Metal", "Water_Tower_Box", "Water_Tower_Conical"];
+    static towerNames = ["Water_Tower_Concrete", "Water_Tower_Metal", "Water_Tower_Box", "Water_Tower_Conical", "Water_Tower_B1", "Water_Tower_B2", "Water_Tower_B3", "Water_Tower_B4"];
     static miscScale = 0.85;
     static minWaterTowers = 1;
     static maxWaterTowers = 2;

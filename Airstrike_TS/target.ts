@@ -77,10 +77,10 @@ const allBuildingInfo: Array<BuildingInfo> = [
 // of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
 const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Container", "Quay_Straight", "Quay_Corner", "Jetty",
     "Breakwater", "Repair_Dock", "Lighthouse", "Lighthouse_B"];
-const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque", "Repair_Dock"];
+const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque"];
 function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const file = (stage: number) => "port buildings/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : undefined };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
 }
 const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }),
@@ -132,6 +132,14 @@ const allIndustrialInfo: Array<BuildingInfo> = [
     industrialInfo("Container_Yard_Large", 144, 76, { x: [34, 86], y: [25, 44] }),
     industrialInfo("Container_Yard_Rail", 154, 68, { x: [29, 83], y: [30, 44] }),
     industrialInfo("Container_Yard_Small", 124, 66, { x: [27, 82], y: [15, 40] }),
+    industrialInfo("Container_Yard_B1", 130, 63, { x: [39, 81], y: [23, 40] }),
+    industrialInfo("Container_Yard_B2", 128, 61, { x: [42, 77], y: [21, 38] }),
+    industrialInfo("Container_Yard_B3", 123, 59, { x: [34, 77], y: [16, 36] }),
+    industrialInfo("Container_Yard_B4", 118, 57, { x: [30, 77], y: [17, 34] }),
+    industrialInfo("Water_Tower_B1", 81, 86, { x: [29, 45], y: [11, 69] }),
+    industrialInfo("Water_Tower_B2", 80, 89, { x: [33, 42], y: [15, 73] }),
+    industrialInfo("Water_Tower_B3", 80, 86, { x: [25, 45], y: [13, 68] }),
+    industrialInfo("Water_Tower_B4", 81, 89, { x: [32, 41], y: [13, 72] }),
     industrialInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
     industrialInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
     industrialInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
