@@ -638,13 +638,14 @@ class SceneLevel extends Level {
 // some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
 // scans them. Stages follow on from each other like the port's.
 class HillsLevel extends SceneLevel {
-    // What a village is made of, which varies from stage to stage: a small one is villas as it always was (with the odd
-    // block), a medium one has a couple of the apartment blocks among them, and a large one is mostly blocks with
-    // a few villas. The bigger the village, the bigger its mosque.
-    private static villageSizes: Array<{ chance: number, villas: [number, number], blocks: [number, number], mosques: Array<BuildingInfo> }> = [
-        { chance: 40, villas: [20, 26], blocks: [0, 1], mosques: allMosqueInfo },
-        { chance: 35, villas: [14, 18], blocks: [2, 3], mosques: mediumMosqueInfo },
-        { chance: 25, villas: [4, 6], blocks: [7, 9], mosques: largeMosqueInfo },
+    // What a village is made of, which varies from stage to stage, in four sizes: just villas; villas with a few of the small
+    // apartment blocks; villas with a range of apartment buildings, the tall ones too; and one that's very built up, mostly
+    // apartment buildings. The bigger the village, the bigger its mosque.
+    private static villageSizes: Array<{ chance: number, villas: [number, number], blocks: [number, number], blockPool: Array<BuildingInfo>, mosques: Array<BuildingInfo>, gap: number }> = [
+        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 22 },        // just villas
+        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 20 },        // villas, and a few small apartment blocks
+        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, mosques: mediumMosqueInfo, gap: 14 },        // a range of apartment buildings
+        { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, mosques: largeMosqueInfo, gap: 7 },        // very built up
     ];
     private static minOutliers: number = 1;    // and standing off from it
     private static maxOutliers: number = 2;
@@ -750,6 +751,7 @@ class HillsLevel extends SceneLevel {
         const reachY = Math.min(340, (height - HillsLevel.screenTop) * 0.5);
 
         // try to put one down: inside the village's ellipse (nearer the middle more often) or, for an outlier, well outside it
+        let gap = HillsLevel.villageGap; // set to the village's own once its size is known
         const place = (info: BuildingInfo, outlier: boolean): boolean => {
             for (let attempt = 0; attempt < 250; attempt++) {
                 let x: number, y: number;
@@ -766,7 +768,7 @@ class HillsLevel extends SceneLevel {
                 }
                 const box = { left: x, top: y, right: x + info.width, bottom: y + info.height };
                 const onScreen = x >= HillsLevel.screenEdge && y >= HillsLevel.screenTop && box.right <= width - HillsLevel.screenEdge && box.bottom <= height - HillsLevel.screenEdge;
-                if (!onScreen || this.overlapsTaken(box, HillsLevel.villageGap)) continue;
+                if (!onScreen || this.overlapsTaken(box, gap)) continue;
                 const building = new Building(info);
                 building.setPosition({ X: x, Y: y });
                 buildings.push(building);
@@ -783,12 +785,13 @@ class HillsLevel extends SceneLevel {
             size = candidate;
             if ((roll -= candidate.chance) <= 0) break;
         }
+        gap = size.gap;
 
         // the big ones first, while there's room: the village's mosque, which there's only the one of, and the blocks
         place(RandomNumberGen.returnRandomFromArray(size.mosques), false);
         const blocks = RandomNumberGen.randomNumBetween(size.blocks[0], size.blocks[1]);
         for (let i = 0; i < blocks; i++) {
-            place(RandomNumberGen.returnRandomFromArray(allBlockInfo), false);
+            place(RandomNumberGen.returnRandomFromArray(size.blockPool), false);
         }
         const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
         for (let i = 0; i < towers; i++) {

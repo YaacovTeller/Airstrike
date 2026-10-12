@@ -210,7 +210,18 @@ const allBlockInfo: Array<BuildingInfo> = [
     blockInfo(2, 115, 122, { x: [19, 84], y: [20, 92] }),
     blockInfo(3, 136, 126, { x: [14, 113], y: [29, 84] }),
     blockInfo(4, 164, 130, { x: [27, 125], y: [28, 92] }),
+    // the newer pictures: 5-8 are the low two-storey ones (0.32 of natural), 9-12 the tall ones (0.36)
+    blockInfo(5, 116, 83, { x: [20, 86], y: [26, 50] }),
+    blockInfo(6, 115, 85, { x: [16, 74], y: [29, 57] }),
+    blockInfo(7, 103, 78, { x: [15, 78], y: [20, 55] }),
+    blockInfo(8, 124, 90, { x: [19, 96], y: [22, 57] }),
+    blockInfo(9, 111, 114, { x: [18, 78], y: [17, 85] }),
+    blockInfo(10, 110, 117, { x: [20, 80], y: [23, 90] }),
+    blockInfo(11, 123, 109, { x: [14, 96], y: [23, 75] }),
+    blockInfo(12, 146, 121, { x: [15, 115], y: [27, 82] }),
 ];
+// The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
+const smallBlockInfo: Array<BuildingInfo> = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.
 function resizedBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
