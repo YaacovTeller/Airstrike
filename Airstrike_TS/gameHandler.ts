@@ -1258,14 +1258,14 @@ class GameHandler {
     // of its rows.
     private firstDryX(topY: number, height: number): number {
         const span = Shoreline.waterSpan(topY, topY + height);
-        return span ? span.shoreRight + GameHandler.shoreMargin : 0;
+        return span ? Math.max(0, span.shoreRight + GameHandler.shoreMargin) : 0; // (a shore that's off the left of the screen is no limit)
     }
 
     // As above, but for a building's picture, which is a diamond: it's the middle of it that's nearest the shore, so it's the rows
     // from near the top of its middle to near the foot that have to be clear, not its whole height
     private firstDryXFor(topY: number, height: number): number {
         const span = Shoreline.waterSpan(topY + height * 0.3, topY + height * 0.75);
-        return span ? span.shoreRight + GameHandler.shoreMargin : 0;
+        return span ? Math.max(0, span.shoreRight + GameHandler.shoreMargin) : 0; // (a shore that's off the left of the screen is no limit)
     }
 
     // The coast comes in two kinds, which take it in turns from one stage to the next:
@@ -1430,6 +1430,7 @@ class GameHandler {
             const shoreAtEnd = this.coastKind == "slice" ? shoreOf(topY - seaKind.height * 0.5, seaKind.height) : shoreOf(topY, seaKind.height);
             const inland = 40; // (they start on the land, a way in from the shore, and go out into the sea)
             if (shoreAtEnd + 16 + inland + padding > screenWidth) continue; // (on a sliced coast the shore is off the screen low down)
+            if (shoreAtEnd - seaKind.width + 16 + inland < 0) continue;      // (and on either, a piece can't start off the left of the screen)
             slots.push({ X: shoreAtEnd - seaKind.width + 16 + inland, Y: topY, info: seaKind });
             seaRanges.push({ top: topY, bottom: topY + seaKind.height });
             break;
@@ -1440,7 +1441,7 @@ class GameHandler {
         // a second cluster of another kind
         const along = crane.height * 0.38;                 // how far down the shore the next in a cluster is (they stand close)
         // down the shore as far as there's room: a sliced coast's shore runs off the right of the screen part of the way down
-        const first = top + (this.coastKind == "slice" ? 60 : 10);
+        const first = this.coastKind == "slice" ? Math.max(top + 60, this.coastShoreIntercept + 10) : top + 10; // (a sliced coast's shore is off the left of the screen above where it comes in)
         const last = this.coastKind == "slice"
             ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - 40))
             : bottom - 10;
@@ -1470,7 +1471,7 @@ class GameHandler {
                 const placedFoot = foot + cluster.info.height + i * cluster.info.height * 0.38;
                 const topY = placedFoot - cluster.info.height;
                 const x = shoreOf(topY, cluster.info.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
-                if (x + cluster.info.width + padding > screenWidth || placedFoot > bottom || topY < top - 20) continue; // (on a sliced coast the shore is off the screen low down)
+                if (x < 0 || x + cluster.info.width + padding > screenWidth || placedFoot > bottom || topY < top - 20) continue; // (the shore's off the screen to the left, or on a sliced coast low down to the right)
                 placedCranes.push({ X: x, Y: topY, info: cluster.info });
             }
             foot += lengthOf(cluster);
@@ -1486,7 +1487,7 @@ class GameHandler {
             const foot = pick ? pick.Y + crane.height : first + step;
             const topY = foot - light.height;
             const left = shoreOf(topY, light.height) + 2;
-            if (left + light.width + padding <= screenWidth) {
+            if (left >= 0 && left + light.width + padding <= screenWidth) {
                 if (pick) placedCranes.splice(placedCranes.indexOf(pick), 1);
                 placedCranes.push({ X: left, Y: topY, info: light });
             }
@@ -1693,7 +1694,7 @@ class GameHandler {
         const sliced = this.coastKind == "slice";
         const along = sliced ? [down.x * pieceLength, down.y * pieceLength] : [-down.x * pieceLength, -down.y * pieceLength];
         const across = sliced ? [-Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth] : [Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth];
-        let y = top - 20, x = shoreOf(y, 10) + roadOffset;
+        let y = Math.max(top - 20, sliced ? this.coastShoreIntercept - 40 : top - 20), x = shoreOf(y, 10) + roadOffset;
         let count = 0;
         while (y < bottom + 60 && count++ < 20) {
             if (x > -pieceLength && x < screenWidth + pieceLength * 0.4) {

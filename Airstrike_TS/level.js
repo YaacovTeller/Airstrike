@@ -339,7 +339,7 @@ class Level {
 // stage is finished when every target has been destroyed, after which a freshly generated stage
 // follows -- forever. Its single wave only carries the time of day and weather.
 class SceneLevel extends Level {
-    staticTargetCount = 10;
+    staticTargetCount = 20 / 3; // boats to a coast stage (two thirds of what there were: 7, 9 or 13, by difficulty)
     stage = 0;
     // A game of these levels is this many stages, and then it's won
     static totalStages = 6;
@@ -570,6 +570,10 @@ class SceneLevel extends Level {
         }, SceneLevel.fleeDelay());
     }
     // How long after the first strike a special enemy waits before he runs for it (the harder the difficulty, the sooner)
+    static spookDelay() {
+        const range = game.difficulty.spookDelay || { min: 3500, max: 7000 };
+        return RandomNumberGen.randomNumBetween(range.min, range.max);
+    }
     static fleeDelay() {
         const range = game.difficulty.fleeDelay || { min: 8000, max: 15000 };
         return RandomNumberGen.randomNumBetween(range.min, range.max);
@@ -588,7 +592,7 @@ class SceneLevel extends Level {
                 if (!special.isFinished())
                     this.sendBoat(special, stage);
             }
-        }, 1500);
+        }, SceneLevel.spookDelay());
     }
     sendBoat(special, stage) {
         if (special.called || special.isFinished())
@@ -758,7 +762,7 @@ class HillsLevel extends SceneLevel {
         setTimeout(() => {
             if (stage === this.stageNumber && game.level === this)
                 this.startFlee();
-        }, 1500);
+        }, SceneLevel.spookDelay());
     }
     // Each special enemy still in a building gets into the nearest vehicle that's running, and starts it up
     startFlee() {

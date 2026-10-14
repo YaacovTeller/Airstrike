@@ -210,6 +210,7 @@ type difficultyLevelInfo = {
     fleeSpeed?: number,   // how fast a special enemy makes off in a car (Hills), in px every 100ms
     boatFleeSpeed?: number, // and in a boat (Coast)
     fleeDelay?: speedRange, // how long (ms) after the first strike he waits before making a run for it
+    spookDelay?: speedRange, // and how long the other waits when one of two has been taken out
     eng: langInfo,
     heb: langInfo
 }
@@ -325,6 +326,7 @@ const sceneNormal: difficultyLevelInfo = {
     fleeSpeed: 3,
     boatFleeSpeed: 3,
     fleeDelay: { min: 8000, max: 15000 },
+    spookDelay: { min: 3500, max: 7000 },
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
@@ -335,6 +337,7 @@ const sceneHard: difficultyLevelInfo = {
     fleeSpeed: 5.5,
     boatFleeSpeed: 5,
     fleeDelay: { min: 6000, max: 11000 },
+    spookDelay: { min: 2500, max: 5000 },
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
@@ -346,6 +349,7 @@ const sceneChaos: difficultyLevelInfo = {
     fleeSpeed: 8,                                   // as fast as the fastest car there is (a regular target's top speed on Chaos)
     boatFleeSpeed: 7,
     fleeDelay: { min: 4000, max: 8000 },
+    spookDelay: { min: 1500, max: 3000 }, // (less generous: on Chaos he's off almost at once)
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
