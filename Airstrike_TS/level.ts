@@ -298,6 +298,8 @@ class Level {
     public noteShot(slot: number, cost: number, bigBomb: boolean) { }
     // Something has exploded (a drone flyover or a gunshot hasn't)
     public noteExplosion() { }
+    // One of the special enemies has been dealt with (see SpecialEnemy)
+    public specialDown() { }
     // A tunnel charge has been set; true if it's the first of the stage
     public noteChargeSet(): boolean { return false; }
 
@@ -616,7 +618,20 @@ class SceneLevel extends Level {
         return RandomNumberGen.randomNumBetween(range.min, range.max);
     }
     // He calls for the nearest boat that's running
+    // Where there are two of them, taking one out spooks the other, who runs for it at once (give or take a moment)
+    public specialDown() {
+        if (this.bunkerSpecials.length < 2) return;
+        const stage = this.stageToken;
+        this.retreatScheduled = true; // (no need for the usual wait and the usual reason)
+        setTimeout(() => {
+            if (stage !== this.stageToken || game.level !== this) return;
+            for (const special of this.bunkerSpecials) {
+                if (!special.isFinished()) this.sendBoat(special, stage);
+            }
+        }, 1500);
+    }
     private sendBoat(special: SpecialEnemy, stage: number) {
+        if (special.called || special.isFinished()) return;
         const boats = allTargets.filter(t => t instanceof WaterVehicleTarget && t.isRunning() && !t.isRunningToShore()) as Array<WaterVehicleTarget>;
         if (!boats.length) return;
         const here = CollisionDetection.getXYfromPoint(special.getTargetEl());
@@ -625,8 +640,10 @@ class SceneLevel extends Level {
             return Math.hypot(there.X - here.X, there.Y - here.Y);
         };
         const boat = boats.reduce((best, t) => distanceTo(t) < distanceTo(best) ? t : best);
+        special.called = true;
         boat.runToShore(special, game.difficulty.boatFleeSpeed || 3, () => {
             // that one was knocked out on the way: another, a moment later
+            special.called = false;
             setTimeout(() => {
                 if (stage === this.stageToken && game.level === this && !special.isFinished()) this.sendBoat(special, stage);
             }, 3000);
@@ -776,6 +793,15 @@ class HillsLevel extends SceneLevel {
         setTimeout(() => {
             if (stage === this.stageNumber && game.level === this) this.startFlee();
         }, SceneLevel.fleeDelay());
+    }
+    // Where there are two of them, taking one out spooks the other, who runs for it at once (give or take a moment)
+    public specialDown() {
+        if (this.specials.length < 2) return;
+        this.fleeScheduled = true;
+        const stage = this.stageNumber;
+        setTimeout(() => {
+            if (stage === this.stageNumber && game.level === this) this.startFlee();
+        }, 1500);
     }
     // Each special enemy still in a building gets into the nearest vehicle that's running, and starts it up
     private startFlee() {

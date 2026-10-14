@@ -1295,6 +1295,8 @@ class VehicleTarget extends Target {
         this.specialName = undefined;
         this.targetEl.classList.remove('special');
         announceElimination(name, this.specialPortrait);
+        if (game.level)
+            game.level.specialDown(); // (another one in the stage is spooked)
     }
     targetDisabled() {
         super.targetDisabled();
@@ -2305,6 +2307,7 @@ class SpecialEnemy extends BuildingEnemy {
     name;
     portrait;
     boarded = false; // he's got into a vehicle: that's the target now
+    called = false; // he's called for a boat, which is on its way
     bunker;
     constructor(name, portrait) {
         super();
@@ -2323,6 +2326,8 @@ class SpecialEnemy extends BuildingEnemy {
             return;
         super.eliminate();
         announceElimination(this.name, this.portrait);
+        if (game.level)
+            game.level.specialDown(); // (another one in the stage is spooked)
     }
     // Down in a bunker, so he's only to be seen where a scan has found him
     goUnderground() {
