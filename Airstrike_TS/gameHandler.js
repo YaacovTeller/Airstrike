@@ -1174,8 +1174,8 @@ class GameHandler {
         else {
             const angle = RandomNumberGen.randomNumBetween(22, 28); // down from the horizontal; the rows are put to match it
             k = 1 / Math.tan(angle * Math.PI / 180);
-            const topLeft = RandomNumberGen.randomNumBetween(60, 200); // where it comes in at the top of the land
-            shoreAtMiddle = topLeft + (height / 2 - 100) * k;
+            const leftEdge = height * RandomNumberGen.randomNumBetween(30, 48) / 100; // how far down the left edge of the screen the shore comes in: the sea is only the corner below it, and the land the rest
+            shoreAtMiddle = (height / 2 - leftEdge) * k;
             this.coastRowSlant = angle;
             this.coastShoreSlope = 1 / k;
             this.coastShoreIntercept = height / 2 - shoreAtMiddle / k;
