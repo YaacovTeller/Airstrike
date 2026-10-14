@@ -561,6 +561,12 @@ img#crater { /*to override the img[src]!*/
     z-index: 7; /* an aircraft's shadow passes over everything on the ground: buildings and targets (5), explosions (6) */
 }
 
+    .flyover.bomber { /* the bunker buster's: a bomber's shadow, a good deal bigger */
+        height: 560px;
+        width: 560px;
+        opacity: 0.5;
+    }
+
     .flyover.chopper {
         height: 250px;
         width: 250px;

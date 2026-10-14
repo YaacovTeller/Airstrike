@@ -675,6 +675,14 @@ const bunkerBusterInfo: ExplosiveWeaponInfo = {
     ...scaledBigStrike(7, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
     utility: true,
     class: BunkerBusterWeaponType,
+    // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point. The picture is a
+    // placeholder (the fighter's) until there's a B-2 one: just change the file here.
+    flyover: {
+        imageSource: assetsSVGFolder + 'f16.svg',
+        speed: 5,
+        duration: 3600,
+        delay: 1200
+    },
     blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };

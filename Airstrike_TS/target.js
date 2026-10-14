@@ -1860,7 +1860,7 @@ class WaterVehicleTarget extends VehicleTarget {
         // down like any other, over the way it landed
         if (this.targetEl.classList.contains('smallBoat') && direc && collisionInfo && collisionInfo.radius > WaterVehicleTarget.flipMinRadius
             && RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.flipChance) {
-            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle);
+            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.dipUpsideDown());
         }
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
@@ -1924,6 +1924,20 @@ class WaterVehicleTarget extends VehicleTarget {
     // the water rather than swinging about the middle of the boat; the window has room above and
     // to the sides so the end that lifts isn't cropped.
     sinkMask; // there once the sinking has started
+    sinkGroup;
+    // A boat that's been thrown over lies upside down in the water: the waterline (the edge of the sink mask) is already a way up it, so it's dipped
+    // in, and goes on burning like that until it goes down
+    static dipShare = 0.3;
+    dipUpsideDown() {
+        if (!this.targetEl.isConnected || this.sinkMask || this.damage === Damage.destroyed || !this.angle)
+            return;
+        const { group } = this.createSinkMask();
+        group.style.transform = `rotate(${this.angle}deg)`;
+        void group.offsetHeight;
+        group.style.transition = "transform 0.6s ease-out";
+        group.style.transform = `translateY(${group.offsetHeight * WaterVehicleTarget.dipShare}px) rotate(${this.angle}deg)`;
+        this.damageEl.style.transform = `rotate(${-this.angle}deg)`; // (the flames still go up)
+    }
     createSinkMask() {
         const targetRect = this.targetEl.getBoundingClientRect();
         const picRect = this.picEl.getBoundingClientRect();
@@ -1949,6 +1963,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.damageEl.style.left = (damageRect.left - picRect.left) + "px"; // damageEl was centered over picEl via flex layout -- pin that same spot explicitly now it's absolutely positioned inside the group
         this.damageEl.style.top = (damageRect.top - picRect.top) + "px";
         void group.offsetHeight; // lay it out now, so the transform changes that follow animate instead of jumping
+        this.sinkGroup = group;
         return { mask, group };
     }
     // Undoes createSinkMask: the picture and fire go back to where they were, and the window goes.
@@ -1968,10 +1983,10 @@ class WaterVehicleTarget extends VehicleTarget {
     static flipChance = 35; // percent of the hits that could throw a small boat over that do
     static flipMinRadius = 50; // only from a blast with a radius bigger than this: not the light missile or the missile
     sink(turned = 0) {
-        let { mask, group } = this.createSinkMask();
+        let { mask, group } = this.sinkMask ? { mask: this.sinkMask, group: this.sinkGroup } : this.createSinkMask(); // (one that's upside down is already in its mask)
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
         this.stopFireLight(WaterVehicleTarget.sinkDuration); // the fire goes down with the boat
-        if (turned) { // (it goes down as it landed, over, not the right way up)
+        if (turned && !group.style.transform) { // (it goes down as it landed, over, not the right way up; one that was dipped in already is)
             group.style.transform = `rotate(${turned}deg)`;
             void group.offsetHeight;
         }

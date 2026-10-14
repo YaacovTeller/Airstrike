@@ -338,6 +338,20 @@ class ExplosiveWeaponType extends WeaponType {
 // it's drawn on a scan is only where it is underground, so landing on that does nothing.
 class BunkerBusterWeaponType extends ExplosiveWeaponType {
     static detonationDelay = 1000; // from the thud to the blast, as if it went off below ground
+    // Its flyover: a big, slow shadow along the middle of the screen (see .flyover.bomber)
+    createFlyover(inst) {
+        const div = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "flyover");
+        div.classList.add("bomber");
+        const img = document.createElement('img');
+        div.appendChild(img);
+        img.src = this.flyoverInfo.imageSource;
+        div.style.left = '100vw';
+        div.style.top = (window.innerHeight - 560) / 2 + 'px';
+        const pause = this.flyoverInfo.delay;
+        const duration = this.flyoverInfo.duration;
+        setTimeout(() => this.beginMoveInterval(div, this.flyoverInfo.speed, duration), pause);
+        ContentElHandler.fadeRemoveItem(div, pause + duration, 10);
+    }
     static craterScale = 0.5; // of a massive explosion's crater (240 by 120), so 120 by 60
     constructor(info) {
         super(info);

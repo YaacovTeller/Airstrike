@@ -351,8 +351,8 @@ class SceneLevel extends Level {
     rushDirections = ["down"]; // the ways the ground can rush between stages
     // The rush between stages isn't the player's time. Over par, the clock goes red and bleeps once.
     tickClock() {
-        if (StageTransition.active)
-            return;
+        if (StageTransition.active || this.stageFinished)
+            return; // (the clock stops when the stage is cleared, as its message comes up)
         this.stageElapsedMs += 100;
         if (++this.ticksSinceRetreatCheck >= 10) { // once a second: has there been enough destruction for the special in the bunker to run for it?
             this.ticksSinceRetreatCheck = 0;
@@ -365,6 +365,7 @@ class SceneLevel extends Level {
         }
     }
     overParWarned = false;
+    stageFinished = false;
     // How long a stage can take before the hurry-up nudge: the difficulty's time, or the level's own if it has none
     parMs() {
         return game.difficulty.parMs || this.slowAfterMs;
@@ -487,6 +488,7 @@ class SceneLevel extends Level {
         this.stageChargesSet = 0;
         this.stageBigBombsBySlot = {};
         this.overParWarned = false;
+        this.stageFinished = false;
         if (this.stage > 1) {
             PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.totalStages, msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
@@ -614,6 +616,7 @@ class SceneLevel extends Level {
         return this.targets.every(t => t.isFinished());
     }
     endWave() {
+        this.stageFinished = true; // the time is what it was when the stage was cleared
         PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
         if (this.stage >= SceneLevel.totalStages) { // the last of them: the game's won, once its message has been read
             setTimeout(() => { if (game.level === this)

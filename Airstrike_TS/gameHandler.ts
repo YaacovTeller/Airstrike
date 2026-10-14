@@ -41,7 +41,7 @@ class PowerGrid {
     // Where to put a substation near the edge of the screen and the pylons that lead away from it, and clear off the edge: up and to the right from one on
     // the top or the right edge, down and to the left from one on the bottom or the left, which is the way they're drawn. The boxes are
     // checked with accept (which is told only the part of each that's on the screen). Returns the slots, or none if there was no room.
-    public static plan(edges: Array<"top" | "right" | "bottom" | "left">, accept: (box: Box, part: "substation" | "line") => boolean): Array<BuildingSlot> {
+    public static plan(edges: Array<"top" | "right" | "bottom" | "left">, accept: (box: Box, part: "substation" | "line") => boolean, corner: boolean = false): Array<BuildingSlot> {
         const width = window.innerWidth, height = window.innerHeight;
         const hud = 125;   // clear of the HUD
         const inside = (box: Box): Box => ({ left: Math.max(0, box.left), top: Math.max(0, box.top), right: Math.min(width, box.right), bottom: Math.min(height, box.bottom) });
@@ -51,9 +51,10 @@ class PowerGrid {
             let x: number, y: number;
             const near = () => RandomNumberGen.randomNumBetween(18, 70);
             switch (edge) {
-                case "right": x = width - sub.width - RandomNumberGen.randomNumBetween(50, 280); y = RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30); break;
-                case "left": x = RandomNumberGen.randomNumBetween(50, 280); y = RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30); break;
-                case "top": y = hud + RandomNumberGen.randomNumBetween(0, 50); x = RandomNumberGen.randomNumBetween(60, width - sub.width - 60); break;
+                // (tucked right at the edge; and with corner set, in the corner at the back of the screen, the top right)
+                case "right": x = width - sub.width - (corner ? RandomNumberGen.randomNumBetween(10, 60) : RandomNumberGen.randomNumBetween(15, 90)); y = corner ? RandomNumberGen.randomNumBetween(hud + 10, hud + 260) : RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30); break;
+                case "left": x = RandomNumberGen.randomNumBetween(15, 90); y = RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30); break;
+                case "top": y = hud + RandomNumberGen.randomNumBetween(0, corner ? 30 : 50); x = corner ? RandomNumberGen.randomNumBetween(width - sub.width - 420, width - sub.width - 20) : RandomNumberGen.randomNumBetween(60, width - sub.width - 60); break;
                 default: y = height - sub.height - near(); x = RandomNumberGen.randomNumBetween(60, width - sub.width - 60); break;
             }
             const subBox = { left: x, top: y, right: x + sub.width, bottom: y + sub.height };
@@ -1471,14 +1472,17 @@ class GameHandler {
     const boxOf = (slot: BuildingSlot): Box => ({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
     const reserved: Array<Box> = [];        // where the town keeps off: the substation and its lines
     const reservedSubstation: Array<Box> = [];
-    const power = PowerGrid.plan(["right", "top", "bottom"], (box, part) => {
+    const powerFits = (box: Box, part: "substation" | "line") => {
         const dry = this.firstDryXFor(box.top, box.bottom - box.top);
         if (box.left < dry + (part == "substation" ? quaySide + 10 : 24)) return false; // (the substation stays out of the strip with the cranes and the shore road)
         return !slots.some(slot => {
             const other = boxOf(slot);
             return box.left < other.right + 10 && box.right > other.left - 10 && box.top < other.bottom + 6 && box.bottom > other.top - 6;
         });
-    });
+    };
+    // tucked away in the corner at the back (the top right), out of the way of the town; anywhere on an edge if that corner's no good
+    let power = PowerGrid.plan(["right", "top"], powerFits, true);
+    if (!power.length) power = PowerGrid.plan(["right", "top", "bottom"], powerFits);
     for (const slot of power) {
         reserved.push(boxOf(slot));
         if (slot.info.electric == "substation") reservedSubstation.push(boxOf(slot));
