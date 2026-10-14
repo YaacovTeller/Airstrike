@@ -1938,10 +1938,11 @@ class WaterVehicleTarget extends VehicleTarget {
         this.sinkScheduled = true;
         this.strikePoint = this.impactPoint(collisionInfo, this.hitBox());
 
-        if (this.targetEl.classList.contains('smallBoat') && direc) {
-            // a small boat is thrown over like a car, and the moment it comes down it goes under, and is lost
-            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.capsize());
-            return;
+        // A small boat is sometimes thrown over like a car, by a blast that's more than a small one (the first two missiles' don't), and then burns and goes
+        // down like any other, over the way it landed
+        if (this.targetEl.classList.contains('smallBoat') && direc && collisionInfo && collisionInfo.radius > WaterVehicleTarget.flipMinRadius
+            && RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.flipChance) {
+            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle);
         }
 
         if (!this.damageEl.classList.contains("badDamaged")) {
@@ -1965,7 +1966,7 @@ class WaterVehicleTarget extends VehicleTarget {
                 this.completeDestruction(); // the same wreck and fireball as a direct hit
             }
             else {
-                tilt === 0 ? this.sink() : this.tiltingSink(tilt);
+                tilt === 0 ? this.sink(this.angle) : this.tiltingSink(tilt);
             }
         }, fireDuration);
     }
@@ -2058,15 +2059,8 @@ class WaterVehicleTarget extends VehicleTarget {
         this.sinkMask = null;
     }
 
-    // Thrown over and come down: it sinks at once, still the way up it landed
-    private capsize() {
-        if (this.damage === Damage.destroyed || !this.targetEl.isConnected) return;
-        const priorStatus = this.status;
-        this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage, false, this);
-        this.sink(this.angle);
-    }
-
+    private static flipChance: number = 35;       // percent of the hits that could throw a small boat over that do
+    private static flipMinRadius: number = 50;    // only from a blast with a radius bigger than this: not the light missile or the missile
     private sink(turned: number = 0) {
         let { mask, group } = this.createSinkMask();
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
