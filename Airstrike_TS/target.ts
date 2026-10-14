@@ -486,7 +486,7 @@ class Building extends MapEntity {
         }
         const centre = CollisionDetection.getXYfromPoint(this.targetEl);
         SoundPlayer.playRandomSound(bigExplosions);
-        ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
+        ExplosionHandler.basicExplosion(centre, ExplSizes.XL, expl_med_imgs, weaponNames.mortar, 0.85); // (a bit bigger than a large one: the next size up, at 85%)
     }
     public blockId?: number; // which block of the coast's town it's in, if it's in one
     // A jetty or a breakwater, out into the sea

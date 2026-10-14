@@ -505,7 +505,7 @@ const surveillanceInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 2, // vw per 100ms, so a pass of 9s crosses the screen with a good deal to spare
+        speed: 1.3, // vw per 100ms, so a pass of 9s (the length of the scan) takes it right across the screen and just off the other side
         duration: 9000, // how long the scan lasts too
         delay: 1000 // a second to arrive
     }
