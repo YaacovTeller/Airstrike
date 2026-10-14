@@ -718,7 +718,8 @@ class GameHandler {
         var flaresString = this.returnLightString(flares, "255, 255, 50");
         var firesString = this.returnLightString(fires, "255, 255, 255");
         if (this.glowDirty) {
-            this.glowString = this.returnLightString(glows, "255, 205, 120");
+            const shift = this.contentShift();
+            this.glowString = this.returnLightString(glows, "255, 205, 120", shift.x, shift.y);
             this.glowDirty = false;
         }
         var gradientsString = [lightsString, flaresString, firesString, this.glowString]
@@ -727,7 +728,7 @@ class GameHandler {
         this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
         this.darkOverlay.style.backgroundColor = defaultRGB;
     }
-    returnLightString(arr, rbgString) {
+    returnLightString(arr, rbgString, shiftX = 0, shiftY = 0) {
         return arr
             .filter(light => light.opac > 0)
             .map(light => {
@@ -738,11 +739,30 @@ class GameHandler {
                 light.pos.X = parseInt(light.parent.style.left) + light.parent.offsetWidth / 2;
                 light.pos.Y = parseInt(light.parent.style.top) + light.parent.offsetHeight / 2;
             }
-            return `radial-gradient(circle ${radius}px at ${light.pos.X}px ${light.pos.Y}px,
+            return `radial-gradient(circle ${radius}px at ${light.pos.X + shiftX}px ${light.pos.Y + shiftY}px,
                         rgba(${rbgString}, ${light.opac}) ${brightRange}%,
                         rgba(0, 0, 0, 0) ${featherRange}%)`;
         })
             .join(', ');
+    }
+    // How far the stage's content is from where it will be, while it's riding in with the rush between stages: the glows are on the shade over it
+    // all, so they have to go with it, or they'd be seen shining where the buildings are going to be, a long way before they get there
+    contentShift() {
+        if (!StageTransition.active)
+            return { x: 0, y: 0 };
+        const m = new DOMMatrix(getComputedStyle(ContentElHandler.returnContentEl()).transform);
+        return { x: m.m41, y: m.m42 };
+    }
+    trackGlowsDuringRush() {
+        const follow = () => {
+            if (!glows.length || this.daytime)
+                return;
+            this.glowDirty = true;
+            this.updateLights();
+            if (StageTransition.active)
+                requestAnimationFrame(follow);
+        };
+        requestAnimationFrame(follow);
     }
     // The glows of the buildings after dark (see lightStage). Static, so the string for them is only made again when something about them changes.
     glowString = "";

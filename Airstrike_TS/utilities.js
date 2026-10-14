@@ -136,6 +136,7 @@ class StageTransition {
         document.body.classList.add("stageRushing");
         this.active = true;
         SoundPlayer.playWithVolumeSet(jet_pass);
+        game.trackGlowsDuringRush(); // (the glows after dark ride in with the buildings)
         setTimeout(() => this.cancel(), this.duration);
     }
     // Ends it, wherever it's got to: the ground and the stage are where they'd be at the end anyway
