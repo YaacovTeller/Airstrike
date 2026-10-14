@@ -230,8 +230,8 @@ function electricInfo(name, width, height, kind) {
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo = [
-    electricInfo("Substation_A", 124, 98, "substation"),
-    electricInfo("Substation_B", 125, 106, "substation"),
+    electricInfo("Substation_A", 196, 146, "substation"),
+    electricInfo("Substation_B", 198, 159, "substation"),
 ];
 const powerLineInfo = [
     { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },

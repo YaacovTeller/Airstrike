@@ -259,8 +259,8 @@ function electricInfo(name: string, width: number, height: number, kind: "substa
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo: Array<BuildingInfo> = [
-    electricInfo("Substation_A", 124, 98, "substation"),
-    electricInfo("Substation_B", 125, 106, "substation"),
+    electricInfo("Substation_A", 196, 146, "substation"),
+    electricInfo("Substation_B", 198, 159, "substation"),
 ];
 type PowerLineInfo = { info: BuildingInfo, leftBase: [number, number], rightBase: [number, number] };
 const powerLineInfo: Array<PowerLineInfo> = [
