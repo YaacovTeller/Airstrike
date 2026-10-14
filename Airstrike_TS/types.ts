@@ -126,6 +126,12 @@ const buildingEnemyTarget: TargetInfo = {
     maxSpeed: 0,
     armour: Armour.none,
 }
+// A stack of ammunition or rockets: it stays where it is
+const explosiveTargetInfo: TargetInfo = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+}
 // A tunnel you can't see, under the ground: doesn't move, nothing damages it but a charge or a really big blast
 const hiddenTunnelTarget: TargetInfo = {
     minSpeed: 0,

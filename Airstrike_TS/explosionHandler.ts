@@ -16,7 +16,9 @@ type light = {
     fadeStep?: number,
     // A light that shines this far (px), solid out to a fifth of it and fading away at the edge,
     // instead of the usual size-based glow.
-    reach?: number
+    reach?: number,
+    // For the glow of a building after dark: the building, which puts it out if it's brought down
+    owner?: { isWrecked(): boolean }
 }
 // The splash pictures (AS_assets/splash) are on a canvas bigger than the original 351x248, with the ripple rings completed
 // out to the sides and bottom. padSides is the extra width on each of the left and right.
@@ -25,6 +27,7 @@ const splashPicture = { width: 501, height: 309, originalWidth: 351, originalHei
 var lights: Array<light> = [];
 var flares: Array<light> = [];
 var fires: Array<light> = [];
+var glows: Array<light> = []; // the lights of the buildings after dark, which go out when the power does
 
 const flareFade = 15000;
 const flareReach = 550;

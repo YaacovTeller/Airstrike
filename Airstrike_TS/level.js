@@ -436,6 +436,12 @@ class SceneLevel extends Level {
         text = (criticised ? userHandler.addressed(praise) : praise) + text;
         return text;
     }
+    // Morning (daylight) or dusk, one stage in three at dusk. There's no night yet, as there are no flares.
+    chooseTimeOfDay() {
+        const time = RandomNumberGen.randomNumBetween(1, 100) <= 33 ? Time.dusk : Time.day;
+        this.currentWave.timeOfDay = time;
+        game.changeTime(time);
+    }
     // Mostly fine: one stage in five has rain, half of those (one in ten) hard rain, the rest light or medium
     chooseWeather() {
         const roll = RandomNumberGen.randomNumBetween(1, 100);
@@ -462,7 +468,10 @@ class SceneLevel extends Level {
             this.setCurrentWave(); // later stages keep whatever time of day they're in
         }
         game.setRain(this.chooseWeather()); // but the weather's chosen afresh for each
+        this.chooseTimeOfDay(); // and the time of day
+        PowerGrid.reset();
         this.populateStage();
+        game.lightStage(this.returnLocation()); // after dark the buildings glow
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
@@ -503,7 +512,7 @@ class SceneLevel extends Level {
         this.bunkerSpecials = [];
         this.retreatScheduled = false;
         this.stageToken++;
-        const pool = buildings.slice();
+        const pool = buildings.filter(b => !b.isElectric());
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const bunker = new Bunker(building);
@@ -637,11 +646,41 @@ class HillsLevel extends SceneLevel {
     takenBoxes = []; // where things have been put this stage, so nothing's put on top of anything
     populateStage() {
         this.takenBoxes = [];
+        this.placePower();
         const buildings = this.placeVillage();
         this.infestBuildings(buildings); // only the villas have somewhere for anyone to hide
         this.placeSpecialEnemies(buildings);
         this.placeVehicles(buildings);
+        this.placeExplosives(buildings);
         this.placeTunnels();
+    }
+    // The substation near the edge of the screen, and its lines leading off the map, are put down first, so the village keeps clear of them
+    placePower() {
+        const slots = PowerGrid.plan(["top", "right", "bottom", "left"], box => !this.overlapsTaken(box, 14));
+        for (const slot of slots) {
+            const building = new Building(slot.info);
+            building.setPosition(slot);
+            PowerGrid.add(building);
+            this.takenBoxes.push({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
+        }
+    }
+    // Stacks of ammunition and rockets standing about among the villas, which count as targets: anything that damages one sets it on fire,
+    // and it goes up (see ExplosiveTarget)
+    static minExplosives = 2;
+    static maxExplosives = 5;
+    placeExplosives(buildings) {
+        const villas = buildings.filter(b => !b.isTall());
+        if (!villas.length)
+            return;
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minExplosives, HillsLevel.maxExplosives);
+        for (let i = 0; i < count; i++) {
+            const info = RandomNumberGen.returnRandomFromArray(allExplosiveInfo);
+            const spot = this.spotBesideAVilla(villas, info.width, info.height);
+            if (!spot)
+                continue;
+            this.takenBoxes.push({ left: spot.X, top: spot.Y, right: spot.X + info.width, bottom: spot.Y + info.height });
+            this.registerTarget(new ExplosiveTarget(info), spot);
+        }
     }
     // The special enemies here hide in buildings, and once the first explosion has gone off they'll try to get away
     // in a vehicle, between 10 and 20 seconds later (see startFlee), if there's one still running.

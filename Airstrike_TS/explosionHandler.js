@@ -11,6 +11,7 @@ const splashPicture = { width: 501, height: 309, originalWidth: 351, originalHei
 var lights = [];
 var flares = [];
 var fires = [];
+var glows = []; // the lights of the buildings after dark, which go out when the power does
 const flareFade = 15000;
 const flareReach = 550;
 const strikeLightReachFactor = 4; // a strike lights up this many times its own size

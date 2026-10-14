@@ -182,6 +182,55 @@ const largeMosqueInfo = [
     mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, "mosques/fancy/"),
     mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, "mosques/fancy/"),
 ];
+function explosiveInfo(name, width, height, rockets) {
+    return { file: "explosives/" + name + ".png", width: width, height: height, rockets: rockets };
+}
+const allExplosiveInfo = [
+    explosiveInfo("Ammo_Crates_1", 59, 42, false),
+    explosiveInfo("Ammo_Crates_2", 70, 51, false),
+    explosiveInfo("Ammo_Crates_3", 63, 54, false),
+    explosiveInfo("Ammo_Crates_4", 76, 55, false),
+    explosiveInfo("Ammo_Crates_5", 82, 48, false),
+    explosiveInfo("Ammo_Crates_6", 70, 52, false),
+    explosiveInfo("Ammo_Crates_7", 71, 51, false),
+    explosiveInfo("Ammo_Crates_8", 78, 50, false),
+    explosiveInfo("Ammo_Messy_1", 83, 66, false),
+    explosiveInfo("Ammo_Messy_2", 81, 65, false),
+    explosiveInfo("Ammo_Messy_3", 82, 64, false),
+    explosiveInfo("Ammo_Messy_4", 87, 67, false),
+    explosiveInfo("Ammo_Messy_5", 82, 66, false),
+    explosiveInfo("Ammo_Messy_6", 82, 63, false),
+    explosiveInfo("Ammo_Messy_7", 78, 64, false),
+    explosiveInfo("Ammo_Messy_8", 83, 59, false),
+    explosiveInfo("Rockets_Messy_1", 98, 73, true),
+    explosiveInfo("Rockets_Messy_2", 92, 67, true),
+    explosiveInfo("Rockets_Messy_3", 83, 74, true),
+    explosiveInfo("Rockets_Messy_4", 89, 76, true),
+    explosiveInfo("Rockets_Tubes_1", 53, 36, true),
+    explosiveInfo("Rockets_Tubes_2", 64, 42, true),
+    explosiveInfo("Rockets_Tubes_3", 65, 45, true),
+    explosiveInfo("Rockets_Tubes_4", 75, 49, true),
+    explosiveInfo("Rockets_Tubes_5", 60, 39, true),
+    explosiveInfo("Rockets_Tubes_6", 73, 39, true),
+    explosiveInfo("Rockets_Tubes_7", 56, 47, true),
+    explosiveInfo("Rockets_Tubes_8", 72, 44, true),
+];
+// The power grid (AS_assets/buildings/electric): a substation, with a line of pylons leading from it off the map. The pictures are on the
+// same canvas in all three states. Sizes are 0.36 of natural. A line of pylons is one picture, with a pylon at each end, so that a
+// chain of them end to end looks like one run: leftBase and rightBase are where the feet of those two pylons are in the picture, in px
+// (the chain steps from one to the next by the difference). The power plants and wind farms are cut out too, but nothing uses them yet.
+function electricInfo(name, width, height, kind) {
+    const file = (stage) => "electric/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
+}
+const substationInfo = [
+    electricInfo("Substation_A", 89, 75, "substation"),
+    electricInfo("Substation_B", 90, 83, "substation"),
+];
+const powerLineInfo = [
+    { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },
+    { info: electricInfo("Power_Line_HV", 122, 60, "line"), leftBase: [21, 59], rightBase: [104, 46] },
+];
 // What the Coast level is built of: the port buildings, the industrial ones, and the bigger mosques (one mosque to a layout,
 // whichever)
 const coastBuildingInfo = [
@@ -340,6 +389,18 @@ class Building extends MapEntity {
     }
     canHideEnemies() {
         return !!this.info.hide;
+    }
+    // Among the town, not on the waterfront
+    isTown() {
+        return !this.info.waterfront && !this.info.electric;
+    }
+    // Part of the power grid (a substation, or a stretch of its lines)
+    isElectric() {
+        return !!this.info.electric;
+    }
+    // Brought down, or what's left of it is rubble: it doesn't do what it did
+    isWrecked() {
+        return this.removed || this.damage === Damage.destroyed;
     }
     // A water tower and the like: nothing parks beside it
     isTall() {
@@ -666,6 +727,99 @@ class Target extends MapEntity {
         if (this.status == Status.active) {
             this.move(parseInt(this.targetEl.style.left));
         }
+    }
+}
+// A stack of ammunition or of rockets, standing about for the taking out. It has no damaged picture: anything that damages it at all sets
+// it on fire (the little fire burning on it, and its glow after dark), and anything more than light blows it up at once. Left burning,
+// the ammunition crackles off a few seconds later, and a few more seconds after that it goes up with a very small explosion; the rockets
+// say nothing, and go up with a large one. Either way the explosion can set off whatever is next to it.
+class ExplosiveTarget extends Target {
+    static fuseMs = { min: 3000, max: 5000 }; // the time it burns before each of its two stages
+    static crackles = 4; // gunfire noises in the ammunition's first stage
+    blast;
+    burning = false;
+    exploded = false;
+    fireLight;
+    constructor(info) {
+        super(explosiveTargetInfo);
+        this.blast = info ? info : RandomNumberGen.returnRandomFromArray(allExplosiveInfo);
+        this.targetEl.classList.add("explosive");
+        this.targetEl.classList.remove("smoothTransition");
+        this.targetEl.style.width = this.blast.width + "px";
+        this.targetEl.style.height = this.blast.height + "px";
+        this.picEl.style.width = "100%";
+        this.baseImgEl.src = assetsFolder + "buildings/" + this.blast.file;
+    }
+    action() { } // it stays put
+    // Any of it that a blast reaches
+    hitBox() {
+        const rect = this.targetEl.getBoundingClientRect();
+        return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+    }
+    hit(severity, wepName, collisionInfo) {
+        if (this.exploded || wepName == weaponNames.flare || wepName == weaponNames.surveillance)
+            return;
+        if (wepName == weaponNames.sniper || severity <= strikeSeverity.light) {
+            this.catchFire();
+        }
+        else {
+            this.explode(true);
+        }
+    }
+    catchFire() {
+        if (this.burning)
+            return;
+        this.burning = true;
+        this.damage = Damage.damaged;
+        this.damageOverlay.playLoop(fire_1_imgs);
+        this.damageEl.classList.add('badDamaged');
+        lightID++;
+        this.fireLight = { id: lightID, pos: this.returnPosition(), opac: 1, size: ExplSizes.large, fading: false, parent: this.getTargetEl(), burning: true };
+        fires.push(this.fireLight);
+        const fuse = () => RandomNumberGen.randomNumBetween(ExplosiveTarget.fuseMs.min, ExplosiveTarget.fuseMs.max);
+        setTimeout(() => {
+            if (this.exploded || !this.targetEl.isConnected)
+                return;
+            if (!this.blast.rockets)
+                this.crackle(ExplosiveTarget.crackles);
+            setTimeout(() => this.explode(false), fuse());
+        }, fuse());
+    }
+    // The ammunition going off in the fire: a run of gunfire
+    crackle(left) {
+        if (this.exploded || !this.targetEl.isConnected || left <= 0)
+            return;
+        SoundPlayer.playRandomSound(gunSounds);
+        setTimeout(() => this.crackle(left - 1), RandomNumberGen.randomNumBetween(180, 520));
+    }
+    // struck: a blast did it, so it counts as a direct hit; otherwise it went up in the fire
+    explode(struck) {
+        if (this.exploded || !this.targetEl.isConnected)
+            return;
+        this.exploded = true;
+        if (this.fireLight) {
+            this.fireLight.burning = false;
+            this.fireLight.fadeStep = 0.5;
+        }
+        const centre = CollisionDetection.getXYfromPoint(this.targetEl);
+        const scoredFrom = struck ? this.status : Status.disabled; // (one that went up in the fire scores as a plain kill, not a "direct hit" popup)
+        this.targetDisabled();
+        this.targetDestroyed(this.status);
+        game.assessKillPoints(scoredFrom, this.damage, false, this);
+        ContentElHandler.removeFromContentEl(this.targetEl);
+        if (this.blast.rockets) {
+            SoundPlayer.playRandomSound(bigExplosions);
+            ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
+        }
+        else {
+            SoundPlayer.playRandomSound(explosions);
+            ExplosionHandler.basicExplosion(centre, ExplSizes.tiny, expl_small_imgs, weaponNames.mortar);
+        }
+    }
+    dispose() {
+        this.exploded = true; // (cleared away with its stage: nothing more happens)
+        if (this.fireLight)
+            this.fireLight.burning = false;
     }
 }
 // A tiny enemy hiding in a building, with no picture of its own yet -- just a small square, under
