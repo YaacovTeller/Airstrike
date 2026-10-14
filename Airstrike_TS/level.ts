@@ -377,7 +377,10 @@ class Level {
 // follows -- forever. Its single wave only carries the time of day and weather.
 class SceneLevel extends Level {
     private staticTargetCount: number = 10;
-    private stage: number = 0;
+    protected stage: number = 0;
+    // A game of these levels is this many stages, and then it's won
+    protected static totalStages: number = 6;
+    public static stagesInAGame(): number { return SceneLevel.totalStages; }
 
     // What this stage has taken so far, for the message when it's cleared
     private stageElapsedMs: number = 0;
@@ -447,36 +450,41 @@ class SceneLevel extends Level {
         const flyovers = this.stageDroneFlyovers;
         const shots = Math.max(0, game.killStats.shots - this.stageShotsAtStart - flyovers);
         const praise = RandomNumberGen.returnRandomFromArray(SceneLevel.praise);
-        let text = 
-            "<br>Time: " + this.formatTime(this.stageElapsedMs) +
-            "<br>" + this.plural(shots, "shot") + " fired" +
-            "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         let criticised = false;
+        // each criticism goes under the figure it's about
         const criticise = (pool: Array<string>) => {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(pool) + "</strong>";
             criticised = true;
+            return "<br><strong>" + RandomNumberGen.returnRandomFromArray(pool) + "</strong>";
         };
+        let text = "<br>Time: " + this.formatTime(this.stageElapsedMs);
         if (this.stageElapsedMs > this.parMs()) {
-            criticise(SceneLevel.hurryUp);
+            text += criticise(SceneLevel.hurryUp);
         }
+        text += "<br>" + this.plural(shots, "shot") + " fired";
         if (this.stageOrdnanceSpent > this.targets.length * SceneLevel.shotsPerTarget) {
-            criticise(SceneLevel.lotsOfShots);
+            text += criticise(SceneLevel.lotsOfShots);
         }
         if (Object.values(this.stageBigBombsBySlot).some(count => count > SceneLevel.tooManyBigBombs)) {
-            criticise(SceneLevel.expensiveBombs);
+            text += criticise(SceneLevel.expensiveBombs);
         }
+        text += "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         if (flyovers == 0 && extraWeapons[slotOf(surveillanceInfo)]) { // had a drone, and never sent it
-            criticise(SceneLevel.noDroneFlyovers);
+            text += criticise(SceneLevel.noDroneFlyovers);
         }
         if (flyovers > SceneLevel.tooManyDroneFlyovers) {
-            criticise(SceneLevel.lotsOfDroneFlyovers);
+            text += criticise(SceneLevel.lotsOfDroneFlyovers);
         }
         // the name goes in once: with the congratulations if there are any, otherwise the plain praise
-        if (!criticised) { // nothing to say against it: say something for it
+        if (!criticised) { // nothing to say against it: say something for it, at the bottom
             text += "<br><strong>" + userHandler.addressed(RandomNumberGen.returnRandomFromArray(SceneLevel.congratulations)) + "</strong>";
         }
-        text = (criticised ? userHandler.addressed(praise) : praise) + text;
-        return text;
+        return (criticised ? userHandler.addressed(praise) : praise) + text;
+    }
+
+    // Who's to be found in a stage: the men in the list the game began with, in order (any extra are made up)
+    protected specialAt(n: number): WantedMan {
+        const entry = game.roster[(this.stage - 1) * this.scaled(1) + n];
+        return entry || { name: SpecialNames.random(), portrait: SpecialPortraits.random() };
     }
 
     // Morning (daylight) or dusk, one stage in three at dusk. There's no night yet, as there are no flares.
@@ -523,7 +531,7 @@ class SceneLevel extends Level {
         this.stageBigBombsBySlot = {};
         this.overParWarned = false;
         if (this.stage > 1) {
-            PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
+            PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.totalStages, msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
@@ -562,7 +570,8 @@ class SceneLevel extends Level {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const bunker = new Bunker(building);
             const room = bunker.setUp();
-            const enemy = new SpecialEnemy();
+            const who = this.specialAt(n);
+            const enemy = new SpecialEnemy(who.name, who.portrait);
             enemy.goUnderground();
             enemy.bunker = bunker;
             bunker.occupant = enemy;
@@ -651,6 +660,10 @@ class SceneLevel extends Level {
 
     protected endWave() {
         PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
+        if (this.stage >= SceneLevel.totalStages) { // the last of them: the game's won, once its message has been read
+            setTimeout(() => { if (game.level === this) game.finishCampaign(); }, msgLength.long + 600);
+            return;
+        }
         this.nextWavePrepGap(); // then nextWave() builds the next stage
     }
 }
@@ -745,7 +758,8 @@ class HillsLevel extends SceneLevel {
         const pool = buildings.filter(b => b.canHideEnemies());
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
-            const enemy = new SpecialEnemy();
+            const who = this.specialAt(n);
+            const enemy = new SpecialEnemy(who.name, who.portrait);
             building.addOccupant(enemy);
             this.registerTarget(enemy, building.randomHidingSpot());
             this.specials.push(enemy);

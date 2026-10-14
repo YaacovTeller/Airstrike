@@ -281,7 +281,9 @@ class GameHandler {
     }
     public menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame(this.selectedMode());
+        document.getElementById("startbutton").onclick = () => this.startPressed();
+        document.getElementById("briefingStart").onclick = () => this.startFromBriefing();
+        document.getElementById("briefingBack").onclick = () => this.closeBriefing();
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
@@ -454,6 +456,14 @@ class GameHandler {
     }
 
     private handleKeyPress(event) {
+        if (this.endScreenOpen) { // the game's over: only Esc works
+            if (event.key === 'Escape') this.closeEndScreen();
+            return;
+        }
+        if (this.briefingOpen) {
+            if (event.key === 'Escape') this.closeBriefing();
+            return;
+        }
         if (this.paused) { // nothing else works while paused
             if (event.key.toLowerCase() === 'p' || event.key === 'Escape') { this.togglePause(); }
             return;
@@ -907,13 +917,73 @@ class GameHandler {
             this.failGame("");
         }
     }
-    // The game's lost, with a message as to why if there is one
-    public failGame(message: string) {
+    // The game's lost, with a message as to why if there is one (and the face of whoever it was that got away): a screen that the game
+    // is frozen behind until Esc goes back to the menu
+    public failGame(message: string, portrait?: string) {
         if (!this.gameInProgress) return;
-        this.pause();
-        this.gameInProgress = false;
-        PopupHandler.addToArray(message, userHandler.addressed("Game Over!"), msgLength.long);
         SoundPlayer.playWithVolumeSet(alarm3);
+        const text = '<div class="endMessage">' + (message || "Too many got away.") + '</div>';
+        const body = portrait ? '<div class="endCard"><img class="endPortrait" src="' + portrait + '">' + text + '</div>' : '<div class="endCard">' + text + '</div>';
+        this.showEndScreen(userHandler.addressed("Game Over!"), body);
+    }
+    // All the stages cleared: everyone on the list has been dealt with
+    public finishCampaign() {
+        if (!this.gameInProgress) return;
+        cheer.play();
+        const faces = this.roster.map(man =>
+            '<div><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + man.portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="endRosterName">' + man.name + '</div></div>').join("");
+        const stats = `${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised, on ${this.difficulty.eng.name} difficulty`;
+        this.showEndScreen(userHandler.addressed("You got them all!"), '<div>That\'s the last of them, good work!</div><div class="endRoster">' + faces + '</div><div>' + stats + '</div>');
+    }
+    private endScreenOpen: boolean = false;
+    private showEndScreen(title: string, bodyHtml: string) {
+        this.gameInProgress = false;
+        this.cutGameFuncs();
+        GameTimers.pause();
+        document.body.classList.add("gamePaused");
+        PopupHandler.reset();
+        document.getElementById("endTitle").innerHTML = title;
+        document.getElementById("endBody").innerHTML = bodyHtml;
+        document.getElementById("endScreen").classList.remove("displayNone");
+        this.endScreenOpen = true;
+    }
+    private closeEndScreen() {
+        document.getElementById("endScreen").classList.add("displayNone");
+        this.endScreenOpen = false;
+        this.toggleModal(); // the menu
+    }
+
+    // The men a game of stages is against, shown on a screen of their own before it starts: Start begins the game, and Esc or the arrow goes back
+    // to the menu. The harder the difficulty, the more of them to a stage.
+    public roster: Array<WantedMan> = [];
+    private briefingOpen: boolean = false;
+    private briefingMode: GameMode = GameMode.hills;
+    private startPressed() {
+        const mode = this.selectedMode();
+        if (mode == GameMode.hills || mode == GameMode.coast) this.openBriefing(mode);
+        else this.newGame(mode);
+    }
+    private openBriefing(mode: GameMode) {
+        this.briefingMode = mode;
+        const perStage = Math.max(1, Math.round(this.difficulty.enemyFactor || 1));
+        this.roster = SpecialRoster.make(SceneLevel.stagesInAGame() * perStage);
+        document.getElementById("briefingText").innerHTML = "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
+            "over " + SceneLevel.stagesInAGame() + " stages. They'll run for it once the shooting starts. Don't let any of them get away.";
+        document.getElementById("rosterGrid").innerHTML = this.roster.map((man, i) =>
+            '<div class="rosterCard"><img class="rosterPortrait" src="' + man.portrait + '"><div><div class="rosterStage">Stage ' + (Math.floor(i / perStage) + 1) + '</div><div class="rosterName">' + man.name + '</div></div></div>').join("");
+        document.getElementById("modal").classList.add("displayNone");
+        document.getElementById("briefing").classList.remove("displayNone");
+        this.briefingOpen = true;
+    }
+    private closeBriefing() {
+        document.getElementById("briefing").classList.add("displayNone");
+        document.getElementById("modal").classList.remove("displayNone");
+        this.briefingOpen = false;
+    }
+    private startFromBriefing() {
+        const mode = this.briefingMode;
+        this.closeBriefing(); // (the menu is up again, as newGame expects: it closes it)
+        this.newGame(mode);
     }
 
     // The menu (Escape) freezes the whole game the way the P key does -- every timer, sound and animation --

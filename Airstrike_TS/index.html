@@ -132,6 +132,31 @@
         </div>
     </div>
 
+    <!-- the men you're after, shown before a Hills or Coast game: Start begins it, Esc or the arrow goes back to the menu -->
+    <div id="briefing" class="displayNone">
+        <div class="modalContainer">
+            <div class="menuTopBar">
+                <button id="briefingBack" class="greenButtonStyle backArrow" title="Back to the menu">&#8592;</button>
+                <h2 id="briefingTitle">Wanted</h2>
+                <span class="backArrowSpacer"></span>
+            </div>
+            <p id="briefingText"></p>
+            <div id="rosterGrid"></div>
+            <div class="buttonContainer">
+                <button class="greenButtonStyle" id="briefingStart">Start</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- the game's over (or won): the game is frozen behind it until Esc takes you back to the menu -->
+    <div id="endScreen" class="displayNone">
+        <div class="modalContainer endContainer">
+            <h1 id="endTitle"></h1>
+            <div id="endBody"></div>
+            <div class="endHint">Press <b>Esc</b> to go back to the menu</div>
+        </div>
+    </div>
+
     <div id="contentWrapper">
         <div id="backgroundContainer">
             <div id="background"></div>

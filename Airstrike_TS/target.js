@@ -1301,9 +1301,10 @@ class VehicleTarget extends Target {
     }
     move(posX) {
         if (this.specialName && (posX > ContentElHandler.contentElWidth() || posX + this.targetEl.offsetWidth < 0)) {
+            const name = this.specialName, portrait = this.specialPortrait;
             this.status = Status.escaped;
             this.specialName = undefined;
-            game.failGame("You shouldn't have let that one get away!");
+            game.failGame(name + " got away!", portrait);
             return;
         }
         super.move(posX);
@@ -2203,9 +2204,22 @@ class SpecialNames {
 // A headshot (one of the 14 in AS_assets/portraits) for each special enemy, with a red ELIMINATED stamp over it when he's been dealt with
 class SpecialPortraits {
     static count = 14;
-    static random() {
-        const n = RandomNumberGen.randomNumBetween(1, SpecialPortraits.count);
+    static path(n) {
         return assetsFolder + "portraits/Portrait_" + (n < 10 ? "0" : "") + n + ".png";
+    }
+    static random() {
+        return SpecialPortraits.path(RandomNumberGen.randomNumBetween(1, SpecialPortraits.count));
+    }
+    // All of them, in a random order
+    static shuffled() {
+        const all = [];
+        for (let n = 1; n <= SpecialPortraits.count; n++)
+            all.push(SpecialPortraits.path(n));
+        for (let i = all.length - 1; i > 0; i--) {
+            const j = RandomNumberGen.randomNumBetween(0, i);
+            [all[i], all[j]] = [all[j], all[i]];
+        }
+        return all;
     }
 }
 function announceElimination(name, portrait) {
@@ -2216,13 +2230,24 @@ function announceElimination(name, portrait) {
         : text;
     PopupHandler.addToArray(html, '<span class="eliminatedTitle">Target eliminated</span>', msgLength.long);
 }
+class SpecialRoster {
+    static make(count) {
+        const names = new Set();
+        while (names.size < count)
+            names.add(SpecialNames.random());
+        const faces = SpecialPortraits.shuffled();
+        return Array.from(names).map((name, i) => ({ name: name, portrait: faces[i % faces.length] }));
+    }
+}
 class SpecialEnemy extends BuildingEnemy {
-    name = SpecialNames.random();
-    portrait = SpecialPortraits.random();
+    name;
+    portrait;
     boarded = false; // he's got into a vehicle: that's the target now
     bunker;
-    constructor() {
+    constructor(name, portrait) {
         super();
+        this.name = name || SpecialNames.random();
+        this.portrait = portrait || SpecialPortraits.random();
         this.targetEl.classList.add('special');
     }
     isFinished() {

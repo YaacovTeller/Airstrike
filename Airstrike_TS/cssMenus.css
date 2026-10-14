@@ -123,6 +123,123 @@ body {
     box-sizing: border-box;
 }
 
+/* the briefing before a game of stages, and the end of a game, which are the same sort of thing as the menu */
+#briefing, #endScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: radial-gradient(circle at top, rgba(40,60,80,0.45), rgba(0,0,0,0.88)), rgba(0,0,0,0.82);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+/* (the game is frozen behind the end screen, but the stamps on its portraits still come down) */
+.gamePaused #endScreen * {
+    animation-play-state: running !important;
+}
+#briefing h2, #endScreen h1 {
+    margin: 0;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #9dffb8;
+}
+#briefingTitle {
+    flex: 1;
+    text-align: center;
+    font-size: 1.8rem;
+}
+.backArrow {
+    padding: 8px 16px;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+.backArrowSpacer {
+    width: 58px;
+}
+#briefingText {
+    text-align: center;
+    opacity: 0.85;
+    margin: 0 0 14px;
+}
+#rosterGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.rosterCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border: 1px solid rgba(120,160,120,0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+}
+.rosterPortrait {
+    height: 72px;
+    border-radius: 6px;
+}
+.rosterStage {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.65;
+}
+.rosterName {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+#briefingStart {
+    min-width: 220px;
+    padding: 12px 40px;
+    font-size: 1.05rem;
+}
+.endContainer {
+    width: min(720px, 95vw);
+    text-align: center;
+}
+.endCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    margin: 18px 0;
+}
+.endPortrait {
+    height: 150px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.endMessage {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+.endRoster {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px 28px;
+    margin: 18px 0;
+}
+.endRoster .eliminatedCard {
+    flex: 0 0 90px;
+}
+.endRosterName {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    max-width: 110px;
+}
+.endHint {
+    margin-top: 16px;
+    opacity: 0.7;
+}
+
 .modalContainer {
     width: min(1000px, 95vw);
     max-height: 92vh;
