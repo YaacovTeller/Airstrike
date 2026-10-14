@@ -620,8 +620,14 @@ class GameHandler {
             this.level.addNewWeapon(special, false);
         }
     }
+    // Using a super-weapon empties the bar, and for a while after nothing fills it: its own strike (and a helicopter's, which goes on for a while)
+    // would otherwise earn the next one at once
+    progressLocked = false;
+    static progressLockMs = 20000;
     drainProgressBar() {
         this.progressNumber = 0;
+        this.progressLocked = true;
+        setTimeout(() => { this.progressLocked = false; }, GameHandler.progressLockMs);
         this.fullProgress = false;
         this.updateProgressBar();
         this.progressBar.classList.remove("full");
@@ -680,6 +686,8 @@ class GameHandler {
                 prog = destroyReward;
             }
         }
+        if (this.progressLocked)
+            return;
         this.progressNumber += prog;
         this.updateProgressBar();
     }
@@ -978,6 +986,7 @@ class GameHandler {
         this.sequenceTargets.clear();
         this.progressNumber = 0;
         this.fullProgress = false;
+        this.progressLocked = false;
         this.daytime = true;
         conventionalWeapons = [];
         extraWeapons = [];
@@ -1281,34 +1290,54 @@ class GameHandler {
             }
         }
         {
-            // The cranes stand in one or two clusters along the shore, each a row of three to five of the one kind, close together
-            const clusterCount = RandomNumberGen.randomNumBetween(1, 2);
-            const along = crane.height * 0.5; // how far down the shore the next in a row is
+            // The cranes stand in a cluster along the shore, three to five of one kind close together, and maybe, a good way down the shore from it,
+            // a second cluster of another kind
+            const along = crane.height * 0.38; // how far down the shore the next in a cluster is (they stand close)
             // down the shore as far as there's room: a sliced coast's shore runs off the right of the screen part of the way down
-            const first = top + (this.coastKind == "slice" ? 150 : 100);
+            const first = top + (this.coastKind == "slice" ? 60 : 10);
             const last = this.coastKind == "slice"
                 ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - 40))
-                : bottom - 60;
-            const groupStep = Math.max(60, (last - first) / clusterCount);
+                : bottom - 10;
             const light = RandomNumberGen.returnRandomFromArray(lighthouses);
             const placedCranes = [];
             const frontRow = placedCranes; // (all of them are on the shore, so the lighthouse can take any one's place)
-            for (let g = 0; g < clusterCount; g++) {
-                const size = RandomNumberGen.randomNumBetween(3, 5);
-                const room = Math.max(0, groupStep - (size - 1) * along - crane.height * 0.3);
-                const groupFoot = first + groupStep * g + RandomNumberGen.randomNumBetween(0, Math.floor(room * 0.6));
-                for (let i = 0; i < size; i++) {
-                    const foot = groupFoot + i * along;
-                    const topY = foot - crane.height;
-                    const x = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
-                    if (x + crane.width + padding > screenWidth || foot > bottom || topY < top - 20)
-                        continue; // (on a sliced coast the shore is off the screen low down)
-                    placedCranes.push({ X: x, Y: topY, info: crane });
-                }
+            const otherCranes = cranes.filter(info => info !== crane);
+            const clusters = [{ info: crane, size: RandomNumberGen.randomNumBetween(3, 5) }];
+            if (otherCranes.length && RandomNumberGen.randomNumBetween(1, 100) <= 65) {
+                clusters.push({ info: RandomNumberGen.returnRandomFromArray(otherCranes), size: RandomNumberGen.randomNumBetween(3, 5) });
             }
-            quaySide = crane.width + 46; // the town starts a road beyond the cranes
-            roadOffset = crane.width + 22;
-            const step = groupStep;
+            const lengthOf = (c) => (c.size - 1) * c.info.height * 0.38 + c.info.height;
+            let gap = RandomNumberGen.randomNumBetween(140, 200); // the big gap between the clusters
+            // (with two, if they don't both fit: they get smaller, and the gap a little, before the second is given up)
+            const lengthOfAll = () => clusters.reduce((sum, c, i) => sum + lengthOf(c) + (i ? gap : 0), 0);
+            while (clusters.length > 1 && lengthOfAll() > last - first) {
+                const biggest = clusters[0].size >= clusters[1].size ? clusters[0] : clusters[1];
+                if (biggest.size > 3)
+                    biggest.size--;
+                else if (gap > 110)
+                    gap -= 20;
+                else
+                    clusters.pop();
+            }
+            const total = lengthOfAll();
+            let foot = first + RandomNumberGen.randomNumBetween(0, Math.max(0, Math.floor(last - first - total)));
+            clusters.forEach((cluster, index) => {
+                if (index)
+                    foot += gap;
+                for (let i = 0; i < cluster.size; i++) {
+                    const placedFoot = foot + cluster.info.height + i * cluster.info.height * 0.38;
+                    const topY = placedFoot - cluster.info.height;
+                    const x = shoreOf(topY, cluster.info.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
+                    if (x + cluster.info.width + padding > screenWidth || placedFoot > bottom || topY < top - 20)
+                        continue; // (on a sliced coast the shore is off the screen low down)
+                    placedCranes.push({ X: x, Y: topY, info: cluster.info });
+                }
+                foot += lengthOf(cluster);
+            });
+            const widest = Math.max(...clusters.map(c => c.info.width));
+            quaySide = widest + 46; // the town starts a road beyond the cranes
+            roadOffset = widest + 22;
+            const step = (last - first) / 2;
             // the lighthouse is one of those on the shore: put in place of one of the cranes, or, if none are on screen, by itself
             if (light && !singleTaken(light)) {
                 usedSingles.push(light);
