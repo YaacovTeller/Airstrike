@@ -582,8 +582,8 @@ const surveillanceInfo: ExplosiveWeaponInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 2,       // vw per 100ms, so a pass of 6s crosses the screen with a bit to spare
-        duration: 6000, // how long the scan lasts too
+        speed: 2,       // vw per 100ms, so a pass of 9s crosses the screen with a good deal to spare
+        duration: 9000, // how long the scan lasts too
         delay: 1000     // a second to arrive
     }
 }
@@ -677,9 +677,9 @@ const bunkerBusterInfo: ExplosiveWeaponInfo = {
     class: BunkerBusterWeaponType,
     // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point: the stealth bomber
     flyover: {
-        imageSource: assetsSVGFolder + 'Stealth Bomber.png',
-        speed: 5,
-        duration: 3600,
+        imageSource: assetsSVGFolder + 'Stealth Bomber 2.png', // (the first stealth bomber picture, 'Stealth Bomber.png', is kept in case)
+        speed: 6.5,
+        duration: 2800,
         delay: 1200
     },
     blastRadius: 12, // just a marker: it's the point it lands on that counts

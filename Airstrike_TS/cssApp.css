@@ -568,9 +568,9 @@ img#crater { /*to override the img[src]!*/
     }
     .flyover.bomber img { /* the stealth bomber's picture is a wide one, nose up: turned to fly to the left */
         width: 640px;
-        height: 320px;
+        height: 232px;
         left: 0;
-        top: 160px;
+        top: 204px;
         transform: rotate(-90deg);
     }
 
