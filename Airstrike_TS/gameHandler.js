@@ -748,8 +748,8 @@ class GameHandler {
     glowString = "";
     glowDirty = true;
     static glowOpacity = 0.62;
-    // After dark each building has a glow, like a fire's; on the coast, where they're packed so close together, there's one big one over the
-    // town instead. They all go out when the power does (see PowerGrid), and the glow of a building that's brought down goes with it.
+    // After dark each building has a glow, like a fire's. They all go out when the power does (see PowerGrid), and the glow of a building that's
+    // brought down goes with it.
     lightStage(area) {
         glows.length = 0;
         this.glowDirty = true;
@@ -757,22 +757,10 @@ class GameHandler {
             return;
         const buildings = allTargets.filter(t => t instanceof Building);
         const homes = buildings.filter(b => !b.isElectric() && !b.isWrecked());
-        if (area == Area.port) {
-            const town = homes.filter(b => b.isTown());
-            if (town.length) {
-                const rects = town.map(b => b.getTargetEl());
-                const left = Math.min(...rects.map(e => parseInt(e.style.left))), right = Math.max(...rects.map(e => parseInt(e.style.left) + e.offsetWidth));
-                const top = Math.min(...rects.map(e => parseInt(e.style.top))), bottom = Math.max(...rects.map(e => parseInt(e.style.top) + e.offsetHeight));
-                lightID++;
-                glows.push({ id: lightID, pos: { X: (left + right) / 2, Y: (top + bottom) / 2 }, opac: GameHandler.glowOpacity, size: ExplSizes.XL, fading: false, reach: Math.max(right - left, bottom - top) * 0.62 });
-            }
-        }
-        else {
-            for (const b of homes) {
-                const el = b.getTargetEl();
-                lightID++;
-                glows.push({ id: lightID, pos: { X: 0, Y: 0 }, opac: GameHandler.glowOpacity, size: ExplSizes.small, fading: false, reach: Math.max(el.offsetWidth, el.offsetHeight) * 1.1, parent: el, owner: b });
-            }
+        for (const b of homes) { // one glow to a building, on the coast too
+            const el = b.getTargetEl();
+            lightID++;
+            glows.push({ id: lightID, pos: { X: 0, Y: 0 }, opac: GameHandler.glowOpacity, size: ExplSizes.small, fading: false, reach: Math.max(el.offsetWidth, el.offsetHeight) * 1.1, parent: el, owner: b });
         }
         this.updateLights();
     }
