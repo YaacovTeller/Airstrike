@@ -79,7 +79,7 @@ class HudHandler {
         }
     }
     getCorrectWepboxContainer(wep) {
-        let boxId = wep.name <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
+        let boxId = wep.name <= weaponNames.drone && !wep.utility ? "firstWepContainer" : "secondWepContainer";
         return document.getElementById(boxId);
     }
     orderWeaponBoxes() {

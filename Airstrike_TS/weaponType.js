@@ -2,6 +2,7 @@
 class WeaponType {
     name;
     slot;
+    utility = false; // in the second group of the HUD whatever it's made from
     displayName;
     cursor;
     sound;
@@ -27,12 +28,13 @@ class WeaponType {
         this.select = info.select;
         this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
         this.bigBomb = !!info.bigBomb;
+        this.utility = !!info.utility;
         let wepArr = this.getWeaponArray();
         wepArr[this.slot] = this;
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
+        return this.name <= weaponNames.drone && !this.utility ? conventionalWeapons : extraWeapons; // by what it is (or the group it's put in); its slot is just its key and place
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {

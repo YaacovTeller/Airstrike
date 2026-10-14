@@ -54,6 +54,12 @@ const allBuildingInfo = [
     structureInfo("r5c8", 63, 47, { x: [14, 27], y: [6, 32] }),
     structureInfo("r5c9", 66, 40, { x: [12, 26], y: [11, 24] }),
 ];
+// Where a fuel building's fire burns: on its two big tanks, or the one tank of the fuel station
+function fuelFires(name) {
+    if (!name.startsWith("Fuel_"))
+        return undefined;
+    return name == "Fuel_Station" ? [[0.78, 0.5]] : [[0.3, 0.3], [0.6, 0.4]];
+}
 // The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
 // with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
 // of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
@@ -62,7 +68,7 @@ const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Conta
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque"];
 function portInfo(name, width, height, hide, folder = "") {
     const file = (stage) => "port buildings/" + folder + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), fireAt: fuelFires(name), single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
 }
 const allPortBuildingInfo = [
     portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
@@ -118,7 +124,7 @@ const seaFacingSW = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_
 // Sizes are 0.36 of natural, but the yards 0.5 (they're a low, wide thing: the sizes are set here, the pictures aren't resaved).
 function industrialInfo(name, width, height, hide) {
     const file = (stage) => "industrial misc/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), noParking: name.startsWith("Water_Tower") };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), fireAt: fuelFires(name), noParking: name.startsWith("Water_Tower") };
 }
 const allIndustrialInfo = [
     industrialInfo("Container_Yard_Circular", 132, 66, { x: [27, 101], y: [20, 45] }),
@@ -186,34 +192,34 @@ function explosiveInfo(name, width, height, rockets) {
     return { file: "explosives/" + name + ".png", width: width, height: height, rockets: rockets };
 }
 const allExplosiveInfo = [
-    explosiveInfo("Ammo_Crates_1", 20, 14, false),
-    explosiveInfo("Ammo_Crates_2", 23, 17, false),
-    explosiveInfo("Ammo_Crates_3", 21, 18, false),
-    explosiveInfo("Ammo_Crates_4", 25, 18, false),
-    explosiveInfo("Ammo_Crates_5", 27, 16, false),
-    explosiveInfo("Ammo_Crates_6", 23, 17, false),
-    explosiveInfo("Ammo_Crates_7", 24, 17, false),
-    explosiveInfo("Ammo_Crates_8", 26, 17, false),
-    explosiveInfo("Ammo_Messy_1", 28, 22, false),
-    explosiveInfo("Ammo_Messy_2", 27, 22, false),
-    explosiveInfo("Ammo_Messy_3", 27, 21, false),
-    explosiveInfo("Ammo_Messy_4", 29, 22, false),
-    explosiveInfo("Ammo_Messy_5", 27, 22, false),
-    explosiveInfo("Ammo_Messy_6", 27, 21, false),
-    explosiveInfo("Ammo_Messy_7", 26, 21, false),
-    explosiveInfo("Ammo_Messy_8", 28, 20, false),
-    explosiveInfo("Rockets_Messy_1", 33, 24, true),
-    explosiveInfo("Rockets_Messy_2", 31, 22, true),
-    explosiveInfo("Rockets_Messy_3", 28, 25, true),
-    explosiveInfo("Rockets_Messy_4", 30, 25, true),
-    explosiveInfo("Rockets_Tubes_1", 18, 12, true),
-    explosiveInfo("Rockets_Tubes_2", 21, 14, true),
-    explosiveInfo("Rockets_Tubes_3", 22, 15, true),
-    explosiveInfo("Rockets_Tubes_4", 25, 16, true),
-    explosiveInfo("Rockets_Tubes_5", 20, 13, true),
-    explosiveInfo("Rockets_Tubes_6", 24, 13, true),
-    explosiveInfo("Rockets_Tubes_7", 19, 16, true),
-    explosiveInfo("Rockets_Tubes_8", 24, 15, true),
+    explosiveInfo("Ammo_Crates_1", 40, 28, false),
+    explosiveInfo("Ammo_Crates_2", 47, 34, false),
+    explosiveInfo("Ammo_Crates_3", 42, 36, false),
+    explosiveInfo("Ammo_Crates_4", 51, 37, false),
+    explosiveInfo("Ammo_Crates_5", 55, 32, false),
+    explosiveInfo("Ammo_Crates_6", 47, 35, false),
+    explosiveInfo("Ammo_Crates_7", 47, 34, false),
+    explosiveInfo("Ammo_Crates_8", 52, 33, false),
+    explosiveInfo("Ammo_Messy_1", 55, 44, false),
+    explosiveInfo("Ammo_Messy_2", 54, 43, false),
+    explosiveInfo("Ammo_Messy_3", 55, 43, false),
+    explosiveInfo("Ammo_Messy_4", 58, 45, false),
+    explosiveInfo("Ammo_Messy_5", 55, 44, false),
+    explosiveInfo("Ammo_Messy_6", 55, 42, false),
+    explosiveInfo("Ammo_Messy_7", 52, 43, false),
+    explosiveInfo("Ammo_Messy_8", 56, 39, false),
+    explosiveInfo("Rockets_Messy_1", 66, 49, true),
+    explosiveInfo("Rockets_Messy_2", 61, 44, true),
+    explosiveInfo("Rockets_Messy_3", 55, 49, true),
+    explosiveInfo("Rockets_Messy_4", 59, 51, true),
+    explosiveInfo("Rockets_Tubes_1", 36, 24, true),
+    explosiveInfo("Rockets_Tubes_2", 43, 28, true),
+    explosiveInfo("Rockets_Tubes_3", 43, 30, true),
+    explosiveInfo("Rockets_Tubes_4", 50, 33, true),
+    explosiveInfo("Rockets_Tubes_5", 40, 26, true),
+    explosiveInfo("Rockets_Tubes_6", 49, 26, true),
+    explosiveInfo("Rockets_Tubes_7", 37, 31, true),
+    explosiveInfo("Rockets_Tubes_8", 48, 30, true),
 ];
 // The power grid (AS_assets/buildings/electric): a substation, with a line of pylons leading from it off the map. The pictures are on the
 // same canvas in all three states. Sizes are 0.36 of natural. A line of pylons is one picture, with a pylon at each end, so that a
@@ -394,24 +400,43 @@ class Building extends MapEntity {
     // glow after dark, and when it's brought down (badly damaged) it detonates with a large explosion, which can take its neighbours with it
     burning = false;
     detonated = false;
-    fireCanvas;
+    fireCanvases = [];
     fireLight;
+    static burnMs = { min: 5000, max: 9000 }; // how long it burns before the fuel goes up
     igniteFire() {
         if (this.burning || this.detonated)
             return;
         this.burning = true;
-        this.fireCanvas = ElementCreator.returnNewCanvas(this.targetEl, "buildingFire", true);
-        new DamageOverlay(this.fireCanvas).playLoop(fire_1_imgs);
+        const spots = this.info.fireAt || [[0.5, 0.35]];
+        for (const spot of spots) { // a fire on each tank
+            const canvas = ElementCreator.returnNewCanvas(this.targetEl, "buildingFire", true);
+            canvas.style.left = this.info.width * spot[0] - 23 + "px";
+            canvas.style.top = this.info.height * spot[1] - 34 + "px";
+            canvas.style.transform = "none";
+            new DamageOverlay(canvas).playLoop(fire_1_imgs);
+            this.fireCanvases.push(canvas);
+        }
         lightID++;
         this.fireLight = { id: lightID, pos: { X: 0, Y: 0 }, opac: 1, size: ExplSizes.large, fading: false, parent: this.targetEl, burning: true };
         fires.push(this.fireLight);
+        setTimeout(() => this.burnDown(), RandomNumberGen.randomNumBetween(Building.burnMs.min, Building.burnMs.max));
+    }
+    // Left to burn, the fuel goes up and brings it down
+    burnDown() {
+        if (this.detonated || this.removed || !this.targetEl.isConnected)
+            return;
+        this.damagePoints = Math.max(this.damagePoints, Building.hitPointsToDestroy);
+        this.damage = Damage.destroyed;
+        this.killOccupants(true);
+        this.reAssignSrc();
+        this.throwDebris(undefined, Building.debrisOnNewStage);
+        this.detonate();
     }
     detonate() {
         if (this.detonated)
             return;
         this.detonated = true;
-        if (this.fireCanvas)
-            this.fireCanvas.remove();
+        this.fireCanvases.forEach(c => c.remove());
         if (this.fireLight) {
             this.fireLight.burning = false;
             this.fireLight.fadeStep = 0.5;

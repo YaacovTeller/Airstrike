@@ -228,18 +228,9 @@ class GameHandler {
         }
     }
     private hideFlare(time: Time) {
-        let name = weaponNames.flare;
-        let hide: boolean;
-        let flareBox = this.hud.returnWepBox(name) as HTMLElement
-        if (flareBox) {
-            if (time == Time.day) {
-                hide = true;
-            }
-            else {
-                hide = false;
-            }
-            this.hud.hideWeapon(name, hide)
-        }
+        // (the box is found by the flare's own key, not by the flare's number: another weapon can be on key 7)
+        const flare = [...conventionalWeapons, ...extraWeapons].find(w => w && w.name == weaponNames.flare);
+        if (flare) this.hud.hideWeapon(flare.slot, time == Time.day);
     }
 
     private addAllLevels() {
@@ -528,7 +519,7 @@ class GameHandler {
     // (see reset()), so going back to any other mode gets the standard set again.
     private addScaledWeaponSet() {
         // three of each, but more of the small and fewer of the big ones
-        const howMany: { [slot: number]: number } = { 1: 4, 4: 2, 5: 1, 6: 2, 7: 1 };
+        const howMany: { [slot: number]: number } = { 1: 4, 4: 2, 5: 2, 6: 1, 7: 1 };
         scaledWeapons.forEach(info => {
             const count = howMany[info.slot] || 3;
             for (let i = 0; i < count; i++) this.level.addNewWeapon(info, false);

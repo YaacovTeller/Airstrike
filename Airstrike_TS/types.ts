@@ -229,6 +229,7 @@ type weaponInfo = {
     slot?: number, // where it sits in the HUD, and which key picks it, if that isn't its name's number. The name still decides how it hurts things
     pickupMessage?: string, // what the popup says when it's picked up, instead of "New weapon: ...".
     shotCost?: number, // how much a shot counts when a stage is judged for using too much ordnance (1 if not given; 0 never counts)
+    utility?: boolean, // sits in the second group of the HUD with the drone and the other specials, whatever it's made from
     bigBomb?: boolean, // one of the bombs a stage's summary tells you off for using too many of
     class: typeof WeaponType,
     sound: Array<Sound>,
@@ -654,24 +655,25 @@ const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 }
 // A bigger airstrike, in the given slot, whose explosion is this size (and so its circle is half of that)
-function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes): ExplosiveWeaponInfo {
+function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes, bomb: boolean = false): ExplosiveWeaponInfo {
     return {
         ...airstrikeInfo,
         ...jetPlaceholder,
         slot: slot,
-        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
-        bigBomb: slot >= 6,
+        shotCost: bomb ? 1.25 : 0.75, // the bombs cost most
+        bigBomb: bomb,
         displayName: displayName,
         imageSource: assetsSVGFolder + icon,
         blastRadius: size / 2,
         explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
     };
 }
-// Slot 5 of the Coast set. It goes through the ground, with a thud, and a second later goes off far below: no
+// Slot 7 of the Coast set, in the second group of the HUD with the drone. It goes through the ground, with a thud, and a second later goes off far below: no
 // explosion at the surface, but a shake as big as the largest bomb's, and the building it's over comes down
 // with the bunker beneath it.
 const bunkerBusterInfo: ExplosiveWeaponInfo = {
-    ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    ...scaledBigStrike(7, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    utility: true,
     class: BunkerBusterWeaponType,
     blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
@@ -683,9 +685,9 @@ const scaledWeapons: Array<weaponInfo> = [
     scaledHowitzerInfo,
     scaledAirstrikeInfo,
     scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),         // as big as the standard airstrike
+    scaledBigStrike(5, "Bomb", 'Bomb_1.png', ExplSizes.massive, true),
+    scaledBigStrike(6, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal, true),
     bunkerBusterInfo,
-    scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
-    scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
 ].map(info => info === bunkerBusterInfo ? info : { ...info, scale: coastWeaponScale, blastRadius: Math.round(info.blastRadius * coastWeaponScale) });
 
 

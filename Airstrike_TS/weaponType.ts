@@ -2,6 +2,7 @@
 class WeaponType {
     public name: weaponNames;
     public slot: number;
+    public utility: boolean = false; // in the second group of the HUD whatever it's made from
     public displayName: string;
     public cursor: string;
     public sound: Array<Sound>;
@@ -29,13 +30,14 @@ class WeaponType {
         this.select = info.select;
         this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
         this.bigBomb = !!info.bigBomb;
+        this.utility = !!info.utility;
 
         let wepArr: Array<WeaponType> = this.getWeaponArray();
         wepArr[this.slot] = this
         game.addHudWeapon(this)
     }
     public getWeaponArray() {
-        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
+        return this.name <= weaponNames.drone && !this.utility ? conventionalWeapons : extraWeapons; // by what it is (or the group it's put in); its slot is just its key and place
     }
 
     public switchFrom() {
