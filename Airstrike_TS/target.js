@@ -445,6 +445,11 @@ class Building extends MapEntity {
         SoundPlayer.playRandomSound(bigExplosions);
         ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
     }
+    blockId; // which block of the coast's town it's in, if it's in one
+    // A jetty or a breakwater, out into the sea
+    isPier() {
+        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_");
+    }
     // Among the town, not on the waterfront
     isTown() {
         return !this.info.waterfront && !this.info.electric;
@@ -1860,7 +1865,7 @@ class WaterVehicleTarget extends VehicleTarget {
         // down like any other, over the way it landed
         if (this.targetEl.classList.contains('smallBoat') && direc && collisionInfo && collisionInfo.radius > WaterVehicleTarget.flipMinRadius
             && RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.flipChance) {
-            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.dipUpsideDown());
+            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.dipUpsideDown(), false); // (no sliding on once it's landed)
         }
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
@@ -1932,6 +1937,7 @@ class WaterVehicleTarget extends VehicleTarget {
         if (!this.targetEl.isConnected || this.sinkMask || this.damage === Damage.destroyed || !this.angle)
             return;
         const { group } = this.createSinkMask();
+        group.style.transformOrigin = "50% 50%"; // (turned over about its middle: from the waterline at the foot of the hull it would swing right out of the mask, and vanish)
         group.style.transform = `rotate(${this.angle}deg)`;
         void group.offsetHeight;
         group.style.transition = "transform 0.6s ease-out";

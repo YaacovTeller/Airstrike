@@ -748,7 +748,7 @@ class GameHandler {
     glowString = "";
     glowDirty = true;
     static glowOpacity = 0.62;
-    // After dark each building has a glow, like a fire's. They all go out when the power does (see PowerGrid), and the glow of a building that's
+    // After dark each building has a glow, like a fire's (on the coast, one large one to a block of the town). They all go out when the power does (see PowerGrid), and the glow of a building that's
     // brought down goes with it.
     lightStage(area) {
         glows.length = 0;
@@ -757,10 +757,34 @@ class GameHandler {
             return;
         const buildings = allTargets.filter(t => t instanceof Building);
         const homes = buildings.filter(b => !b.isElectric() && !b.isWrecked());
-        for (const b of homes) { // one glow to a building, on the coast too
+        // On the coast the town is in blocks, each of which gets one large glow, and the buildings on the shore (the cranes and the lighthouse) a glow
+        // each. Elsewhere it's one to a building.
+        const blocks = {};
+        const single = [];
+        for (const b of homes) {
+            if (area == Area.port && b.blockId)
+                (blocks[b.blockId] = blocks[b.blockId] || []).push(b);
+            else if (area == Area.port && b.isPier())
+                continue; // (a jetty or a breakwater, out in the sea, has no lights)
+            else
+                single.push(b);
+        }
+        for (const b of single) {
             const el = b.getTargetEl();
             lightID++;
             glows.push({ id: lightID, pos: { X: 0, Y: 0 }, opac: GameHandler.glowOpacity, size: ExplSizes.small, fading: false, reach: Math.max(el.offsetWidth, el.offsetHeight) * 1.1, parent: el, owner: b });
+        }
+        for (const id of Object.keys(blocks)) {
+            const members = blocks[id];
+            const rects = members.map(m => m.getTargetEl());
+            const left = Math.min(...rects.map(e => parseInt(e.style.left))), right = Math.max(...rects.map(e => parseInt(e.style.left) + e.offsetWidth));
+            const top = Math.min(...rects.map(e => parseInt(e.style.top))), bottom = Math.max(...rects.map(e => parseInt(e.style.top) + e.offsetHeight));
+            lightID++;
+            glows.push({
+                id: lightID, pos: { X: (left + right) / 2, Y: (top + bottom) / 2 }, opac: GameHandler.glowOpacity, size: ExplSizes.XL, fading: false,
+                reach: Math.max(right - left, bottom - top) * 0.75,
+                owner: { isWrecked: () => members.every(m => m.isWrecked()) } // (it goes out when the whole block has been brought down)
+            });
         }
         this.updateLights();
     }
@@ -1181,6 +1205,7 @@ class GameHandler {
         const buildings = this.streetBlockSlots(96).reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
+            building.blockId = slot.block;
             if (slot.info.electric)
                 PowerGrid.add(building);
             return building;
@@ -1546,6 +1571,7 @@ class GameHandler {
         const rowStep = Math.sqrt(1 + slope * slope); // along a row (or back from one), for each px across
         const slantRad = slantDegrees * Math.PI / 180;
         let blocks = 0;
+        let blockCount = 0;
         while (blocks < blocksWanted && finished.some(f => !f)) {
             for (let k = 0; k < lines && blocks < blocksWanted; k++) {
                 if (finished[k])
@@ -1559,9 +1585,11 @@ class GameHandler {
                     finished[k] = true;
                     continue;
                 }
+                blockCount++;
                 block.slots.forEach(slot => {
                     if (slot.info.single)
                         usedSingles.push(slot.info);
+                    slot.block = blockCount;
                     slots.push(slot);
                 });
                 // a street across the gap between this block and the one before it on the line: its middle is the middle of the four building

@@ -1,7 +1,7 @@
 ﻿class ThrowHandler {
-    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number, onLanded?: (landedElem: HTMLElement) => void): number { // ODD? HACKY?
+    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number, onLanded?: (landedElem: HTMLElement) => void, slide: boolean = true): number { // ODD? HACKY?
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc, onLanded); // ARC
+        this.throwArc(thrownElem, direc, onLanded, slide); // ARC
         let deg = this.rotate(elem, direc, angle);   // ROTATION
         if (impactSounds && impactSounds.length) {
             this.crashSound(impactSounds);
@@ -122,7 +122,7 @@
         }
         requestAnimationFrame(step);
     }
-    private static throwArc(elem: HTMLElement, direc: direction, onLanded?: (landedElem: HTMLElement) => void) { // Handles the arc travelled NOT rotation, see CSS
+    private static throwArc(elem: HTMLElement, direc: direction, onLanded?: (landedElem: HTMLElement) => void, slide: boolean = true) { // Handles the arc travelled NOT rotation, see CSS
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
 
@@ -149,7 +149,7 @@
 
                 ThrowHandler.put(elem, x, y);
             }
-            else {
+            else if (slide) { // (once it's come down a car slides on a little; a boat, which has nothing to slide on, doesn't)
                 let left = parseInt(elem.style.left);
                 if (direc == direction.forward) {
                     x = left + 2;

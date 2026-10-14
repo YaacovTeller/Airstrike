@@ -1,8 +1,8 @@
 "use strict";
 class ThrowHandler {
-    static flip(elem, direc, impactSounds, parentElem, angle, onLanded) {
+    static flip(elem, direc, impactSounds, parentElem, angle, onLanded, slide = true) {
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc, onLanded); // ARC
+        this.throwArc(thrownElem, direc, onLanded, slide); // ARC
         let deg = this.rotate(elem, direc, angle); // ROTATION
         if (impactSounds && impactSounds.length) {
             this.crashSound(impactSounds);
@@ -114,7 +114,7 @@ class ThrowHandler {
         }
         requestAnimationFrame(step);
     }
-    static throwArc(elem, direc, onLanded) {
+    static throwArc(elem, direc, onLanded, slide = true) {
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
         let distance = RandomNumberGen.randomNumBetween(10, 40); //20
@@ -137,7 +137,7 @@ class ThrowHandler {
                 y = currentTop - Math.sin(a) * height;
                 ThrowHandler.put(elem, x, y);
             }
-            else {
+            else if (slide) { // (once it's come down a car slides on a little; a boat, which has nothing to slide on, doesn't)
                 let left = parseInt(elem.style.left);
                 if (direc == direction.forward) {
                     x = left + 2;
