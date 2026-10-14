@@ -41,11 +41,11 @@ class PowerGrid {
     // Where to put a substation near the edge of the screen and the pylons that lead away from it, and clear off the edge: up and to the right from one on
     // the top or the right edge, down and to the left from one on the bottom or the left, which is the way they're drawn. The boxes are
     // checked with accept (which is told only the part of each that's on the screen). Returns the slots, or none if there was no room.
-    public static plan(edges: Array<"top" | "right" | "bottom" | "left">, accept: (box: Box) => boolean): Array<BuildingSlot> {
+    public static plan(edges: Array<"top" | "right" | "bottom" | "left">, accept: (box: Box, part: "substation" | "line") => boolean): Array<BuildingSlot> {
         const width = window.innerWidth, height = window.innerHeight;
         const hud = 125;   // clear of the HUD
         const inside = (box: Box): Box => ({ left: Math.max(0, box.left), top: Math.max(0, box.top), right: Math.min(width, box.right), bottom: Math.min(height, box.bottom) });
-        for (let attempt = 0; attempt < 120; attempt++) {
+        for (let attempt = 0; attempt < 500; attempt++) {
             const edge = RandomNumberGen.returnRandomFromArray(edges);
             const sub = RandomNumberGen.returnRandomFromArray(substationInfo);
             let x: number, y: number;
@@ -57,7 +57,7 @@ class PowerGrid {
                 default: y = height - sub.height - near(); x = RandomNumberGen.randomNumBetween(60, width - sub.width - 60); break;
             }
             const subBox = { left: x, top: y, right: x + sub.width, bottom: y + sub.height };
-            if (!accept(subBox)) continue;
+            if (!accept(subBox, "substation")) continue;
             const slots: Array<BuildingSlot> = [{ X: x, Y: y, info: sub }];
             const boxes: Array<Box> = [subBox];
             const upRight = edge == "top" || edge == "right";
@@ -72,7 +72,7 @@ class PowerGrid {
                 const box = { left: left, top: top, right: left + line.info.width, bottom: top + line.info.height };
                 const seen = inside(box);
                 if (seen.right - seen.left < 20 || seen.bottom - seen.top < 20) break; // it's right off the screen: that's the end of it
-                if (!accept(seen)) { ok = false; break; }
+                if (!accept(seen, "line")) { ok = false; break; }
                 slots.push({ X: left, Y: top, info: line.info });
                 boxes.push(box);
                 base = upRight ? { x: base.x + step.x, y: base.y + step.y } : { x: base.x - step.x, y: base.y - step.y };
@@ -1207,6 +1207,18 @@ class GameHandler {
         water.style.transform = "skewX(" + Math.atan(k) * 180 / Math.PI + "deg)";
     }
 
+    // Whether a road of the coast runs through this box (to within a margin): it's checked at points along the road, each as far from it as the road is wide
+    public roadsHit(box: Box, margin: number): boolean {
+        return this.coastRoads.some(road => this.roadHitsBox(road, box, margin));
+    }
+    public roadHitsBox(road: { cx: number, cy: number, along: [number, number], across: [number, number] }, box: Box, margin: number): boolean {
+        const half = Math.hypot(road.across[0], road.across[1]) / 2 + margin;
+        for (let t = -0.5; t <= 0.5001; t += 0.1) {
+            const x = road.cx + road.along[0] * t, y = road.cy + road.along[1] * t;
+            if (x > box.left - half && x < box.right + half && y > box.top - half && y < box.bottom + half) return true;
+        }
+        return false;
+    }
     // The roads of the coast: a picture of road (AS_assets/buildings/roads), stretched into place. It's drawn on the slant of the buildings, which
     // is not quite the slant it was drawn at, so each is given a matrix: the road's own two edges (along it, and across it) are what it maps
     // from, and `along` and `across` are what they're to become on the screen (px, as a vector from one end to the other).
@@ -1308,50 +1320,42 @@ class GameHandler {
             // sliced coast's run from the top right to the bottom left: the top right end is on the shore, which is further along
             // lower down, so the whole piece is out in the sea
             const shoreAtEnd = this.coastKind == "slice" ? shoreOf(topY - seaKind.height * 0.5, seaKind.height) : shoreOf(topY, seaKind.height);
-            if (shoreAtEnd + 16 + padding > screenWidth) continue; // (on a sliced coast the shore is off the screen low down)
-            slots.push({ X: shoreAtEnd - seaKind.width + 16, Y: topY, info: seaKind });
+            const inland = 40; // (they start on the land, a way in from the shore, and go out into the sea)
+            if (shoreAtEnd + 16 + inland + padding > screenWidth) continue; // (on a sliced coast the shore is off the screen low down)
+            slots.push({ X: shoreAtEnd - seaKind.width + 16 + inland, Y: topY, info: seaKind });
             seaRanges.push({ top: topY, bottom: topY + seaKind.height });
             break;
         }
     }
     {
-        // The cranes stand in a few groups along the shore, close together: each group has a front row on the shore, with the
-        // others in a row behind it, inland, like the rows of the town
-        const craneCount = RandomNumberGen.randomNumBetween(3, 6);
-        const groupCount = craneCount <= 3 ? 1 : craneCount <= 5 ? 2 : RandomNumberGen.randomNumBetween(2, 3);
-        const along = crane.height * 0.55;                 // how far down the shore the next in a row is
-        const inland = crane.width * 0.7;                  // and how far in the row behind is: across, and (along the slant of the rows) down or up
-        const inlandDrop = this.coastKind == "slice" ? -slope * inland : slope * inland;
+        // The cranes stand in one or two clusters along the shore, each a row of three to five of the one kind, close together
+        const clusterCount = RandomNumberGen.randomNumBetween(1, 2);
+        const along = crane.height * 0.5;                  // how far down the shore the next in a row is
         // down the shore as far as there's room: a sliced coast's shore runs off the right of the screen part of the way down
         const first = top + (this.coastKind == "slice" ? 150 : 100);
         const last = this.coastKind == "slice"
-            ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - inland - 40))
+            ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - 40))
             : bottom - 60;
-        const groupStep = Math.max(60, (last - first) / groupCount);
+        const groupStep = Math.max(60, (last - first) / clusterCount);
         const light = RandomNumberGen.returnRandomFromArray(lighthouses);
         const placedCranes: Array<BuildingSlot> = [];
-        const frontRow: Array<BuildingSlot> = [];
-        let behind = false;
-        for (let g = 0, remaining = craneCount; g < groupCount; g++) {
-            const size = Math.ceil(remaining / (groupCount - g));
-            remaining -= size;
-            const groupFoot = first + groupStep * g + RandomNumberGen.randomNumBetween(0, Math.floor(groupStep * 0.25));
+        const frontRow: Array<BuildingSlot> = placedCranes; // (all of them are on the shore, so the lighthouse can take any one's place)
+        for (let g = 0; g < clusterCount; g++) {
+            const size = RandomNumberGen.randomNumBetween(3, 5);
+            const room = Math.max(0, groupStep - (size - 1) * along - crane.height * 0.3);
+            const groupFoot = first + groupStep * g + RandomNumberGen.randomNumBetween(0, Math.floor(room * 0.6));
             for (let i = 0; i < size; i++) {
-                const row = i % 2, col = Math.floor(i / 2);   // (the second of a group is behind the first, the third next to it)
-                const foot = groupFoot + col * along + (row ? inlandDrop : 0);
+                const foot = groupFoot + i * along;
                 const topY = foot - crane.height;
-                const x = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3) + (row ? inland : 0);
+                const x = shoreOf(topY, crane.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
                 if (x + crane.width + padding > screenWidth || foot > bottom || topY < top - 20) continue; // (on a sliced coast the shore is off the screen low down)
-                const slot = { X: x, Y: topY, info: crane };
-                placedCranes.push(slot);
-                if (row) behind = true; else frontRow.push(slot);
+                placedCranes.push({ X: x, Y: topY, info: crane });
             }
         }
-        const craneBack = behind ? crane.width + inland : crane.width; // how far in from the shore the cranes go
-        quaySide = craneBack + 46;                                       // and the town starts a road beyond that
-        roadOffset = craneBack + 22;
+        quaySide = crane.width + 46;                                     // the town starts a road beyond the cranes
+        roadOffset = crane.width + 22;
         const step = groupStep;
-        // the lighthouse is one of the front row: put on the shore in place of one of those cranes, or, if none are on screen, by itself
+        // the lighthouse is one of those on the shore: put in place of one of the cranes, or, if none are on screen, by itself
         if (light && !singleTaken(light)) {
             usedSingles.push(light);
             const pick = frontRow.length ? RandomNumberGen.returnRandomFromArray(frontRow) : null;
@@ -1365,6 +1369,32 @@ class GameHandler {
         }
         slots.push(...placedCranes);
     }
+
+    // The substation, near an edge of the screen on the land, with the lines leading off the map from it, is put down before the town: the
+    // blocks and the streets are laid out round it (it takes up a good deal of the land that's left, and it can't be put on a road afterwards)
+    const boxOf = (slot: BuildingSlot): Box => ({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
+    const reserved: Array<Box> = [];        // where the town keeps off: the substation and its lines
+    const reservedSubstation: Array<Box> = [];
+    const power = PowerGrid.plan(["right", "top", "bottom"], (box, part) => {
+        const dry = this.firstDryXFor(box.top, box.bottom - box.top);
+        if (box.left < dry + (part == "substation" ? quaySide + 10 : 24)) return false; // (the substation stays out of the strip with the cranes and the shore road)
+        return !slots.some(slot => {
+            const other = boxOf(slot);
+            return box.left < other.right + 10 && box.right > other.left - 10 && box.top < other.bottom + 6 && box.bottom > other.top - 6;
+        });
+    });
+    for (const slot of power) {
+        reserved.push(boxOf(slot));
+        if (slot.info.electric == "substation") reservedSubstation.push(boxOf(slot));
+    }
+    slots.push(...power);
+    const overlapsReserved = (left: number, top: number, right: number, bottom: number) =>
+        reserved.some(r => left < r.right + 10 && right > r.left - 10 && top < r.bottom + 8 && bottom > r.top - 8);
+    // a road isn't laid across the substation
+    const lay = (road: { cx: number, cy: number, along: [number, number], across: [number, number], mirrored: boolean }) => {
+        if (reservedSubstation.some(r => this.roadHitsBox(road, r, 6))) return;
+        this.coastRoads.push(road);
+    };
 
     // each line is one size class: how wide its widest building is says how far it is from the line above
     const classes = [];
@@ -1439,6 +1469,7 @@ class GameHandler {
                     const left = cx - info.width / 2;
                     const placedTop = footBottom - info.height;
                     if (left + info.width + padding > screenWidth || footBottom > bottom) return null;
+                    if (overlapsReserved(left, placedTop, left + info.width, footBottom)) { tooHigh = true; break; } // (it's in the way of the substation: try further along)
                     if (placedTop < top - 20 || left < this.firstDryXFor(placedTop, info.height) + quaySide) { tooHigh = true; break; }
                     placed.push({ X: left, Y: placedTop, info: info });
                     centres.push({ X: cx, Y: cy });
@@ -1478,7 +1509,7 @@ class GameHandler {
                 const cx = around.reduce((a, p) => a + p.X, 0) / 4, cy = around.reduce((a, p) => a + p.Y, 0) / 4;
                 const step = block.cell / 2 * rowStep;
                 const lengthAlong = (blockDepth + 0.7) * step, widthAcross = 0.44 * block.cell;
-                this.coastRoads.push({ cx: cx, cy: cy, along: [Math.cos(slantRad) * lengthAlong, -Math.sin(slantRad) * lengthAlong], across: [Math.cos(slantRad) * widthAcross, Math.sin(slantRad) * widthAcross], mirrored: false });
+                lay({ cx: cx, cy: cy, along: [Math.cos(slantRad) * lengthAlong, -Math.sin(slantRad) * lengthAlong], across: [Math.cos(slantRad) * widthAcross, Math.sin(slantRad) * widthAcross], mirrored: false });
             }
             previous[k] = { centres: block.centres };
             {
@@ -1519,7 +1550,7 @@ class GameHandler {
         const across = [-Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth];
         const step = pieceLength * 0.94 * Math.cos(slantRad);   // how far across the screen from one piece to the next
         for (let x = from + step / 2; x - step / 2 < to; x += step) {
-            this.coastRoads.push({ cx: x, cy: middle + slope * x, along: along as [number, number], across: across as [number, number], mirrored: true });
+            lay({ cx: x, cy: middle + slope * x, along: along as [number, number], across: across as [number, number], mirrored: true });
         }
     }
 
@@ -1536,25 +1567,13 @@ class GameHandler {
         let count = 0;
         while (y < bottom + 60 && count++ < 20) {
             if (x > -pieceLength && x < screenWidth + pieceLength * 0.4) {
-                this.coastRoads.push({ cx: x + down.x * pieceLength * 0.5, cy: y + down.y * pieceLength * 0.5, along: along as [number, number], across: across as [number, number], mirrored: sliced });
+                lay({ cx: x + down.x * pieceLength * 0.5, cy: y + down.y * pieceLength * 0.5, along: along as [number, number], across: across as [number, number], mirrored: sliced });
             }
             x += down.x * pieceLength * 0.94;
             y += down.y * pieceLength * 0.94;
         }
     }
 
-    // the substation, near the right or the top of the screen where the land is, with the lines leading off the map from it
-    const boxOf = (slot: BuildingSlot): Box => ({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
-    const clearOfTheTown = (box: Box) => {
-        if (box.left < this.firstDryXFor(box.top, box.bottom - box.top) + 24) return false;
-        return !slots.some(slot => {
-            const other = boxOf(slot);
-            return box.left < other.right + 10 && box.right > other.left - 10 && box.top < other.bottom + 6 && box.bottom > other.top - 6;
-        });
-    };
-    let power = PowerGrid.plan(["right", "top"], clearOfTheTown);
-    if (!power.length) power = PowerGrid.plan(["right", "top", "bottom"], clearOfTheTown); // (if the town has taken all of those edges)
-    slots.push(...power);
     // back to front: the nearer ones (lower down) are the ones that go over the ones behind them
     slots.sort((a, b) => (a.Y + a.info.height) - (b.Y + b.info.height));
     return slots;

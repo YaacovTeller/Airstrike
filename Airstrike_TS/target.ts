@@ -103,7 +103,7 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
     portInfo("Port_Office_B", 106, 83, { x: [22, 68], y: [30, 60] }),
     portInfo("Quay_Corner", 100, 61, undefined),
-    portInfo("Quay_Straight", 133, 77, { x: [87, 98], y: [20, 25] }),
+    portInfo("Quay_Straight", 133, 77, undefined),
     portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
     portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
@@ -128,11 +128,11 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
 // whose piers run from the shore at the top right down to the left. SW is the NW set turned over, with the better first pictures
 // the user redrew (and no jetty). Each state is the same size as its NW twin, and its hiding spots are mirrored.
 const seaFacingNW: Array<BuildingInfo> = [
-    portInfo("Breakwater", 118, 77, { x: [56, 70], y: [41, 47] }, "coast NW/"),
+    portInfo("Breakwater", 118, 77, undefined, "coast NW/"),
     portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }, "coast NW/"),
     portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }, "coast NW/"),
     portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }, "coast NW/"),
-    portInfo("Jetty", 102, 69, { x: [58, 70], y: [33, 37] }, "coast NW/"),
+    portInfo("Jetty", 102, 69, undefined, "coast NW/"),
     portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }, "coast NW/"),
 ];
 const seaFacingSW: Array<BuildingInfo> = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
@@ -157,19 +157,19 @@ const allIndustrialInfo: Array<BuildingInfo> = [
     industrialInfo("Container_Yard_B2", 128, 61, { x: [42, 77], y: [21, 38] }),
     industrialInfo("Container_Yard_B3", 123, 59, { x: [34, 77], y: [16, 36] }),
     industrialInfo("Container_Yard_B4", 118, 57, { x: [30, 77], y: [17, 34] }),
-    industrialInfo("Water_Tower_B1", 81, 86, { x: [29, 45], y: [11, 69] }),
-    industrialInfo("Water_Tower_B2", 80, 89, { x: [33, 42], y: [15, 73] }),
-    industrialInfo("Water_Tower_B3", 80, 86, { x: [25, 45], y: [13, 68] }),
-    industrialInfo("Water_Tower_B4", 81, 89, { x: [32, 41], y: [13, 72] }),
+    industrialInfo("Water_Tower_B1", 81, 86, undefined),
+    industrialInfo("Water_Tower_B2", 80, 89, undefined),
+    industrialInfo("Water_Tower_B3", 80, 86, undefined),
+    industrialInfo("Water_Tower_B4", 81, 89, undefined),
     industrialInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
     industrialInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
     industrialInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
     industrialInfo("Storage_Shed", 113, 65, { x: [27, 69], y: [22, 42] }),
-    industrialInfo("Water_Tank", 79, 57, { x: [17, 48], y: [18, 35] }),
-    industrialInfo("Water_Tower_Box", 83, 78, { x: [28, 41], y: [9, 61] }),
-    industrialInfo("Water_Tower_Concrete", 83, 81, { x: [29, 43], y: [11, 65] }),
-    industrialInfo("Water_Tower_Conical", 82, 80, { x: [30, 42], y: [11, 64] }),
-    industrialInfo("Water_Tower_Metal", 79, 81, { x: [30, 41], y: [11, 65] }),
+    industrialInfo("Water_Tank", 79, 57, undefined),
+    industrialInfo("Water_Tower_Box", 83, 78, undefined),
+    industrialInfo("Water_Tower_Concrete", 83, 81, undefined),
+    industrialInfo("Water_Tower_Conical", 82, 80, undefined),
+    industrialInfo("Water_Tower_Metal", 79, 81, undefined),
 ];
 function industrialByName(name: string): BuildingInfo {
     return allIndustrialInfo.find(info => info.undamaged === "industrial misc/" + name + "_1.png");
@@ -259,8 +259,8 @@ function electricInfo(name: string, width: number, height: number, kind: "substa
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo: Array<BuildingInfo> = [
-    electricInfo("Substation_A", 89, 75, "substation"),
-    electricInfo("Substation_B", 90, 83, "substation"),
+    electricInfo("Substation_A", 124, 105, "substation"),
+    electricInfo("Substation_B", 125, 116, "substation"),
 ];
 type PowerLineInfo = { info: BuildingInfo, leftBase: [number, number], rightBase: [number, number] };
 const powerLineInfo: Array<PowerLineInfo> = [
@@ -880,6 +880,11 @@ class ExplosiveTarget extends Target {
         this.baseImgEl.src = assetsFolder + "buildings/" + this.blast.file;
     }
     public action() { } // it stays put
+
+    // A drone's scan shows it up, in blue like a bunker, to say it's a target
+    public heatSignatureBox(): Box | null {
+        return this.exploded ? null : this.targetEl.getBoundingClientRect();
+    }
 
     // Any of it that a blast reaches
     public hitBox(): Box {

@@ -557,7 +557,7 @@ class SceneLevel extends Level {
         this.bunkerSpecials = [];
         this.retreatScheduled = false;
         this.stageToken++;
-        const pool = buildings.filter(b => !b.isElectric());
+        const pool = buildings.filter(b => !b.isElectric() && b.canHideEnemies()); // (nobody hides in a jetty, a breakwater or a water tank)
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const bunker = new Bunker(building);
