@@ -1750,6 +1750,19 @@ class WaterVehicleTarget extends VehicleTarget {
             this.targetEl.classList.add('smallBoat');
             this.armour = smallBoatTarget.armour;
         }
+        this.targetEl.constrain = (x, y) => this.keepInWater(x, y); // however it's thrown, it stays in the sea
+    }
+    // Wherever a boat is pushed or thrown it's kept in the open water: along the shore it stops at the edge, and if there's no room at the height
+    // it was going to, it stays at the height it was
+    keepInWater(x, y) {
+        const width = this.targetEl.offsetWidth, height = this.targetEl.offsetHeight;
+        const span = Shoreline.waterSpan(y, y + height);
+        if (!span)
+            return { X: x, Y: y };
+        const low = Math.max(span.left + WaterVehicleTarget.shoreMargin, 0), high = span.openRight - WaterVehicleTarget.shoreMargin - width;
+        if (high < low)
+            return { X: parseFloat(this.targetEl.style.left) || x, Y: parseFloat(this.targetEl.style.top) || y };
+        return { X: Math.min(Math.max(x, low), high), Y: y };
     }
     // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
     // remembered from when the boat was hit.
@@ -1843,6 +1856,11 @@ class WaterVehicleTarget extends VehicleTarget {
             return; // already burning and on its way down
         this.sinkScheduled = true;
         this.strikePoint = this.impactPoint(collisionInfo, this.hitBox());
+        if (this.targetEl.classList.contains('smallBoat') && direc) {
+            // a small boat is thrown over like a car, and the moment it comes down it goes under, and is lost
+            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.capsize());
+            return;
+        }
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
         }
@@ -1946,12 +1964,25 @@ class WaterVehicleTarget extends VehicleTarget {
         this.sinkMask.remove();
         this.sinkMask = null;
     }
-    sink() {
+    // Thrown over and come down: it sinks at once, still the way up it landed
+    capsize() {
+        if (this.damage === Damage.destroyed || !this.targetEl.isConnected)
+            return;
+        const priorStatus = this.status;
+        this.targetDestroyed(priorStatus);
+        game.assessKillPoints(priorStatus, this.damage, false, this);
+        this.sink(this.angle);
+    }
+    sink(turned = 0) {
         let { mask, group } = this.createSinkMask();
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
         this.stopFireLight(WaterVehicleTarget.sinkDuration); // the fire goes down with the boat
+        if (turned) { // (it goes down as it landed, over, not the right way up)
+            group.style.transform = `rotate(${turned}deg)`;
+            void group.offsetHeight;
+        }
         group.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
-        group.style.transform = `translateY(${sinkDistance}px)`;
+        group.style.transform = `translateY(${sinkDistance}px)` + (turned ? ` rotate(${turned}deg)` : "");
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
     // tilt is 1 to go down by the bow (the right-hand end), -1 for the stern
