@@ -259,8 +259,8 @@ function electricInfo(name: string, width: number, height: number, kind: "substa
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo: Array<BuildingInfo> = [
-    electricInfo("Substation_A", 124, 105, "substation"),
-    electricInfo("Substation_B", 125, 116, "substation"),
+    electricInfo("Substation_A", 124, 98, "substation"),
+    electricInfo("Substation_B", 125, 106, "substation"),
 ];
 type PowerLineInfo = { info: BuildingInfo, leftBase: [number, number], rightBase: [number, number] };
 const powerLineInfo: Array<PowerLineInfo> = [
@@ -2075,6 +2075,20 @@ class WaterVehicleTarget extends VehicleTarget {
 
     private static flipChance: number = 35;       // percent of the hits that could throw a small boat over that do
     private static flipMinRadius: number = 50;    // only from a blast with a radius bigger than this: not the light missile or the missile
+    // A sinking boat makes ripples on the water under it: one as it starts to go, and more as it goes down
+    private splashUnder(duration: number) {
+        const ripple = () => {
+            if (!this.targetEl.isConnected) return;
+            const r = this.picEl.getBoundingClientRect();
+            const width = r.width * 0.9;
+            const at: position = { X: r.left + r.width / 2 + RandomNumberGen.randomNumBetween(-width / 3, width / 3), Y: r.bottom - r.height * 0.2 };
+            ExplosionHandler.createSplash(at, Math.max(40, width * 0.7));
+        };
+        ripple();
+        setTimeout(ripple, duration * 0.35);
+        setTimeout(ripple, duration * 0.65);
+    }
+
     private sink(turned: number = 0) {
         let { mask, group } = this.sinkMask ? { mask: this.sinkMask, group: this.sinkGroup } : this.createSinkMask(); // (one that's upside down is already in its mask)
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
@@ -2085,6 +2099,7 @@ class WaterVehicleTarget extends VehicleTarget {
         }
         group.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
         group.style.transform = `translateY(${sinkDistance}px)` + (turned ? ` rotate(${turned}deg)` : "");
+        this.splashUnder(WaterVehicleTarget.sinkDuration);
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
 
@@ -2096,6 +2111,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.stopFireLight(WaterVehicleTarget.tiltSinkDuration);
         group.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         group.style.transform = `rotate(${tiltAngle}deg)`;
+        this.splashUnder(WaterVehicleTarget.tiltSinkDuration);
 
         setTimeout(() => {
             let submergeDuration = (WaterVehicleTarget.tiltSinkDuration - WaterVehicleTarget.tiltPause) / 1000;

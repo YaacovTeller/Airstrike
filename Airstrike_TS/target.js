@@ -230,8 +230,8 @@ function electricInfo(name, width, height, kind) {
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo = [
-    electricInfo("Substation_A", 124, 105, "substation"),
-    electricInfo("Substation_B", 125, 116, "substation"),
+    electricInfo("Substation_A", 124, 98, "substation"),
+    electricInfo("Substation_B", 125, 106, "substation"),
 ];
 const powerLineInfo = [
     { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },
@@ -1982,6 +1982,20 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     static flipChance = 35; // percent of the hits that could throw a small boat over that do
     static flipMinRadius = 50; // only from a blast with a radius bigger than this: not the light missile or the missile
+    // A sinking boat makes ripples on the water under it: one as it starts to go, and more as it goes down
+    splashUnder(duration) {
+        const ripple = () => {
+            if (!this.targetEl.isConnected)
+                return;
+            const r = this.picEl.getBoundingClientRect();
+            const width = r.width * 0.9;
+            const at = { X: r.left + r.width / 2 + RandomNumberGen.randomNumBetween(-width / 3, width / 3), Y: r.bottom - r.height * 0.2 };
+            ExplosionHandler.createSplash(at, Math.max(40, width * 0.7));
+        };
+        ripple();
+        setTimeout(ripple, duration * 0.35);
+        setTimeout(ripple, duration * 0.65);
+    }
     sink(turned = 0) {
         let { mask, group } = this.sinkMask ? { mask: this.sinkMask, group: this.sinkGroup } : this.createSinkMask(); // (one that's upside down is already in its mask)
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
@@ -1992,6 +2006,7 @@ class WaterVehicleTarget extends VehicleTarget {
         }
         group.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
         group.style.transform = `translateY(${sinkDistance}px)` + (turned ? ` rotate(${turned}deg)` : "");
+        this.splashUnder(WaterVehicleTarget.sinkDuration);
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
     // tilt is 1 to go down by the bow (the right-hand end), -1 for the stern
@@ -2002,6 +2017,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.stopFireLight(WaterVehicleTarget.tiltSinkDuration);
         group.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         group.style.transform = `rotate(${tiltAngle}deg)`;
+        this.splashUnder(WaterVehicleTarget.tiltSinkDuration);
         setTimeout(() => {
             let submergeDuration = (WaterVehicleTarget.tiltSinkDuration - WaterVehicleTarget.tiltPause) / 1000;
             group.style.transition = `transform ${submergeDuration}s ease-in`;

@@ -562,9 +562,16 @@ img#crater { /*to override the img[src]!*/
 }
 
     .flyover.bomber { /* the bunker buster's: a bomber's shadow, a good deal bigger */
-        height: 560px;
-        width: 560px;
+        height: 640px;
+        width: 640px;
         opacity: 0.5;
+    }
+    .flyover.bomber img { /* the stealth bomber's picture is a wide one, nose up: turned to fly to the left */
+        width: 640px;
+        height: 320px;
+        left: 0;
+        top: 160px;
+        transform: rotate(-90deg);
     }
 
     .flyover.chopper {

@@ -346,7 +346,7 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
         div.appendChild(img);
         img.src = this.flyoverInfo.imageSource;
         div.style.left = '100vw';
-        div.style.top = (window.innerHeight - 560) / 2 + 'px';
+        div.style.top = (window.innerHeight - 640) / 2 + 'px';
         const pause = this.flyoverInfo.delay;
         const duration = this.flyoverInfo.duration;
         setTimeout(() => this.beginMoveInterval(div, this.flyoverInfo.speed, duration), pause);

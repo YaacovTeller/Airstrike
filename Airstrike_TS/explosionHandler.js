@@ -77,8 +77,8 @@ class ExplosionHandler {
     }
     // Small splash for a piece of thrown debris (wheel/bit/etc) landing in water -- see
     // ThrowHandler.removeIfLandedInWater.
-    static createSplash(position) {
-        let splash = this.setAndReturnExplosion(position, ExplSizes.XXS, HitSurface.water);
+    static createSplash(position, size = ExplSizes.XXS) {
+        let splash = this.setAndReturnExplosion(position, size, HitSurface.water);
         this.presentAndFadeout(splash, 2000, 100);
     }
     static landHit(blastCenter, size, explFrames, weaponName) {

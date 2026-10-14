@@ -675,10 +675,9 @@ const bunkerBusterInfo: ExplosiveWeaponInfo = {
     ...scaledBigStrike(7, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
     utility: true,
     class: BunkerBusterWeaponType,
-    // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point. The picture is a
-    // placeholder (the fighter's) until there's a B-2 one: just change the file here.
+    // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point: the stealth bomber
     flyover: {
-        imageSource: assetsSVGFolder + 'f16.svg',
+        imageSource: assetsSVGFolder + 'Stealth Bomber.png',
         speed: 5,
         duration: 3600,
         delay: 1200
