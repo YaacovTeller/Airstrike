@@ -883,7 +883,7 @@ class ExplosiveTarget extends Target {
         ContentElHandler.removeFromContentEl(this.targetEl);
         if (this.blast.rockets) {
             SoundPlayer.playRandomSound(bigExplosions);
-            ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
+            ExplosionHandler.basicExplosion(centre, ExplSizes.XL, expl_med_imgs, weaponNames.mortar, 0.85); // (a little larger than a large explosion: the next size up, drawn at 85%)
         }
         else {
             SoundPlayer.playRandomSound(explosions);
