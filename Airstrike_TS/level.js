@@ -542,12 +542,12 @@ class SceneLevel extends Level {
     retreatScheduled = false;
     stageToken = 0;
     ticksSinceRetreatCheck = 0;
+    // The special in the bunker feels threatened, and makes a run for it, once most of the boats have been dealt with, or most of the targets on land
     heavilyDestroyed() {
-        const progress = this.stageProgress();
-        if (progress.total && progress.done * 2 > progress.total)
-            return true;
-        const down = this.stageBuildings.filter(b => !b.isStanding() || b.damage === Damage.destroyed).length;
-        return this.stageBuildings.length > 0 && down * 2 > this.stageBuildings.length;
+        const boats = this.targets.filter(t => t instanceof WaterVehicleTarget);
+        const land = this.targets.filter(t => !(t instanceof WaterVehicleTarget));
+        const mostGone = (group) => group.length > 0 && group.filter(t => t.isFinished()).length * 2 > group.length;
+        return mostGone(boats) || mostGone(land);
     }
     checkForRetreat() {
         if (this.retreatScheduled || !this.bunkerSpecials.length || !this.heavilyDestroyed())

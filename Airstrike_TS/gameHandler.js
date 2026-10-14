@@ -953,7 +953,9 @@ class GameHandler {
         const perStage = Math.max(1, Math.round(this.difficulty.enemyFactor || 1));
         this.roster = SpecialRoster.make(SceneLevel.stagesInAGame() * perStage);
         document.getElementById("briefingText").innerHTML = "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
-            "over " + SceneLevel.stagesInAGame() + " stages. They'll run for it once the shooting starts. Don't let any of them get away.";
+            "over " + SceneLevel.stagesInAGame() + " stages. " +
+            (mode == GameMode.coast ? "They'll run for it if they feel threatened, when most of the boats or most of the targets on land have been dealt with. " : "They'll run for it once the shooting starts. ") +
+            "Don't let any of them get away.";
         document.getElementById("rosterGrid").innerHTML = this.roster.map((man, i) => '<div class="rosterCard"><img class="rosterPortrait" src="' + man.portrait + '"><div><div class="rosterStage">Stage ' + (Math.floor(i / perStage) + 1) + '</div><div class="rosterName">' + man.name + '</div></div></div>').join("");
         document.getElementById("modal").classList.add("displayNone");
         document.getElementById("briefing").classList.remove("displayNone");
