@@ -164,6 +164,7 @@ const strikes: Array<Sound> = [];
 const bigExplosions: Array<Sound> = [];
 const multiExplosions: Array<Sound> = [];
 const crashes: Array<Sound> = [];
+const impactCrash: Array<Sound> = [];
 const beeps: Array<Sound> = [];
 const ticks: Array<Sound> = [];
 const bombCountdowns: Array<Sound> = []; // a recorded countdown that ends in a blast, in place of the ticks and the usual explosion
@@ -290,6 +291,9 @@ function loadSound() {
         new Sound(soundFolder + "crash_3.mp3"),
         new Sound(soundFolder + "crash_4.mp3"),
         new Sound(soundFolder + "crash_5.mp3"),
+    )
+    impactCrash.push(
+        new Sound(soundFolder + "impact crash.mp3"),
     )
     strikes.push(
          new Sound(soundFolder + "strike_1.mp3"),

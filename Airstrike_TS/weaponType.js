@@ -347,7 +347,9 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             const aimed = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
-            SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            SoundPlayer.playRandomSound(impactCrash); // bunker buster impact sound
+            // Tiny impact explosion on initial hit
+            ExplosionHandler.basicExplosion(aimed, ExplSizes.XXS, expl_small_imgs, weaponNames.mortar);
             if (this.onWater(aimed))
                 ExplosionHandler.createSplash(aimed); // into the sea, it's just a small splash
             setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
