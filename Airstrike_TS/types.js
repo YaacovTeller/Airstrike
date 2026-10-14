@@ -594,6 +594,8 @@ const bunkerBusterInfo = {
     blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };
+// The whole set a little smaller than its sizes say (the bunker buster's isn't an area, so it's left as it is)
+const coastWeaponScale = 0.85;
 const scaledWeapons = [
     scaledMortarInfo,
     scaledHowitzerInfo,
@@ -602,7 +604,7 @@ const scaledWeapons = [
     bunkerBusterInfo,
     scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
     scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
-];
+].map(info => info === bunkerBusterInfo ? info : { ...info, scale: coastWeaponScale, blastRadius: Math.round(info.blastRadius * coastWeaponScale) });
 var msgLength;
 (function (msgLength) {
     msgLength[msgLength["long"] = 3000] = "long";

@@ -461,6 +461,18 @@
  /*overflow: hidden;*/
 }
 
+/* a fire burning on a building that has fuel in it (see Building.igniteFire) */
+.buildingFire {
+    position: absolute;
+    left: 50%;
+    top: 22%;
+    width: 46px;
+    height: 46px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 3;
+}
+
 /* the roads of the coast: flat on the ground, under everything (even the craters, which are at -1) */
 .coastRoad {
     position: absolute;

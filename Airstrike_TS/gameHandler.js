@@ -1421,6 +1421,7 @@ class GameHandler {
         const next = classes.map(() => 40);
         const finished = classes.map(() => false);
         const previous = classes.map(() => null);
+        const extent = classes.map(() => null);
         const rowStep = Math.sqrt(1 + slope * slope); // along a row (or back from one), for each px across
         const slantRad = slantDegrees * Math.PI / 180;
         let blocks = 0;
@@ -1453,6 +1454,12 @@ class GameHandler {
                     this.coastRoads.push({ cx: cx, cy: cy, along: [Math.cos(slantRad) * lengthAlong, -Math.sin(slantRad) * lengthAlong], across: [Math.cos(slantRad) * widthAcross, Math.sin(slantRad) * widthAcross], mirrored: false });
                 }
                 previous[k] = { centres: block.centres };
+                {
+                    const xs = block.centres.map(p => p.X);
+                    const from = Math.min(...xs) - block.cell / 2, to = Math.max(...xs) + block.cell / 2;
+                    const seen = extent[k];
+                    extent[k] = seen ? { from: Math.min(seen.from, from), to: Math.max(seen.to, to), cell: Math.max(seen.cell, block.cell) } : { from: from, to: to, cell: block.cell };
+                }
                 next[k] = block.end;
                 blocks++;
             }
@@ -1471,6 +1478,24 @@ class GameHandler {
             if (best >= 0) {
                 const old = slots[best];
                 slots[best] = { X: old.X + old.info.width / 2 - mosque.width / 2, Y: old.Y + old.info.height - mosque.height, info: mosque };
+            }
+        }
+        // A street between each line of blocks and the next, along the way the lines run: its middle is half way between the second row of one line
+        // and the first row of the next (the second row of a block is a cell's worth of slant further along the line's intercept, down for the
+        // steep coast and up for the sliced one, where the lines go up the screen)
+        for (let k = 0; k + 1 < lines; k++) {
+            const here = extent[k], there = extent[k + 1];
+            if (!here || !there)
+                continue;
+            const behind = (this.coastKind == "slice" ? -1 : 1) * slope * here.cell;
+            const middle = (intercepts[k] + behind + intercepts[k + 1]) / 2;
+            const from = Math.min(here.from, there.from), to = Math.max(here.to, there.to);
+            const pieceLength = 170, pieceWidth = 0.44 * Math.max(here.cell, there.cell);
+            const along = [Math.cos(slantRad) * pieceLength, Math.sin(slantRad) * pieceLength];
+            const across = [-Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth];
+            const step = pieceLength * 0.94 * Math.cos(slantRad); // how far across the screen from one piece to the next
+            for (let x = from + step / 2; x - step / 2 < to; x += step) {
+                this.coastRoads.push({ cx: x, cy: middle + slope * x, along: along, across: across, mirrored: true });
             }
         }
         // the road along the shore, behind the cranes and in front of the town: pieces end to end down the line of the shore (on the steep coast the

@@ -210,7 +210,7 @@ body.stageRushing #background {
     animation: rushGround var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;
 }
 /* the old sea washes away to the left (see GameHandler.moveStageToExit) and the new one, which has a different slant, waits off the
-   screen to the left until near the end of the rush and then washes back in from there */
+   screen to the left for the first fifth or so of the rush and then washes back in from there, settled before the buildings arrive */
 body.stageRushing .oldSea {
     animation: waterOut var(--rushDuration) linear both;
 }
@@ -219,11 +219,11 @@ body.stageRushing #water {
 }
 @keyframes waterOut {
     0% { translate: 0 0; animation-timing-function: cubic-bezier(.5, 0, .75, .5); }
-    45%, 100% { translate: var(--waterOutX) 0; }
+    38%, 100% { translate: var(--waterOutX) 0; }
 }
 @keyframes waterIn {
-    0%, 55% { translate: var(--waterOutX) 0; animation-timing-function: cubic-bezier(.2, .55, .3, 1); }
-    100% { translate: 0 0; }
+    0%, 22% { translate: var(--waterOutX) 0; animation-timing-function: cubic-bezier(.2, .55, .3, 1); }
+    62%, 100% { translate: 0 0; }
 }
 body.stageRushing #content {
     animation: rushContent var(--rushDuration) cubic-bezier(.55, 0, .1, 1) both;

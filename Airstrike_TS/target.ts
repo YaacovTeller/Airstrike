@@ -16,6 +16,7 @@ type BuildingInfo = {
     group?: string, // only one of a group to a layout (a mosque, whichever of the mosques it is)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
     electric?: "substation" | "line", // part of the power grid: the lights stay on while the substation and its lines stand
+    flammable?: boolean, // has fuel in it: goes on fire when it's damaged, and blows up when it's brought down
 }
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
 function bitPath(name: string): string {
@@ -81,7 +82,7 @@ const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Conta
 const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque"];
 function portInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"], folder: string = ""): BuildingInfo {
     const file = (stage: number) => "port buildings/" + folder + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
 }
 const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
@@ -139,7 +140,7 @@ const seaFacingSW: Array<BuildingInfo> = seaFacingNW.filter(info => !info.undama
 // Sizes are 0.36 of natural, but the yards 0.5 (they're a low, wide thing: the sizes are set here, the pictures aren't resaved).
 function industrialInfo(name: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const file = (stage: number) => "industrial misc/" + name + "_" + stage + ".png";
-    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, noParking: name.startsWith("Water_Tower") };
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), noParking: name.startsWith("Water_Tower") };
 }
 const allIndustrialInfo: Array<BuildingInfo> = [
     industrialInfo("Container_Yard_Circular", 132, 66, { x: [27, 101], y: [20, 45] }),
@@ -206,41 +207,41 @@ const largeMosqueInfo: Array<BuildingInfo> = [
 ];
 
 // The explosives (AS_assets/buildings/explosives): stacks of ammunition crates and of rocket tubes and RPGs, each a single picture
-// with no damaged state: anything that damages one sets it on fire, and it goes up (see ExplosiveTarget). Sizes are 0.26 of
-// natural for the messy stacks and 0.24 for the others.
+// with no damaged state: anything that damages one sets it on fire, and it goes up (see ExplosiveTarget). Sizes are a third of
+// what they were at first, 0.087 of natural for the messy stacks and 0.08 for the others (the explosions are the same size they were).
 type ExplosiveInfo = { file: string, width: number, height: number, rockets: boolean };
 function explosiveInfo(name: string, width: number, height: number, rockets: boolean): ExplosiveInfo {
     return { file: "explosives/" + name + ".png", width: width, height: height, rockets: rockets };
 }
 const allExplosiveInfo: Array<ExplosiveInfo> = [
-    explosiveInfo("Ammo_Crates_1", 59, 42, false),
-    explosiveInfo("Ammo_Crates_2", 70, 51, false),
-    explosiveInfo("Ammo_Crates_3", 63, 54, false),
-    explosiveInfo("Ammo_Crates_4", 76, 55, false),
-    explosiveInfo("Ammo_Crates_5", 82, 48, false),
-    explosiveInfo("Ammo_Crates_6", 70, 52, false),
-    explosiveInfo("Ammo_Crates_7", 71, 51, false),
-    explosiveInfo("Ammo_Crates_8", 78, 50, false),
-    explosiveInfo("Ammo_Messy_1", 83, 66, false),
-    explosiveInfo("Ammo_Messy_2", 81, 65, false),
-    explosiveInfo("Ammo_Messy_3", 82, 64, false),
-    explosiveInfo("Ammo_Messy_4", 87, 67, false),
-    explosiveInfo("Ammo_Messy_5", 82, 66, false),
-    explosiveInfo("Ammo_Messy_6", 82, 63, false),
-    explosiveInfo("Ammo_Messy_7", 78, 64, false),
-    explosiveInfo("Ammo_Messy_8", 83, 59, false),
-    explosiveInfo("Rockets_Messy_1", 98, 73, true),
-    explosiveInfo("Rockets_Messy_2", 92, 67, true),
-    explosiveInfo("Rockets_Messy_3", 83, 74, true),
-    explosiveInfo("Rockets_Messy_4", 89, 76, true),
-    explosiveInfo("Rockets_Tubes_1", 53, 36, true),
-    explosiveInfo("Rockets_Tubes_2", 64, 42, true),
-    explosiveInfo("Rockets_Tubes_3", 65, 45, true),
-    explosiveInfo("Rockets_Tubes_4", 75, 49, true),
-    explosiveInfo("Rockets_Tubes_5", 60, 39, true),
-    explosiveInfo("Rockets_Tubes_6", 73, 39, true),
-    explosiveInfo("Rockets_Tubes_7", 56, 47, true),
-    explosiveInfo("Rockets_Tubes_8", 72, 44, true),
+    explosiveInfo("Ammo_Crates_1", 20, 14, false),
+    explosiveInfo("Ammo_Crates_2", 23, 17, false),
+    explosiveInfo("Ammo_Crates_3", 21, 18, false),
+    explosiveInfo("Ammo_Crates_4", 25, 18, false),
+    explosiveInfo("Ammo_Crates_5", 27, 16, false),
+    explosiveInfo("Ammo_Crates_6", 23, 17, false),
+    explosiveInfo("Ammo_Crates_7", 24, 17, false),
+    explosiveInfo("Ammo_Crates_8", 26, 17, false),
+    explosiveInfo("Ammo_Messy_1", 28, 22, false),
+    explosiveInfo("Ammo_Messy_2", 27, 22, false),
+    explosiveInfo("Ammo_Messy_3", 27, 21, false),
+    explosiveInfo("Ammo_Messy_4", 29, 22, false),
+    explosiveInfo("Ammo_Messy_5", 27, 22, false),
+    explosiveInfo("Ammo_Messy_6", 27, 21, false),
+    explosiveInfo("Ammo_Messy_7", 26, 21, false),
+    explosiveInfo("Ammo_Messy_8", 28, 20, false),
+    explosiveInfo("Rockets_Messy_1", 33, 24, true),
+    explosiveInfo("Rockets_Messy_2", 31, 22, true),
+    explosiveInfo("Rockets_Messy_3", 28, 25, true),
+    explosiveInfo("Rockets_Messy_4", 30, 25, true),
+    explosiveInfo("Rockets_Tubes_1", 18, 12, true),
+    explosiveInfo("Rockets_Tubes_2", 21, 14, true),
+    explosiveInfo("Rockets_Tubes_3", 22, 15, true),
+    explosiveInfo("Rockets_Tubes_4", 25, 16, true),
+    explosiveInfo("Rockets_Tubes_5", 20, 13, true),
+    explosiveInfo("Rockets_Tubes_6", 24, 13, true),
+    explosiveInfo("Rockets_Tubes_7", 19, 16, true),
+    explosiveInfo("Rockets_Tubes_8", 24, 15, true),
 ];
 
 // The power grid (AS_assets/buildings/electric): a substation, with a line of pylons leading from it off the map. The pictures are on the
@@ -435,6 +436,33 @@ class Building extends MapEntity {
     public canHideEnemies(): boolean {
         return !!this.info.hide;
     }
+    // A building with fuel in it (see BuildingInfo.flammable) goes on fire when it's damaged, with the little fire burning on it and its
+    // glow after dark, and when it's brought down (badly damaged) it detonates with a large explosion, which can take its neighbours with it
+    private burning: boolean = false;
+    private detonated: boolean = false;
+    private fireCanvas?: HTMLCanvasElement;
+    private fireLight?: light;
+    private igniteFire() {
+        if (this.burning || this.detonated) return;
+        this.burning = true;
+        this.fireCanvas = ElementCreator.returnNewCanvas(this.targetEl, "buildingFire", true);
+        new DamageOverlay(this.fireCanvas).playLoop(fire_1_imgs);
+        lightID++;
+        this.fireLight = { id: lightID, pos: { X: 0, Y: 0 }, opac: 1, size: ExplSizes.large, fading: false, parent: this.targetEl, burning: true };
+        fires.push(this.fireLight);
+    }
+    private detonate() {
+        if (this.detonated) return;
+        this.detonated = true;
+        if (this.fireCanvas) this.fireCanvas.remove();
+        if (this.fireLight) {
+            this.fireLight.burning = false;
+            this.fireLight.fadeStep = 0.5;
+        }
+        const centre = CollisionDetection.getXYfromPoint(this.targetEl);
+        SoundPlayer.playRandomSound(bigExplosions);
+        ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
+    }
     // Among the town, not on the waterfront
     public isTown(): boolean {
         return !this.info.waterfront && !this.info.electric;
@@ -560,10 +588,15 @@ class Building extends MapEntity {
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);
+            if (this.info.flammable) this.detonate();
             this.clearAway();
             return;
         }
         this.reAssignSrc();
+        if (this.info.flammable) {
+            if (this.damage === Damage.destroyed) this.detonate();
+            else this.igniteFire();
+        }
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
         }
@@ -581,6 +614,7 @@ class Building extends MapEntity {
         this.damage = Damage.destroyed;
         this.killOccupants(true);
         this.throwDebris(undefined, Building.debrisWhenGone);
+        if (this.info.flammable) this.detonate();
         this.clearAway();
     }
     public isStanding(): boolean {
@@ -1270,10 +1304,29 @@ class VehicleTarget extends Target {
         this.specialPortrait = portrait;
         this.targetEl.classList.add('special');
     }
+    // He doesn't take off at full speed: it builds up over the first second (ten ticks of the game loop) to the top speed given. Anything that
+    // changes its speed meanwhile (being hit) is carried on in what it builds up to.
+    private static fleeRampTicks: number = 10;
+    private fleeRamp?: { top: number, last: number, tick: number, factor: number };
     public startFleeing(name: string, speed: number, portrait?: string) {
         this.makeSpecial(name, portrait);
-        this.speed = speed;
+        const first = speed * 0.05;
+        this.fleeRamp = { top: speed, last: first, tick: 0, factor: 1 };
+        this.speed = first;
         SoundPlayer.playSequentialSound(revs);
+    }
+    private stepFleeRamp() {
+        const ramp = this.fleeRamp;
+        if (!ramp) return;
+        if (this.speed !== ramp.last) {
+            if (this.speed === 0) { this.fleeRamp = undefined; return; } // stopped dead: nothing more to build up
+            ramp.factor *= this.speed / ramp.last;
+        }
+        ramp.tick++;
+        const next = ramp.top * ramp.factor * Math.min(1, ramp.tick / VehicleTarget.fleeRampTicks);
+        this.speed = next;
+        ramp.last = next;
+        if (ramp.tick >= VehicleTarget.fleeRampTicks) this.fleeRamp = undefined;
     }
     private specialDown() {
         if (!this.specialName) return;
@@ -1456,6 +1509,7 @@ class VehicleTarget extends Target {
         this.pose(Math.max(-18, Math.min(18, pitch)), middle);
     }
     public action() {
+        this.stepFleeRamp();
         super.action();
         this.craterEffects();
     }
@@ -1760,12 +1814,30 @@ class WaterVehicleTarget extends VehicleTarget {
     public runToShore(special: SpecialEnemy, speed: number, onFail: () => void) {
         this.shoreRun = { special: special, speed: speed, onFail: onFail };
     }
+    // At the shore he boards, and the boat sits there for two seconds (twenty ticks) before it turns and makes for the open sea
+    private static shoreWaitTicks: number = 20;
+    private leaving?: { special: SpecialEnemy, speed: number, ticks: number };
     public action() {
+        if (this.leaving) {
+            this.waitAtShore();
+            return;
+        }
         if (this.shoreRun) {
             this.shoreStep();
             return;
         }
         super.action();
+    }
+    private waitAtShore() {
+        const wait = this.leaving;
+        if (!this.isRunning()) { // put out of action at the quay: it's him that's been taken out, as it's his boat now
+            this.leaving = undefined;
+            return;
+        }
+        if (--wait.ticks > 0) return;
+        this.leaving = undefined;
+        this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
+        this.startFleeing(wait.special.name, -wait.speed, wait.special.portrait);
     }
     private shoreStep() {
         const run = this.shoreRun;
@@ -1781,9 +1853,9 @@ class WaterVehicleTarget extends VehicleTarget {
         const landing = span ? span.openRight + (span.shoreRight - span.openRight) * 0.5 : window.innerWidth;
         if (left + this.targetEl.offsetWidth >= landing) {
             this.shoreRun = undefined;
-            this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
             run.special.board();
-            this.startFleeing(run.special.name, -run.speed, run.special.portrait);
+            this.makeSpecial(run.special.name, run.special.portrait); // (it's his boat from the moment he's aboard)
+            this.leaving = { special: run.special, speed: run.speed, ticks: WaterVehicleTarget.shoreWaitTicks };
             return;
         }
         this.targetEl.style.left = left + run.speed * 0.9 + "px"; // (on its way to the coast it's not far off as quick as it will be)

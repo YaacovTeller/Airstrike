@@ -223,11 +223,13 @@ class ExplosiveWeaponType extends WeaponType {
     public blastRadius: number;
     protected explosionInfo: ExplosionInfo;
     protected flyoverInfo: FlyOver;
+    protected scale: number = 1; // how much bigger or smaller than its size its explosion is drawn and reaches
 
     constructor(info: ExplosiveWeaponInfo) {
         super(info);
         this.explosionInfo = info.explosionInfo;
         this.blastRadius = info.blastRadius;
+        this.scale = info.scale || 1;
         if (info.flyover) {
             this.flyoverInfo = info.flyover;
         }
@@ -323,7 +325,7 @@ class ExplosiveWeaponType extends WeaponType {
     protected fireResultsTimeout(inst: weaponInstance) {
         setTimeout(() => {
             let blastCenter: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
@@ -572,7 +574,7 @@ class CarpetBombing extends ExplosiveWeaponType {
             for (let lane = 0; lane < CarpetBombing.bombsPerTick; lane++) {
                 const x = Math.min(screenWidth, Math.max(0, leadMiddle + RandomNumberGen.randomNumBetween(0, 160)));
                 const y = bandMiddle - halfBand + lane * laneHeight + RandomNumberGen.randomNumBetween(0, laneHeight);
-                ExplosionHandler.basicExplosion({ X: x, Y: y }, this.explosionInfo.size, this.explosionInfo.frames, weaponNames.airstrike);
+                ExplosionHandler.basicExplosion({ X: x, Y: y }, this.explosionInfo.size, this.explosionInfo.frames, weaponNames.airstrike, this.scale);
             }
         }, CarpetBombing.tickMs);
     }
@@ -603,7 +605,7 @@ class Chopper extends ExplosiveWeaponType {
             let blastCenter: position = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
             SoundPlayer.playSequentialSound(cannonSounds);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
             side = !side;
             shots--
             if (shots <= 0) {
@@ -779,7 +781,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
-                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
                 //    this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer)
         })

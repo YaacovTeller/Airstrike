@@ -240,6 +240,7 @@ type weaponInfo = {
     select: Array<Sound>,
 }
 type ExplosiveWeaponInfo = weaponInfo & {
+    scale?: number, // an explosion's size is what sort it is; this is how much bigger or smaller than that it's drawn and reaches (1 if not given)
     blastRadius: number,
     explosionInfo: ExplosionInfo,
     flyover?: FlyOver
@@ -675,6 +676,8 @@ const bunkerBusterInfo: ExplosiveWeaponInfo = {
     blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };
+// The whole set a little smaller than its sizes say (the bunker buster's isn't an area, so it's left as it is)
+const coastWeaponScale = 0.85;
 const scaledWeapons: Array<weaponInfo> = [
     scaledMortarInfo,
     scaledHowitzerInfo,
@@ -683,7 +686,7 @@ const scaledWeapons: Array<weaponInfo> = [
     bunkerBusterInfo,
     scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
     scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
-];
+].map(info => info === bunkerBusterInfo ? info : { ...info, scale: coastWeaponScale, blastRadius: Math.round(info.blastRadius * coastWeaponScale) });
 
 
 enum msgLength {

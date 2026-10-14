@@ -34,7 +34,19 @@ class ExplosionHandler {
     static bigShake() {
         this.shake(screenShakeTimeouts.shake_3);
     }
-    static basicExplosion(blastCenter, size, explFrames, weaponName) {
+    // How much bigger or smaller than its size says an explosion is drawn and reaches (a weapon can be scaled: see ExplosiveWeaponInfo.scale). The size
+    // still decides what sort of explosion it is: which pictures, how hard it shakes the screen, how deep a crater it's counted as.
+    static drawScale = 1;
+    static basicExplosion(blastCenter, size, explFrames, weaponName, scale = 1) {
+        this.drawScale = scale;
+        try {
+            this.explode(blastCenter, size, explFrames, weaponName);
+        }
+        finally {
+            this.drawScale = 1;
+        }
+    }
+    static explode(blastCenter, size, explFrames, weaponName) {
         if (game.level)
             game.level.noteExplosion(); // the first one starts the clock on a special enemy's escape
         game.lastStrike = blastCenter;
@@ -77,7 +89,7 @@ class ExplosionHandler {
     }
     static shake_Light_Targets(blastCenter, size, weaponName) {
         this.setScreenShake(size);
-        this.pushLight(lights, blastCenter, size, size * strikeLightReachFactor);
+        this.pushLight(lights, blastCenter, size, size * strikeLightReachFactor * this.drawScale);
         this.checkForTargets(blastCenter, size, weaponName);
     }
     static setScreenShake(size) {
@@ -142,11 +154,11 @@ class ExplosionHandler {
             if (dist < minDist)
                 directHit = true;
         };
-        this.forEachBlastCollision(blastCenter, size / 2, flagIfDirect, flagIfDirect);
+        this.forEachBlastCollision(blastCenter, size / 2 * this.drawScale, flagIfDirect, flagIfDirect);
         return directHit;
     }
     static checkForTargets(blastCenter, size, weaponName) {
-        this.forEachBlastCollision(blastCenter, size / 2, (target, collisionInfo) => this.targetStrike(target, weaponName, collisionInfo), (item, collisionInfo) => this.itemStrike(item, collisionInfo));
+        this.forEachBlastCollision(blastCenter, size / 2 * this.drawScale, (target, collisionInfo) => this.targetStrike(target, weaponName, collisionInfo), (item, collisionInfo) => this.itemStrike(item, collisionInfo));
     }
     static itemStrike(item, collisionInfo) {
         let direc = ThrowHandler.determineDirectionForFlip(collisionInfo);
@@ -231,6 +243,8 @@ class ExplosionHandler {
             explosionImgs = splash_imgs;
         }
         const player = new CanvasGifPlayer(explosion, size);
+        const classSize = size;
+        size = size * this.drawScale; // (from here on it's how big it's drawn)
         let width = size, height = size;
         let left = blastCenter.X - (size / 2);
         if (surface == HitSurface.water) {
@@ -288,8 +302,8 @@ class ExplosionHandler {
         let craterSrc = assetsFolder + RandomNumberGen.returnRandomFromArray(this.craterSources);
         let crater = ElementCreator.returnNewImageEl(ContentElHandler.returnContentEl(), "crater", craterSrc);
         crater.id = "crater";
-        let width = size / 1.5;
-        let height = size / 3;
+        let width = size * this.drawScale / 1.5;
+        let height = size * this.drawScale / 3;
         this.setSizeAndPos(crater, width, height, blastCenter.X - width / 2, blastCenter.Y - height / 2);
         this.craters.push({ el: crater, x: blastCenter.X, y: blastCenter.Y, rx: width / 2, ry: height / 2, size: size, born: performance.now(), wet: false });
         return crater;
