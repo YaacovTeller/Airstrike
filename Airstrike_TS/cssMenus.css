@@ -304,24 +304,34 @@ body {
 /* ===== Username ===== */
 
 #input-container {
-    margin-bottom: 14px;
+    margin: 0;
 }
 
 #userNameInput {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+    #userNameInput .greenButtonStyle {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+#userDisplay {
+    font-weight: 600;
+    color: #9dffb8;
 }
 
 #username {
     flex: 1;
-    min-width: 220px;
-    padding: 12px 14px;
+    min-width: 0;
+    width: 150px;
+    padding: 6px 10px;
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.05);
     color: white;
-    font-size: 1rem;
+    font-size: 0.9rem;
     outline: none;
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -483,6 +493,28 @@ b {
     display: flex;
     gap: 12px;
 }
+
+    .locationPanel {
+        position: relative;
+    }
+    /* a tiny, clear button in the top right corner of the location box: clears what's been finished */
+    .clearProgress {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: rgba(255,255,255,0.35);
+        font-size: 0.8rem;
+        line-height: 20px;
+        cursor: pointer;
+    }
+        .clearProgress:hover {
+            color: #ff8c8c;
+        }
 
     #locationContainer input[type="radio"] {
         position: absolute;

@@ -342,7 +342,7 @@ class SceneLevel extends Level {
     staticTargetCount = 20 / 3; // boats to a coast stage (two thirds of what there were: 7, 9 or 13, by difficulty)
     stage = 0;
     // A game of these levels is this many stages, and then it's won
-    static totalStages = 1; // TEMP: one stage, to try the ending out (it's six: put it back)
+    static totalStages = 6;
     static stagesInAGame() { return SceneLevel.totalStages; }
     // What this stage has taken so far, for the message when it's cleared
     stageElapsedMs = 0;

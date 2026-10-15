@@ -40,14 +40,15 @@
                         <div id="sliderValue"></div>
                     </div>
 
-                    <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
-                </div>
-                <div id="input-container">
-                    <div id="userNameInput">
-                        <input type="text" id="username" placeholder="Enter your name">
-                        <button id="userInput" class="greenButtonStyle">Submit</button>
+                    <div id="input-container">
+                        <div id="userNameInput">
+                            <input type="text" id="username" placeholder="Enter your name">
+                            <button id="userInput" class="greenButtonStyle">Submit</button>
+                        </div>
+                        <div class="displayNone" id="userDisplay"></div>
                     </div>
-                    <div class="displayNone" id="userDisplay"></div>
+
+                    <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
                 </div>
                 <div class="directionalFluidContainer">
                     <div class="instructionsPanel">
@@ -61,10 +62,10 @@
                                 <li>Select weapons by clicking on the boxes or with the <b>number keys</b>.</li>
                                 <li>Fire with <b>left mouse</b>, <b>ctrl</b> or <b>spacebar</b>.</li>
                                 <li><b>Esc</b> or <b>P</b> to pause.</li>
-                                <li>Armoured targets are impervious to gunfire, and require direct hits with explosives.</li>
-                                <li><b>No. 5</b> is an explosive charge for tunnels, watch out for tunnels.</li>
-                                <li>Tunnels can also be halted, or even destroyed, with a well placed airstrike.</li>
-                                <li>The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, active vehicles and tunnels. Fly it over the area you want checked.</li>
+                                <li data-changes="5">Armoured targets are impervious to gunfire, and require direct hits with explosives.</li>
+                                <li data-changes="6"><b>No. 5</b> is an explosive charge for tunnels, watch out for tunnels.</li>
+                                <li data-changes="7">Tunnels can also be halted, or even destroyed, with a well placed airstrike.</li>
+                                <li data-changes="8">The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, active vehicles and tunnels. Fly it over the area you want checked.</li>
                                 <!--<li><b>No. 6</b> is... off limits. Unless you press <b>SHIFT N</b>. You were warned.</li>-->
                             </ol>
                             <ol class="heb " style="direction:rtl">
@@ -104,6 +105,7 @@
                         </div>
                     </div>
                     <div class="locationPanel">
+                        <button id="clearProgress" class="clearProgress" title="Clear progress">&#10005;</button>
                         <h2 class="eng">Location:</h2>
                         <h2 class="heb">מיקום:</h2>
                         <div id="locationContainer">

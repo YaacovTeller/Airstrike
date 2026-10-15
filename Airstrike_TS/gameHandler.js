@@ -280,6 +280,7 @@ class GameHandler {
     menuSetup() {
         let arr = this.getMenuLis();
         document.getElementById("startbutton").onclick = () => this.startPressed();
+        document.getElementById("clearProgress").onclick = () => this.clearProgress();
         document.getElementById("briefingStart").onclick = () => this.startFromBriefing();
         document.getElementById("briefingBack").onclick = () => this.closeBriefing();
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
@@ -291,8 +292,42 @@ class GameHandler {
         this.toggleModal();
         this.setRadioButtons();
         this.refreshFinishStamps();
+        this.setInstructionsFor(this.selectedLocation());
         this.setVolumeSlider();
         this.setupInstructionsToggle();
+    }
+    // Clearing what's been finished, asking first if there's anything to lose
+    clearProgress() {
+        if (GameProgress.hasAny() && !confirm("Do you really want to clear your progress?"))
+            return;
+        GameProgress.clear();
+        this.refreshFinishStamps();
+    }
+    // The instructions: the same for every location up to the fourth, and then what's particular to where you're going. (The ones for the
+    // desert are as they are in the page; the others are put in over them, in English.)
+    desertInstructions;
+    static placeInstructions = {
+        hills: {
+            "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Stacks of ammunition catch fire from a couple of gun hits, rockets need an explosion, and both go up and take their neighbours with them.",
+            "6": "Tunnels run under the hills. <b>No. 6</b> is an explosive charge for them: set it at a tunnel's head.",
+            "7": "The men you're after are hiding in the villas. Once the shooting starts, each makes a run for the nearest running vehicle: stop it before it leaves the screen, or it's game over.",
+            "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, ammunition, active vehicles and tunnels. Fly it over the area you want checked.",
+        },
+        coast: {
+            "5": "Missiles (<b>Nos. 1-4</b>) and bombs (<b>Nos. 5 and 6</b>): the bigger they are, the more they cost, and you'll be told off for wasting them. Armoured ships need direct hits.",
+            "6": "The <b>bunker buster (No. 7)</b> goes through the ground and brings down a building, and the bunker beneath it. The men you're after hide in bunkers, and nothing else can reach them.",
+            "7": "Once most of the boats, or most of the targets on land, have been dealt with, the man you're after calls the nearest boat in to the shore and runs for the open sea. Stop that boat. Small ones can be flipped over, and burn and sink.",
+            "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, bunkers, ammunition and active boats. Fly it over the area you want checked.",
+        },
+    };
+    setInstructionsFor(location) {
+        const items = document.querySelectorAll('#instructionsContent ol.eng li[data-changes]');
+        if (!this.desertInstructions) {
+            this.desertInstructions = {};
+            items.forEach(li => this.desertInstructions[li.dataset.changes] = li.innerHTML);
+        }
+        const texts = GameHandler.placeInstructions[location] || this.desertInstructions;
+        items.forEach(li => li.innerHTML = texts[li.dataset.changes]);
     }
     // The stamp across the end of each location's button in the menu, for the hardest difficulty that kind of game has been finished on
     refreshFinishStamps() {
@@ -348,6 +383,7 @@ class GameHandler {
                 label.innerHTML = "";
             }
             this.setMenuDifficulty(difficultyLis, staged ? [sceneNormal, sceneHard, sceneChaos] : [normal, hard, chaos]);
+            this.setInstructionsFor(this.selectedLocation());
             const picked = document.querySelector('#difficultiesContainer input[type="radio"]:checked');
             if (picked)
                 this.jsonParseRadioDifficulty(picked.value);

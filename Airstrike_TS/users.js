@@ -89,6 +89,16 @@ class GameProgress {
         }
         catch (e) { } // (no storage to keep it in: it just isn't remembered)
     }
+    static hasAny() {
+        const done = GameProgress.read();
+        return Object.keys(done).some(location => (done[location] || []).length > 0);
+    }
+    static clear() {
+        try {
+            localStorage.removeItem(GameProgress.key);
+        }
+        catch (e) { }
+    }
     // The hardest difficulty this kind of game has been finished on, if it has
     static best(location) {
         const list = GameProgress.read()[location] || [];
