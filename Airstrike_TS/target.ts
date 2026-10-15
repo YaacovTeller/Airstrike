@@ -2296,7 +2296,22 @@ class RocketLauncher extends VehicleTarget {
         }
         return false
     }
+    // Once it's set up, a small dot of light goes up off its rocket pack every six to twelve seconds, like a rocket being launched
+    private nextLaunch: number = RandomNumberGen.randomNumBetween(60, 120); // (ticks of the game loop)
+    private launchDot() {
+        const pack = this.launcherEl.getBoundingClientRect();
+        const dot = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "rocketDot");
+        dot.style.left = pack.left + pack.width * 0.5 + "px";
+        dot.style.top = pack.top + pack.height * 0.2 + "px";
+        dot.style.setProperty("--dx", RandomNumberGen.randomNumBetween(-30, 60) + "px");
+        dot.style.setProperty("--dy", -RandomNumberGen.randomNumBetween(140, 260) + "px");
+        setTimeout(() => dot.remove(), 1200);
+    }
     public action() {
+        if (this.deployed && this.status == Status.active && this.damage <= Damage.damaged && --this.nextLaunch <= 0) {
+            this.nextLaunch = RandomNumberGen.randomNumBetween(60, 120);
+            this.launchDot();
+        }
         if (this.status == Status.active) {
             let posX = parseInt(this.targetEl.style.left);
             if (posX < this.stopPos || this.inNoStrikeZone(this) && this.deployed == false) {

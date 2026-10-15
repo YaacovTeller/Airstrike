@@ -321,9 +321,9 @@ class GameHandler {
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, ammunition, active vehicles and tunnels. Fly it over the area you want checked.",
         },
         coast: {
-            "5": "Missiles (<b>Nos. 1-4</b>) and bombs (<b>Nos. 5 and 6</b>): the bigger they are, the more they cost, and you'll be told off for wasting them. Armoured ships need direct hits.",
+            "5": "Missiles (<b>Nos. 1-4</b>) and bombs (<b>Nos. 5 and 6</b>): the bigger they are the heavier they hit. Note that frivolous use of high-end ordnance will be frowned upon. Armoured ships need direct hits.",
             "6": "The <b>bunker buster (No. 7)</b> goes through the ground and brings down a building, and the bunker beneath it. The men you're after hide in bunkers, and nothing else can reach them.",
-            "7": "Once most of the boats, or most of the targets on land, have been dealt with, the man you're after calls the nearest boat in to the shore and runs for the open sea. Stop that boat. Small ones can be flipped over, and burn and sink.",
+            "7": "If a lot of targets get taken out, enemies in bunkers might try to make a break for it by sea. Don't give them the chance!",
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, bunkers, ammunition and active boats. Fly it over the area you want checked.",
         },
     };
@@ -690,14 +690,7 @@ class GameHandler {
             this.progressBar.style.width = this.progressNumber + '%';
         }
         let span = document.getElementById('UNdescription');
-        let text = progressMarkers[Math.floor(this.progressNumber / 10) * 10];
-        if (this.progressNumber > 50) {
-            text += "!"
-        }
-        if (this.progressNumber > 80) {
-            text += "!!"
-        }
-        span.innerText = text;
+        span.innerText = progressMarkers[Math.floor(this.progressNumber / 10) * 10];
     }
     private fullProgressBar() {
         this.progressBar.classList.add("full");
