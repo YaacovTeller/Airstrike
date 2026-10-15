@@ -897,9 +897,15 @@ class ExplosiveTarget extends Target {
         return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
     }
 
+    // Ammunition takes two hits from a gun to catch fire; rockets and RPGs don't catch from a gun at all, they need an explosion
+    private gunHits: number = 0;
+    private static gunHitsToIgnite: number = 2;
     public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
         if (this.exploded || wepName == weaponNames.flare || wepName == weaponNames.surveillance) return;
-        if (wepName == weaponNames.sniper || severity <= strikeSeverity.light) {
+        if (wepName == weaponNames.sniper) {
+            if (!this.blast.rockets && ++this.gunHits >= ExplosiveTarget.gunHitsToIgnite) this.catchFire();
+        }
+        else if (severity <= strikeSeverity.light) {
             this.catchFire();
         }
         else {

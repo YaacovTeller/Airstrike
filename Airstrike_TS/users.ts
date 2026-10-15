@@ -75,3 +75,35 @@ class userHandler {
       //  saveJsonToFile(json);
     }
 }
+
+// Which kinds of game have been finished, and on which difficulty: kept in local storage, and shown as a stamp on the menu's button for each
+type finishedGames = { [location: string]: Array<string> };
+class GameProgress {
+    private static key = 'Airstrike_TS FINISHED';
+    private static order = ["normal", "hard", "chaos"];
+    private static read(): finishedGames {
+        try {
+            return JSON.parse(localStorage.getItem(GameProgress.key)) || {};
+        }
+        catch (e) {
+            return {};
+        }
+    }
+    public static record(location: string, difficulty: string) {
+        const done = GameProgress.read();
+        const list = done[location] || [];
+        if (!list.includes(difficulty)) list.push(difficulty);
+        done[location] = list;
+        try {
+            localStorage.setItem(GameProgress.key, JSON.stringify(done));
+        }
+        catch (e) { } // (no storage to keep it in: it just isn't remembered)
+    }
+    // The hardest difficulty this kind of game has been finished on, if it has
+    public static best(location: string): string | null {
+        const list = GameProgress.read()[location] || [];
+        let best: string = null;
+        for (const difficulty of GameProgress.order) if (list.includes(difficulty)) best = difficulty;
+        return best;
+    }
+}

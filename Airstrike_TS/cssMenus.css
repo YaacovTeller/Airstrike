@@ -507,6 +507,30 @@ b {
             border-color: rgba(120,255,170,0.45);
         }
 
+    #locationContainer label {
+        position: relative;
+    }
+    /* the stamp that says a kind of game has been finished, and on what difficulty: across the end of its button, at an angle */
+    .finishStamp {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%) rotate(-14deg);
+        padding: 0 9px;
+        border: 3px double currentColor;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: rgba(0,0,0,0.35);
+        opacity: 0.92;
+        pointer-events: none;
+    }
+    .finishStamp.normal { color: #6fd0ff; }
+    .finishStamp.hard { color: #ffb02e; }
+    .finishStamp.chaos { color: #ff5252; }
+
     #locationContainer input[type="radio"]:checked + label {
         border-color: #5dff9d;
         background: rgba(60,160,90,0.28);

@@ -67,4 +67,36 @@ class userHandler {
         //  saveJsonToFile(json);
     }
 }
+class GameProgress {
+    static key = 'Airstrike_TS FINISHED';
+    static order = ["normal", "hard", "chaos"];
+    static read() {
+        try {
+            return JSON.parse(localStorage.getItem(GameProgress.key)) || {};
+        }
+        catch (e) {
+            return {};
+        }
+    }
+    static record(location, difficulty) {
+        const done = GameProgress.read();
+        const list = done[location] || [];
+        if (!list.includes(difficulty))
+            list.push(difficulty);
+        done[location] = list;
+        try {
+            localStorage.setItem(GameProgress.key, JSON.stringify(done));
+        }
+        catch (e) { } // (no storage to keep it in: it just isn't remembered)
+    }
+    // The hardest difficulty this kind of game has been finished on, if it has
+    static best(location) {
+        const list = GameProgress.read()[location] || [];
+        let best = null;
+        for (const difficulty of GameProgress.order)
+            if (list.includes(difficulty))
+                best = difficulty;
+        return best;
+    }
+}
 //# sourceMappingURL=users.js.map
