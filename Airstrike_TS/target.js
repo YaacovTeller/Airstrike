@@ -2204,14 +2204,23 @@ class RocketLauncher extends VehicleTarget {
     }
     // Once it's set up, a small dot of light goes up off its rocket pack every six to twelve seconds, like a rocket being launched
     nextLaunch = RandomNumberGen.randomNumBetween(60, 120); // (ticks of the game loop)
+    static launchAngle = 35; // degrees above the horizontal: the way the raised rocket pack points (see .raiseLauncher)
+    static dotSpeed = 650; // px a second
     launchDot() {
         const pack = this.launcherEl.getBoundingClientRect();
         const dot = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "rocketDot");
-        dot.style.left = pack.left + pack.width * 0.5 + "px";
-        dot.style.top = pack.top + pack.height * 0.2 + "px";
-        dot.style.setProperty("--dx", RandomNumberGen.randomNumBetween(-30, 60) + "px");
-        dot.style.setProperty("--dy", -RandomNumberGen.randomNumBetween(140, 260) + "px");
-        setTimeout(() => dot.remove(), 1200);
+        const x = pack.left + pack.width * 0.75, y = pack.top + pack.height * 0.25; // (near the tips of the tubes)
+        dot.style.left = x + "px";
+        dot.style.top = y + "px";
+        // it goes straight along the line of the pack, right across the screen, and is gone only when it has left it
+        const rad = RocketLauncher.launchAngle * Math.PI / 180;
+        const dx = Math.cos(rad), dy = -Math.sin(rad);
+        const distance = Math.min((window.innerWidth - x) / dx, y / -dy) + 20;
+        const seconds = distance / RocketLauncher.dotSpeed;
+        dot.style.setProperty("--dx", dx * distance + "px");
+        dot.style.setProperty("--dy", dy * distance + "px");
+        dot.style.animationDuration = seconds + "s";
+        setTimeout(() => dot.remove(), seconds * 1000 + 100);
     }
     action() {
         if (this.deployed && this.status == Status.active && this.damage <= Damage.damaged && --this.nextLaunch <= 0) {
