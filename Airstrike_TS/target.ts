@@ -259,8 +259,7 @@ function electricInfo(name: string, width: number, height: number, kind: "substa
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo: Array<BuildingInfo> = [
-    electricInfo("Substation_A", 196, 146, "substation"),
-    electricInfo("Substation_B", 198, 159, "substation"),
+    electricInfo("Substation", 196, 167, "substation"), // (the old ones, and the power plants and wind farms, are in electric/UNUSED)
 ];
 type PowerLineInfo = { info: BuildingInfo, leftBase: [number, number], rightBase: [number, number] };
 const powerLineInfo: Array<PowerLineInfo> = [
@@ -2299,7 +2298,7 @@ class RocketLauncher extends VehicleTarget {
     // Once it's set up, a small dot of light goes up off its rocket pack every six to twelve seconds, like a rocket being launched
     private nextLaunch: number = RandomNumberGen.randomNumBetween(60, 120); // (ticks of the game loop)
     private static launchAngle: number = 35;  // degrees above the horizontal: the way the raised rocket pack points (see .raiseLauncher)
-    private static dotSpeed: number = 650;    // px a second
+    private static dotSpeed: number = 1800;   // px a second
     private launchDot() {
         const pack = this.launcherEl.getBoundingClientRect();
         const dot = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "rocketDot");
