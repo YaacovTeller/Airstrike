@@ -281,6 +281,7 @@ class GameHandler {
         let arr = this.getMenuLis();
         document.getElementById("startbutton").onclick = () => this.startPressed();
         document.getElementById("clearProgress").onclick = () => this.clearProgress();
+        document.getElementById("testModeToggle").onclick = () => this.toggleTestMode();
         document.getElementById("briefingStart").onclick = () => this.startFromBriefing();
         document.getElementById("briefingBack").onclick = () => this.closeBriefing();
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
@@ -295,6 +296,13 @@ class GameHandler {
         this.setInstructionsFor(this.selectedLocation());
         this.setVolumeSlider();
         this.setupInstructionsToggle();
+    }
+    // Test mode, switched on and off with the tiny dark button in the test area of the menu: every kind of game is one stage long, to try the ending out
+    testMode = false;
+    toggleTestMode() {
+        this.testMode = !this.testMode;
+        document.getElementById("testModeWarning").classList.toggle("displayNone", !this.testMode);
+        document.getElementById("testModeToggle").classList.toggle("on", this.testMode);
     }
     // Clearing what's been finished and the name, asking first if there's anything to lose
     clearProgress() {
@@ -723,7 +731,7 @@ class GameHandler {
                     this.hud.popKillNumber("x" + this.sequentialHits, this.sequentialHits, this.sequenceOrigin);
                 }
                 else if (this.sequenceBuilding) { // a strike on a building that got just the one: still worth a mention
-                    this.hud.popKillNumber("Hit!", 1, this.sequenceOrigin);
+                    this.hud.popKillNumber("Hit", 1, this.sequenceOrigin);
                 }
                 this.calcScore(this.sequentialHits);
                 this.sequentialHits = 0;

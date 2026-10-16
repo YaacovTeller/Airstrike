@@ -438,6 +438,35 @@ b {
     background: rgba(255,255,255,0.03);
 }
 
+.testGroup {
+    position: relative;
+}
+/* a tiny, dark button, with nothing on it, at the right of the test area: it switches test mode on and off */
+.testModeToggle {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: 1px solid #1d2326;
+    border-radius: 3px;
+    background: #0d1113;
+    cursor: pointer;
+}
+    .testModeToggle.on {
+        border-color: #6b5200;
+        background: #2a2100;
+    }
+#testModeWarning {
+    text-align: center;
+    margin: 2px 0 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffb02e;
+}
+
 .testGroupLabel {
     text-align: center;
     font-size: 0.75rem;

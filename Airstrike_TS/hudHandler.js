@@ -168,7 +168,7 @@ class HudHandler {
     popKillNumber(text, count, origin) {
         const pop = document.createElement("div");
         pop.className = "killPop";
-        pop.innerText = text + (count > 6 ? "!" : "") + (count > 10 ? "!" : "");
+        pop.innerText = text;
         const colour = HudHandler.popColours[Math.min(count, HudHandler.popColours.length - 1)];
         pop.style.color = colour;
         pop.style.fontSize = Math.min(96, 26 + count * 9) + "px";
@@ -181,15 +181,8 @@ class HudHandler {
         setTimeout(() => pop.remove(), 1700);
     }
     updateMultiKillBox(num) {
-        let txt = "";
-        if (num > 6) {
-            txt = "!";
-        }
-        if (num > 10) {
-            txt = "!!";
-        }
         let textOption = multiKillText[num] ? multiKillText[num] : multiKillText[14];
-        this.multiKillBox.innerText = "x" + num + txt;
+        this.multiKillBox.innerText = "x" + num;
         this.multiKillBox.style.fontSize = textOption.size + "px";
         this.multiKillBox.style.color = textOption.colour;
         this.multiKillBox.classList.remove('hide');

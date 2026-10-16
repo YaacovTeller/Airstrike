@@ -235,7 +235,7 @@ class Level {
     }
     nextWave() {
         this.waveIndex++;
-        let length = this.info.waves.length;
+        let length = game.testMode && game.gameMode == GameMode.regular ? 1 : this.info.waves.length; // (test mode: the desert game is its first wave)
         let funcToExecute;
         switch (this.waveIndex) {
             case (0):
@@ -343,7 +343,7 @@ class SceneLevel extends Level {
     stage = 0;
     // A game of these levels is this many stages, and then it's won
     static totalStages = 6;
-    static stagesInAGame() { return SceneLevel.totalStages; }
+    static stagesInAGame() { return game.testMode ? 1 : SceneLevel.totalStages; } // (one in test mode)
     // What this stage has taken so far, for the message when it's cleared
     stageElapsedMs = 0;
     stageShotsAtStart = 0;
@@ -492,7 +492,7 @@ class SceneLevel extends Level {
         this.overParWarned = false;
         this.stageFinished = false;
         if (this.stage > 1) {
-            PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.totalStages, msgLength.short);
+            PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.stagesInAGame(), msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
@@ -643,7 +643,7 @@ class SceneLevel extends Level {
     endWave() {
         this.stageFinished = true; // the time is what it was when the stage was cleared
         PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
-        if (this.stage >= SceneLevel.totalStages) { // the last of them: the game's won, once its message has been read
+        if (this.stage >= SceneLevel.stagesInAGame()) { // the last of them: the game's won, once its message has been read
             setTimeout(() => { if (game.level === this)
                 game.finishCampaign(); }, msgLength.long + 600);
             return;

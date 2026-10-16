@@ -230,7 +230,7 @@ function electricInfo(name, width, height, kind) {
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo = [
-    electricInfo("Substation", 196, 167, "substation"), // (the old ones, and the power plants and wind farms, are in electric/UNUSED)
+    electricInfo("Substation", 167, 142, "substation"), // (the old ones, and the power plants and wind farms, are in electric/UNUSED)
 ];
 const powerLineInfo = [
     { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },
