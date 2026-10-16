@@ -1862,14 +1862,14 @@ class WaterVehicleTarget extends VehicleTarget {
     // on the way to the shore he's still to get away, and the level sends another.
     private shoreRun?: { special: SpecialEnemy, speed: number, onFail: () => void };
     public isRunningToShore(): boolean {
-        return !!this.shoreRun;
+        return !!this.shoreRun || !!this.leaving;
     }
     public runToShore(special: SpecialEnemy, speed: number, onFail: () => void) {
         this.shoreRun = { special: special, speed: speed, onFail: onFail };
     }
-    // At the shore he boards, and the boat sits there for two seconds (twenty ticks) before it turns and makes for the open sea
+    // At the shore the boat sits for two seconds (twenty ticks) with him still in the bunker, and he boards as it turns and makes for the open sea
     private static shoreWaitTicks: number = 20;
-    private leaving?: { special: SpecialEnemy, speed: number, ticks: number };
+    private leaving?: { special: SpecialEnemy, speed: number, ticks: number, onFail: () => void };
     public action() {
         if (this.leaving) {
             this.waitAtShore();
@@ -1883,12 +1883,15 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     private waitAtShore() {
         const wait = this.leaving;
-        if (!this.isRunning()) { // put out of action at the quay: it's him that's been taken out, as it's his boat now
+        if (!this.isRunning()) { // put out of action at the quay: he's not aboard yet, so he's still to get away and another is sent
             this.leaving = undefined;
+            wait.onFail();
             return;
         }
         if (--wait.ticks > 0) return;
         this.leaving = undefined;
+        wait.special.board(); // only now is he off the land: from here on he's the special target, in his boat
+        this.makeSpecial(wait.special.name, wait.special.portrait);
         this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
         this.startFleeing(wait.special.name, -wait.speed, wait.special.portrait);
     }
@@ -1906,9 +1909,7 @@ class WaterVehicleTarget extends VehicleTarget {
         const landing = span ? span.openRight + (span.shoreRight - span.openRight) * 0.5 : window.innerWidth;
         if (left + this.targetEl.offsetWidth >= landing) {
             this.shoreRun = undefined;
-            run.special.board();
-            this.makeSpecial(run.special.name, run.special.portrait); // (it's his boat from the moment he's aboard)
-            this.leaving = { special: run.special, speed: run.speed, ticks: WaterVehicleTarget.shoreWaitTicks };
+            this.leaving = { special: run.special, speed: run.speed, ticks: WaterVehicleTarget.shoreWaitTicks, onFail: run.onFail };
             return;
         }
         this.targetEl.style.left = left + run.speed * 0.9 + "px"; // (on its way to the coast it's not far off as quick as it will be)

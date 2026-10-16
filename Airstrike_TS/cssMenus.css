@@ -963,6 +963,10 @@ input[type=radio]:checked ~ label {
 .gamePaused * {
     animation-play-state: paused !important;
 }
+/* (the game's frozen behind the menu, but a stamp just earned still comes down on its button) */
+.gamePaused #modal .finishStamp {
+    animation-play-state: running !important;
+}
 .directionalFluidContainer {
     display: flex;
     flex-direction: column;

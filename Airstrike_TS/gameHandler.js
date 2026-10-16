@@ -260,8 +260,7 @@ class GameHandler {
         }
     }
     endGame() {
-        GameProgress.record("desert", this.difficulty.eng.name.toLowerCase());
-        this.refreshFinishStamps();
+        this.recordFinish("desert");
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", userHandler.addressed("You did it!"), msgLength.long);
         PopupHandler.addToArray(`Finished <strong>${GameHandler.placeName(this.gameMode)}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
@@ -341,25 +340,35 @@ class GameHandler {
         items.forEach(li => li.innerHTML = texts[li.dataset.changes]);
     }
     // The stamp across the end of each location's button in the menu, for the hardest difficulty that kind of game has been finished on
-    // What each button's stamp was last time they were drawn, so one that's new (just earned) can slam down when the menu is next seen
-    stampsDrawn = null;
+    // A game finished: it's stamped, and the stamp slams down as soon as the menu is back on the screen
+    stampToSlam = null;
+    recordFinish(location) {
+        GameProgress.record(location, this.difficulty.eng.name.toLowerCase());
+        this.refreshFinishStamps();
+        this.stampToSlam = location;
+    }
+    slamStamp() {
+        const location = this.stampToSlam;
+        this.stampToSlam = null;
+        const stamp = document.querySelector('#locationContainer label[for="location_' + location + '"] .finishStamp');
+        if (!stamp)
+            return;
+        stamp.classList.remove("fresh");
+        void stamp.offsetWidth; // (so it starts again)
+        stamp.classList.add("fresh");
+        stamp.addEventListener("animationend", () => stamp.classList.remove("fresh"), { once: true });
+    }
     refreshFinishStamps() {
-        const drawn = {};
         for (const location of ["desert", "hills", "coast"]) {
             const label = document.querySelector('#locationContainer label[for="location_' + location + '"]');
             if (!label)
                 continue;
             label.querySelectorAll(".finishStamp").forEach(el => el.remove());
             const best = GameProgress.best(location) || "";
-            drawn[location] = best;
             const stamp = document.createElement("span");
             if (best) {
                 stamp.className = "finishStamp " + best;
                 stamp.textContent = best;
-                if (this.stampsDrawn && this.stampsDrawn[location] !== best) { // (an animation waits until what it's on is on the screen)
-                    stamp.classList.add("fresh");
-                    stamp.addEventListener("animationend", () => stamp.classList.remove("fresh"));
-                }
             }
             else { // not finished yet: the outline of a stamp where it will go
                 stamp.className = "finishStamp ghost";
@@ -367,7 +376,6 @@ class GameHandler {
             }
             label.appendChild(stamp);
         }
-        this.stampsDrawn = drawn;
     }
     setRadioButtons() {
         const radioButtons = document.querySelectorAll('#difficultiesContainer input[type="radio"]');
@@ -500,6 +508,8 @@ class GameHandler {
     toggleModal() {
         this.toggleElem("overlay");
         this.toggleElem("modal");
+        if (this.stampToSlam && !document.getElementById("modal").classList.contains("displayNone"))
+            this.slamStamp();
     }
     toggleElem(id) {
         var elem = document.getElementById(id);
@@ -1019,8 +1029,7 @@ class GameHandler {
     finishCampaign() {
         if (!this.gameInProgress)
             return;
-        GameProgress.record(this.gameMode == GameMode.coast ? "coast" : "hills", this.difficulty.eng.name.toLowerCase());
-        this.refreshFinishStamps();
+        this.recordFinish(this.gameMode == GameMode.coast ? "coast" : "hills");
         cheer.play();
         const faces = this.roster.map(man => '<div><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + man.portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="endRosterName">' + man.name + '</div></div>').join("");
         const stats = `${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised, on ${this.difficulty.eng.name} difficulty`;
