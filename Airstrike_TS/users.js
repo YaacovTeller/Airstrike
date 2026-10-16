@@ -1,4 +1,3 @@
-"use strict";
 class userHandler {
     static userName;
     static key = 'Airstrike_TS USER';

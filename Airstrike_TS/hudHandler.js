@@ -1,4 +1,3 @@
-"use strict";
 var killStatDisplayOptions;
 (function (killStatDisplayOptions) {
     killStatDisplayOptions["total"] = "Total";
@@ -79,7 +78,7 @@ class HudHandler {
         }
     }
     getCorrectWepboxContainer(wep) {
-        let boxId = wep.name <= weaponNames.drone ? "firstWepContainer" : "secondWepContainer";
+        let boxId = wep.name <= weaponNames.drone && !wep.utility ? "firstWepContainer" : "secondWepContainer";
         return document.getElementById(boxId);
     }
     orderWeaponBoxes() {
@@ -161,6 +160,24 @@ class HudHandler {
         this.multiKillBox = document.createElement('div');
         this.multiKillBox.classList.add('multiKillBox', 'hide');
         ContentElHandler.addToContentWrapper(this.multiKillBox);
+    }
+    // The number that comes up from where the shot landed when it's taken out more than one (or "Hit!"): big, bright and outlined,
+    // bigger and hotter with the count, popping up and rising away as it fades
+    static popColours = ["#7de3ff", "#7de3ff", "#ffe14a", "#ff9d2e", "#ff5a2e", "#ff2e8a", "#c13dff", "#ffffff"];
+    popKillNumber(text, count, origin) {
+        const pop = document.createElement("div");
+        pop.className = "killPop";
+        pop.innerText = text + (count > 6 ? "!" : "") + (count > 10 ? "!" : "");
+        const colour = HudHandler.popColours[Math.min(count, HudHandler.popColours.length - 1)];
+        pop.style.color = colour;
+        pop.style.fontSize = Math.min(96, 26 + count * 9) + "px";
+        pop.style.setProperty("--popGlow", colour);
+        const x = Math.max(80, Math.min(window.innerWidth - 80, origin ? origin.X : window.innerWidth / 2));
+        const y = Math.max(120, Math.min(window.innerHeight - 40, origin ? origin.Y : window.innerHeight / 2));
+        pop.style.left = x + "px";
+        pop.style.top = y + "px";
+        ContentElHandler.addToContentWrapper(pop);
+        setTimeout(() => pop.remove(), 1700);
     }
     updateMultiKillBox(num) {
         let txt = "";

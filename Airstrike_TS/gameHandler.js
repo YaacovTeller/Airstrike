@@ -1,4 +1,3 @@
-"use strict";
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";
@@ -20,6 +19,83 @@ var allBuildings = [];
 var allLevelsArray = [];
 const level_continuous = new Level(continuousInfo);
 const level_weather = new Level(weatherTestInfo);
+// The power: a substation, with lines leading from it off the map, and the lights after dark that go with it. If the substation or any
+// stretch of its lines is brought down the lights go out.
+class PowerGrid {
+    static parts = [];
+    static reset() {
+        PowerGrid.parts = [];
+    }
+    static add(building) {
+        PowerGrid.parts.push(building);
+    }
+    // (a stage with no grid has no power to lose)
+    static isUp() {
+        return PowerGrid.parts.every(part => !part.isWrecked());
+    }
+    // Where to put a substation near the edge of the screen and the pylons that lead away from it, and clear off the edge: up and to the right from one on
+    // the top or the right edge, down and to the left from one on the bottom or the left, which is the way they're drawn. The boxes are
+    // checked with accept (which is told only the part of each that's on the screen). Returns the slots, or none if there was no room.
+    static plan(edges, accept, corner = false) {
+        const width = window.innerWidth, height = window.innerHeight;
+        const hud = 125; // clear of the HUD
+        const inside = (box) => ({ left: Math.max(0, box.left), top: Math.max(0, box.top), right: Math.min(width, box.right), bottom: Math.min(height, box.bottom) });
+        for (let attempt = 0; attempt < 500; attempt++) {
+            const edge = RandomNumberGen.returnRandomFromArray(edges);
+            const sub = RandomNumberGen.returnRandomFromArray(substationInfo);
+            let x, y;
+            const near = () => RandomNumberGen.randomNumBetween(18, 70);
+            switch (edge) {
+                // (tucked right at the edge; and with corner set, in the corner at the back of the screen, the top right)
+                case "right":
+                    x = width - sub.width - (corner ? RandomNumberGen.randomNumBetween(10, 60) : RandomNumberGen.randomNumBetween(15, 90));
+                    y = corner ? RandomNumberGen.randomNumBetween(hud + 10, hud + 260) : RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30);
+                    break;
+                case "left":
+                    x = RandomNumberGen.randomNumBetween(15, 90);
+                    y = RandomNumberGen.randomNumBetween(hud + 40, height - sub.height - 30);
+                    break;
+                case "top":
+                    y = hud + RandomNumberGen.randomNumBetween(0, corner ? 30 : 50);
+                    x = corner ? RandomNumberGen.randomNumBetween(width - sub.width - 420, width - sub.width - 20) : RandomNumberGen.randomNumBetween(60, width - sub.width - 60);
+                    break;
+                default:
+                    y = height - sub.height - near();
+                    x = RandomNumberGen.randomNumBetween(60, width - sub.width - 60);
+                    break;
+            }
+            const subBox = { left: x, top: y, right: x + sub.width, bottom: y + sub.height };
+            if (!accept(subBox, "substation"))
+                continue;
+            const slots = [{ X: x, Y: y, info: sub }];
+            const boxes = [subBox];
+            const upRight = edge == "top" || edge == "right";
+            const line = RandomNumberGen.randomNumBetween(1, 100) <= 70 ? powerLineInfo[0] : powerLineInfo[1];
+            const step = { x: line.rightBase[0] - line.leftBase[0], y: line.rightBase[1] - line.leftBase[1] }; // (from one pylon to the next, up and to the right: y is negative)
+            // the first pylon stands at the substation's corner, and the others follow
+            let base = upRight ? { x: x + sub.width * 0.88, y: y + sub.height * 0.5 } : { x: x + sub.width * 0.12, y: y + sub.height * 0.85 };
+            let ok = true;
+            for (let i = 0; i < 9; i++) {
+                const left = upRight ? base.x - line.leftBase[0] : base.x - line.rightBase[0];
+                const top = upRight ? base.y - line.leftBase[1] : base.y - line.rightBase[1];
+                const box = { left: left, top: top, right: left + line.info.width, bottom: top + line.info.height };
+                const seen = inside(box);
+                if (seen.right - seen.left < 20 || seen.bottom - seen.top < 20)
+                    break; // it's right off the screen: that's the end of it
+                if (!accept(seen, "line")) {
+                    ok = false;
+                    break;
+                }
+                slots.push({ X: left, Y: top, info: line.info });
+                boxes.push(box);
+                base = upRight ? { x: base.x + step.x, y: base.y + step.y } : { x: base.x - step.x, y: base.y - step.y };
+            }
+            if (ok && slots.length >= 2)
+                return slots;
+        }
+        return [];
+    }
+}
 class GameHandler {
     hud = new HudHandler();
     weapon;
@@ -80,11 +156,21 @@ class GameHandler {
         rain.classList.add('rain');
         ContentElHandler.addToContentWrapper(rain);
     }
-    setRain(rain) {
-        if (rain.ambience) {
-            this.switchAmbience(rain.ambience);
+    // The weather and the time of day together decide what's heard: rain (or a storm) over everything else, otherwise the day's
+    // sounds or the night's. Changing either one goes through here, so none of them leaves a stale sound playing (the rain
+    // carrying on once it's stopped, or going back to the day's sounds while it's still raining).
+    rain = noRain;
+    nightSounds = false;
+    updateAmbience() {
+        const wanted = this.rain.ambience ? this.rain.ambience : this.nightSounds ? night : regular_amb;
+        if (wanted !== this.ambience) {
+            this.switchAmbience(wanted);
         }
+    }
+    setRain(rain) {
+        this.rain = rain;
         WeatherHandler.createRain(rain);
+        this.updateAmbience();
     }
     setBackground(url) {
         let back = ContentElHandler.returnbackground();
@@ -128,13 +214,11 @@ class GameHandler {
     changeTime(time) {
         this.daytime = time == Time.day;
         this.hideFlare(time);
+        this.nightSounds = time != Time.day;
         if (time == Time.day) {
             this.darkOverlay.style.opacity = '0';
-            this.switchAmbience(regular_amb);
         }
-        else {
-            this.switchAmbience(night);
-        }
+        this.updateAmbience();
         if (time == Time.dusk) {
             this.darkOverlay.style.opacity = '0.5';
         }
@@ -143,18 +227,10 @@ class GameHandler {
         }
     }
     hideFlare(time) {
-        let name = weaponNames.flare;
-        let hide;
-        let flareBox = this.hud.returnWepBox(name);
-        if (flareBox) {
-            if (time == Time.day) {
-                hide = true;
-            }
-            else {
-                hide = false;
-            }
-            this.hud.hideWeapon(name, hide);
-        }
+        // (the box is found by the flare's own key, not by the flare's number: another weapon can be on key 7)
+        const flare = [...conventionalWeapons, ...extraWeapons].find(w => w && w.name == weaponNames.flare);
+        if (flare)
+            this.hud.hideWeapon(flare.slot, time == Time.day);
     }
     addAllLevels() {
         allLevelsArray = [];
@@ -200,7 +276,9 @@ class GameHandler {
     }
     menuSetup() {
         let arr = this.getMenuLis();
-        document.getElementById("startbutton").onclick = () => this.newGame(this.selectedMode());
+        document.getElementById("startbutton").onclick = () => this.startPressed();
+        document.getElementById("briefingStart").onclick = () => this.startFromBriefing();
+        document.getElementById("briefingBack").onclick = () => this.closeBriefing();
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
@@ -364,6 +442,16 @@ class GameHandler {
         this.weapon.fireFunc(); // MESSY??
     }
     handleKeyPress(event) {
+        if (this.endScreenOpen) { // the game's over: only Esc works
+            if (event.key === 'Escape')
+                this.closeEndScreen();
+            return;
+        }
+        if (this.briefingOpen) {
+            if (event.key === 'Escape')
+                this.closeBriefing();
+            return;
+        }
         if (this.paused) { // nothing else works while paused
             if (event.key.toLowerCase() === 'p' || event.key === 'Escape') {
                 this.togglePause();
@@ -399,7 +487,7 @@ class GameHandler {
                 game.changeTime(RandomNumberGen.randomNumBetween(0, 2));
             }
             else if (event.key.toLowerCase() === 'w') {
-                WeatherHandler.createRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]);
+                this.setRain(allRains[RandomNumberGen.randomNumBetween(0, 3)]); // the whole weather: the sound and how long things burn too
             }
             else if (event.shiftKey && event.key === 'A') {
                 if (this.gameMode == GameMode.coast) { // its own weapons (a charge would land on the bomb's key), and the supers
@@ -433,7 +521,7 @@ class GameHandler {
     // (see reset()), so going back to any other mode gets the standard set again.
     addScaledWeaponSet() {
         // three of each, but more of the small and fewer of the big ones
-        const howMany = { 1: 4, 4: 2, 5: 1, 6: 2, 7: 1 };
+        const howMany = { 1: 4, 4: 2, 5: 2, 6: 1, 7: 1 };
         scaledWeapons.forEach(info => {
             const count = howMany[info.slot] || 3;
             for (let i = 0; i < count; i++)
@@ -544,15 +632,33 @@ class GameHandler {
             this.level.addNewWeapon(special, false);
         }
     }
+    // Using a super-weapon empties the bar, and for a while after nothing fills it: its own strike (and a helicopter's, which goes on for a while)
+    // would otherwise earn the next one at once
+    progressLocked = false;
+    static progressLockMs = 20000;
     drainProgressBar() {
         this.progressNumber = 0;
+        this.progressLocked = true;
+        setTimeout(() => { this.progressLocked = false; }, GameHandler.progressLockMs);
         this.fullProgress = false;
         this.updateProgressBar();
         this.progressBar.classList.remove("full");
     }
-    assessKillPoints(priorStatus, damage) {
-        this.sequentialHits += 1;
-        if (this.sequentialHits === 1) {
+    // Where the latest shot landed, which is where the multi-kill number comes up from
+    lastStrike = null;
+    sequenceOrigin = null;
+    sequenceBuilding = false;
+    // The targets in the chain so far: a target that is hit twice (disabled, then destroyed) is still the one target, and what is
+    // counted is real targets, not how many times they were scored
+    sequenceTargets = new Set();
+    assessKillPoints(priorStatus, damage, fromBuilding = false, target) {
+        const first = this.sequenceTargets.size === 0;
+        this.sequenceTargets.add(target || {});
+        this.sequentialHits = this.sequenceTargets.size;
+        if (fromBuilding)
+            this.sequenceBuilding = true;
+        if (first) {
+            this.sequenceOrigin = this.lastStrike ? { X: this.lastStrike.X, Y: this.lastStrike.Y } : null;
             this.timeOutForMoreHits(this.sequentialHits);
         }
         this.calcScore(priorStatus, damage);
@@ -563,9 +669,16 @@ class GameHandler {
                 this.timeOutForMoreHits(this.sequentialHits);
             }
             else {
-                this.sequentialHits > 1 ? this.hud.updateMultiKillBox(this.sequentialHits) : "";
+                if (this.sequentialHits > 1) {
+                    this.hud.popKillNumber("x" + this.sequentialHits, this.sequentialHits, this.sequenceOrigin);
+                }
+                else if (this.sequenceBuilding) { // a strike on a building that got just the one: still worth a mention
+                    this.hud.popKillNumber("Hit!", 1, this.sequenceOrigin);
+                }
                 this.calcScore(this.sequentialHits);
                 this.sequentialHits = 0;
+                this.sequenceTargets.clear();
+                this.sequenceBuilding = false;
             }
         }, 500);
     }
@@ -585,6 +698,8 @@ class GameHandler {
                 prog = destroyReward;
             }
         }
+        if (this.progressLocked)
+            return;
         this.progressNumber += prog;
         this.updateProgressBar();
     }
@@ -601,13 +716,18 @@ class GameHandler {
         var lightsString = this.returnLightString(lights, "255, 255, 255");
         var flaresString = this.returnLightString(flares, "255, 255, 50");
         var firesString = this.returnLightString(fires, "255, 255, 255");
-        var gradientsString = [lightsString, flaresString, firesString]
+        if (this.glowDirty) {
+            const shift = this.contentShift();
+            this.glowString = this.returnLightString(glows, "255, 205, 120", shift.x, shift.y);
+            this.glowDirty = false;
+        }
+        var gradientsString = [lightsString, flaresString, firesString, this.glowString]
             .filter(str => str)
             .join(', ');
         this.darkOverlay.style.background = gradientsString ? gradientsString : defaultRGB; // Fallback to full darkness if no lights
         this.darkOverlay.style.backgroundColor = defaultRGB;
     }
-    returnLightString(arr, rbgString) {
+    returnLightString(arr, rbgString, shiftX = 0, shiftY = 0) {
         return arr
             .filter(light => light.opac > 0)
             .map(light => {
@@ -618,14 +738,93 @@ class GameHandler {
                 light.pos.X = parseInt(light.parent.style.left) + light.parent.offsetWidth / 2;
                 light.pos.Y = parseInt(light.parent.style.top) + light.parent.offsetHeight / 2;
             }
-            return `radial-gradient(circle ${radius}px at ${light.pos.X}px ${light.pos.Y}px,
+            return `radial-gradient(circle ${radius}px at ${light.pos.X + shiftX}px ${light.pos.Y + shiftY}px,
                         rgba(${rbgString}, ${light.opac}) ${brightRange}%,
                         rgba(0, 0, 0, 0) ${featherRange}%)`;
         })
             .join(', ');
     }
+    // How far the stage's content is from where it will be, while it's riding in with the rush between stages: the glows are on the shade over it
+    // all, so they have to go with it, or they'd be seen shining where the buildings are going to be, a long way before they get there
+    contentShift() {
+        if (!StageTransition.active)
+            return { x: 0, y: 0 };
+        const m = new DOMMatrix(getComputedStyle(ContentElHandler.returnContentEl()).transform);
+        return { x: m.m41, y: m.m42 };
+    }
+    trackGlowsDuringRush() {
+        const follow = () => {
+            if (!glows.length || this.daytime)
+                return;
+            this.glowDirty = true;
+            this.updateLights();
+            if (StageTransition.active)
+                requestAnimationFrame(follow);
+        };
+        requestAnimationFrame(follow);
+    }
+    // The glows of the buildings after dark (see lightStage). Static, so the string for them is only made again when something about them changes.
+    glowString = "";
+    glowDirty = true;
+    static glowOpacity = 0.62;
+    // After dark each building has a glow, like a fire's (on the coast, one large one to a block of the town). They all go out when the power does (see PowerGrid), and the glow of a building that's
+    // brought down goes with it.
+    lightStage(area) {
+        glows.length = 0;
+        this.glowDirty = true;
+        if (this.daytime)
+            return;
+        const buildings = allTargets.filter(t => t instanceof Building);
+        const homes = buildings.filter(b => !b.isElectric() && !b.isWrecked());
+        // On the coast the town is in blocks, each of which gets one large glow, and the buildings on the shore (the cranes and the lighthouse) a glow
+        // each. Elsewhere it's one to a building.
+        const blocks = {};
+        const single = [];
+        for (const b of homes) {
+            if (area == Area.port && b.blockId)
+                (blocks[b.blockId] = blocks[b.blockId] || []).push(b);
+            else if (area == Area.port && b.isPier())
+                continue; // (a jetty or a breakwater, out in the sea, has no lights)
+            else
+                single.push(b);
+        }
+        for (const b of single) {
+            const el = b.getTargetEl();
+            lightID++;
+            glows.push({ id: lightID, pos: { X: 0, Y: 0 }, opac: GameHandler.glowOpacity, size: ExplSizes.small, fading: false, reach: Math.max(el.offsetWidth, el.offsetHeight) * 1.1, parent: el, owner: b });
+        }
+        for (const id of Object.keys(blocks)) {
+            const members = blocks[id];
+            const rects = members.map(m => m.getTargetEl());
+            const left = Math.min(...rects.map(e => parseInt(e.style.left))), right = Math.max(...rects.map(e => parseInt(e.style.left) + e.offsetWidth));
+            const top = Math.min(...rects.map(e => parseInt(e.style.top))), bottom = Math.max(...rects.map(e => parseInt(e.style.top) + e.offsetHeight));
+            lightID++;
+            glows.push({
+                id: lightID, pos: { X: (left + right) / 2, Y: (top + bottom) / 2 }, opac: GameHandler.glowOpacity, size: ExplSizes.XL, fading: false,
+                reach: Math.max(right - left, bottom - top) * 0.75,
+                owner: { isWrecked: () => members.every(m => m.isWrecked()) } // (it goes out when the whole block has been brought down)
+            });
+        }
+        this.updateLights();
+    }
+    fadeGlows() {
+        if (!glows.length)
+            return;
+        const down = !PowerGrid.isUp();
+        for (const glow of glows) {
+            if (down || (glow.owner && glow.owner.isWrecked())) {
+                if (glow.fadeStep === undefined)
+                    glow.fadeStep = RandomNumberGen.randomNumBetween(5, 30) / 100; // (they don't all go at once)
+                glow.opac = Math.max(0, glow.opac - glow.fadeStep);
+                this.glowDirty = true;
+            }
+        }
+        this.removeFaded(glows);
+    }
     fadeAllLights() {
-        const anyLights = lights.length || flares.length || fires.length;
+        const glowsChanging = glows.length && (!PowerGrid.isUp() || glows.some(g => g.owner && g.owner.isWrecked()));
+        this.fadeGlows();
+        const anyLights = lights.length || flares.length || fires.length || glowsChanging || this.glowDirty;
         this.fadeLights(lights, 200);
         this.fadeLights(flares, flareFade);
         this.fadeFires();
@@ -707,12 +906,24 @@ class GameHandler {
             if (!aimers.has(el))
                 exiting.appendChild(el);
         }
+        // the sea, as it was, washes away to the left (the next stage's has a new shape: it comes back in from the left at the end,
+        // see .water in cssAnims.css)
+        const water = document.getElementById("water");
+        if (water && !water.classList.contains("displayNone")) {
+            const old = water.cloneNode(true);
+            old.removeAttribute("id");
+            old.classList.add("oldSea");
+            water.parentElement.insertBefore(old, water);
+            StageTransition.oldSea = old;
+        }
         StageTransition.exiting = exiting;
     }
     clearLights() {
         lights.length = 0;
         flares.length = 0;
         fires.length = 0;
+        glows.length = 0;
+        this.glowDirty = true;
         this.darkOverlay.style.background = "";
     }
     checkEnd() {
@@ -721,14 +932,76 @@ class GameHandler {
             this.failGame("");
         }
     }
-    // The game's lost, with a message as to why if there is one
-    failGame(message) {
+    // The game's lost, with a message as to why if there is one (and the face of whoever it was that got away): a screen that the game
+    // is frozen behind until Esc goes back to the menu
+    failGame(message, portrait) {
         if (!this.gameInProgress)
             return;
-        this.pause();
-        this.gameInProgress = false;
-        PopupHandler.addToArray(message, userHandler.addressed("Game Over!"), msgLength.long);
         SoundPlayer.playWithVolumeSet(alarm3);
+        const text = '<div class="endMessage">' + (message || "Too many got away.") + '</div>';
+        const body = portrait ? '<div class="endCard"><img class="endPortrait" src="' + portrait + '">' + text + '</div>' : '<div class="endCard">' + text + '</div>';
+        this.showEndScreen(userHandler.addressed("Game Over!"), body);
+    }
+    // All the stages cleared: everyone on the list has been dealt with
+    finishCampaign() {
+        if (!this.gameInProgress)
+            return;
+        cheer.play();
+        const faces = this.roster.map(man => '<div><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + man.portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="endRosterName">' + man.name + '</div></div>').join("");
+        const stats = `${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised, on ${this.difficulty.eng.name} difficulty`;
+        this.showEndScreen(userHandler.addressed("You got them all!"), '<div>That\'s the last of them, good work!</div><div class="endRoster">' + faces + '</div><div>' + stats + '</div>');
+    }
+    endScreenOpen = false;
+    showEndScreen(title, bodyHtml) {
+        this.gameInProgress = false;
+        this.cutGameFuncs();
+        GameTimers.pause();
+        document.body.classList.add("gamePaused");
+        PopupHandler.reset();
+        document.getElementById("endTitle").innerHTML = title;
+        document.getElementById("endBody").innerHTML = bodyHtml;
+        document.getElementById("endScreen").classList.remove("displayNone");
+        this.endScreenOpen = true;
+    }
+    closeEndScreen() {
+        document.getElementById("endScreen").classList.add("displayNone");
+        this.endScreenOpen = false;
+        this.toggleModal(); // the menu
+    }
+    // The men a game of stages is against, shown on a screen of their own before it starts: Start begins the game, and Esc or the arrow goes back
+    // to the menu. The harder the difficulty, the more of them to a stage.
+    roster = [];
+    briefingOpen = false;
+    briefingMode = GameMode.hills;
+    startPressed() {
+        const mode = this.selectedMode();
+        if (mode == GameMode.hills || mode == GameMode.coast)
+            this.openBriefing(mode);
+        else
+            this.newGame(mode);
+    }
+    openBriefing(mode) {
+        this.briefingMode = mode;
+        const perStage = Math.max(1, Math.round(this.difficulty.enemyFactor || 1));
+        this.roster = SpecialRoster.make(SceneLevel.stagesInAGame() * perStage);
+        document.getElementById("briefingText").innerHTML = "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
+            "over " + SceneLevel.stagesInAGame() + " stages. " +
+            (mode == GameMode.coast ? "They'll run for it if they feel threatened, when most of the boats or most of the targets on land have been dealt with. " : "They'll run for it once the shooting starts. ") +
+            "Don't let any of them get away.";
+        document.getElementById("rosterGrid").innerHTML = this.roster.map((man, i) => '<div class="rosterCard"><img class="rosterPortrait" src="' + man.portrait + '"><div><div class="rosterStage">Stage ' + (Math.floor(i / perStage) + 1) + '</div><div class="rosterName">' + man.name + '</div></div></div>').join("");
+        document.getElementById("modal").classList.add("displayNone");
+        document.getElementById("briefing").classList.remove("displayNone");
+        this.briefingOpen = true;
+    }
+    closeBriefing() {
+        document.getElementById("briefing").classList.add("displayNone");
+        document.getElementById("modal").classList.remove("displayNone");
+        this.briefingOpen = false;
+    }
+    startFromBriefing() {
+        const mode = this.briefingMode;
+        this.closeBriefing(); // (the menu is up again, as newGame expects: it closes it)
+        this.newGame(mode);
     }
     // The menu (Escape) freezes the whole game the way the P key does -- every timer, sound and animation --
     // and when it's closed again the game carries on from that moment.
@@ -807,6 +1080,8 @@ class GameHandler {
         this.clearLights();
         allObjects = [];
         PopupHandler.reset();
+        this.rain = noRain;
+        this.resetCoastKind();
         WeatherHandler.createRain(noRain);
         this.resetScreenEffects();
         fireStay = itemStay; // the weather changes these
@@ -814,8 +1089,10 @@ class GameHandler {
         this.weapon = null;
         this.strikesRestricted = false;
         this.sequentialHits = 0;
+        this.sequenceTargets.clear();
         this.progressNumber = 0;
         this.fullProgress = false;
+        this.progressLocked = false;
         this.daytime = true;
         conventionalWeapons = [];
         extraWeapons = [];
@@ -942,11 +1219,18 @@ class GameHandler {
         this.start_unpause();
     }
     drawAllBuildings() {
-        return this.streetBlockSlots(60).map(slot => {
+        // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
+        // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end.
+        const buildings = this.streetBlockSlots(96).reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
+            building.blockId = slot.block;
+            if (slot.info.electric)
+                PowerGrid.add(building);
             return building;
         });
+        this.drawRoads();
+        return buildings;
     }
     // How far clear of the water's faded shallows a building has to stay.
     static shoreMargin = 10;
@@ -954,108 +1238,457 @@ class GameHandler {
     // of its rows.
     firstDryX(topY, height) {
         const span = Shoreline.waterSpan(topY, topY + height);
-        return span ? span.shoreRight + GameHandler.shoreMargin : 0;
+        return span ? Math.max(0, span.shoreRight + GameHandler.shoreMargin) : 0; // (a shore that's off the left of the screen is no limit)
     }
-    // The sea gets a different width, and the coast a different slant, each time
+    // As above, but for a building's picture, which is a diamond: it's the middle of it that's nearest the shore, so it's the rows
+    // from near the top of its middle to near the foot that have to be clear, not its whole height
+    firstDryXFor(topY, height) {
+        const span = Shoreline.waterSpan(topY + height * 0.3, topY + height * 0.75);
+        return span ? Math.max(0, span.shoreRight + GameHandler.shoreMargin) : 0; // (a shore that's off the left of the screen is no limit)
+    }
+    // The coast comes in two kinds, which take it in turns from one stage to the next:
+    //  - "lean": the sea is down the left and the shore goes down and to the left at a good angle (not far off the way the ends of
+    //    the blocks of buildings run), the land open to the top right
+    //  - "slice": the shore comes down from around the top left corner, down and to the right, along the way the rows of buildings
+    //    run, so the town lies along it with the sea beneath
+    // Either way the sea is to the left of the shore, which is a straight line across the screen: the water is a box a half taller
+    // than the screen, skewed about its middle so its right edge is the shore, and placed so that edge is where it's meant to be.
+    coastKind = "lean";
+    nextCoastKind = RandomNumberGen.randomNumBetween(0, 1) ? "lean" : "slice";
+    coastRowSlant = 18; // how steeply down to the right the rows of buildings go, in degrees
+    coastShoreK = 0; // how far right the shore goes for each px down the screen (negative on the steep coast)
+    coastShoreIntercept = 0; // the shore as y = intercept + slope * x (for the sliced coast, where that's a slope down to the right)
+    coastShoreSlope = 0;
+    resetCoastKind() {
+        this.nextCoastKind = RandomNumberGen.randomNumBetween(0, 1) ? "lean" : "slice";
+    }
     shapeCoast() {
         const water = document.getElementById("water");
         if (!water)
             return;
-        water.style.width = RandomNumberGen.randomNumBetween(38, 56) + "%";
-        water.style.transform = "skewX(" + RandomNumberGen.randomNumBetween(18, 38) + "deg)";
+        const width = window.innerWidth, height = window.innerHeight;
+        this.coastKind = this.nextCoastKind;
+        this.nextCoastKind = this.coastKind == "lean" ? "slice" : "lean";
+        let k; // how far right the shore goes for each px down the screen
+        let shoreAtMiddle;
+        if (this.coastKind == "lean") {
+            const lean = RandomNumberGen.randomNumBetween(44, 54);
+            k = -Math.tan(lean * Math.PI / 180);
+            shoreAtMiddle = width * RandomNumberGen.randomNumBetween(34, 44) / 100; // (rolled back: not much more than a third of the way across)
+            this.coastRowSlant = 18;
+            this.coastShoreSlope = 0;
+        }
+        else {
+            const angle = RandomNumberGen.randomNumBetween(22, 28); // down from the horizontal; the rows are put to match it
+            k = 1 / Math.tan(angle * Math.PI / 180);
+            const leftEdge = height * RandomNumberGen.randomNumBetween(30, 48) / 100; // how far down the left edge of the screen the shore comes in: the sea is only the corner below it, and the land the rest
+            shoreAtMiddle = (height / 2 - leftEdge) * k;
+            this.coastRowSlant = angle;
+            this.coastShoreSlope = 1 / k;
+            this.coastShoreIntercept = height / 2 - shoreAtMiddle / k;
+        }
+        this.coastShoreK = k;
+        const left = -(Math.abs(k) * height * 0.75 + 60);
+        water.style.left = left + "px";
+        water.style.width = (shoreAtMiddle + 0.25 * height * k - left) + "px";
+        water.style.transform = "skewX(" + Math.atan(k) * 180 / Math.PI + "deg)";
     }
-    // Where to put up to maxCount buildings, none of them in the water, laid out in 3 or 4 lines like streets,
-    // most of them wide enough for blocks two buildings deep (a street that's only one building high is the
-    // rarity): each line is a row of blocks along its own baseline (which wanders from game to game), buildings
-    // standing on it, packed close with a narrow gap between blocks. What a block is depends on how big the
-    // buildings are, so sizes aren't mixed in one:
-    //  - the big ones (warehouses) go singly or two or three side by side, and mostly two deep
-    //  - the middling ones go like that too
-    //  - the small ones (huts, sheds, little houses) mostly go in twos, sometimes threes and only rarely
-    //    on their own, and a block of them is always followed by something bigger, so they never run on
-    // and the same type isn't put down twice running in a line.
+    // Whether a road of the coast runs through this box (to within a margin): it's checked at points along the road, each as far from it as the road is wide
+    roadsHit(box, margin) {
+        return this.coastRoads.some(road => this.roadHitsBox(road, box, margin));
+    }
+    roadHitsBox(road, box, margin) {
+        const half = Math.hypot(road.across[0], road.across[1]) / 2 + margin;
+        for (let t = -0.5; t <= 0.5001; t += 0.1) {
+            const x = road.cx + road.along[0] * t, y = road.cy + road.along[1] * t;
+            if (x > box.left - half && x < box.right + half && y > box.top - half && y < box.bottom + half)
+                return true;
+        }
+        return false;
+    }
+    // The roads of the coast: a picture of road (AS_assets/buildings/roads), stretched into place. It's drawn on the slant of the buildings, which
+    // is not quite the slant it was drawn at, so each is given a matrix: the road's own two edges (along it, and across it) are what it maps
+    // from, and `along` and `across` are what they're to become on the screen (px, as a vector from one end to the other).
+    coastRoads = [];
+    static roadArt = { width: 362, height: 176, centre: [181, 88], along: [295.5, -125], across: [69.5, 49] };
+    drawRoads() {
+        const art = GameHandler.roadArt;
+        for (const road of this.coastRoads) {
+            const u = road.mirrored ? [art.along[0], -art.along[1]] : art.along; // the picture's edges, as vectors
+            const v = road.mirrored ? [-art.across[0], art.across[1]] : art.across;
+            const det = u[0] * v[1] - v[0] * u[1];
+            const inv = [[v[1] / det, -v[0] / det], [-u[1] / det, u[0] / det]]; // (the inverse of the matrix with u and v as its columns)
+            const t = [[road.along[0], road.across[0]], [road.along[1], road.across[1]]];
+            const m = [
+                [t[0][0] * inv[0][0] + t[0][1] * inv[1][0], t[0][0] * inv[0][1] + t[0][1] * inv[1][1]],
+                [t[1][0] * inv[0][0] + t[1][1] * inv[1][0], t[1][0] * inv[0][1] + t[1][1] * inv[1][1]],
+            ];
+            const img = document.createElement("img");
+            img.className = "coastRoad";
+            img.src = assetsFolder + "buildings/roads/" + (road.mirrored ? "Road_Straight_TLBR_1.png" : "Road_Straight_1.png");
+            img.style.left = road.cx - art.centre[0] + "px";
+            img.style.top = road.cy - art.centre[1] + "px";
+            img.style.width = art.width + "px";
+            img.style.height = art.height + "px";
+            img.style.transform = `matrix(${m[0][0]}, ${m[1][0]}, ${m[0][1]}, ${m[1][1]}, 0, 0)`;
+            ContentElHandler.addToContentEl(img);
+        }
+    }
+    // Where to put up to maxCount buildings, none of them in the water, laid out as blocks: two rows of buildings of
+    // similar size, four long, packed edge to edge. The ground runs on a slant in the pictures, so a row goes down the
+    // screen as it goes right, and the second row of a block is a half-step back along the other slope (down and to the
+    // left) so each building sits against the one beside it and the one behind it, like tiles. The blocks stand in lines
+    // from the shore inland with a narrow street between them, a few lines one below the next. Every building in a block
+    // is its own type, from the same size class, and there's one lighthouse, not several.
     streetBlockSlots(maxCount, options) {
-        const { buildingGap = -0.1, rowGap = -0.14, padding = 40 } = options || {};
+        const { blockLength = 4, lines = 10, slantDegrees = this.coastRowSlant, padding = 12, road = 1.0, // the road between blocks, in building widths
+        aboveCorner = 420 // how far the first line is above the one that runs from the corner of the land
+         } = options || {};
         const slots = [];
+        this.coastRoads = [];
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         const top = 110; // clear of the HUD
         const bottom = screenHeight - 40;
-        const large = allBuildingInfo.filter(info => info.width >= 90);
-        const medium = allBuildingInfo.filter(info => info.width >= 70 && info.width < 90);
-        const small = allBuildingInfo.filter(info => info.width < 70);
-        // The lines: bands across the screen, mostly deep ones with room for two rows of buildings, now and then a
-        // shallow one with room for one. Three deep ones about half the time, two deep and a shallow one most of the
-        // rest, and rarely four lines, two of each.
-        const shallowHeight = 120;
-        const plan = RandomNumberGen.randomNumBetween(1, 100);
-        const deepFlags = plan <= 55 ? [true, true, true] : plan <= 90 ? [true, true, false] : [true, true, false, false];
-        for (let i = deepFlags.length - 1; i > 0; i--) { // in a random order
-            const j = RandomNumberGen.randomNumBetween(0, i);
-            [deepFlags[i], deepFlags[j]] = [deepFlags[j], deepFlags[i]];
-        }
-        const deepCount = deepFlags.filter(f => f).length;
-        const deepHeight = ((bottom - top) - shallowHeight * (deepFlags.length - deepCount)) / deepCount;
-        let cursor = top;
-        const bands = deepFlags.map(deep => {
-            const band = { top: cursor, height: deep ? deepHeight : shallowHeight, deep: deep };
-            cursor += band.height;
-            return band;
-        });
-        for (const band of bands) {
-            if (slots.length >= maxCount)
+        const slope = Math.tan(slantDegrees * Math.PI / 180);
+        const blockDepth = 2; // rows to a block
+        const footRise = 0.25; // the middle of a building's platform is this share of its width above the bottom of its picture
+        // the port buildings, by how big they are
+        const town = coastBuildingInfo.filter(info => !info.waterfront);
+        const large = town.filter(info => info.width >= 110);
+        const medium = town.filter(info => info.width >= 80 && info.width < 110);
+        const small = town.filter(info => info.width < 80);
+        const usedSingles = []; // there's one lighthouse, say, not four, and one mosque
+        const singleTaken = (info) => !!info.single && usedSingles.some(u => u === info || (!!u.group && u.group === info.group));
+        const blocksWanted = Math.floor(maxCount / (blockLength * blockDepth));
+        // The waterfront: one kind of crane, three to six of them, stand along the shore, and one kind of jetty or breakwater, three
+        // to six of those, goes out into the sea, with the one lighthouse among the cranes. Where the water's faded edge is is the
+        // shore: a crane's near corner is put there and a jetty's landward end. The town starts just behind the cranes, a road away.
+        // (the ones drawn for this slant of coast: the pier a steep coast's runs down to the shore from the top left, a sliced one's from the top right)
+        const seaSet = this.coastKind == "slice" ? seaFacingSW : seaFacingNW;
+        const cranes = seaSet.filter(info => info.undamaged.includes("/Crane_"));
+        const seaKinds = seaSet.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_"));
+        const lighthouses = coastBuildingInfo.filter(info => info.undamaged.includes("/Lighthouse"));
+        const crane = RandomNumberGen.returnRandomFromArray(cranes);
+        const seaKind = RandomNumberGen.returnRandomFromArray(seaKinds);
+        const shoreOf = (topY, height) => {
+            const span = Shoreline.waterSpan(topY + height * 0.55, topY + height);
+            return span ? (span.openRight + span.shoreRight) / 2 : 0;
+        };
+        let quaySide = crane.width + 6; // how far in from the shore the town starts: the cranes' depth and a road's worth
+        let roadOffset = crane.width + 22; // where the road along the shore is, from the shore (the middle of it)
+        const seaCount = RandomNumberGen.randomNumBetween(3, 6);
+        const seaRanges = [];
+        for (let n = 0; n < seaCount; n++) {
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const topY = RandomNumberGen.randomNumBetween(top + 20, bottom - seaKind.height - 10);
+                if (seaRanges.some(r => topY < r.bottom - 6 && topY + seaKind.height > r.top + 6))
+                    continue;
+                // the steep coast's pieces run from the top left to the bottom right, and the bottom right end is the one on the shore. The
+                // sliced coast's run from the top right to the bottom left: the top right end is on the shore, which is further along
+                // lower down, so the whole piece is out in the sea
+                const shoreAtEnd = this.coastKind == "slice" ? shoreOf(topY - seaKind.height * 0.5, seaKind.height) : shoreOf(topY, seaKind.height);
+                const inland = 40; // (they start on the land, a way in from the shore, and go out into the sea)
+                if (shoreAtEnd + 16 + inland + padding > screenWidth)
+                    continue; // (on a sliced coast the shore is off the screen low down)
+                if (shoreAtEnd - seaKind.width + 16 + inland < 0)
+                    continue; // (and on either, a piece can't start off the left of the screen)
+                slots.push({ X: shoreAtEnd - seaKind.width + 16 + inland, Y: topY, info: seaKind });
+                seaRanges.push({ top: topY, bottom: topY + seaKind.height });
                 break;
-            const pitch = band.height;
-            const wander = Math.max(0, Math.min(14, (pitch - 110) / 2)); // how far a baseline can move: less when the lines are close, so they don't run into each other
-            // where the buildings in this line stand: its baseline, which moves about from one game to the next
-            const baseline = band.top + pitch - 6 + RandomNumberGen.randomNumBetween(-wander, wander);
-            let x = 0;
-            let previous = null;
-            let previousWasSmall = false;
-            for (let tries = 0; slots.length < maxCount && tries < 80; tries++) {
-                const roll = RandomNumberGen.randomNumBetween(1, 100);
-                const pool = previousWasSmall ? (roll <= 60 ? large : medium) : (roll <= 40 ? large : roll <= 65 ? medium : small);
-                const choices = pool.filter(info => info !== previous);
-                const info = RandomNumberGen.returnRandomFromArray(choices.length ? choices : pool);
-                const isSmall = pool === small;
-                const smallRoll = RandomNumberGen.randomNumBetween(1, 100);
-                let cols = isSmall ? (smallRoll <= 12 ? 1 : smallRoll <= 80 ? 2 : 3) : RandomNumberGen.randomNumBetween(1, 3);
-                // in a deep line most blocks are two deep, the little ones less often and only as pairs or more
-                const deepRoll = RandomNumberGen.randomNumBetween(1, 100);
-                let rows = band.deep && (isSmall ? cols >= 2 && deepRoll <= 60 : deepRoll <= 88) ? 2 : 1;
-                const stepX = info.width * (1 + buildingGap);
-                const stepY = info.height * (1 + rowGap);
-                // two deep only if it fits between this line's baseline and the one above
-                if (rows == 2 && info.height + stepY > pitch - 12)
-                    rows = 1;
-                const blockWidth = info.width + (cols - 1) * stepX;
-                const blockHeight = info.height + (rows - 1) * stepY;
-                // little things stand about a bit more loosely than the rest, so they don't line up like soldiers
-                const lift = RandomNumberGen.randomNumBetween(0, isSmall ? 26 : 10);
-                const blockTop = baseline - lift - blockHeight;
-                if (blockTop < top - 20 || blockHeight + lift > pitch - 8)
-                    continue; // too tall for the room between the lines
-                // right of the shore, for the rows this block covers
-                x = Math.max(x, this.firstDryX(blockTop, blockHeight));
-                if (x + blockWidth + padding > screenWidth) {
-                    // doesn't fit: a three-wide block can be squeezed to two, otherwise the line is full
-                    if (cols == 3 && x + info.width + stepX + padding <= screenWidth)
-                        cols = 2;
-                    else
-                        break;
-                }
-                if (slots.length + cols * rows > maxCount)
-                    break;
-                for (let row = 0; row < rows; row++) {
-                    for (let col = 0; col < cols; col++) {
-                        slots.push({ X: x + col * stepX, Y: blockTop + row * stepY, info: info });
-                    }
-                }
-                previous = info;
-                previousWasSmall = isSmall;
-                x += info.width + (cols - 1) * stepX + RandomNumberGen.randomNumBetween(14, 34); // and a narrow street
             }
         }
+        {
+            // The cranes stand in a cluster along the shore, three to five of one kind close together, and maybe, a good way down the shore from it,
+            // a second cluster of another kind
+            const along = crane.height * 0.38; // how far down the shore the next in a cluster is (they stand close)
+            // down the shore as far as there's room: a sliced coast's shore runs off the right of the screen part of the way down
+            const first = this.coastKind == "slice" ? Math.max(top + 60, this.coastShoreIntercept + 10) : top + 10; // (a sliced coast's shore is off the left of the screen above where it comes in)
+            const last = this.coastKind == "slice"
+                ? Math.min(bottom, this.coastShoreIntercept + this.coastShoreSlope * (screenWidth - padding - crane.width - 40))
+                : bottom - 10;
+            const light = RandomNumberGen.returnRandomFromArray(lighthouses);
+            const placedCranes = [];
+            const frontRow = placedCranes; // (all of them are on the shore, so the lighthouse can take any one's place)
+            const otherCranes = cranes.filter(info => info !== crane);
+            const clusters = [{ info: crane, size: RandomNumberGen.randomNumBetween(3, 5) }];
+            if (otherCranes.length && RandomNumberGen.randomNumBetween(1, 100) <= 65) {
+                clusters.push({ info: RandomNumberGen.returnRandomFromArray(otherCranes), size: RandomNumberGen.randomNumBetween(3, 5) });
+            }
+            const lengthOf = (c) => (c.size - 1) * c.info.height * 0.38 + c.info.height;
+            let gap = RandomNumberGen.randomNumBetween(140, 200); // the big gap between the clusters
+            // (with two, if they don't both fit: they get smaller, and the gap a little, before the second is given up)
+            const lengthOfAll = () => clusters.reduce((sum, c, i) => sum + lengthOf(c) + (i ? gap : 0), 0);
+            while (clusters.length > 1 && lengthOfAll() > last - first) {
+                const biggest = clusters[0].size >= clusters[1].size ? clusters[0] : clusters[1];
+                if (biggest.size > 3)
+                    biggest.size--;
+                else if (gap > 110)
+                    gap -= 20;
+                else
+                    clusters.pop();
+            }
+            const total = lengthOfAll();
+            let foot = first + RandomNumberGen.randomNumBetween(0, Math.max(0, Math.floor(last - first - total)));
+            clusters.forEach((cluster, index) => {
+                if (index)
+                    foot += gap;
+                for (let i = 0; i < cluster.size; i++) {
+                    const placedFoot = foot + cluster.info.height + i * cluster.info.height * 0.38;
+                    const topY = placedFoot - cluster.info.height;
+                    const x = shoreOf(topY, cluster.info.height) + 2 + RandomNumberGen.randomNumBetween(-3, 3);
+                    if (x < 0 || x + cluster.info.width + padding > screenWidth || placedFoot > bottom || topY < top - 20)
+                        continue; // (the shore's off the screen to the left, or on a sliced coast low down to the right)
+                    placedCranes.push({ X: x, Y: topY, info: cluster.info });
+                }
+                foot += lengthOf(cluster);
+            });
+            const widest = Math.max(...clusters.map(c => c.info.width));
+            quaySide = widest + 46; // the town starts a road beyond the cranes
+            roadOffset = widest + 22;
+            const step = (last - first) / 2;
+            // the lighthouse is one of those on the shore: put in place of one of the cranes, or, if none are on screen, by itself
+            if (light && !singleTaken(light)) {
+                usedSingles.push(light);
+                const pick = frontRow.length ? RandomNumberGen.returnRandomFromArray(frontRow) : null;
+                const foot = pick ? pick.Y + crane.height : first + step;
+                const topY = foot - light.height;
+                const left = shoreOf(topY, light.height) + 2;
+                if (left >= 0 && left + light.width + padding <= screenWidth) {
+                    if (pick)
+                        placedCranes.splice(placedCranes.indexOf(pick), 1);
+                    placedCranes.push({ X: left, Y: topY, info: light });
+                }
+            }
+            slots.push(...placedCranes);
+        }
+        // The substation, near an edge of the screen on the land, with the lines leading off the map from it, is put down before the town: the
+        // blocks and the streets are laid out round it (it takes up a good deal of the land that's left, and it can't be put on a road afterwards)
+        const boxOf = (slot) => ({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
+        const reserved = []; // where the town keeps off: the substation and its lines
+        const reservedSubstation = [];
+        const powerFits = (box, part) => {
+            const dry = this.firstDryXFor(box.top, box.bottom - box.top);
+            if (box.left < dry + (part == "substation" ? quaySide + 10 : 24))
+                return false; // (the substation stays out of the strip with the cranes and the shore road)
+            return !slots.some(slot => {
+                const other = boxOf(slot);
+                return box.left < other.right + 10 && box.right > other.left - 10 && box.top < other.bottom + 6 && box.bottom > other.top - 6;
+            });
+        };
+        // tucked away in the corner at the back (the top right), out of the way of the town; anywhere on an edge if that corner's no good
+        let power = PowerGrid.plan(["right", "top"], powerFits, true);
+        if (!power.length)
+            power = PowerGrid.plan(["right", "top", "bottom"], powerFits);
+        for (const slot of power) {
+            reserved.push(boxOf(slot));
+            if (slot.info.electric == "substation")
+                reservedSubstation.push(boxOf(slot));
+        }
+        slots.push(...power);
+        const overlapsReserved = (left, top, right, bottom) => reserved.some(r => left < r.right + 10 && right > r.left - 10 && top < r.bottom + 8 && bottom > r.top - 8);
+        // a road isn't laid across the substation
+        const lay = (road) => {
+            if (reservedSubstation.some(r => this.roadHitsBox(road, r, 6)))
+                return;
+            this.coastRoads.push(road);
+        };
+        // each line is one size class: how wide its widest building is says how far it is from the line above
+        const classes = [];
+        // at least two of the lines are the big compounds and warehouses, not all little things; the rest are whatever
+        const kinds = [large, large];
+        for (let k = 2; k < lines; k++) {
+            const roll = RandomNumberGen.randomNumBetween(1, 100);
+            kinds.push(roll <= 30 ? large : roll <= 70 ? medium : small);
+        }
+        for (let i = kinds.length - 1; i > 0; i--) { // in a random order down the screen
+            const j = RandomNumberGen.randomNumBetween(0, i);
+            [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+        }
+        for (const pool of kinds) {
+            classes.push({ pool: pool, width: Math.max(...pool.map(info => info.width)) });
+        }
+        // where each line is, as how far down the screen it would be at the left edge (y = intercept + slope * x): the first
+        // at the top of the land, the others a block's depth and a street below the one before
+        // (the first line is well above the top of the land's corner, so the lines above the corner start further along the top
+        // and fill the top right, and the ones below it the bottom left, like the streets of a town)
+        const spacingAt = (k) => (classes[k - 1].width + classes[k].width) / 2 * slope * (blockDepth + road);
+        const intercepts = [];
+        if (this.coastKind == "slice") {
+            // the rows run along the shore: the first just behind the waterfront and the others further inland, up and to the right
+            // (the first row of a block is the one by the sea: the line is far enough from the waterfront for half a building and a gap)
+            const back = classes[0].width / 2 + 45;
+            intercepts.push(this.coastShoreIntercept - slope * (quaySide + 10 + back));
+            for (let k = 1; k < lines; k++)
+                intercepts.push(intercepts[k - 1] - spacingAt(k));
+        }
+        else {
+            intercepts.push((top + 85) - slope * (this.firstDryX(top, 80) + 60) - aboveCorner);
+            for (let k = 1; k < lines; k++)
+                intercepts.push(intercepts[k - 1] + spacingAt(k));
+        }
+        // the buildings for a block: a grid of them, none the same as the one beside or behind it
+        const chooseBlock = (pool, length) => {
+            const grid = [];
+            for (let i = 0; i < length; i++) {
+                grid.push([]);
+                for (let j = 0; j < blockDepth; j++) {
+                    const beside = i > 0 ? grid[i - 1][j] : null;
+                    const behind = j > 0 ? grid[i][j - 1] : null;
+                    const taken = (info) => singleTaken(info) || (!!info.single && grid.some(col => col.some(i => i === info || (!!i.group && i.group === info.group))));
+                    // (there are a lot of water towers, which would crowd the rest out: they're picked a third as often)
+                    const wantTower = RandomNumberGen.randomNumBetween(1, 100) <= 30;
+                    const choices = pool.filter(info => info !== beside && info !== behind && !taken(info) && (wantTower || !info.undamaged.includes("Water_Tower")));
+                    const anyLeft = pool.filter(info => !taken(info));
+                    grid[i].push(RandomNumberGen.returnRandomFromArray(choices.length ? choices : anyLeft.length ? anyLeft : pool));
+                }
+            }
+            return grid;
+        };
+        // Tries a block on a line with its first building's middle at x0, working along the line from x0 until it's clear of
+        // the water and the top of the screen. Returns the slots, or null if it runs out of room (the edge, or the bottom).
+        const tryBlock = (k, grid, from) => {
+            const cell = Math.max(...grid.map(col => Math.max(...col.map(info => info.width))));
+            for (let x0 = from; x0 < screenWidth; x0 += 12) {
+                const placed = [];
+                const centres = [];
+                let tooHigh = false;
+                for (let i = 0; i < grid.length && !tooHigh; i++) {
+                    for (let j = 0; j < blockDepth; j++) {
+                        const info = grid[i][j];
+                        // the middle of its platform: along the row, a half cell for each step along it, and for each step back
+                        // (the second row goes back towards the sea, down and to the left, except along a sliced coast, where the sea is
+                        // that way and it goes back inland instead)
+                        const back = this.coastKind == "slice" ? -j : j;
+                        const cx = x0 + (i - back) * cell / 2;
+                        const cy = intercepts[k] + slope * x0 + (i + back) * slope * cell / 2;
+                        const footBottom = cy + footRise * info.width;
+                        const left = cx - info.width / 2;
+                        const placedTop = footBottom - info.height;
+                        if (left + info.width + padding > screenWidth || footBottom > bottom)
+                            return null;
+                        if (overlapsReserved(left, placedTop, left + info.width, footBottom)) {
+                            tooHigh = true;
+                            break;
+                        } // (it's in the way of the substation: try further along)
+                        if (placedTop < top - 20 || left < this.firstDryXFor(placedTop, info.height) + quaySide) {
+                            tooHigh = true;
+                            break;
+                        }
+                        placed.push({ X: left, Y: placedTop, info: info });
+                        centres.push({ X: cx, Y: cy });
+                    }
+                }
+                if (!tooHigh)
+                    return { slots: placed, end: x0 + grid.length * cell / 2 + road * cell * 0.6, centres: centres, cell: cell, start: x0 };
+            }
+            return null;
+        };
+        // the lines take it in turns to have a block put on them, so no one line gets all of them
+        const next = classes.map(() => 40);
+        const finished = classes.map(() => false);
+        const previous = classes.map(() => null);
+        const extent = classes.map(() => null);
+        const rowStep = Math.sqrt(1 + slope * slope); // along a row (or back from one), for each px across
+        const slantRad = slantDegrees * Math.PI / 180;
+        let blocks = 0;
+        let blockCount = 0;
+        while (blocks < blocksWanted && finished.some(f => !f)) {
+            for (let k = 0; k < lines && blocks < blocksWanted; k++) {
+                if (finished[k])
+                    continue;
+                // a block of the full length if it fits, and if not a shorter one in what's left of the line, out to the edge of the screen
+                let block = null;
+                for (let length = blockLength; length >= 2 && !block; length--) {
+                    block = tryBlock(k, chooseBlock(classes[k].pool, length), next[k]);
+                }
+                if (!block) {
+                    finished[k] = true;
+                    continue;
+                }
+                blockCount++;
+                block.slots.forEach(slot => {
+                    if (slot.info.single)
+                        usedSingles.push(slot.info);
+                    slot.block = blockCount;
+                    slots.push(slot);
+                });
+                // a street across the gap between this block and the one before it on the line: its middle is the middle of the four building
+                // centres round it (the last two of the one before and the first two of this), and it runs along the way a block goes back
+                const before = previous[k];
+                if (before && block.start - next[k] <= 30) {
+                    const around = [before.centres[before.centres.length - 2], before.centres[before.centres.length - 1], block.centres[0], block.centres[1]];
+                    const cx = around.reduce((a, p) => a + p.X, 0) / 4, cy = around.reduce((a, p) => a + p.Y, 0) / 4;
+                    const step = block.cell / 2 * rowStep;
+                    const lengthAlong = (blockDepth + 0.7) * step, widthAcross = 0.44 * block.cell;
+                    lay({ cx: cx, cy: cy, along: [Math.cos(slantRad) * lengthAlong, -Math.sin(slantRad) * lengthAlong], across: [Math.cos(slantRad) * widthAcross, Math.sin(slantRad) * widthAcross], mirrored: false });
+                }
+                previous[k] = { centres: block.centres };
+                {
+                    const xs = block.centres.map(p => p.X);
+                    const from = Math.min(...xs) - block.cell / 2, to = Math.max(...xs) + block.cell / 2;
+                    const seen = extent[k];
+                    extent[k] = seen ? { from: Math.min(seen.from, from), to: Math.max(seen.to, to), cell: Math.max(seen.cell, block.cell) } : { from: from, to: to, cell: block.cell };
+                }
+                next[k] = block.end;
+                blocks++;
+            }
+        }
+        // there's always the one mosque: if the blocks didn't happen to draw it, it takes the place of the building closest to it in size
+        const mosques = town.filter(info => info.group === "mosque");
+        if (mosques.length && blocksWanted > 0 && !slots.some(s => s.info.group === "mosque")) {
+            const mosque = RandomNumberGen.returnRandomFromArray(mosques);
+            let best = -1;
+            slots.forEach((s, i) => {
+                if (s.info.single || s.info.waterfront || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged))
+                    return;
+                if (best < 0 || Math.abs(s.info.width - mosque.width) < Math.abs(slots[best].info.width - mosque.width))
+                    best = i;
+            });
+            if (best >= 0) {
+                const old = slots[best];
+                slots[best] = { X: old.X + old.info.width / 2 - mosque.width / 2, Y: old.Y + old.info.height - mosque.height, info: mosque };
+            }
+        }
+        // A street between each line of blocks and the next, along the way the lines run: its middle is half way between the second row of one line
+        // and the first row of the next (the second row of a block is a cell's worth of slant further along the line's intercept, down for the
+        // steep coast and up for the sliced one, where the lines go up the screen)
+        for (let k = 0; k + 1 < lines; k++) {
+            const here = extent[k], there = extent[k + 1];
+            if (!here || !there)
+                continue;
+            const behind = (this.coastKind == "slice" ? -1 : 1) * slope * here.cell;
+            const middle = (intercepts[k] + behind + intercepts[k + 1]) / 2;
+            const from = Math.min(here.from, there.from), to = Math.max(here.to, there.to);
+            const pieceLength = 170, pieceWidth = 0.44 * Math.max(here.cell, there.cell);
+            const along = [Math.cos(slantRad) * pieceLength, Math.sin(slantRad) * pieceLength];
+            const across = [-Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth];
+            const step = pieceLength * 0.94 * Math.cos(slantRad); // how far across the screen from one piece to the next
+            for (let x = from + step / 2; x - step / 2 < to; x += step) {
+                lay({ cx: x, cy: middle + slope * x, along: along, across: across, mirrored: true });
+            }
+        }
+        // the road along the shore, behind the cranes and in front of the town: pieces end to end down the line of the shore (on the steep coast the
+        // road drawn rising to the right is turned to the shore's slope, on the sliced one the same turned over, falling to the right)
+        {
+            const pieceLength = 200, pieceWidth = 34;
+            const norm = Math.hypot(this.coastShoreK, 1);
+            const down = { x: this.coastShoreK / norm, y: 1 / norm }; // down the shore
+            const sliced = this.coastKind == "slice";
+            const along = sliced ? [down.x * pieceLength, down.y * pieceLength] : [-down.x * pieceLength, -down.y * pieceLength];
+            const across = sliced ? [-Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth] : [Math.cos(slantRad) * pieceWidth, Math.sin(slantRad) * pieceWidth];
+            let y = Math.max(top - 20, sliced ? this.coastShoreIntercept - 40 : top - 20), x = shoreOf(y, 10) + roadOffset;
+            let count = 0;
+            while (y < bottom + 60 && count++ < 20) {
+                if (x > -pieceLength && x < screenWidth + pieceLength * 0.4) {
+                    lay({ cx: x + down.x * pieceLength * 0.5, cy: y + down.y * pieceLength * 0.5, along: along, across: across, mirrored: sliced });
+                }
+                x += down.x * pieceLength * 0.94;
+                y += down.y * pieceLength * 0.94;
+            }
+        }
+        // back to front: the nearer ones (lower down) are the ones that go over the ones behind them
+        slots.sort((a, b) => (a.Y + a.info.height) - (b.Y + b.info.height));
         return slots;
     }
     //public layoutStreetBlocks(
@@ -1121,6 +1754,7 @@ class GameHandler {
             this.checkEnd();
             this.updateProgressBar();
             this.fadeAllLights();
+            WeatherHandler.tick();
             this.level.tickClock();
             this.level.targets.forEach((trg) => {
                 trg.action();
@@ -1131,27 +1765,39 @@ class GameHandler {
 class WeatherHandler {
     static rains = [noRain, lightRain, medRain, heavyRain];
     static weatherTest() {
-        this.createRain(lightRain);
+        game.setRain(lightRain);
         setTimeout(() => {
-            this.createRain(this.rains[0]);
+            game.setRain(this.rains[0]);
         }, 2000);
         setTimeout(() => {
-            this.createRain(this.rains[3]);
+            game.setRain(this.rains[3]);
         }, 4000);
         setTimeout(() => {
-            this.createRain(this.rains[0]);
+            game.setRain(this.rains[0]);
         }, 6000);
         //setTimeout(() => {
-        //    this.createRain(this.rains[0])
+        //    game.setRain(this.rains[0])
         //}, 8000)
         //setTimeout(() => {
-        //    this.createRain(this.rains[3])
+        //    game.setRain(this.rains[3])
         //}, 12000)
         //setTimeout(() => {
-        //    this.createRain(this.rains[0])
+        //    game.setRain(this.rains[0])
         //}, 15000)
     }
+    // How long it's been raining hard (medium or heavy rain), in ms of game time: after a few seconds of it the craters fill with water
+    static current = noRain;
+    static hardRainMs = 0;
+    static static_ticks = 0;
+    static tick() {
+        const hard = this.current === medRain || this.current === heavyRain;
+        this.hardRainMs = hard ? this.hardRainMs + 100 : 0;
+        if (hard && this.hardRainMs >= 4000 && ++this.static_ticks % 5 == 0) {
+            ExplosionHandler.fillCratersWithRain();
+        }
+    }
     static createRain(rainType) {
+        this.current = rainType;
         const rainContainer = document.querySelector(".rain");
         rainContainer.className = "rain";
         const excess = Array.from(rainContainer.children).slice(0, rainContainer.children.length - rainType.drops);

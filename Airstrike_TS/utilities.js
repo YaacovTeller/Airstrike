@@ -1,4 +1,3 @@
-"use strict";
 class RandomNumberGen {
     static randomNumBetween(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -100,11 +99,14 @@ class StageTransition {
     // direction is the way the ground goes: down (the new stage comes in from the top), up (from the bottom)
     // or right (from the left)
     static exiting; // the old stage's layer, which rides off with the ground and is thrown away at the end
+    static oldSea; // the old stage's sea, which washes away to the left and is thrown away at the end
     static rush(direction = "down") {
-        const exiting = this.exiting; // (cancel() would throw it away)
+        const exiting = this.exiting, oldSea = this.oldSea; // (cancel() would throw them away)
         this.exiting = undefined;
+        this.oldSea = undefined;
         this.cancel();
         this.exiting = exiting;
+        this.oldSea = oldSea;
         const root = document.documentElement;
         const ground = ContentElHandler.returnbackground();
         const water = document.getElementById("water");
@@ -123,6 +125,7 @@ class StageTransition {
         set("--rushWaterY", waterRun, !sideways);
         set("--rushContentX", -groundRun, sideways);
         set("--rushContentY", -groundRun, !sideways);
+        root.style.setProperty("--waterOutX", -(2 * window.innerWidth + window.innerHeight) + "px"); // the sea washes off to the left, far enough to be right off the screen, and comes back from there
         set("--streakX", 6000, sideways);
         set("--streakY", 6000 * sign, !sideways);
         this.streaks = document.createElement("div");
@@ -132,6 +135,7 @@ class StageTransition {
         document.body.classList.add("stageRushing");
         this.active = true;
         SoundPlayer.playWithVolumeSet(jet_pass);
+        game.trackGlowsDuringRush(); // (the glows after dark ride in with the buildings)
         setTimeout(() => this.cancel(), this.duration);
     }
     // Ends it, wherever it's got to: the ground and the stage are where they'd be at the end anyway
@@ -141,6 +145,10 @@ class StageTransition {
         if (this.exiting) {
             this.exiting.remove();
             this.exiting = undefined;
+        }
+        if (this.oldSea) {
+            this.oldSea.remove();
+            this.oldSea = undefined;
         }
         if (this.streaks) {
             this.streaks.remove();

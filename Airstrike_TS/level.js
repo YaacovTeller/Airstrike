@@ -1,4 +1,3 @@
-"use strict";
 var WaveType;
 (function (WaveType) {
     WaveType[WaveType["gradual"] = 0] = "gradual";
@@ -90,7 +89,7 @@ class Level {
     addNewWeapon(info, showMsg) {
         let wepName = info.displayName || weaponNames[info.name];
         let slot = info.slot !== undefined ? info.slot : info.name;
-        let wepArr = info.name <= weaponNames.drone ? conventionalWeapons : extraWeapons;
+        let wepArr = info.name <= weaponNames.drone && !info.utility ? conventionalWeapons : extraWeapons;
         if (wepArr[slot]) {
             wepArr[slot].pushNewWeaponInstance();
             if (showMsg != false) {
@@ -265,6 +264,10 @@ class Level {
     noteShot(slot, cost, bigBomb) { }
     // Something has exploded (a drone flyover or a gunshot hasn't)
     noteExplosion() { }
+    // One of the special enemies has been dealt with (see SpecialEnemy)
+    specialDown() { }
+    // A tunnel charge has been set; true if it's the first of the stage
+    noteChargeSet() { return false; }
     continueWave() {
         // this.winLimitCheck(); // UNNEEDED? prevented new target on unpause
         let freq;
@@ -335,8 +338,11 @@ class Level {
 // stage is finished when every target has been destroyed, after which a freshly generated stage
 // follows -- forever. Its single wave only carries the time of day and weather.
 class SceneLevel extends Level {
-    staticTargetCount = 10;
+    staticTargetCount = 20 / 3; // boats to a coast stage (two thirds of what there were: 7, 9 or 13, by difficulty)
     stage = 0;
+    // A game of these levels is this many stages, and then it's won
+    static totalStages = 6;
+    static stagesInAGame() { return SceneLevel.totalStages; }
     // What this stage has taken so far, for the message when it's cleared
     stageElapsedMs = 0;
     stageShotsAtStart = 0;
@@ -346,8 +352,8 @@ class SceneLevel extends Level {
     rushDirections = ["down"]; // the ways the ground can rush between stages
     // The rush between stages isn't the player's time. Over par, the clock goes red and bleeps once.
     tickClock() {
-        if (StageTransition.active)
-            return;
+        if (StageTransition.active || this.stageFinished)
+            return; // (the clock stops when the stage is cleared, as its message comes up)
         this.stageElapsedMs += 100;
         if (++this.ticksSinceRetreatCheck >= 10) { // once a second: has there been enough destruction for the special in the bunker to run for it?
             this.ticksSinceRetreatCheck = 0;
@@ -360,6 +366,7 @@ class SceneLevel extends Level {
         }
     }
     overParWarned = false;
+    stageFinished = false;
     // How long a stage can take before the hurry-up nudge: the difficulty's time, or the level's own if it has none
     parMs() {
         return game.difficulty.parMs || this.slowAfterMs;
@@ -369,6 +376,8 @@ class SceneLevel extends Level {
         return Math.max(1, Math.round(count * (game.difficulty.enemyFactor || 1)));
     }
     noteDroneFlyover() { this.stageDroneFlyovers++; }
+    stageChargesSet = 0;
+    noteChargeSet() { return this.stageChargesSet++ === 0; }
     noteShot(slot, cost, bigBomb) {
         if (slot == slotOf(surveillanceInfo))
             return; // the drone's flyovers are counted on their own
@@ -402,35 +411,46 @@ class SceneLevel extends Level {
         const flyovers = this.stageDroneFlyovers;
         const shots = Math.max(0, game.killStats.shots - this.stageShotsAtStart - flyovers);
         const praise = RandomNumberGen.returnRandomFromArray(SceneLevel.praise);
-        let text = "<br>Time: " + this.formatTime(this.stageElapsedMs) +
-            "<br>" + this.plural(shots, "shot") + " fired" +
-            "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         let criticised = false;
+        // each criticism goes under the figure it's about
         const criticise = (pool) => {
-            text += "<br><strong>" + RandomNumberGen.returnRandomFromArray(pool) + "</strong>";
             criticised = true;
+            return "<br><strong>" + RandomNumberGen.returnRandomFromArray(pool) + "</strong>";
         };
+        let text = "<br>Time: " + this.formatTime(this.stageElapsedMs);
         if (this.stageElapsedMs > this.parMs()) {
-            criticise(SceneLevel.hurryUp);
+            text += criticise(SceneLevel.hurryUp);
         }
+        text += "<br>" + this.plural(shots, "shot") + " fired";
         if (this.stageOrdnanceSpent > this.targets.length * SceneLevel.shotsPerTarget) {
-            criticise(SceneLevel.lotsOfShots);
+            text += criticise(SceneLevel.lotsOfShots);
         }
         if (Object.values(this.stageBigBombsBySlot).some(count => count > SceneLevel.tooManyBigBombs)) {
-            criticise(SceneLevel.expensiveBombs);
+            text += criticise(SceneLevel.expensiveBombs);
         }
+        text += "<br>" + this.plural(flyovers, "drone flyover") + " needed";
         if (flyovers == 0 && extraWeapons[slotOf(surveillanceInfo)]) { // had a drone, and never sent it
-            criticise(SceneLevel.noDroneFlyovers);
+            text += criticise(SceneLevel.noDroneFlyovers);
         }
         if (flyovers > SceneLevel.tooManyDroneFlyovers) {
-            criticise(SceneLevel.lotsOfDroneFlyovers);
+            text += criticise(SceneLevel.lotsOfDroneFlyovers);
         }
         // the name goes in once: with the congratulations if there are any, otherwise the plain praise
-        if (!criticised) { // nothing to say against it: say something for it
+        if (!criticised) { // nothing to say against it: say something for it, at the bottom
             text += "<br><strong>" + userHandler.addressed(RandomNumberGen.returnRandomFromArray(SceneLevel.congratulations)) + "</strong>";
         }
-        text = (criticised ? userHandler.addressed(praise) : praise) + text;
-        return text;
+        return (criticised ? userHandler.addressed(praise) : praise) + text;
+    }
+    // Who's to be found in a stage: the men in the list the game began with, in order (any extra are made up)
+    specialAt(n) {
+        const entry = game.roster[(this.stage - 1) * this.scaled(1) + n];
+        return entry || { name: SpecialNames.random(), portrait: SpecialPortraits.random() };
+    }
+    // Morning (daylight) or dusk, one stage in three at dusk. There's no night yet, as there are no flares.
+    chooseTimeOfDay() {
+        const time = RandomNumberGen.randomNumBetween(1, 100) <= 33 ? Time.dusk : Time.day;
+        this.currentWave.timeOfDay = time;
+        game.changeTime(time);
     }
     // Mostly fine: one stage in five has rain, half of those (one in ten) hard rain, the rest light or medium
     chooseWeather() {
@@ -458,15 +478,20 @@ class SceneLevel extends Level {
             this.setCurrentWave(); // later stages keep whatever time of day they're in
         }
         game.setRain(this.chooseWeather()); // but the weather's chosen afresh for each
+        this.chooseTimeOfDay(); // and the time of day
+        PowerGrid.reset();
         this.populateStage();
+        game.lightStage(this.returnLocation()); // after dark the buildings glow
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
         this.stageOrdnanceSpent = 0;
+        this.stageChargesSet = 0;
         this.stageBigBombsBySlot = {};
         this.overParWarned = false;
+        this.stageFinished = false;
         if (this.stage > 1) {
-            PopupHandler.addToArray("", "Stage " + this.stage, msgLength.short);
+            PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.totalStages, msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
@@ -476,8 +501,17 @@ class SceneLevel extends Level {
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     populateStage() {
         game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
+        // make the boats all, then place them together (see WaterVehicleTarget.arrange): the lower ones go in front
+        const made = [];
         for (let i = 0; i < this.scaled(this.staticTargetCount); i++) {
-            this.registerTarget(this.provideAvailTargets());
+            made.push(this.provideAvailTargets());
+        }
+        if (made.length && made.every(t => t instanceof WaterVehicleTarget)) {
+            const spots = WaterVehicleTarget.arrange(made);
+            made.forEach((t, i) => this.registerTarget(t, spots[i]));
+        }
+        else {
+            made.forEach(t => this.registerTarget(t));
         }
         const buildings = game.drawAllBuildings();
         this.infestBuildings(buildings);
@@ -489,12 +523,13 @@ class SceneLevel extends Level {
         this.bunkerSpecials = [];
         this.retreatScheduled = false;
         this.stageToken++;
-        const pool = buildings.slice();
+        const pool = buildings.filter(b => !b.isElectric() && b.canHideEnemies()); // (nobody hides in a jetty, a breakwater or a water tank)
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const bunker = new Bunker(building);
             const room = bunker.setUp();
-            const enemy = new SpecialEnemy();
+            const who = this.specialAt(n);
+            const enemy = new SpecialEnemy(who.name, who.portrait);
             enemy.goUnderground();
             enemy.bunker = bunker;
             bunker.occupant = enemy;
@@ -510,12 +545,12 @@ class SceneLevel extends Level {
     retreatScheduled = false;
     stageToken = 0;
     ticksSinceRetreatCheck = 0;
+    // The special in the bunker feels threatened, and makes a run for it, once most of the boats have been dealt with, or most of the targets on land
     heavilyDestroyed() {
-        const progress = this.stageProgress();
-        if (progress.total && progress.done * 2 > progress.total)
-            return true;
-        const down = this.stageBuildings.filter(b => !b.isStanding() || b.damage === Damage.destroyed).length;
-        return this.stageBuildings.length > 0 && down * 2 > this.stageBuildings.length;
+        const boats = this.targets.filter(t => t instanceof WaterVehicleTarget);
+        const land = this.targets.filter(t => !(t instanceof WaterVehicleTarget));
+        const mostGone = (group) => group.length > 0 && group.filter(t => t.isFinished()).length * 2 > group.length;
+        return mostGone(boats) || mostGone(land);
     }
     checkForRetreat() {
         if (this.retreatScheduled || !this.bunkerSpecials.length || !this.heavilyDestroyed())
@@ -531,15 +566,49 @@ class SceneLevel extends Level {
                 if (!special.isFinished())
                     this.sendBoat(special, stage);
             }
-        }, RandomNumberGen.randomNumBetween(10000, 20000));
+        }, SceneLevel.fleeDelay());
+    }
+    // How long after the first strike a special enemy waits before he runs for it (the harder the difficulty, the sooner)
+    static spookDelay() {
+        const range = game.difficulty.spookDelay || { min: 3500, max: 7000 };
+        return RandomNumberGen.randomNumBetween(range.min, range.max);
+    }
+    static fleeDelay() {
+        const range = game.difficulty.fleeDelay || { min: 8000, max: 15000 };
+        return RandomNumberGen.randomNumBetween(range.min, range.max);
+    }
+    // He calls for the nearest boat that's running
+    // Where there are two of them, taking one out spooks the other, who runs for it at once (give or take a moment)
+    specialDown() {
+        if (this.bunkerSpecials.length < 2)
+            return;
+        const stage = this.stageToken;
+        this.retreatScheduled = true; // (no need for the usual wait and the usual reason)
+        setTimeout(() => {
+            if (stage !== this.stageToken || game.level !== this)
+                return;
+            for (const special of this.bunkerSpecials) {
+                if (!special.isFinished())
+                    this.sendBoat(special, stage);
+            }
+        }, SceneLevel.spookDelay());
     }
     sendBoat(special, stage) {
+        if (special.called || special.isFinished())
+            return;
         const boats = allTargets.filter(t => t instanceof WaterVehicleTarget && t.isRunning() && !t.isRunningToShore());
         if (!boats.length)
             return;
-        const boat = RandomNumberGen.returnRandomFromArray(boats);
-        boat.runToShore(special, game.difficulty.fleeSpeed || 2, () => {
+        const here = CollisionDetection.getXYfromPoint(special.getTargetEl());
+        const distanceTo = (t) => {
+            const there = CollisionDetection.getXYfromPoint(t.getTargetEl());
+            return Math.hypot(there.X - here.X, there.Y - here.Y);
+        };
+        const boat = boats.reduce((best, t) => distanceTo(t) < distanceTo(best) ? t : best);
+        special.called = true;
+        boat.runToShore(special, game.difficulty.boatFleeSpeed || 3, () => {
             // that one was knocked out on the way: another, a moment later
+            special.called = false;
             setTimeout(() => {
                 if (stage === this.stageToken && game.level === this && !special.isFinished())
                     this.sendBoat(special, stage);
@@ -571,7 +640,13 @@ class SceneLevel extends Level {
         return this.targets.every(t => t.isFinished());
     }
     endWave() {
+        this.stageFinished = true; // the time is what it was when the stage was cleared
         PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
+        if (this.stage >= SceneLevel.totalStages) { // the last of them: the game's won, once its message has been read
+            setTimeout(() => { if (game.level === this)
+                game.finishCampaign(); }, msgLength.long + 600);
+            return;
+        }
         this.nextWavePrepGap(); // then nextWave() builds the next stage
     }
 }
@@ -579,13 +654,14 @@ class SceneLevel extends Level {
 // some not), enemies hiding in some of the villas, and tunnels nobody can see until a surveillance drone
 // scans them. Stages follow on from each other like the port's.
 class HillsLevel extends SceneLevel {
-    // What a village is made of, which varies from stage to stage: a small one is villas as it always was (with the odd
-    // block), a medium one has a couple of the apartment blocks among them, and a large one is mostly blocks with
-    // a few villas. The bigger the village, the bigger its mosque.
+    // What a village is made of, which varies from stage to stage, in four sizes: just villas; villas with a few of the small
+    // apartment blocks; villas with a range of apartment buildings, the tall ones too; and one that's very built up, mostly
+    // apartment buildings. The bigger the village, the bigger its mosque.
     static villageSizes = [
-        { chance: 40, villas: [20, 26], blocks: [0, 1], mosques: allMosqueInfo },
-        { chance: 35, villas: [14, 18], blocks: [2, 3], mosques: mediumMosqueInfo },
-        { chance: 25, villas: [4, 6], blocks: [7, 9], mosques: largeMosqueInfo },
+        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 22 },
+        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 20 },
+        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, mosques: mediumMosqueInfo, gap: 14 },
+        { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, mosques: largeMosqueInfo, gap: 7 }, // very built up
     ];
     static minOutliers = 1; // and standing off from it
     static maxOutliers = 2;
@@ -596,32 +672,56 @@ class HillsLevel extends SceneLevel {
     static maxTunnels = 4;
     static screenTop = 120; // clear of the HUD
     static screenEdge = 70;
-    // The structure types the village borrows from the other set, at the villas' scale (theirs is 0.28 of
-    // their pictures' size, the others' 0.4)
-    static borrowedScale = 0.7;
-    // The odd ones out: the checkpoint booth (the fenced yards and the little shelter didn't suit), put down a couple
-    // of times or three...
-    static oddCodes = ["r5c6"];
-    static minOfEachOdd = 2;
-    static maxOfEachOdd = 3;
-    // ...and (no warehouses: they don't suit the sand) one or two water towers (of the three kinds), at a larger
-    // scale than the rest, and one each of the containers and the stack of crates. Nothing parks beside a water tower.
-    static waterTowerCodes = ["r5c1", "r5c2", "r5c3"];
-    static waterTowerScale = 1;
+    // The industrial odds and ends the village has among the houses (see industrial misc): a couple of each of these...
+    static miscNames = ["Fuel_Station", "Storage_Shed", "Water_Tank", "Fuel_Depot", "Storage_Pad"];
+    static minOfEachMisc = 1;
+    static maxOfEachMisc = 2;
+    // ...and one or two water towers, of the four kinds. Nothing parks beside a water tower. They're drawn at a bit
+    // under their usual size to go with the villas.
+    static towerNames = ["Water_Tower_Concrete", "Water_Tower_Metal", "Water_Tower_Box", "Water_Tower_Conical", "Water_Tower_B1", "Water_Tower_B2", "Water_Tower_B3", "Water_Tower_B4"];
+    static miscScale = 0.85;
     static minWaterTowers = 1;
     static maxWaterTowers = 2;
-    static containerCode = "r5c8";
-    static cratesCode = "r5c9";
     rushDirections = ["up", "right"]; // there's no sea here to keep in place, so it can go either way
     slowAfterMs = 90000; // a stage here takes longer: there's a village to search and tunnels to find
     takenBoxes = []; // where things have been put this stage, so nothing's put on top of anything
     populateStage() {
         this.takenBoxes = [];
+        this.placePower();
         const buildings = this.placeVillage();
         this.infestBuildings(buildings); // only the villas have somewhere for anyone to hide
         this.placeSpecialEnemies(buildings);
         this.placeVehicles(buildings);
+        this.placeExplosives(buildings);
         this.placeTunnels();
+    }
+    // The substation near the edge of the screen, and its lines leading off the map, are put down first, so the village keeps clear of them
+    placePower() {
+        const slots = PowerGrid.plan(["top", "right", "bottom", "left"], box => !this.overlapsTaken(box, 14));
+        for (const slot of slots) {
+            const building = new Building(slot.info);
+            building.setPosition(slot);
+            PowerGrid.add(building);
+            this.takenBoxes.push({ left: slot.X, top: slot.Y, right: slot.X + slot.info.width, bottom: slot.Y + slot.info.height });
+        }
+    }
+    // Stacks of ammunition and rockets standing about among the villas, which count as targets: anything that damages one sets it on fire,
+    // and it goes up (see ExplosiveTarget)
+    static minExplosives = 2;
+    static maxExplosives = 5;
+    placeExplosives(buildings) {
+        const villas = buildings.filter(b => !b.isTall());
+        if (!villas.length)
+            return;
+        const count = RandomNumberGen.randomNumBetween(HillsLevel.minExplosives, HillsLevel.maxExplosives);
+        for (let i = 0; i < count; i++) {
+            const info = RandomNumberGen.returnRandomFromArray(allExplosiveInfo);
+            const spot = this.spotBesideAVilla(villas, info.width, info.height);
+            if (!spot)
+                continue;
+            this.takenBoxes.push({ left: spot.X, top: spot.Y, right: spot.X + info.width, bottom: spot.Y + info.height });
+            this.registerTarget(new ExplosiveTarget(info), spot);
+        }
     }
     // The special enemies here hide in buildings, and once the first explosion has gone off they'll try to get away
     // in a vehicle, between 10 and 20 seconds later (see startFlee), if there's one still running.
@@ -635,7 +735,8 @@ class HillsLevel extends SceneLevel {
         const pool = buildings.filter(b => b.canHideEnemies());
         for (let n = 0; n < this.scaled(1) && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
-            const enemy = new SpecialEnemy();
+            const who = this.specialAt(n);
+            const enemy = new SpecialEnemy(who.name, who.portrait);
             building.addOccupant(enemy);
             this.registerTarget(enemy, building.randomHidingSpot());
             this.specials.push(enemy);
@@ -649,7 +750,18 @@ class HillsLevel extends SceneLevel {
         setTimeout(() => {
             if (stage === this.stageNumber && game.level === this)
                 this.startFlee();
-        }, RandomNumberGen.randomNumBetween(10000, 20000));
+        }, SceneLevel.fleeDelay());
+    }
+    // Where there are two of them, taking one out spooks the other, who runs for it at once (give or take a moment)
+    specialDown() {
+        if (this.specials.length < 2)
+            return;
+        this.fleeScheduled = true;
+        const stage = this.stageNumber;
+        setTimeout(() => {
+            if (stage === this.stageNumber && game.level === this)
+                this.startFlee();
+        }, SceneLevel.spookDelay());
     }
     // Each special enemy still in a building gets into the nearest vehicle that's running, and starts it up
     startFlee() {
@@ -673,7 +785,7 @@ class HillsLevel extends SceneLevel {
                 return; // nothing left to get away in
             taken.push(nearest);
             special.board();
-            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 2, special.portrait);
+            nearest.startFleeing(special.name, game.difficulty.fleeSpeed || 3, special.portrait);
         }
     }
     overlapsTaken(box, room = 0) {
@@ -682,12 +794,10 @@ class HillsLevel extends SceneLevel {
     within(low, high) {
         return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
     }
-    typeFor(codes, noParking, scale = HillsLevel.borrowedScale) {
-        const name = "Structure_" + RandomNumberGen.returnRandomFromArray(codes) + "_1.png";
-        const info = allBuildingInfo.find(info => info.undamaged === name);
-        return { ...resizedBuildingInfo(info, scale), noParking: noParking };
+    miscInfo(name) {
+        return scaledBuildingInfo(industrialByName(name), HillsLevel.miscScale);
     }
-    // A village: the villas bunched up round the middle of the screen, the mosque, a couple of water towers, containers, crates and a few of each of the other odd structures among them,
+    // A village: the villas bunched up round the middle of the screen, the mosque, a couple of water towers and some of the fuel stations, sheds and the like among them,
     // and one or two villas out on their own
     placeVillage() {
         const buildings = [];
@@ -699,6 +809,7 @@ class HillsLevel extends SceneLevel {
         const reachX = Math.min(540, width * 0.39); // room for a good few more than a hamlet's worth
         const reachY = Math.min(340, (height - HillsLevel.screenTop) * 0.5);
         // try to put one down: inside the village's ellipse (nearer the middle more often) or, for an outlier, well outside it
+        let gap = HillsLevel.villageGap; // set to the village's own once its size is known
         const place = (info, outlier) => {
             for (let attempt = 0; attempt < 250; attempt++) {
                 let x, y;
@@ -716,7 +827,7 @@ class HillsLevel extends SceneLevel {
                 }
                 const box = { left: x, top: y, right: x + info.width, bottom: y + info.height };
                 const onScreen = x >= HillsLevel.screenEdge && y >= HillsLevel.screenTop && box.right <= width - HillsLevel.screenEdge && box.bottom <= height - HillsLevel.screenEdge;
-                if (!onScreen || this.overlapsTaken(box, HillsLevel.villageGap))
+                if (!onScreen || this.overlapsTaken(box, gap))
                     continue;
                 const building = new Building(info);
                 building.setPosition({ X: x, Y: y });
@@ -734,22 +845,21 @@ class HillsLevel extends SceneLevel {
             if ((roll -= candidate.chance) <= 0)
                 break;
         }
+        gap = size.gap;
         // the big ones first, while there's room: the village's mosque, which there's only the one of, and the blocks
         place(RandomNumberGen.returnRandomFromArray(size.mosques), false);
         const blocks = RandomNumberGen.randomNumBetween(size.blocks[0], size.blocks[1]);
         for (let i = 0; i < blocks; i++) {
-            place(RandomNumberGen.returnRandomFromArray(allBlockInfo), false);
+            place(RandomNumberGen.returnRandomFromArray(size.blockPool), false);
         }
         const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
         for (let i = 0; i < towers; i++) {
-            place(this.typeFor(HillsLevel.waterTowerCodes, true, HillsLevel.waterTowerScale), false);
+            place(this.miscInfo(RandomNumberGen.returnRandomFromArray(HillsLevel.towerNames)), false);
         }
-        place(this.typeFor([HillsLevel.containerCode]), false);
-        place(this.typeFor([HillsLevel.cratesCode]), false);
-        for (const code of HillsLevel.oddCodes) {
-            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachOdd, HillsLevel.maxOfEachOdd);
+        for (const name of HillsLevel.miscNames) {
+            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachMisc, HillsLevel.maxOfEachMisc);
             for (let i = 0; i < count; i++) {
-                place(this.typeFor([code]), false);
+                place(this.miscInfo(name), false);
             }
         }
         const villas = RandomNumberGen.randomNumBetween(size.villas[0], size.villas[1]);
@@ -946,7 +1056,7 @@ const allLevelInfo = [
         messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
             new Wave(8, WaveType.double, Time.dusk),
-            new Wave(8, WaveType.gradual), //GRAD
+            new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
             /*            new Wave(14, WaveType.sudden)*/
         ],
@@ -980,7 +1090,7 @@ const allLevelInfo = [
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
-        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo], // and a drone, to find the tunnels that come next
+        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo],
         targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {

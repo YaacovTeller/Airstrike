@@ -1,7 +1,7 @@
-"use strict";
 class WeaponType {
     name;
     slot;
+    utility = false; // in the second group of the HUD whatever it's made from
     displayName;
     cursor;
     sound;
@@ -27,12 +27,13 @@ class WeaponType {
         this.select = info.select;
         this.shotCost = info.shotCost !== undefined ? info.shotCost : 1;
         this.bigBomb = !!info.bigBomb;
+        this.utility = !!info.utility;
         let wepArr = this.getWeaponArray();
         wepArr[this.slot] = this;
         game.addHudWeapon(this);
     }
     getWeaponArray() {
-        return this.name <= weaponNames.drone ? conventionalWeapons : extraWeapons; // by what it is; its slot is just its key and place
+        return this.name <= weaponNames.drone && !this.utility ? conventionalWeapons : extraWeapons; // by what it is (or the group it's put in); its slot is just its key and place
     }
     switchFrom() {
         if (this.instances.length && this.activeInstance && this.activeInstance.blastRadElement) {
@@ -178,6 +179,7 @@ class BulletWeaponType extends WeaponType {
         return severity;
     }
     checkForTargets_instantHit() {
+        game.lastStrike = { X: MouseHandler.mousePos.X, Y: MouseHandler.mousePos.Y };
         for (let target of allTargets) {
             if (CollisionDetection.checkCollisionFromPosition(MouseHandler.mousePos, target.getPicEl())) {
                 let severity = this.determineSeverity();
@@ -204,10 +206,12 @@ class ExplosiveWeaponType extends WeaponType {
     blastRadius;
     explosionInfo;
     flyoverInfo;
+    scale = 1; // how much bigger or smaller than its size its explosion is drawn and reaches
     constructor(info) {
         super(info);
         this.explosionInfo = info.explosionInfo;
         this.blastRadius = info.blastRadius;
+        this.scale = info.scale || 1;
         if (info.flyover) {
             this.flyoverInfo = info.flyover;
         }
@@ -296,7 +300,7 @@ class ExplosiveWeaponType extends WeaponType {
     fireResultsTimeout(inst) {
         setTimeout(() => {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
         }, this.speed);
@@ -333,6 +337,20 @@ class ExplosiveWeaponType extends WeaponType {
 // it's drawn on a scan is only where it is underground, so landing on that does nothing.
 class BunkerBusterWeaponType extends ExplosiveWeaponType {
     static detonationDelay = 1000; // from the thud to the blast, as if it went off below ground
+    // Its flyover: a big, slow shadow along the middle of the screen (see .flyover.bomber)
+    createFlyover(inst) {
+        const div = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "flyover");
+        div.classList.add("bomber");
+        const img = document.createElement('img');
+        div.appendChild(img);
+        img.src = this.flyoverInfo.imageSource;
+        div.style.left = '100vw';
+        div.style.top = (window.innerHeight - 640) / 2 + 'px';
+        const pause = this.flyoverInfo.delay;
+        const duration = this.flyoverInfo.duration;
+        setTimeout(() => this.beginMoveInterval(div, this.flyoverInfo.speed, duration), pause);
+        ContentElHandler.fadeRemoveItem(div, pause + duration, 10);
+    }
     static craterScale = 0.5; // of a massive explosion's crater (240 by 120), so 120 by 60
     constructor(info) {
         super(info);
@@ -342,7 +360,9 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             const aimed = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
-            SoundPlayer.playRandomSound(crashes); // the sound of it hitting the ground: only a stand-in
+            SoundPlayer.playRandomSound(impactCrash); // bunker buster impact sound
+            // Tiny impact explosion on initial hit
+            ExplosionHandler.basicExplosion(aimed, ExplSizes.XXS, expl_small_imgs, weaponNames.mortar);
             if (this.onWater(aimed))
                 ExplosionHandler.createSplash(aimed); // into the sea, it's just a small splash
             setTimeout(() => this.detonate(aimed), BunkerBusterWeaponType.detonationDelay);
@@ -353,6 +373,7 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
         return !!water && CollisionDetection.checkCollisionFromPosition(at, water);
     }
     detonate(at) {
+        game.lastStrike = at;
         ExplosionHandler.bigShake();
         SoundPlayer.playSequentialSound(bigExplosions);
         // the building the aim point is on (the one whose middle is nearest, if pictures overlap there)
@@ -433,7 +454,9 @@ class ChargeWeaponType extends WeaponType {
                 SoundPlayer.playSequentialSound(beeps);
                 // Half the time the countdown is a recording (voices, then the blast), which sets the length
                 // of the fuse; the rest of the time it's the ticks, and the usual explosion at the end
-                const recorded = RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance;
+                // (the recording is only for the Hills level, where the first tunnel of each stage always gets it)
+                const firstOfStage = game.level.noteChargeSet();
+                const recorded = game.gameMode == GameMode.hills && (firstOfStage || RandomNumberGen.randomNumBetween(1, 100) <= ChargeWeaponType.recordedChance);
                 SoundPlayer.playSequentialSound(recorded ? bombCountdowns : ticks);
                 setTimeout(() => {
                     tunnel.hit(strikeSeverity.catastrophic, this.name); // TARGET - Main hit function
@@ -465,7 +488,7 @@ class CarpetBombing extends ExplosiveWeaponType {
     static bombsPerTick = 3; // one in each third of the band's height
     static wingmen = [
         { dx: 0, dy: 0 },
-        { dx: 6, dy: -110 }, // vw behind, and px above or below
+        { dx: 6, dy: -110 },
         { dx: 6, dy: 110 },
     ];
     constructor(info) {
@@ -532,7 +555,7 @@ class CarpetBombing extends ExplosiveWeaponType {
             for (let lane = 0; lane < CarpetBombing.bombsPerTick; lane++) {
                 const x = Math.min(screenWidth, Math.max(0, leadMiddle + RandomNumberGen.randomNumBetween(0, 160)));
                 const y = bandMiddle - halfBand + lane * laneHeight + RandomNumberGen.randomNumBetween(0, laneHeight);
-                ExplosionHandler.basicExplosion({ X: x, Y: y }, this.explosionInfo.size, this.explosionInfo.frames, weaponNames.airstrike);
+                ExplosionHandler.basicExplosion({ X: x, Y: y }, this.explosionInfo.size, this.explosionInfo.frames, weaponNames.airstrike, this.scale);
             }
         }, CarpetBombing.tickMs);
     }
@@ -563,7 +586,7 @@ class Chopper extends ExplosiveWeaponType {
             let blastCenter = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             side == true ? blastCenter.X += this.blastRadius / 2 : blastCenter.X -= this.blastRadius;
             SoundPlayer.playSequentialSound(cannonSounds);
-            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+            ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
             side = !side;
             shots--;
             if (shots <= 0) {
@@ -728,7 +751,7 @@ class DroneWeaponType extends ExplosiveWeaponType {
                 let blastCenter = CollisionDetection.getXYfromPoint(trgt.getTargetEl());
                 blastCenter.X += deviationX;
                 blastCenter.Y += deviationY;
-                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name);
+                ExplosionHandler.basicExplosion(blastCenter, this.explosionInfo.size, this.explosionInfo.frames, this.name, this.scale);
                 //    this.checkForTargets(blastCenter, allTargets);
             }, this.speed + currentSpeedBuffer);
         });

@@ -1,4 +1,3 @@
-"use strict";
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
 function bitPath(name) {
     return assetsFolder + "bits/Bit_" + name + ".png";
@@ -54,6 +53,109 @@ const allBuildingInfo = [
     structureInfo("r5c8", 63, 47, { x: [14, 27], y: [6, 32] }),
     structureInfo("r5c9", 66, 40, { x: [12, 26], y: [11, 24] }),
 ];
+// Where a fuel building's fire burns: on its two big tanks, or the one tank of the fuel station
+function fuelFires(name) {
+    if (!name.startsWith("Fuel_"))
+        return undefined;
+    return name == "Fuel_Station" ? [[0.78, 0.5]] : [[0.3, 0.3], [0.6, 0.4]];
+}
+// The port buildings (AS_assets/buildings/port buildings): what the Coast level is built of. Each is a whole compound,
+// with its own platform or fence, in its three states (Name_1 intact, _2 heavily damaged, _3 destroyed). Sizes are 0.36
+// of natural. There's only ever the one of each of the lighthouses, towers, mosque and repair dock.
+const waterfrontPortBuildings = ["Crane_Dockside", "Crane_Harbour", "Crane_Container", "Quay_Straight", "Quay_Corner", "Jetty",
+    "Breakwater", "Repair_Dock", "Lighthouse", "Lighthouse_B"];
+const singlePortBuildings = ["Lighthouse", "Lighthouse_B", "Comms_Tower", "Radio_Tower", "Port_Mosque"];
+function portInfo(name, width, height, hide, folder = "") {
+    const file = (stage) => "port buildings/" + folder + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), fireAt: fuelFires(name), single: singlePortBuildings.includes(name), waterfront: waterfrontPortBuildings.includes(name), group: name == "Port_Mosque" ? "mosque" : name.startsWith("Lighthouse") ? "lighthouse" : undefined };
+}
+const allPortBuildingInfo = [
+    portInfo("Checkpoint", 77, 72, { x: [17, 44], y: [29, 49] }),
+    portInfo("Comms_Tower", 72, 87, { x: [16, 43], y: [45, 66] }),
+    portInfo("Customs", 101, 76, { x: [18, 63], y: [31, 52] }),
+    portInfo("Customs_B", 120, 83, { x: [20, 74], y: [39, 59] }),
+    portInfo("Fuel_Depot_B", 110, 64, { x: [22, 78], y: [22, 39] }),
+    portInfo("Guard_Shack", 66, 52, { x: [21, 38], y: [12, 30] }),
+    portInfo("Lighthouse", 76, 98, { x: [11, 43], y: [66, 77] }),
+    portInfo("Lighthouse_B", 78, 101, { x: [20, 46], y: [68, 80] }),
+    portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
+    portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
+    portInfo("Port_Office_B", 106, 83, { x: [22, 68], y: [30, 60] }),
+    portInfo("Quay_Corner", 100, 61, undefined),
+    portInfo("Quay_Straight", 133, 77, undefined),
+    portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
+    portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
+    portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
+    portInfo("Utility_Shed", 69, 51, { x: [15, 43], y: [14, 29] }),
+    portInfo("Warehouse_Adobe", 126, 88, { x: [22, 95], y: [24, 54] }),
+    portInfo("Warehouse_Concrete_Metal", 130, 92, { x: [26, 100], y: [23, 57] }),
+    portInfo("Warehouse_Concrete_Sloped", 127, 81, { x: [14, 89], y: [28, 51] }),
+    portInfo("Warehouse_Metal_Rounded", 116, 77, { x: [24, 86], y: [22, 48] }),
+    portInfo("Warehouse_Metal_Sloped", 134, 79, { x: [24, 95], y: [25, 50] }),
+    portInfo("Warehouse_Plain", 86, 60, { x: [19, 60], y: [13, 34] }),
+    portInfo("Warehouse_Quonset", 125, 89, { x: [25, 93], y: [23, 57] }),
+    portInfo("Warehouse_Stone_Brick", 118, 86, { x: [15, 88], y: [19, 54] }),
+    portInfo("Warehouse_Stone_Sloped", 113, 80, { x: [24, 87], y: [25, 49] }),
+    portInfo("Workshop", 114, 80, { x: [14, 90], y: [22, 50] }),
+    portInfo("Workshop_B", 128, 77, { x: [23, 94], y: [20, 50] }),
+    portInfo("Workshop_Small", 82, 62, { x: [11, 53], y: [19, 37] }),
+];
+// The cranes, piers and dock that face the sea, which are drawn for one slant of coast or the other and kept in their own folders:
+// coast NW (AS_assets/buildings/port buildings/coast NW) for the steep coast, with the sea to the upper left, whose piers run
+// from the top left down to the shore at the bottom right, and coast SW for the sliced coast, with the sea below and to the left,
+// whose piers run from the shore at the top right down to the left. SW is the NW set turned over, with the better first pictures
+// the user redrew (and no jetty). Each state is the same size as its NW twin, and its hiding spots are mirrored.
+const seaFacingNW = [
+    portInfo("Breakwater", 118, 77, undefined, "coast NW/"),
+    portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }, "coast NW/"),
+    portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }, "coast NW/"),
+    portInfo("Crane_Harbour", 88, 102, { x: [25, 36], y: [70, 79] }, "coast NW/"),
+    portInfo("Jetty", 102, 69, undefined, "coast NW/"),
+    portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }, "coast NW/"),
+];
+const seaFacingSW = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
+    const mirrored = info.hide ? { x: [info.width - info.hide.x[1], info.width - info.hide.x[0]], y: info.hide.y } : undefined;
+    const sw = (file) => file.replace("coast NW/", "coast SW/");
+    return { ...info, undamaged: sw(info.undamaged), damaged: sw(info.damaged), destroyed: sw(info.destroyed), hide: mirrored };
+});
+// Industrial odds and ends (AS_assets/buildings/industrial misc): the fuel station and depot, storage shed and pad, the
+// water tank, four water towers and four container yards. The Hills level uses all but the yards, the Coast level the lot.
+// Sizes are 0.36 of natural, but the yards 0.5 (they're a low, wide thing: the sizes are set here, the pictures aren't resaved).
+function industrialInfo(name, width, height, hide) {
+    const file = (stage) => "industrial misc/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, hide: hide, flammable: name.startsWith("Fuel_"), fireAt: fuelFires(name), noParking: name.startsWith("Water_Tower") };
+}
+const allIndustrialInfo = [
+    industrialInfo("Container_Yard_Circular", 132, 66, { x: [27, 101], y: [20, 45] }),
+    industrialInfo("Container_Yard_Large", 144, 76, { x: [34, 86], y: [25, 44] }),
+    industrialInfo("Container_Yard_Rail", 154, 68, { x: [29, 83], y: [30, 44] }),
+    industrialInfo("Container_Yard_Small", 124, 66, { x: [27, 82], y: [15, 40] }),
+    industrialInfo("Container_Yard_B1", 130, 63, { x: [39, 81], y: [23, 40] }),
+    industrialInfo("Container_Yard_B2", 128, 61, { x: [42, 77], y: [21, 38] }),
+    industrialInfo("Container_Yard_B3", 123, 59, { x: [34, 77], y: [16, 36] }),
+    industrialInfo("Container_Yard_B4", 118, 57, { x: [30, 77], y: [17, 34] }),
+    industrialInfo("Water_Tower_B1", 81, 86, undefined),
+    industrialInfo("Water_Tower_B2", 80, 89, undefined),
+    industrialInfo("Water_Tower_B3", 80, 86, undefined),
+    industrialInfo("Water_Tower_B4", 81, 89, undefined),
+    industrialInfo("Fuel_Depot", 100, 68, { x: [13, 72], y: [19, 38] }),
+    industrialInfo("Fuel_Station", 80, 68, { x: [20, 50], y: [24, 45] }),
+    industrialInfo("Storage_Pad", 89, 55, { x: [21, 56], y: [16, 31] }),
+    industrialInfo("Storage_Shed", 113, 65, { x: [27, 69], y: [22, 42] }),
+    industrialInfo("Water_Tank", 79, 57, undefined),
+    industrialInfo("Water_Tower_Box", 83, 78, undefined),
+    industrialInfo("Water_Tower_Concrete", 83, 81, undefined),
+    industrialInfo("Water_Tower_Conical", 82, 80, undefined),
+    industrialInfo("Water_Tower_Metal", 79, 81, undefined),
+];
+function industrialByName(name) {
+    return allIndustrialInfo.find(info => info.undamaged === "industrial misc/" + name + "_1.png");
+}
+// A copy of a building type at another scale, hiding spots and all
+function scaledBuildingInfo(info, factor) {
+    const hide = info.hide ? { x: [Math.round(info.hide.x[0] * factor), Math.round(info.hide.x[1] * factor)], y: [Math.round(info.hide.y[0] * factor), Math.round(info.hide.y[1] * factor)] } : undefined;
+    return { ...info, width: Math.round(info.width * factor), height: Math.round(info.height * factor), hide: hide };
+}
 // The villas (AS_assets/buildings/villas) are building types too, but aren't in the usual rotation:
 // the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
 function villaInfo(letter, width, height, hide) {
@@ -85,6 +187,64 @@ const largeMosqueInfo = [
     mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, "mosques/fancy/"),
     mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, "mosques/fancy/"),
 ];
+function explosiveInfo(name, width, height, rockets) {
+    return { file: "explosives/" + name + ".png", width: width, height: height, rockets: rockets };
+}
+const allExplosiveInfo = [
+    explosiveInfo("Ammo_Crates_1", 40, 28, false),
+    explosiveInfo("Ammo_Crates_2", 47, 34, false),
+    explosiveInfo("Ammo_Crates_3", 42, 36, false),
+    explosiveInfo("Ammo_Crates_4", 51, 37, false),
+    explosiveInfo("Ammo_Crates_5", 55, 32, false),
+    explosiveInfo("Ammo_Crates_6", 47, 35, false),
+    explosiveInfo("Ammo_Crates_7", 47, 34, false),
+    explosiveInfo("Ammo_Crates_8", 52, 33, false),
+    explosiveInfo("Ammo_Messy_1", 55, 44, false),
+    explosiveInfo("Ammo_Messy_2", 54, 43, false),
+    explosiveInfo("Ammo_Messy_3", 55, 43, false),
+    explosiveInfo("Ammo_Messy_4", 58, 45, false),
+    explosiveInfo("Ammo_Messy_5", 55, 44, false),
+    explosiveInfo("Ammo_Messy_6", 55, 42, false),
+    explosiveInfo("Ammo_Messy_7", 52, 43, false),
+    explosiveInfo("Ammo_Messy_8", 56, 39, false),
+    explosiveInfo("Rockets_Messy_1", 66, 49, true),
+    explosiveInfo("Rockets_Messy_2", 61, 44, true),
+    explosiveInfo("Rockets_Messy_3", 55, 49, true),
+    explosiveInfo("Rockets_Messy_4", 59, 51, true),
+    explosiveInfo("Rockets_Tubes_1", 36, 24, true),
+    explosiveInfo("Rockets_Tubes_2", 43, 28, true),
+    explosiveInfo("Rockets_Tubes_3", 43, 30, true),
+    explosiveInfo("Rockets_Tubes_4", 50, 33, true),
+    explosiveInfo("Rockets_Tubes_5", 40, 26, true),
+    explosiveInfo("Rockets_Tubes_6", 49, 26, true),
+    explosiveInfo("Rockets_Tubes_7", 37, 31, true),
+    explosiveInfo("Rockets_Tubes_8", 48, 30, true),
+];
+// The power grid (AS_assets/buildings/electric): a substation, with a line of pylons leading from it off the map. The pictures are on the
+// same canvas in all three states. Sizes are 0.36 of natural. A line of pylons is one picture, with a pylon at each end, so that a
+// chain of them end to end looks like one run: leftBase and rightBase are where the feet of those two pylons are in the picture, in px
+// (the chain steps from one to the next by the difference). The power plants and wind farms are cut out too, but nothing uses them yet.
+function electricInfo(name, width, height, kind) {
+    const file = (stage) => "electric/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
+}
+const substationInfo = [
+    electricInfo("Substation_A", 196, 146, "substation"),
+    electricInfo("Substation_B", 198, 159, "substation"),
+];
+const powerLineInfo = [
+    { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },
+    { info: electricInfo("Power_Line_HV", 122, 60, "line"), leftBase: [21, 59], rightBase: [104, 46] },
+];
+// What the Coast level is built of: the port buildings, the industrial ones, and the bigger mosques (one mosque to a layout,
+// whichever)
+const coastBuildingInfo = [
+    ...allPortBuildingInfo,
+    ...seaFacingNW,
+    ...seaFacingSW,
+    ...allIndustrialInfo,
+    ...largeMosqueInfo.map(info => ({ ...info, single: true, group: "mosque" })),
+];
 // The apartment blocks (AS_assets/buildings/blocks): four kinds, each intact, really damaged and destroyed.
 // Sizes are 0.4 of natural: they're meant to tower over the villas (0.28).
 function blockInfo(number, width, height, hide) {
@@ -96,7 +256,18 @@ const allBlockInfo = [
     blockInfo(2, 115, 122, { x: [19, 84], y: [20, 92] }),
     blockInfo(3, 136, 126, { x: [14, 113], y: [29, 84] }),
     blockInfo(4, 164, 130, { x: [27, 125], y: [28, 92] }),
+    // the newer pictures: 5-8 are the low two-storey ones (0.32 of natural), 9-12 the tall ones (0.36)
+    blockInfo(5, 116, 83, { x: [20, 86], y: [26, 50] }),
+    blockInfo(6, 115, 85, { x: [16, 74], y: [29, 57] }),
+    blockInfo(7, 103, 78, { x: [15, 78], y: [20, 55] }),
+    blockInfo(8, 124, 90, { x: [19, 96], y: [22, 57] }),
+    blockInfo(9, 111, 114, { x: [18, 78], y: [17, 85] }),
+    blockInfo(10, 110, 117, { x: [20, 80], y: [23, 90] }),
+    blockInfo(11, 123, 109, { x: [14, 96], y: [23, 75] }),
+    blockInfo(12, 146, 121, { x: [15, 115], y: [27, 82] }),
 ];
+// The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
+const smallBlockInfo = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.
 function resizedBuildingInfo(info, factor) {
@@ -197,7 +368,12 @@ class Building extends MapEntity {
     ];
     static debrisPerHit = 2;
     static debrisOnNewStage = 8; // when a hit takes it down a stage (undamaged to damaged, damaged to destroyed)
-    static debrisWhenGone = 18; // when it's brought down completely: a lot of pieces, three times what it used to be
+    static debrisWhenGone = 18;
+    // A blast that brings down a lot of buildings would throw hundreds of pieces and bog the game down, so the more buildings
+    // that have thrown debris in the last moment, the fewer each throws (half, then a third), and there is a limit to how many
+    // pieces there can be in all
+    static recentDebris = [];
+    static maxBits = 170; // when it's brought down completely: a lot of pieces, three times what it used to be
     static loudPieces = 4; // of which only this many make a noise landing
     static ownBitChance = 60; // percent of the pieces, for the buildings that have bits of their own
     // A bunker beneath it (see Bunker), if it has one
@@ -219,6 +395,72 @@ class Building extends MapEntity {
     canHideEnemies() {
         return !!this.info.hide;
     }
+    // A building with fuel in it (see BuildingInfo.flammable) goes on fire when it's damaged, with the little fire burning on it and its
+    // glow after dark, and when it's brought down (badly damaged) it detonates with a large explosion, which can take its neighbours with it
+    burning = false;
+    detonated = false;
+    fireCanvases = [];
+    fireLight;
+    static burnMs = { min: 5000, max: 9000 }; // how long it burns before the fuel goes up
+    igniteFire() {
+        if (this.burning || this.detonated)
+            return;
+        this.burning = true;
+        const spots = this.info.fireAt || [[0.5, 0.35]];
+        for (const spot of spots) { // a fire on each tank
+            const canvas = ElementCreator.returnNewCanvas(this.targetEl, "buildingFire", true);
+            canvas.style.left = this.info.width * spot[0] - 23 + "px";
+            canvas.style.top = this.info.height * spot[1] - 34 + "px";
+            canvas.style.transform = "none";
+            new DamageOverlay(canvas).playLoop(fire_1_imgs);
+            this.fireCanvases.push(canvas);
+        }
+        lightID++;
+        this.fireLight = { id: lightID, pos: { X: 0, Y: 0 }, opac: 1, size: ExplSizes.large, fading: false, parent: this.targetEl, burning: true };
+        fires.push(this.fireLight);
+        setTimeout(() => this.burnDown(), RandomNumberGen.randomNumBetween(Building.burnMs.min, Building.burnMs.max));
+    }
+    // Left to burn, the fuel goes up and brings it down
+    burnDown() {
+        if (this.detonated || this.removed || !this.targetEl.isConnected)
+            return;
+        this.damagePoints = Math.max(this.damagePoints, Building.hitPointsToDestroy);
+        this.damage = Damage.destroyed;
+        this.killOccupants(true);
+        this.reAssignSrc();
+        this.throwDebris(undefined, Building.debrisOnNewStage);
+        this.detonate();
+    }
+    detonate() {
+        if (this.detonated)
+            return;
+        this.detonated = true;
+        this.fireCanvases.forEach(c => c.remove());
+        if (this.fireLight) {
+            this.fireLight.burning = false;
+            this.fireLight.fadeStep = 0.5;
+        }
+        const centre = CollisionDetection.getXYfromPoint(this.targetEl);
+        SoundPlayer.playRandomSound(bigExplosions);
+        ExplosionHandler.basicExplosion(centre, ExplSizes.large, expl_small_imgs, weaponNames.mortar);
+    }
+    blockId; // which block of the coast's town it's in, if it's in one
+    // A jetty or a breakwater, out into the sea
+    isPier() {
+        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_");
+    }
+    // Among the town, not on the waterfront
+    isTown() {
+        return !this.info.waterfront && !this.info.electric;
+    }
+    // Part of the power grid (a substation, or a stretch of its lines)
+    isElectric() {
+        return !!this.info.electric;
+    }
+    // Brought down, or what's left of it is rubble: it doesn't do what it did
+    isWrecked() {
+        return this.removed || this.damage === Damage.destroyed;
+    }
     // A water tower and the like: nothing parks beside it
     isTall() {
         return !!this.info.noParking;
@@ -226,11 +468,25 @@ class Building extends MapEntity {
     // Wrecking the building takes everyone in it with it. A significant hit that only damages it
     // (see Building.hit) gives each of them an even chance of being killed, every time, so a few such
     // shots can clear a building out without bringing it down.
+    // A strike that takes someone out with the building gets a 'good hit' voice, one of the acknowledge sounds (not every
+    // building in a blast all at once, though)
+    static goodHitAt = 0;
+    static goodHitGap = 900; // ms
+    static goodHitDelay = 1300; // ms after the strike
     killOccupants(destroyed) {
+        let killed = 0;
         for (const enemy of this.occupants) {
             if (destroyed || RandomNumberGen.randomNumBetween(0, 1) === 1) {
+                const wasLive = !enemy.isFinished();
                 enemy.eliminate();
+                if (wasLive && enemy.isFinished())
+                    killed++;
             }
+        }
+        if (killed && performance.now() - Building.goodHitAt > Building.goodHitGap) {
+            Building.goodHitAt = performance.now();
+            // a moment later, so it comes after the noise of the explosion that did it instead of being lost in it
+            setTimeout(() => SoundPlayer.playRandomSound(acknowledge), Building.goodHitDelay);
         }
     }
     constructor(info) {
@@ -314,10 +570,18 @@ class Building extends MapEntity {
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);
+            if (this.info.flammable)
+                this.detonate();
             this.clearAway();
             return;
         }
         this.reAssignSrc();
+        if (this.info.flammable) {
+            if (this.damage === Damage.destroyed)
+                this.detonate();
+            else
+                this.igniteFire();
+        }
         if (this.damage === Damage.destroyed) {
             this.killOccupants(true);
         }
@@ -335,6 +599,8 @@ class Building extends MapEntity {
         this.damage = Damage.destroyed;
         this.killOccupants(true);
         this.throwDebris(undefined, Building.debrisWhenGone);
+        if (this.info.flammable)
+            this.detonate();
         this.clearAway();
     }
     isStanding() {
@@ -351,20 +617,30 @@ class Building extends MapEntity {
     // The pieces fly out from where the blast hit the building.
     throwDebris(collisionInfo, pieces = Building.debrisPerHit) {
         const origin = this.impactPoint(collisionInfo);
-        for (let i = 0; i < pieces; i++) {
-            this.throwDebrisPiece(origin, i < Building.loudPieces);
+        const flattened = pieces >= Building.debrisWhenGone;
+        const now = performance.now();
+        Building.recentDebris = Building.recentDebris.filter(t => now - t < 900);
+        Building.recentDebris.push(now);
+        const crowd = Building.recentDebris.length; // buildings throwing at once, this one included
+        const share = crowd <= 1 ? 1 : crowd <= 4 ? 0.5 : 0.33;
+        let room = Building.maxBits - document.querySelectorAll(".buildingDebris, .buildingChunk").length;
+        const count = Math.min(Math.max(1, Math.round(pieces * share)), Math.max(0, room));
+        for (let i = 0; i < count; i++) {
+            this.throwDebrisPiece(origin, crowd <= 1 ? i < Building.loudPieces : i < 1);
         }
-        if (pieces >= Building.debrisWhenGone) { // brought down completely: some big pieces as well, one of each of the generic ones
-            for (const source of Building.debrisSources) {
-                this.throwChunk(origin, source);
+        room -= count;
+        if (flattened) { // brought down completely: some big pieces as well, one of each of the generic ones (fewer in a crowd, and quietly)
+            const chunks = Building.debrisSources.slice(0, Math.min(room, crowd <= 1 ? 3 : crowd <= 4 ? 2 : 1));
+            for (const source of chunks) {
+                this.throwChunk(origin, source, crowd <= 1);
             }
         }
     }
-    throwChunk(origin, imageSrc) {
+    throwChunk(origin, imageSrc, loud = true) {
         const chunk = this.returnBit(imageSrc, "wheel", "wheelPic", origin);
         chunk.classList.add("buildingChunk");
         const direc = RandomNumberGen.randomNumBetween(0, 1) ? direction.forward : direction.backward;
-        ThrowHandler.lob(chunk, direc, crashes, ThrowHandler.removeIfLandedInWater);
+        ThrowHandler.lob(chunk, direc, loud ? crashes : null, ThrowHandler.removeIfLandedInWater);
     }
     throwDebrisPiece(origin, loud = true) {
         // a building with bits of its own throws them more often than not, and the generic ones the rest of the time
@@ -522,6 +798,103 @@ class Target extends MapEntity {
         }
     }
 }
+// A stack of ammunition or of rockets, standing about for the taking out. It has no damaged picture: anything that damages it at all sets
+// it on fire (the little fire burning on it, and its glow after dark), and anything more than light blows it up at once. Left burning,
+// the ammunition crackles off a few seconds later, and a few more seconds after that it goes up with a very small explosion; the rockets
+// say nothing, and go up with a large one. Either way the explosion can set off whatever is next to it.
+class ExplosiveTarget extends Target {
+    static fuseMs = { min: 3000, max: 5000 }; // the time it burns before each of its two stages
+    static crackles = 4; // gunfire noises in the ammunition's first stage
+    blast;
+    burning = false;
+    exploded = false;
+    fireLight;
+    constructor(info) {
+        super(explosiveTargetInfo);
+        this.blast = info ? info : RandomNumberGen.returnRandomFromArray(allExplosiveInfo);
+        this.targetEl.classList.add("explosive");
+        this.targetEl.classList.remove("smoothTransition");
+        this.targetEl.style.width = this.blast.width + "px";
+        this.targetEl.style.height = this.blast.height + "px";
+        this.picEl.style.width = "100%";
+        this.baseImgEl.src = assetsFolder + "buildings/" + this.blast.file;
+    }
+    action() { } // it stays put
+    // A drone's scan shows it up, in blue like a bunker, to say it's a target
+    heatSignatureBox() {
+        return this.exploded ? null : this.targetEl.getBoundingClientRect();
+    }
+    // Any of it that a blast reaches
+    hitBox() {
+        const rect = this.targetEl.getBoundingClientRect();
+        return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+    }
+    hit(severity, wepName, collisionInfo) {
+        if (this.exploded || wepName == weaponNames.flare || wepName == weaponNames.surveillance)
+            return;
+        if (wepName == weaponNames.sniper || severity <= strikeSeverity.light) {
+            this.catchFire();
+        }
+        else {
+            this.explode(true);
+        }
+    }
+    catchFire() {
+        if (this.burning)
+            return;
+        this.burning = true;
+        this.damage = Damage.damaged;
+        this.damageOverlay.playLoop(fire_1_imgs);
+        this.damageEl.classList.add('badDamaged');
+        lightID++;
+        this.fireLight = { id: lightID, pos: this.returnPosition(), opac: 1, size: ExplSizes.large, fading: false, parent: this.getTargetEl(), burning: true };
+        fires.push(this.fireLight);
+        const fuse = () => RandomNumberGen.randomNumBetween(ExplosiveTarget.fuseMs.min, ExplosiveTarget.fuseMs.max);
+        setTimeout(() => {
+            if (this.exploded || !this.targetEl.isConnected)
+                return;
+            if (!this.blast.rockets)
+                this.crackle(ExplosiveTarget.crackles);
+            setTimeout(() => this.explode(false), fuse());
+        }, fuse());
+    }
+    // The ammunition going off in the fire: a run of gunfire
+    crackle(left) {
+        if (this.exploded || !this.targetEl.isConnected || left <= 0)
+            return;
+        SoundPlayer.playRandomSound(gunSounds);
+        setTimeout(() => this.crackle(left - 1), RandomNumberGen.randomNumBetween(180, 520));
+    }
+    // struck: a blast did it, so it counts as a direct hit; otherwise it went up in the fire
+    explode(struck) {
+        if (this.exploded || !this.targetEl.isConnected)
+            return;
+        this.exploded = true;
+        if (this.fireLight) {
+            this.fireLight.burning = false;
+            this.fireLight.fadeStep = 0.5;
+        }
+        const centre = CollisionDetection.getXYfromPoint(this.targetEl);
+        const scoredFrom = struck ? this.status : Status.disabled; // (one that went up in the fire scores as a plain kill, not a "direct hit" popup)
+        this.targetDisabled();
+        this.targetDestroyed(this.status);
+        game.assessKillPoints(scoredFrom, this.damage, false, this);
+        ContentElHandler.removeFromContentEl(this.targetEl);
+        if (this.blast.rockets) {
+            SoundPlayer.playRandomSound(bigExplosions);
+            ExplosionHandler.basicExplosion(centre, ExplSizes.XL, expl_med_imgs, weaponNames.mortar, 0.85); // (a little larger than a large explosion: the next size up, drawn at 85%)
+        }
+        else {
+            SoundPlayer.playRandomSound(explosions);
+            ExplosionHandler.basicExplosion(centre, ExplSizes.tiny, expl_small_imgs, weaponNames.mortar);
+        }
+    }
+    dispose() {
+        this.exploded = true; // (cleared away with its stage: nothing more happens)
+        if (this.fireLight)
+            this.fireLight.burning = false;
+    }
+}
 // A tiny enemy hiding in a building, with no picture of its own yet -- just a small square, under
 // the building's picture. Nothing hits it directly; it's killed (see Building.hit) when the building
 // is damaged or destroyed. It counts as a target like any other.
@@ -541,7 +914,7 @@ class BuildingEnemy extends Target {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup for each one
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage);
+        game.assessKillPoints(priorStatus, this.damage, true, this); // (a hit on a building)
         this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
     }
@@ -796,7 +1169,7 @@ class HiddenTunnel extends Target {
         this.targetDisabled(); // so it scores as a plain kill, not a "direct hit" popup
         const priorStatus = this.status;
         this.targetDestroyed(priorStatus);
-        game.assessKillPoints(priorStatus, this.damage);
+        game.assessKillPoints(priorStatus, this.damage, false, this);
         this.targetEl.classList.remove('heatSig');
         this.pathEl.style.maskImage = "none"; // the flashes aren't confined to where a scan last was
         this.pathEl.style.webkitMaskImage = "none";
@@ -872,7 +1245,7 @@ class VehicleTarget extends Target {
     cold = false;
     // A vehicle that's up and running and could be driven off: not parked cold, not knocked out or burning
     isRunning() {
-        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed && !this.wrecked;
+        return !this.cold && this.status === Status.active && this.damage !== Damage.destroyed && !this.wrecked && !this.fallen;
     }
     // The special enemy making off in it, if there is one: this vehicle is then the special target, and glows its
     // colour on a scan. It's driven off to the right at the speed given (px every 100ms); if it gets off the screen
@@ -885,10 +1258,34 @@ class VehicleTarget extends Target {
         this.specialPortrait = portrait;
         this.targetEl.classList.add('special');
     }
+    // He doesn't take off at full speed: it builds up over the first second (ten ticks of the game loop) to the top speed given. Anything that
+    // changes its speed meanwhile (being hit) is carried on in what it builds up to.
+    static fleeRampTicks = 10;
+    fleeRamp;
     startFleeing(name, speed, portrait) {
         this.makeSpecial(name, portrait);
-        this.speed = speed;
+        const first = speed * 0.05;
+        this.fleeRamp = { top: speed, last: first, tick: 0, factor: 1 };
+        this.speed = first;
         SoundPlayer.playSequentialSound(revs);
+    }
+    stepFleeRamp() {
+        const ramp = this.fleeRamp;
+        if (!ramp)
+            return;
+        if (this.speed !== ramp.last) {
+            if (this.speed === 0) {
+                this.fleeRamp = undefined;
+                return;
+            } // stopped dead: nothing more to build up
+            ramp.factor *= this.speed / ramp.last;
+        }
+        ramp.tick++;
+        const next = ramp.top * ramp.factor * Math.min(1, ramp.tick / VehicleTarget.fleeRampTicks);
+        this.speed = next;
+        ramp.last = next;
+        if (ramp.tick >= VehicleTarget.fleeRampTicks)
+            this.fleeRamp = undefined;
     }
     specialDown() {
         if (!this.specialName)
@@ -897,6 +1294,8 @@ class VehicleTarget extends Target {
         this.specialName = undefined;
         this.targetEl.classList.remove('special');
         announceElimination(name, this.specialPortrait);
+        if (game.level)
+            game.level.specialDown(); // (another one in the stage is spooked)
     }
     targetDisabled() {
         super.targetDisabled();
@@ -908,9 +1307,10 @@ class VehicleTarget extends Target {
     }
     move(posX) {
         if (this.specialName && (posX > ContentElHandler.contentElWidth() || posX + this.targetEl.offsetWidth < 0)) {
+            const name = this.specialName, portrait = this.specialPortrait;
             this.status = Status.escaped;
             this.specialName = undefined;
-            game.failGame("You shouldn't have let that one get away!");
+            game.failGame(name + " got away!", portrait);
             return;
         }
         super.move(posX);
@@ -930,6 +1330,164 @@ class VehicleTarget extends Target {
     angle = 0;
     constructor(info) {
         super(info);
+    }
+    // Driving over a crater. How far down a vehicle is, and which way it is tilted, comes from where it is on the crater's
+    // profile and nothing else: not from timers or how long it has been there. So a slow one eases in and out as slowly as it is
+    // going, a fast one drops in quickly, and one that stops in a crater stays where it has got to. The profile of a crater, along
+    // the way a vehicle drives across it: a wall down at the edge of the picture, a flat bottom, and a wall up the other side.
+    // A bigger crater is deeper, and a small one is hardly more than a dent.
+    craterRolled = new WeakSet();
+    craterPosed = false;
+    // An airstrike's crater (the 4) gives a 15% chance of going over forward, anything bigger 30%, anything smaller none
+    // and a faster one is a little likelier to go over (about a twelfth more for every step of speed above 4)
+    static craterTumbleChance(size, speed) {
+        const base = size > ExplSizes.XL ? 30 : size >= ExplSizes.XL ? 15 : 0;
+        return base * Math.max(0.7, Math.min(1.4, 1 + (speed - 4) * 0.08));
+    }
+    // How deep the bottom is, as a share of the crater's half-height (its picture is the crater seen at a slant)
+    static craterDepthShare(size) {
+        return size <= ExplSizes.small ? 0.25 : size < ExplSizes.XL ? 0.4 : size <= ExplSizes.XL ? 0.5 : 0.55;
+    }
+    static craterWall = 0.35; // each wall's share of the way across
+    // How far down (px) the ground is at this x, along a line at this height (y): zero off the edge of the crater's picture
+    // How much of the crater's depth there is across a line at this height: none off the top or bottom of its picture, and the
+    // lower edge of the picture (the near rim, which is shadow and spoil more than hole) is left out, shaved off at 0.78 of the way
+    static craterLowerEdge = 0.78;
+    static craterRim(c, y) {
+        const across = (y - c.y) / c.ry;
+        const scaled = across > 0 ? across / VehicleTarget.craterLowerEdge : across;
+        return Math.abs(scaled) >= 1 ? 0 : Math.sqrt(1 - scaled * scaled);
+    }
+    // The depth (px) of the ground at this x along a line at this height (y): zero off the edge of the crater's picture
+    static craterDepthAt(c, x, y) {
+        const rim = VehicleTarget.craterRim(c, y);
+        if (rim <= 0)
+            return 0;
+        const half = c.rx * rim; // the picture's width along this line: narrower towards its top and bottom
+        const u = (x - (c.x - half)) / (2 * half); // 0 at its near edge, 1 at the far one
+        if (u <= 0 || u >= 1)
+            return 0;
+        const wall = VehicleTarget.craterWall;
+        const edge = u < wall ? u / wall : u > 1 - wall ? (1 - u) / wall : 1;
+        const smooth = edge * edge * (3 - 2 * edge); // eased, so the lip and the base are rounded off
+        return c.ry * VehicleTarget.craterDepthShare(c.size) * rim * smooth;
+    }
+    static visibleCraters() {
+        return ExplosionHandler.liveCraters();
+    }
+    static craterTotalDepth(x, y) {
+        let depth = 0;
+        for (const c of VehicleTarget.visibleCraters()) {
+            depth += VehicleTarget.craterDepthAt(c, x, y) * ExplosionHandler.strengthOf(c);
+        }
+        return depth;
+    }
+    pose(degrees, sink, seconds = 0.1) {
+        this.baseImgEl.style.transition = "transform " + seconds + "s linear"; // just smooths the steps between one move and the next
+        this.baseImgEl.style.transform = (sink ? "translateY(" + sink.toFixed(1) + "px) " : "") + "rotate(" + degrees.toFixed(1) + "deg)";
+    }
+    // A vehicle that has gone over: it carries on down the same profile, with what's left of its speed, while it flips onto its roof
+    tumbling;
+    // Fallen into a crater and on its roof: still a live target, still there to be hit and destroyed, but it goes no further, and
+    // it stays just where it came to rest, whatever happens to the crater after (when that fades away, say)
+    fallen = false;
+    stepTumble() {
+        const t = this.tumbling;
+        const size = this.picEl.getBoundingClientRect();
+        if (!size.width)
+            return;
+        t.age++;
+        // it slides on: slowed by the ground and sped by the slope when it's on a wall, and stops when it has run out of speed
+        const here = parseFloat(this.targetEl.style.left) || 0;
+        const foot = (parseFloat(this.targetEl.style.top) || 0) + size.height * 0.85;
+        const depth = (x) => VehicleTarget.craterDepthAt(t.crater, x, foot); // (its own crater, even if that has faded away since)
+        const frontNow = depth(here + size.width * 0.88);
+        const rearNow = depth(here + size.width * 0.12);
+        const slope = (frontNow - rearNow) / (size.width * 0.76);
+        t.vx = Math.max(0, t.vx * t.drag + slope * 0.9);
+        const left = here + t.vx;
+        this.targetEl.style.left = left + "px";
+        const front = depth(left + size.width * 0.88);
+        const rear = depth(left + size.width * 0.12);
+        const middle = depth(left + size.width / 2);
+        const pitch = Math.atan2(front - rear, size.width * 0.76) * 180 / Math.PI;
+        // the nose goes down as it would going in, and then it's over
+        if (t.age > 1 && t.flip < 180)
+            t.flip = Math.min(180, t.flip + t.rate);
+        const angle = t.flip > 0 ? t.flip + Math.max(-18, Math.min(18, pitch)) * (1 - t.flip / 180) : Math.max(-18, Math.min(18, pitch));
+        this.pose(angle, middle);
+        if (t.flip >= 180 && t.vx < t.stopAt) {
+            this.tumbling = undefined; // it has come to rest, on its roof, wherever it has got to: part way down the side or at the bottom
+        }
+    }
+    startTumble(crater) {
+        this.craterPosed = true;
+        this.fallen = true;
+        // where it ends up is as random as how it goes over: some just fall down the edge, some slide on at the bottom
+        const carried = Math.max(this.speed, 2) * (0.15 + Math.random() * 1.15);
+        this.tumbling = { vx: carried, flip: 0, rate: 30 + Math.random() * 35, age: 0, drag: 0.6 + Math.random() * 0.26, stopAt: 0.2 + Math.random() * 0.85, crater: crater };
+        this.lightDamage(); // smoking, but not out of it: it's still a live target
+        this.speed = 0;
+        SoundPlayer.playRandomSound(crashes);
+    }
+    craterEffects() {
+        if (this.tumbling) {
+            this.stepTumble();
+            return;
+        }
+        if (this.fallen)
+            return; // where it came to rest is where it stays
+        if (this instanceof WaterVehicleTarget || this.status !== Status.active || this.wrecked || this.cold) {
+            if (this.craterPosed && this.status === Status.active) {
+                this.craterPosed = false;
+                this.pose(0, 0);
+            }
+            return;
+        }
+        const size = this.picEl.getBoundingClientRect();
+        if (!size.width)
+            return;
+        // from where it has been put, which is where it is going: the picture is on its way there, with a transition
+        const left = parseFloat(this.targetEl.style.left) || 0;
+        const foot = (parseFloat(this.targetEl.style.top) || 0) + size.height * 0.85;
+        const frontX = left + size.width * 0.88, rearX = left + size.width * 0.12, middleX = left + size.width / 2;
+        const front = VehicleTarget.craterTotalDepth(frontX, foot);
+        const rear = VehicleTarget.craterTotalDepth(rearX, foot);
+        const middle = VehicleTarget.craterTotalDepth(middleX, foot);
+        if (front === 0 && rear === 0 && middle === 0) {
+            if (this.craterPosed) {
+                this.craterPosed = false;
+                this.pose(0, 0, 0.2);
+            }
+            return;
+        }
+        // once it has dipped in and is well on its way down the wall (the middle of it less than halfway to the bottom, a bit over a third) it may go over
+        if (front > 0) {
+            for (const c of VehicleTarget.visibleCraters()) {
+                if (this.craterRolled.has(c))
+                    continue;
+                if (ExplosionHandler.strengthOf(c) < 1)
+                    continue; // (not into one that is going)
+                const deepest = c.ry * VehicleTarget.craterDepthShare(c.size) * VehicleTarget.craterRim(c, foot);
+                if (deepest <= 0 || VehicleTarget.craterDepthAt(c, middleX, foot) < deepest * 0.4)
+                    continue;
+                this.craterRolled.add(c);
+                if (this.speed > 0 && RandomNumberGen.randomNumBetween(1, 100) <= VehicleTarget.craterTumbleChance(c.size, this.speed)) {
+                    this.startTumble(c);
+                    this.stepTumble();
+                    return;
+                }
+            }
+        }
+        // it sits on the ground at its two ends, so it is tilted by the difference between them over its length
+        const pitch = Math.atan2(front - rear, frontX - rearX) * 180 / Math.PI;
+        this.craterPosed = true;
+        this.pose(Math.max(-18, Math.min(18, pitch)), middle);
+    }
+    action() {
+        this.stepFleeRamp();
+        super.action();
+        this.craterEffects();
     }
     ricochetChance(num) {
         RandomNumberGen.randomNumBetween(1, 10) > num ? SoundPlayer.playRandomSound(ricochet) : "";
@@ -1038,19 +1596,19 @@ class VehicleTarget extends Target {
         if (severity == strikeSeverity.medium) {
             this.damage = Damage.moderateDamaged;
             this.badDamage(direc, collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return;
         }
         if (severity == strikeSeverity.heavy) {
             this.damage = Damage.heavyDamaged;
             this.badDamage(direc, collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return;
         }
         if (severity == strikeSeverity.catastrophic) {
             this.targetDestroyed(priorStatus);
             this.completeDestruction(collisionInfo);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             return;
         }
     }
@@ -1198,6 +1756,19 @@ class WaterVehicleTarget extends VehicleTarget {
             this.targetEl.classList.add('smallBoat');
             this.armour = smallBoatTarget.armour;
         }
+        this.targetEl.constrain = (x, y) => this.keepInWater(x, y); // however it's thrown, it stays in the sea
+    }
+    // Wherever a boat is pushed or thrown it's kept in the open water: along the shore it stops at the edge, and if there's no room at the height
+    // it was going to, it stays at the height it was
+    keepInWater(x, y) {
+        const width = this.targetEl.offsetWidth, height = this.targetEl.offsetHeight;
+        const span = Shoreline.waterSpan(y, y + height);
+        if (!span)
+            return { X: x, Y: y };
+        const low = Math.max(span.left + WaterVehicleTarget.shoreMargin, 0), high = span.openRight - WaterVehicleTarget.shoreMargin - width;
+        if (high < low)
+            return { X: parseFloat(this.targetEl.style.left) || x, Y: parseFloat(this.targetEl.style.top) || y };
+        return { X: Math.min(Math.max(x, low), high), Y: y };
     }
     // Where the wreckage flies out from if it blows up: the point on the hull the blast struck,
     // remembered from when the boat was hit.
@@ -1213,12 +1784,31 @@ class WaterVehicleTarget extends VehicleTarget {
     runToShore(special, speed, onFail) {
         this.shoreRun = { special: special, speed: speed, onFail: onFail };
     }
+    // At the shore he boards, and the boat sits there for two seconds (twenty ticks) before it turns and makes for the open sea
+    static shoreWaitTicks = 20;
+    leaving;
     action() {
+        if (this.leaving) {
+            this.waitAtShore();
+            return;
+        }
         if (this.shoreRun) {
             this.shoreStep();
             return;
         }
         super.action();
+    }
+    waitAtShore() {
+        const wait = this.leaving;
+        if (!this.isRunning()) { // put out of action at the quay: it's him that's been taken out, as it's his boat now
+            this.leaving = undefined;
+            return;
+        }
+        if (--wait.ticks > 0)
+            return;
+        this.leaving = undefined;
+        this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
+        this.startFleeing(wait.special.name, -wait.speed, wait.special.portrait);
     }
     shoreStep() {
         const run = this.shoreRun;
@@ -1234,12 +1824,12 @@ class WaterVehicleTarget extends VehicleTarget {
         const landing = span ? span.openRight + (span.shoreRight - span.openRight) * 0.5 : window.innerWidth;
         if (left + this.targetEl.offsetWidth >= landing) {
             this.shoreRun = undefined;
-            this.baseImgEl.style.transform = "scaleX(-1)"; // turns about
             run.special.board();
-            this.startFleeing(run.special.name, -run.speed, run.special.portrait);
+            this.makeSpecial(run.special.name, run.special.portrait); // (it's his boat from the moment he's aboard)
+            this.leaving = { special: run.special, speed: run.speed, ticks: WaterVehicleTarget.shoreWaitTicks };
             return;
         }
-        this.targetEl.style.left = left + run.speed * 0.6 + "px";
+        this.targetEl.style.left = left + run.speed * 0.9 + "px"; // (on its way to the coast it's not far off as quick as it will be)
     }
     static hullBits = [bitPath("boat_1"), bitPath("boat_2")];
     destructionBits() {
@@ -1272,6 +1862,12 @@ class WaterVehicleTarget extends VehicleTarget {
             return; // already burning and on its way down
         this.sinkScheduled = true;
         this.strikePoint = this.impactPoint(collisionInfo, this.hitBox());
+        // A small boat is sometimes thrown over like a car, by a blast that's more than a small one (the first two missiles' don't), and then burns and goes
+        // down like any other, over the way it landed
+        if (this.targetEl.classList.contains('smallBoat') && direc && collisionInfo && collisionInfo.radius > WaterVehicleTarget.flipMinRadius
+            && RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.flipChance) {
+            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.dipUpsideDown(), false); // (no sliding on once it's landed)
+        }
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);
         }
@@ -1287,12 +1883,12 @@ class WaterVehicleTarget extends VehicleTarget {
             // counts now, not when the sinking has finished playing out.
             let priorStatus = this.status;
             this.targetDestroyed(priorStatus);
-            game.assessKillPoints(priorStatus, this.damage);
+            game.assessKillPoints(priorStatus, this.damage, false, this);
             if (RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.explodeChance) {
                 this.completeDestruction(); // the same wreck and fireball as a direct hit
             }
             else {
-                tilt === 0 ? this.sink() : this.tiltingSink(tilt);
+                tilt === 0 ? this.sink(this.angle) : this.tiltingSink(tilt);
             }
         }, fireDuration);
     }
@@ -1334,6 +1930,21 @@ class WaterVehicleTarget extends VehicleTarget {
     // the water rather than swinging about the middle of the boat; the window has room above and
     // to the sides so the end that lifts isn't cropped.
     sinkMask; // there once the sinking has started
+    sinkGroup;
+    // A boat that's been thrown over lies upside down in the water: the waterline (the edge of the sink mask) is already a way up it, so it's dipped
+    // in, and goes on burning like that until it goes down
+    static dipShare = 0.3;
+    dipUpsideDown() {
+        if (!this.targetEl.isConnected || this.sinkMask || this.damage === Damage.destroyed || !this.angle)
+            return;
+        const { group } = this.createSinkMask();
+        group.style.transformOrigin = "50% 50%"; // (turned over about its middle: from the waterline at the foot of the hull it would swing right out of the mask, and vanish)
+        group.style.transform = `rotate(${this.angle}deg)`;
+        void group.offsetHeight;
+        group.style.transition = "transform 0.6s ease-out";
+        group.style.transform = `translateY(${group.offsetHeight * WaterVehicleTarget.dipShare}px) rotate(${this.angle}deg)`;
+        this.damageEl.style.transform = `rotate(${-this.angle}deg)`; // (the flames still go up)
+    }
     createSinkMask() {
         const targetRect = this.targetEl.getBoundingClientRect();
         const picRect = this.picEl.getBoundingClientRect();
@@ -1359,6 +1970,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.damageEl.style.left = (damageRect.left - picRect.left) + "px"; // damageEl was centered over picEl via flex layout -- pin that same spot explicitly now it's absolutely positioned inside the group
         this.damageEl.style.top = (damageRect.top - picRect.top) + "px";
         void group.offsetHeight; // lay it out now, so the transform changes that follow animate instead of jumping
+        this.sinkGroup = group;
         return { mask, group };
     }
     // Undoes createSinkMask: the picture and fire go back to where they were, and the window goes.
@@ -1375,12 +1987,33 @@ class WaterVehicleTarget extends VehicleTarget {
         this.sinkMask.remove();
         this.sinkMask = null;
     }
-    sink() {
-        let { mask, group } = this.createSinkMask();
+    static flipChance = 35; // percent of the hits that could throw a small boat over that do
+    static flipMinRadius = 50; // only from a blast with a radius bigger than this: not the light missile or the missile
+    // A sinking boat makes ripples on the water under it: one as it starts to go, and more as it goes down
+    splashUnder(duration) {
+        const ripple = () => {
+            if (!this.targetEl.isConnected)
+                return;
+            const r = this.picEl.getBoundingClientRect();
+            const width = r.width * 0.9;
+            const at = { X: r.left + r.width / 2 + RandomNumberGen.randomNumBetween(-width / 3, width / 3), Y: r.bottom - r.height * 0.2 };
+            ExplosionHandler.createSplash(at, Math.max(40, width * 0.7));
+        };
+        ripple();
+        setTimeout(ripple, duration * 0.35);
+        setTimeout(ripple, duration * 0.65);
+    }
+    sink(turned = 0) {
+        let { mask, group } = this.sinkMask ? { mask: this.sinkMask, group: this.sinkGroup } : this.createSinkMask(); // (one that's upside down is already in its mask)
         let sinkDistance = mask.getBoundingClientRect().height * 1.2; // overshoot a bit so it's fully clear of the window
         this.stopFireLight(WaterVehicleTarget.sinkDuration); // the fire goes down with the boat
+        if (turned && !group.style.transform) { // (it goes down as it landed, over, not the right way up; one that was dipped in already is)
+            group.style.transform = `rotate(${turned}deg)`;
+            void group.offsetHeight;
+        }
         group.style.transition = `transform ${WaterVehicleTarget.sinkDuration / 1000}s ease-in`;
-        group.style.transform = `translateY(${sinkDistance}px)`;
+        group.style.transform = `translateY(${sinkDistance}px)` + (turned ? ` rotate(${turned}deg)` : "");
+        this.splashUnder(WaterVehicleTarget.sinkDuration);
         setTimeout(() => this.finishSinking(), WaterVehicleTarget.sinkDuration);
     }
     // tilt is 1 to go down by the bow (the right-hand end), -1 for the stern
@@ -1391,6 +2024,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.stopFireLight(WaterVehicleTarget.tiltSinkDuration);
         group.style.transition = `transform ${WaterVehicleTarget.tiltPause / 1000}s ease-in-out`;
         group.style.transform = `rotate(${tiltAngle}deg)`;
+        this.splashUnder(WaterVehicleTarget.tiltSinkDuration);
         setTimeout(() => {
             let submergeDuration = (WaterVehicleTarget.tiltSinkDuration - WaterVehicleTarget.tiltPause) / 1000;
             group.style.transition = `transform ${submergeDuration}s ease-in`;
@@ -1406,7 +2040,53 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     // Anywhere in open water: the whole boat has to fit between the left of the water and the
     // start of the faded shallows at the shore (see Shoreline), not just its top-left corner.
-    decidePosition() {
+    // Where a number of boats go, together: each at its own height on the screen, no two within 12px of each other (one that
+    // would be is moved up to be 12 clear), and drawn so the lower ones are in front of the ones higher up. They're put
+    // into the content lowest first, which is what puts the later (higher) ones behind.
+    static arrange(boats) {
+        const minY = Math.ceil(window.innerHeight * 0.1);
+        const heights = boats.map(boat => boat.getTargetEl().getBoundingClientRect().height);
+        // a height where there's room in the water for the boat (near the top of a sliced coast there's hardly any sea)
+        const ys = boats.map((boat, i) => {
+            const maxY = Math.max(minY, Math.floor(window.innerHeight * 0.9 - heights[i]));
+            const width = boat.getTargetEl().getBoundingClientRect().width;
+            let y = RandomNumberGen.randomNumBetween(minY, maxY);
+            for (let attempt = 0; attempt < 40; attempt++) {
+                const span = Shoreline.waterSpan(y, y + heights[i]);
+                if (!span || span.openRight - WaterVehicleTarget.shoreMargin - width >= Math.max(span.left, 0) + WaterVehicleTarget.shoreMargin)
+                    break;
+                y = RandomNumberGen.randomNumBetween(minY, maxY);
+            }
+            return y;
+        });
+        const order = boats.map((_, i) => i).sort((p, q) => (ys[q] + heights[q]) - (ys[p] + heights[p])); // lowest first
+        const spots = boats.map(() => null);
+        let previous = Infinity;
+        const content = ContentElHandler.returnContentEl();
+        for (const i of order) {
+            let y = ys[i];
+            if (previous - y < 12)
+                y = previous - 12; // too close to the one below it: a clear 12 above it
+            y = Math.max(y, minY);
+            previous = y;
+            const span = Shoreline.waterSpan(y, y + heights[i]);
+            if (!span) {
+                spots[i] = { X: 0, Y: y };
+                continue;
+            }
+            const size = boats[i].getTargetEl().getBoundingClientRect();
+            const lowX = Math.ceil(Math.max(span.left + WaterVehicleTarget.shoreMargin, 0));
+            const highX = Math.floor(Math.min(span.openRight - WaterVehicleTarget.shoreMargin - size.width, window.innerWidth - size.width));
+            spots[i] = { X: highX >= lowX ? RandomNumberGen.randomNumBetween(lowX, highX) : lowX, Y: y };
+            content.prepend(boats[i].getTargetEl()); // lowest first, so the higher ones end up behind
+        }
+        return spots;
+    }
+    decidePosition(pos) {
+        if (pos) {
+            this.placeAt(pos.X, pos.Y);
+            return;
+        }
         const size = this.targetEl.getBoundingClientRect();
         const minY = Math.ceil(window.innerHeight * 0.1);
         const maxY = Math.floor(window.innerHeight * 0.9 - size.height);
@@ -1587,9 +2267,22 @@ class SpecialNames {
 // A headshot (one of the 14 in AS_assets/portraits) for each special enemy, with a red ELIMINATED stamp over it when he's been dealt with
 class SpecialPortraits {
     static count = 14;
-    static random() {
-        const n = RandomNumberGen.randomNumBetween(1, SpecialPortraits.count);
+    static path(n) {
         return assetsFolder + "portraits/Portrait_" + (n < 10 ? "0" : "") + n + ".png";
+    }
+    static random() {
+        return SpecialPortraits.path(RandomNumberGen.randomNumBetween(1, SpecialPortraits.count));
+    }
+    // All of them, in a random order
+    static shuffled() {
+        const all = [];
+        for (let n = 1; n <= SpecialPortraits.count; n++)
+            all.push(SpecialPortraits.path(n));
+        for (let i = all.length - 1; i > 0; i--) {
+            const j = RandomNumberGen.randomNumBetween(0, i);
+            [all[i], all[j]] = [all[j], all[i]];
+        }
+        return all;
     }
 }
 function announceElimination(name, portrait) {
@@ -1600,13 +2293,25 @@ function announceElimination(name, portrait) {
         : text;
     PopupHandler.addToArray(html, '<span class="eliminatedTitle">Target eliminated</span>', msgLength.long);
 }
+class SpecialRoster {
+    static make(count) {
+        const names = new Set();
+        while (names.size < count)
+            names.add(SpecialNames.random());
+        const faces = SpecialPortraits.shuffled();
+        return Array.from(names).map((name, i) => ({ name: name, portrait: faces[i % faces.length] }));
+    }
+}
 class SpecialEnemy extends BuildingEnemy {
-    name = SpecialNames.random();
-    portrait = SpecialPortraits.random();
+    name;
+    portrait;
     boarded = false; // he's got into a vehicle: that's the target now
+    called = false; // he's called for a boat, which is on its way
     bunker;
-    constructor() {
+    constructor(name, portrait) {
         super();
+        this.name = name || SpecialNames.random();
+        this.portrait = portrait || SpecialPortraits.random();
         this.targetEl.classList.add('special');
     }
     isFinished() {
@@ -1620,6 +2325,8 @@ class SpecialEnemy extends BuildingEnemy {
             return;
         super.eliminate();
         announceElimination(this.name, this.portrait);
+        if (game.level)
+            game.level.specialDown(); // (another one in the stage is spooked)
     }
     // Down in a bunker, so he's only to be seen where a scan has found him
     goUnderground() {

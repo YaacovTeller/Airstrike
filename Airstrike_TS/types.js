@@ -1,4 +1,3 @@
-"use strict";
 var RainTypes;
 (function (RainTypes) {
     RainTypes["none"] = "none";
@@ -114,6 +113,12 @@ const modTarget = {
 };
 // Enemies hiding in a building: they don't move, and only the building's fate can touch them
 const buildingEnemyTarget = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+};
+// A stack of ammunition or rockets: it stays where it is
+const explosiveTargetInfo = {
     minSpeed: 0,
     maxSpeed: 0,
     armour: Armour.none,
@@ -236,7 +241,10 @@ const sceneNormal = {
     ...normal,
     enemyFactor: 1,
     parMs: 120000,
-    fleeSpeed: 2,
+    fleeSpeed: 3,
+    boatFleeSpeed: 3,
+    fleeDelay: { min: 8000, max: 15000 },
+    spookDelay: { min: 3500, max: 7000 },
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 };
@@ -244,7 +252,10 @@ const sceneHard = {
     ...hard,
     enemyFactor: 1.4,
     parMs: 105000,
-    fleeSpeed: 3.5,
+    fleeSpeed: 5.5,
+    boatFleeSpeed: 5,
+    fleeDelay: { min: 6000, max: 11000 },
+    spookDelay: { min: 2500, max: 5000 },
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 };
@@ -253,7 +264,10 @@ const sceneChaos = {
     enemyFactor: 2,
     parMs: 90000,
     extraTunnels: 1,
-    fleeSpeed: 5,
+    fleeSpeed: 8,
+    boatFleeSpeed: 7,
+    fleeDelay: { min: 4000, max: 8000 },
+    spookDelay: { min: 1500, max: 3000 },
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 };
@@ -380,13 +394,13 @@ const nukeInfo = {
 // along a band around the mouse, carpeting it with airstrike-sized explosions.
 const carpetBombInfo = {
     name: weaponNames.carpet_bomb,
-    slot: 11, // the - key
+    slot: 11,
     displayName: "Carpet Strike",
     class: CarpetBombing,
     cursor: "cursor4",
-    blastRadius: 150, // half the height of the band it covers
+    blastRadius: 150,
     explosionInfo: {
-        size: ExplSizes.XL, // same as the airstrike
+        size: ExplSizes.XL,
         frames: expl_med_imgs,
         sound: [],
         length: 1000,
@@ -398,7 +412,7 @@ const carpetBombInfo = {
     noAmmo: bleep_neg,
     select: [redeemerpickup],
     flyover: {
-        imageSource: assetsSVGFolder + 'f16.svg', // the same shadow, but three of them and slower than the airstrike's
+        imageSource: assetsSVGFolder + 'f16.svg',
         speed: 10,
         duration: 2000,
         delay: 2000
@@ -406,7 +420,7 @@ const carpetBombInfo = {
 };
 const chargeInfo = {
     name: weaponNames.tunnel_Charge,
-    shotCost: 0, // one to a tunnel: never held against you
+    shotCost: 0,
     class: ChargeWeaponType,
     cursor: "cursor4",
     imageSource: assetsSVGFolder + 'dynamite.svg',
@@ -443,7 +457,7 @@ const droneInfo = {
 };
 const chopperInfo = {
     name: weaponNames.chopper,
-    slot: 10, // the 0 key
+    slot: 10,
     class: Chopper,
     cursor: "cursor4",
     blastRadius: 20,
@@ -470,12 +484,12 @@ const chopperInfo = {
 // A utility weapon: a slow pass of a drone that shows up what's hiding in buildings under the mouse
 const surveillanceInfo = {
     name: weaponNames.surveillance,
-    slot: 8, // on key 8, so the three superweapons (9, 0 and -) are together
+    slot: 8,
     displayName: "Surveillance Drone",
     pickupMessage: "A surveillance drone has been flown out to scan for active targets.",
     class: SurveillanceDrone,
     cursor: "cursor4",
-    blastRadius: 110, // how far around the mouse it can pick up a heat signature
+    blastRadius: 110,
     explosionInfo: {
         size: ExplSizes.tiny,
         frames: [],
@@ -490,8 +504,8 @@ const surveillanceInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 2, // vw per 100ms, so a pass of 6s crosses the screen with a bit to spare
-        duration: 6000, // how long the scan lasts too
+        speed: 2,
+        duration: 9000,
         delay: 1000 // a second to arrive
     }
 };
@@ -560,37 +574,47 @@ const scaledAirstrikeInfo = {
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 };
 // A bigger airstrike, in the given slot, whose explosion is this size (and so its circle is half of that)
-function scaledBigStrike(slot, displayName, icon, size) {
+function scaledBigStrike(slot, displayName, icon, size, bomb = false) {
     return {
         ...airstrikeInfo,
         ...jetPlaceholder,
         slot: slot,
-        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
-        bigBomb: slot >= 6,
+        shotCost: bomb ? 1.25 : 0.75,
+        bigBomb: bomb,
         displayName: displayName,
         imageSource: assetsSVGFolder + icon,
         blastRadius: size / 2,
         explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
     };
 }
-// Slot 5 of the Coast set. It goes through the ground, with a thud, and a second later goes off far below: no
+// Slot 7 of the Coast set, in the second group of the HUD with the drone. It goes through the ground, with a thud, and a second later goes off far below: no
 // explosion at the surface, but a shake as big as the largest bomb's, and the building it's over comes down
 // with the bunker beneath it.
 const bunkerBusterInfo = {
-    ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    ...scaledBigStrike(7, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    utility: true,
     class: BunkerBusterWeaponType,
-    blastRadius: 12, // just a marker: it's the point it lands on that counts
+    // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point: the stealth bomber
+    flyover: {
+        imageSource: assetsSVGFolder + 'Stealth Bomber 2.png',
+        speed: 6.5,
+        duration: 2800,
+        delay: 1200
+    },
+    blastRadius: 12,
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };
+// The whole set a little smaller than its sizes say (the bunker buster's isn't an area, so it's left as it is)
+const coastWeaponScale = 0.85;
 const scaledWeapons = [
     scaledMortarInfo,
     scaledHowitzerInfo,
     scaledAirstrikeInfo,
-    scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL), // as big as the standard airstrike
+    scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),
+    scaledBigStrike(5, "Bomb", 'Bomb_1.png', ExplSizes.massive, true),
+    scaledBigStrike(6, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal, true),
     bunkerBusterInfo,
-    scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
-    scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
-];
+].map(info => info === bunkerBusterInfo ? info : { ...info, scale: coastWeaponScale, blastRadius: Math.round(info.blastRadius * coastWeaponScale) });
 var msgLength;
 (function (msgLength) {
     msgLength[msgLength["long"] = 3000] = "long";

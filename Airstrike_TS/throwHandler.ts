@@ -1,7 +1,7 @@
 ﻿class ThrowHandler {
-    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number, onLanded?: (landedElem: HTMLElement) => void): number { // ODD? HACKY?
+    public static flip(elem: HTMLElement, direc: direction, impactSounds: Sound[], parentElem?: HTMLElement, angle?: number, onLanded?: (landedElem: HTMLElement) => void, slide: boolean = true): number { // ODD? HACKY?
         let thrownElem = parentElem ? parentElem : elem;
-        this.throwArc(thrownElem, direc, onLanded); // ARC
+        this.throwArc(thrownElem, direc, onLanded, slide); // ARC
         let deg = this.rotate(elem, direc, angle);   // ROTATION
         if (impactSounds && impactSounds.length) {
             this.crashSound(impactSounds);
@@ -77,6 +77,20 @@
         return direc
     }
 
+    // Where a thrown thing is put: an element can have a constrain function (a boat keeps to the water) that says where it can really go
+    private static put(elem: HTMLElement, x: number, y: number) {
+        const keep = (elem as any).constrain as (x: number, y: number) => position;
+        if (keep) {
+            const kept = keep(x, y);
+            x = kept.X;
+            y = kept.Y;
+        }
+        elem.style.left = x + "px";
+        elem.style.top = y + "px";
+    }
+
+    // Pushed away from the blast, in 200 ms. How far: the bigger the blast the further, up to a limit, and the nearer the middle the further.
+    // (It used to be worked out so that anything with a blast radius over about 166 -- the nuke's -- went the wrong way, towards it.)
     public static moveAtAngle(vectorMove: vectorMoveObj) {
         let elem = vectorMove.elem;
         let angle = vectorMove.angle;
@@ -87,19 +101,20 @@
 
         var angleRad = angle * (Math.PI / 180);
 
-        var deltaX = Math.cos(angleRad) * 1;
-        var deltaY = Math.sin(angleRad) * 1;
+        var deltaX = Math.cos(angleRad);
+        var deltaY = Math.sin(angleRad);
+
+        const r = Math.max(1, Math.min(radius, 120));
+        const reach = Math.min(160, 200 * r / (500 - 3 * r));
+        const total = reach * Math.max(0.4, 1.25 - 0.5 * dist / Math.max(1, radius));
 
         var start = null;
         function step(timestamp) {
             if (!start)
                 start = timestamp;
-            var progress = timestamp - start;
+            var progress = Math.min(timestamp - start, 200);
 
-            var mult = (500 / radius) - 3; // MESSY?
-            //            console.log("radius: " + radius + " - mult: " + mult)
-            elem.style.left = (currentLeft + progress / mult * deltaX) + "px";
-            elem.style.top = (currentTop + progress / mult * deltaY) + "px";
+            ThrowHandler.put(elem, currentLeft + deltaX * total * progress / 200, currentTop + deltaY * total * progress / 200);
 
             if (progress < 200) {
                 requestAnimationFrame(step);
@@ -107,7 +122,7 @@
         }
         requestAnimationFrame(step);
     }
-    private static throwArc(elem: HTMLElement, direc: direction, onLanded?: (landedElem: HTMLElement) => void) { // Handles the arc travelled NOT rotation, see CSS
+    private static throwArc(elem: HTMLElement, direc: direction, onLanded?: (landedElem: HTMLElement) => void, slide: boolean = true) { // Handles the arc travelled NOT rotation, see CSS
         var currentLeft = parseInt(elem.style.left) || 0;
         var currentTop = parseInt(elem.style.top) || 0;
 
@@ -132,10 +147,9 @@
                 }
                 y = currentTop - Math.sin(a) * height;
 
-                elem.style.left = x + "px";
-                elem.style.top = y + "px";
+                ThrowHandler.put(elem, x, y);
             }
-            else {
+            else if (slide) { // (once it's come down a car slides on a little; a boat, which has nothing to slide on, doesn't)
                 let left = parseInt(elem.style.left);
                 if (direc == direction.forward) {
                     x = left + 2;
@@ -143,7 +157,7 @@
                 else if (direc == direction.backward) {
                     x = left - 2;
                 }
-                elem.style.left = x + "px";
+                ThrowHandler.put(elem, x, parseFloat(elem.style.top) || 0);
             }
             if (progress < maxProgress) {
                 requestAnimationFrame(step);

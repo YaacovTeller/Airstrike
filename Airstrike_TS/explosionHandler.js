@@ -1,4 +1,3 @@
-"use strict";
 var screenShakeTimeouts;
 (function (screenShakeTimeouts) {
     screenShakeTimeouts[screenShakeTimeouts["shake_1"] = 200] = "shake_1";
@@ -11,11 +10,12 @@ const splashPicture = { width: 501, height: 309, originalWidth: 351, originalHei
 var lights = [];
 var flares = [];
 var fires = [];
+var glows = []; // the lights of the buildings after dark, which go out when the power does
 const flareFade = 15000;
 const flareReach = 550;
 const strikeLightReachFactor = 4; // a strike lights up this many times its own size
 class ExplosionHandler {
-    static craterDecalStay = 15000;
+    static craterDecalStay = 20000;
     static craterFadingTillRemoval = fadeAnimTime;
     static craterSources = ["crater_1.png", "crater_2.png", "crater_3.png"];
     static createFlare(blastCenter, size) {
@@ -33,9 +33,22 @@ class ExplosionHandler {
     static bigShake() {
         this.shake(screenShakeTimeouts.shake_3);
     }
-    static basicExplosion(blastCenter, size, explFrames, weaponName) {
+    // How much bigger or smaller than its size says an explosion is drawn and reaches (a weapon can be scaled: see ExplosiveWeaponInfo.scale). The size
+    // still decides what sort of explosion it is: which pictures, how hard it shakes the screen, how deep a crater it's counted as.
+    static drawScale = 1;
+    static basicExplosion(blastCenter, size, explFrames, weaponName, scale = 1) {
+        this.drawScale = scale;
+        try {
+            this.explode(blastCenter, size, explFrames, weaponName);
+        }
+        finally {
+            this.drawScale = 1;
+        }
+    }
+    static explode(blastCenter, size, explFrames, weaponName) {
         if (game.level)
             game.level.noteExplosion(); // the first one starts the clock on a special enemy's escape
+        game.lastStrike = blastCenter;
         let water = document.getElementById("water");
         if (water) {
             if (CollisionDetection.checkCollisionFromPosition(blastCenter, water)) {
@@ -63,8 +76,8 @@ class ExplosionHandler {
     }
     // Small splash for a piece of thrown debris (wheel/bit/etc) landing in water -- see
     // ThrowHandler.removeIfLandedInWater.
-    static createSplash(position) {
-        let splash = this.setAndReturnExplosion(position, ExplSizes.XXS, HitSurface.water);
+    static createSplash(position, size = ExplSizes.XXS) {
+        let splash = this.setAndReturnExplosion(position, size, HitSurface.water);
         this.presentAndFadeout(splash, 2000, 100);
     }
     static landHit(blastCenter, size, explFrames, weaponName) {
@@ -75,7 +88,7 @@ class ExplosionHandler {
     }
     static shake_Light_Targets(blastCenter, size, weaponName) {
         this.setScreenShake(size);
-        this.pushLight(lights, blastCenter, size, size * strikeLightReachFactor);
+        this.pushLight(lights, blastCenter, size, size * strikeLightReachFactor * this.drawScale);
         this.checkForTargets(blastCenter, size, weaponName);
     }
     static setScreenShake(size) {
@@ -140,11 +153,11 @@ class ExplosionHandler {
             if (dist < minDist)
                 directHit = true;
         };
-        this.forEachBlastCollision(blastCenter, size / 2, flagIfDirect, flagIfDirect);
+        this.forEachBlastCollision(blastCenter, size / 2 * this.drawScale, flagIfDirect, flagIfDirect);
         return directHit;
     }
     static checkForTargets(blastCenter, size, weaponName) {
-        this.forEachBlastCollision(blastCenter, size / 2, (target, collisionInfo) => this.targetStrike(target, weaponName, collisionInfo), (item, collisionInfo) => this.itemStrike(item, collisionInfo));
+        this.forEachBlastCollision(blastCenter, size / 2 * this.drawScale, (target, collisionInfo) => this.targetStrike(target, weaponName, collisionInfo), (item, collisionInfo) => this.itemStrike(item, collisionInfo));
     }
     static itemStrike(item, collisionInfo) {
         let direc = ThrowHandler.determineDirectionForFlip(collisionInfo);
@@ -229,6 +242,8 @@ class ExplosionHandler {
             explosionImgs = splash_imgs;
         }
         const player = new CanvasGifPlayer(explosion, size);
+        const classSize = size;
+        size = size * this.drawScale; // (from here on it's how big it's drawn)
         let width = size, height = size;
         let left = blastCenter.X - (size / 2);
         if (surface == HitSurface.water) {
@@ -244,13 +259,52 @@ class ExplosionHandler {
         this.setSizeAndPos(explosion, width, height, left, blastCenter.Y - (size * 0.9));
         return explosion;
     }
+    // Every crater there is, with where it is, how big it is and how old: what vehicles driving over it feel (see
+    // VehicleTarget.craterEffects) and what the rain fills
+    static craters = [];
+    // How much of its effect a crater still has on what drives over it: all of it while its picture is there, and once that starts to
+    // fade it goes the same way, over a few seconds, instead of all at once (which would drop a vehicle sitting in it back up with a hop)
+    static fadeOutMs = 4000;
+    static strengthOf(c) {
+        if (c.el.isConnected && !c.el.classList.contains("hide"))
+            return 1;
+        if (c.fadeStart === undefined)
+            c.fadeStart = performance.now();
+        return Math.max(0, 1 - (performance.now() - c.fadeStart) / this.fadeOutMs);
+    }
+    static liveCraters() {
+        this.craters = this.craters.filter(c => this.strengthOf(c) > 0);
+        return this.craters;
+    }
+    // After a few seconds of hard rain the craters that have had time to settle fade into the picture of one full of water
+    static fillCratersWithRain() {
+        const now = performance.now();
+        for (const crater of this.liveCraters()) {
+            if (crater.wet || !crater.el.isConnected || now - crater.born < 1500)
+                continue;
+            crater.wet = true;
+            const water = document.createElement("img");
+            water.className = crater.el.className;
+            water.style.cssText = crater.el.style.cssText;
+            water.style.opacity = "0";
+            water.style.transition = "opacity 3s ease-in";
+            water.src = assetsFolder + "crater_rain.png";
+            crater.el.parentElement.appendChild(water);
+            requestAnimationFrame(() => requestAnimationFrame(() => water.style.opacity = crater.el.style.opacity || "1"));
+            setTimeout(() => {
+                crater.el.src = assetsFolder + "crater_rain.png";
+                water.remove();
+            }, 3100);
+        }
+    }
     static setAndReturnCrater(blastCenter, size) {
         let craterSrc = assetsFolder + RandomNumberGen.returnRandomFromArray(this.craterSources);
         let crater = ElementCreator.returnNewImageEl(ContentElHandler.returnContentEl(), "crater", craterSrc);
         crater.id = "crater";
-        let width = size / 1.5;
-        let height = size / 3;
+        let width = size * this.drawScale / 1.5;
+        let height = size * this.drawScale / 3;
         this.setSizeAndPos(crater, width, height, blastCenter.X - width / 2, blastCenter.Y - height / 2);
+        this.craters.push({ el: crater, x: blastCenter.X, y: blastCenter.Y, rx: width / 2, ry: height / 2, size: size, born: performance.now(), wet: false });
         return crater;
     }
     static setAndReturnSplash(blastCenter, size) {

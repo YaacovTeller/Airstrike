@@ -126,6 +126,12 @@ const buildingEnemyTarget: TargetInfo = {
     maxSpeed: 0,
     armour: Armour.none,
 }
+// A stack of ammunition or rockets: it stays where it is
+const explosiveTargetInfo: TargetInfo = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.none,
+}
 // A tunnel you can't see, under the ground: doesn't move, nothing damages it but a charge or a really big blast
 const hiddenTunnelTarget: TargetInfo = {
     minSpeed: 0,
@@ -201,7 +207,10 @@ type difficultyLevelInfo = {
     enemyFactor?: number, // the stage levels (hills and coast): how many more enemies than usual
     parMs?: number,       // and how long a stage gets before you're told off for being slow
     extraTunnels?: number, // and how many tunnels more than usual (Hills)
-    fleeSpeed?: number,   // how fast a special enemy makes off in a vehicle (Hills), in px every 100ms
+    fleeSpeed?: number,   // how fast a special enemy makes off in a car (Hills), in px every 100ms
+    boatFleeSpeed?: number, // and in a boat (Coast)
+    fleeDelay?: speedRange, // how long (ms) after the first strike he waits before making a run for it
+    spookDelay?: speedRange, // and how long the other waits when one of two has been taken out
     eng: langInfo,
     heb: langInfo
 }
@@ -221,6 +230,7 @@ type weaponInfo = {
     slot?: number, // where it sits in the HUD, and which key picks it, if that isn't its name's number. The name still decides how it hurts things
     pickupMessage?: string, // what the popup says when it's picked up, instead of "New weapon: ...".
     shotCost?: number, // how much a shot counts when a stage is judged for using too much ordnance (1 if not given; 0 never counts)
+    utility?: boolean, // sits in the second group of the HUD with the drone and the other specials, whatever it's made from
     bigBomb?: boolean, // one of the bombs a stage's summary tells you off for using too many of
     class: typeof WeaponType,
     sound: Array<Sound>,
@@ -232,6 +242,7 @@ type weaponInfo = {
     select: Array<Sound>,
 }
 type ExplosiveWeaponInfo = weaponInfo & {
+    scale?: number, // an explosion's size is what sort it is; this is how much bigger or smaller than that it's drawn and reaches (1 if not given)
     blastRadius: number,
     explosionInfo: ExplosionInfo,
     flyover?: FlyOver
@@ -312,7 +323,10 @@ const sceneNormal: difficultyLevelInfo = {
     ...normal,
     enemyFactor: 1,
     parMs: 120000,
-    fleeSpeed: 2,
+    fleeSpeed: 3,
+    boatFleeSpeed: 3,
+    fleeDelay: { min: 8000, max: 15000 },
+    spookDelay: { min: 3500, max: 7000 },
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
@@ -320,7 +334,10 @@ const sceneHard: difficultyLevelInfo = {
     ...hard,
     enemyFactor: 1.4,
     parMs: 105000,
-    fleeSpeed: 3.5,
+    fleeSpeed: 5.5,
+    boatFleeSpeed: 5,
+    fleeDelay: { min: 6000, max: 11000 },
+    spookDelay: { min: 2500, max: 5000 },
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
@@ -329,7 +346,10 @@ const sceneChaos: difficultyLevelInfo = {
     enemyFactor: 2,
     parMs: 90000,
     extraTunnels: 1,
-    fleeSpeed: 5,
+    fleeSpeed: 8,                                   // as fast as the fastest car there is (a regular target's top speed on Chaos)
+    boatFleeSpeed: 7,
+    fleeDelay: { min: 4000, max: 8000 },
+    spookDelay: { min: 1500, max: 3000 }, // (less generous: on Chaos he's off almost at once)
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
@@ -566,8 +586,8 @@ const surveillanceInfo: ExplosiveWeaponInfo = {
     select: [jet],
     flyover: {
         imageSource: assetsSVGFolder + 'reaper3.svg',
-        speed: 2,       // vw per 100ms, so a pass of 6s crosses the screen with a bit to spare
-        duration: 6000, // how long the scan lasts too
+        speed: 2,       // vw per 100ms, so a pass of 9s crosses the screen with a good deal to spare
+        duration: 9000, // how long the scan lasts too
         delay: 1000     // a second to arrive
     }
 }
@@ -639,37 +659,47 @@ const scaledAirstrikeInfo: ExplosiveWeaponInfo = {
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.large }, // about the standard howitzer
 }
 // A bigger airstrike, in the given slot, whose explosion is this size (and so its circle is half of that)
-function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes): ExplosiveWeaponInfo {
+function scaledBigStrike(slot: number, displayName: string, icon: string, size: ExplSizes, bomb: boolean = false): ExplosiveWeaponInfo {
     return {
         ...airstrikeInfo,
         ...jetPlaceholder,
         slot: slot,
-        shotCost: slot >= 6 ? 1.25 : 0.75, // the bombs cost most
-        bigBomb: slot >= 6,
+        shotCost: bomb ? 1.25 : 0.75, // the bombs cost most
+        bigBomb: bomb,
         displayName: displayName,
         imageSource: assetsSVGFolder + icon,
         blastRadius: size / 2,
         explosionInfo: { ...airstrikeInfo.explosionInfo, size: size },
     };
 }
-// Slot 5 of the Coast set. It goes through the ground, with a thud, and a second later goes off far below: no
+// Slot 7 of the Coast set, in the second group of the HUD with the drone. It goes through the ground, with a thud, and a second later goes off far below: no
 // explosion at the surface, but a shake as big as the largest bomb's, and the building it's over comes down
 // with the bunker beneath it.
 const bunkerBusterInfo: ExplosiveWeaponInfo = {
-    ...scaledBigStrike(5, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    ...scaledBigStrike(7, "Bunker Buster", 'missile_5.png', ExplSizes.huge),
+    utility: true,
     class: BunkerBusterWeaponType,
+    // A bomber's shadow, much bigger and slower than a fighter's and across the middle of the screen, not at the aim point: the stealth bomber
+    flyover: {
+        imageSource: assetsSVGFolder + 'Stealth Bomber 2.png', // (the first stealth bomber picture, 'Stealth Bomber.png', is kept in case)
+        speed: 6.5,
+        duration: 2800,
+        delay: 1200
+    },
     blastRadius: 12, // just a marker: it's the point it lands on that counts
     explosionInfo: { ...airstrikeInfo.explosionInfo, size: ExplSizes.huge, sound: [] }, // its own sound, in its own time
 };
+// The whole set a little smaller than its sizes say (the bunker buster's isn't an area, so it's left as it is)
+const coastWeaponScale = 0.85;
 const scaledWeapons: Array<weaponInfo> = [
     scaledMortarInfo,
     scaledHowitzerInfo,
     scaledAirstrikeInfo,
     scaledBigStrike(4, "Strike Missile", 'Missile_4.png', ExplSizes.XL),         // as big as the standard airstrike
+    scaledBigStrike(5, "Bomb", 'Bomb_1.png', ExplSizes.massive, true),
+    scaledBigStrike(6, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal, true),
     bunkerBusterInfo,
-    scaledBigStrike(6, "Bomb", 'Bomb_1.png', ExplSizes.massive),
-    scaledBigStrike(7, "Heavy Bomb", 'Bomb_2.png', ExplSizes.colossal),
-];
+].map(info => info === bunkerBusterInfo ? info : { ...info, scale: coastWeaponScale, blastRadius: Math.round(info.blastRadius * coastWeaponScale) });
 
 
 enum msgLength {
