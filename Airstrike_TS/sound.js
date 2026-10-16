@@ -137,6 +137,7 @@ const redeemerpickup = new Sound(soundFolder + "redeemerpickup.wav");
 const alarm3 = new Sound(soundFolder + "alarm3.wav");
 const jet = new Sound(soundFolder + "jet_fly.mp3");
 const jet_pass = new Sound(soundFolder + "jet_pass.mp3");
+const electr = new Sound(soundFolder + "electr.mp3"); // the power going
 //const strike_4 = new Sound(soundFolder + "strike_4.mp3");
 const gunSounds = [];
 const chopper = [];

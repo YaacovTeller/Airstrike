@@ -905,14 +905,35 @@ class GameHandler {
         }
         this.updateLights();
     }
+    // The power going: the sound of it, and the lights flick off, come back on for a moment, and then go out for good (each fading off in its own time)
+    private powerCut: { phase: "off" | "on" | "out" } = null;
+    private static flickerOffMs: number = 150;
+    private static flickerOnMs: number = 300;
+    private startPowerCut() {
+        const cut = this.powerCut = { phase: "off" as "off" | "on" | "out" };
+        SoundPlayer.playWithVolumeSet(electr);
+        setTimeout(() => { if (this.powerCut === cut) cut.phase = "on"; }, GameHandler.flickerOffMs);
+        setTimeout(() => { if (this.powerCut === cut) cut.phase = "out"; }, GameHandler.flickerOffMs + GameHandler.flickerOnMs);
+    }
     private fadeGlows() {
-        if (!glows.length) return;
         const down = !PowerGrid.isUp();
+        if (!down) this.powerCut = null;
+        else if (!this.powerCut) this.startPowerCut();
+        if (!glows.length) return;
+        const flickering = down && this.powerCut && this.powerCut.phase !== "out";
         for (const glow of glows) {
-            if (down || (glow.owner && glow.owner.isWrecked())) {
+            const gone = glow.owner && glow.owner.isWrecked();
+            if ((down && !flickering) || gone) {
                 if (glow.fadeStep === undefined) glow.fadeStep = RandomNumberGen.randomNumBetween(5, 30) / 100; // (they don't all go at once)
                 glow.opac = Math.max(0, glow.opac - glow.fadeStep);
                 this.glowDirty = true;
+            }
+            else if (flickering) {
+                const level = this.powerCut.phase === "off" ? 0.001 : GameHandler.glowOpacity; // (not quite nothing, or it would be taken away)
+                if (glow.opac !== level) {
+                    glow.opac = level;
+                    this.glowDirty = true;
+                }
             }
         }
         this.removeFaded(glows);
