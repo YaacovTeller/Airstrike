@@ -215,24 +215,48 @@ class Level {
         clearInterval(this.winCheckTimer);
         this.winCheckTimer = null;
     }
+    // The ground rushes past between the levels of the desert game, as it does between the stages of the others
+    rushDirections = ["down"];
+    static levelRushAt = 1800; // ms into the gap after the last wave of a level, once its message has been seen
     endWave() {
-        PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
-        );
+        // the last wave of a level (and not the last level) is a finished stage, as in the other games; the others are just a "Nice job!"
+        const lastOfLevel = game.gameMode == GameMode.regular && this.waveIndex >= this.waveCount() - 1;
+        if (lastOfLevel) {
+            PopupHandler.addToArray("", "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
+        }
+        else {
+            PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
+            );
+        }
         this.allTargetsDeployed = false;
         this.targets = [];
-        this.nextWavePrepGap();
+        this.nextWavePrepGap(lastOfLevel);
     }
-    nextWavePrepGap() {
+    waveCount() {
+        return game.testMode && game.gameMode == GameMode.regular ? 1 : this.info.waves.length;
+    }
+    nextWavePrepGap(lastOfLevel = false) {
+        const index = allLevelsArray.indexOf(this);
+        const nextLevel = allLevelsArray[index + 1];
+        if (lastOfLevel && nextLevel) {
+            setTimeout(() => this.rushToNextLevel(), Level.levelRushAt); // the wrecks ride off with the ground, and the next level starts when it's stopped
+        }
         setTimeout(() => {
             //    PopupHandler.addToArray("Get ready, more coming!");
         }, 3500);
         setTimeout(() => {
             if (this.nextWave() == false) {
-                let index = allLevelsArray.indexOf(this);
-                let nextLevel = allLevelsArray[index + 1];
                 game.newLevel(nextLevel, game.gameMode);
             }
         }, 5000);
+    }
+    rushToNextLevel() {
+        if (game.level !== this)
+            return; // a stale call from before the game was reset
+        game.moveStageToExit();
+        this.resetTargets(true);
+        game.clearStageLeftovers();
+        StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections));
     }
     nextWave() {
         this.waveIndex++;
@@ -351,7 +375,6 @@ class SceneLevel extends Level {
     stageDroneFlyovers = 0;
     stageOrdnanceSpent = 0; // the shots so far, each weighed by what it costs
     stageBigBombsBySlot = {};
-    rushDirections = ["down"]; // the ways the ground can rush between stages
     // The rush between stages isn't the player's time. Over par, the clock goes red and bleeps once.
     tickClock() {
         if (StageTransition.active || this.stageFinished)
@@ -643,7 +666,7 @@ class SceneLevel extends Level {
     }
     endWave() {
         this.stageFinished = true; // the time is what it was when the stage was cleared
-        PopupHandler.addToArray(this.stageSummary(), "Stage " + this.stage + " finished!", msgLength.long);
+        PopupHandler.addToArray(this.stageSummary(), "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
         if (this.stage >= SceneLevel.stagesInAGame()) { // the last of them: the game's won, once its message has been read
             setTimeout(() => { if (game.level === this)
                 game.finishCampaign(); }, msgLength.long + 600);

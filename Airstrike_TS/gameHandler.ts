@@ -268,7 +268,7 @@ class GameHandler {
         this.refreshFinishStamps();
         PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", userHandler.addressed("You did it!"), msgLength.long);
-        PopupHandler.addToArray(`Finished <strong>${GameMode[this.gameMode]}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
+        PopupHandler.addToArray(`Finished <strong>${GameHandler.placeName(this.gameMode)}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
         this.gameInProgress = false // HACKY??
         this.cutGameFuncs();
@@ -299,6 +299,7 @@ class GameHandler {
         this.toggleModal();
 
         this.setRadioButtons();
+        this.labelLocationButtons();
         this.refreshFinishStamps();
         this.setInstructionsFor(this.selectedLocation());
         this.setVolumeSlider();
@@ -316,7 +317,8 @@ class GameHandler {
         if ((GameProgress.hasAny() || userHandler.userName) && !confirm("Do you really want to clear your progress and your name?")) return;
         GameProgress.clear();
         userHandler.clearUserInfo();
-        this.refreshFinishStamps();
+        document.querySelectorAll(".finishStamp:not(.ghost)").forEach(el => el.classList.add("wiped")); // the stamps fade off before they're swapped for the outlines
+        setTimeout(() => this.refreshFinishStamps(), 450);
     }
 
     // The instructions: the same for every location up to the fourth, and then what's particular to where you're going. (The ones for the
@@ -347,18 +349,32 @@ class GameHandler {
     }
 
     // The stamp across the end of each location's button in the menu, for the hardest difficulty that kind of game has been finished on
+    // What each button's stamp was last time they were drawn, so one that's new (just earned) can slam down when the menu is next seen
+    private stampsDrawn: { [location: string]: string } = null;
     public refreshFinishStamps() {
+        const drawn: { [location: string]: string } = {};
         for (const location of ["desert", "hills", "coast"]) {
             const label = document.querySelector<HTMLElement>('#locationContainer label[for="location_' + location + '"]');
             if (!label) continue;
             label.querySelectorAll(".finishStamp").forEach(el => el.remove());
-            const best = GameProgress.best(location);
-            if (!best) continue;
+            const best = GameProgress.best(location) || "";
+            drawn[location] = best;
             const stamp = document.createElement("span");
-            stamp.className = "finishStamp " + best;
-            stamp.textContent = best;
+            if (best) {
+                stamp.className = "finishStamp " + best;
+                stamp.textContent = best;
+                if (this.stampsDrawn && this.stampsDrawn[location] !== best) { // (an animation waits until what it's on is on the screen)
+                    stamp.classList.add("fresh");
+                    stamp.addEventListener("animationend", () => stamp.classList.remove("fresh"));
+                }
+            }
+            else { // not finished yet: the outline of a stamp where it will go
+                stamp.className = "finishStamp ghost";
+                stamp.textContent = "not yet";
+            }
             label.appendChild(stamp);
         }
+        this.stampsDrawn = drawn;
     }
     private setRadioButtons() {
         const radioButtons = document.querySelectorAll<HTMLInputElement>('#difficultiesContainer input[type="radio"]');
@@ -1232,14 +1248,31 @@ class GameHandler {
         return this.gameMode == GameMode.coast || this.gameMode == GameMode.hills;
     }
 
+    // What each kind of game is called, in the menu's buttons, the message at the start and the messages at the end
+    public static placeName(mode: GameMode): string {
+        switch (mode) {
+            case GameMode.hills: return "Hills";
+            case GameMode.coast: return "Coast";
+            case GameMode.sandbox: return "Weapon Test";
+            case GameMode.test_1: return "Weather Test";
+            default: return "Desert";
+        }
+    }
+    private static locationModes: { [location: string]: GameMode } = { desert: GameMode.regular, hills: GameMode.hills, coast: GameMode.coast };
+    private labelLocationButtons() {
+        for (const location in GameHandler.locationModes) {
+            const label = document.querySelector<HTMLElement>('label[for="location_' + location + '"] .eng');
+            if (label) label.textContent = GameHandler.placeName(GameHandler.locationModes[location]);
+        }
+    }
+
     public newGame(mode: GameMode) {
         if (this.gameWasPlayed) {
             this.reset();
         }
         this.gameMode = mode;
         // the one message at the start: where, and then how hard
-        const where = mode == GameMode.hills ? "Hills" : mode == GameMode.coast ? "Coast" : mode == GameMode.sandbox ? "Weapon Test" : mode == GameMode.test_1 ? "Weather Test" : "Desert";
-        PopupHandler.addToArray(game.difficulty.eng.name, where);
+        PopupHandler.addToArray(game.difficulty.eng.name, GameHandler.placeName(mode));
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();
