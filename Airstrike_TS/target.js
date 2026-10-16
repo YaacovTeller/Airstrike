@@ -1435,7 +1435,7 @@ class VehicleTarget extends Target {
         this.tumbling = { vx: carried, flip: 0, rate: 30 + Math.random() * 35, age: 0, drag: 0.6 + Math.random() * 0.26, stopAt: 0.2 + Math.random() * 0.85, crater: crater };
         this.lightDamage(); // smoking, but not out of it: it's still a live target
         this.speed = 0;
-        SoundPlayer.playRandomSound(crashes);
+        SoundPlayer.playRandomSound(carCrashes);
     }
     craterEffects() {
         if (this.tumbling) {
@@ -1681,7 +1681,7 @@ class VehicleTarget extends Target {
                 this.stopFireLight(); // it's smoke now, which gives no light. A wreck is still burning
         }, fireStay + RandomNumberGen.randomNumBetween(0, 3000));
         if (direc) {
-            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle);
+            this.angle = ThrowHandler.flip(this.picEl, direc, carCrashes, this.targetEl, this.angle);
         }
         ContentElHandler.fadeRemoveItem(this.targetEl, damagedTargetStay, fadeAnimTime);
         this.removeFromArray();
