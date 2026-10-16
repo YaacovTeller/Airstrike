@@ -141,15 +141,16 @@ class Level {
     setAsLevel() {
         let num = this.info.number;
         this.frequency = game.difficulty.newTargetEvery;
+        // The game's own message at the start says where it is and how hard; after that, each new level of the desert game announces itself
+        // (the first level's own messages are left out, and the levels of the other games have no messages of their own)
         if (game.gameMode == GameMode.regular) {
-            PopupHandler.addToArray("", "Level " + num, msgLength.long);
             this.setLevelDisplay(num);
-        }
-        else {
-            PopupHandler.addToArray("", "Sandbox", msgLength.short);
-        }
-        for (let msg of this.info.messages) {
-            PopupHandler.addToArray(msg.text, msg.title, msg.length);
+            if (num > 1) {
+                PopupHandler.addToArray("", "Level " + num, msgLength.long);
+                for (let msg of this.info.messages) {
+                    PopupHandler.addToArray(msg.text, msg.title, msg.length);
+                }
+            }
         }
     }
     setLevelDisplay(num) {

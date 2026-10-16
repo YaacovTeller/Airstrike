@@ -731,7 +731,7 @@ class GameHandler {
                     this.hud.popKillNumber("x" + this.sequentialHits, this.sequentialHits, this.sequenceOrigin);
                 }
                 else if (this.sequenceBuilding) { // a strike on a building that got just the one: still worth a mention
-                    this.hud.popKillNumber("Hit", 1, this.sequenceOrigin);
+                    this.hud.popKillNumber("Hit!", 1, this.sequenceOrigin);
                 }
                 this.calcScore(this.sequentialHits);
                 this.sequentialHits = 0;
@@ -1221,9 +1221,9 @@ class GameHandler {
             this.reset();
         }
         this.gameMode = mode;
-        PopupHandler.addToArray(game.difficulty.eng.name);
-        if (userHandler.userName)
-            PopupHandler.addToArray(userHandler.addressed("Good luck!"));
+        // the one message at the start: where, and then how hard
+        const where = mode == GameMode.hills ? "Hills" : mode == GameMode.coast ? "Coast" : mode == GameMode.sandbox ? "Weapon Test" : mode == GameMode.test_1 ? "Weather Test" : "Desert";
+        PopupHandler.addToArray(game.difficulty.eng.name, where);
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();
