@@ -363,7 +363,7 @@ class GameHandler {
             }
             else { // not finished yet: the outline of a stamp where it will go
                 stamp.className = "finishStamp ghost";
-                stamp.textContent = "not yet";
+                stamp.textContent = "-";
             }
             label.appendChild(stamp);
         }
