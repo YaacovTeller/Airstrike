@@ -244,8 +244,8 @@ const sceneNormal = {
     parMs: 120000,
     fleeSpeed: 3,
     boatFleeSpeed: 3,
-    fleeDelay: { min: 8000, max: 15000 },
-    spookDelay: { min: 3500, max: 7000 },
+    fleeDelay: { min: 10000, max: 17000 },
+    spookDelay: { min: 5500, max: 9000 },
     eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 };
@@ -255,8 +255,8 @@ const sceneHard = {
     parMs: 105000,
     fleeSpeed: 5.5,
     boatFleeSpeed: 5,
-    fleeDelay: { min: 6000, max: 11000 },
-    spookDelay: { min: 2500, max: 5000 },
+    fleeDelay: { min: 8000, max: 13000 },
+    spookDelay: { min: 4500, max: 7000 },
     eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 };

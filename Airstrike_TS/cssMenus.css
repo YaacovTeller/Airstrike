@@ -572,7 +572,7 @@ b {
         position: relative;
     }
     /* the stamp that says a kind of game has been finished, and on what difficulty: inked across the corner of its button, hanging over the
-       edge, at an angle. (Rough and patchy like a rubber stamp; see the stampInk filter in the page.) */
+       edge, at an angle. */
     .finishStamp {
         position: absolute;
         right: 8px;
@@ -586,10 +586,8 @@ b {
         letter-spacing: 2px;
         line-height: 1.15;
         text-transform: uppercase;
-        text-shadow: 0 0 1px currentColor;
         background: rgba(0,0,0,0.5);
         opacity: 0.95;
-        filter: url(#stampInk);
         pointer-events: none;
         z-index: 1;
     }
@@ -609,11 +607,8 @@ b {
         color: rgba(255,255,255,0.22);
         border: 3px dashed currentColor;
         background: transparent;
-        font-size: 0.95rem;
-        font-weight: 700;
-        padding: 0 16px;
-        text-shadow: none;
-        filter: none;
+        min-width: 4.1em; /* (about as wide as the longest stamp, CHAOS) */
+        text-align: center;
     }
 
 @keyframes stampSlam {
