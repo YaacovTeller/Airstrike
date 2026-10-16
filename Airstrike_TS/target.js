@@ -1792,7 +1792,7 @@ class WaterVehicleTarget extends VehicleTarget {
         this.shoreRun = { special: special, speed: speed, onFail: onFail };
     }
     // At the shore the boat sits for four seconds (forty ticks) with him still in the bunker, and he boards as it turns and makes for the open sea
-    static shoreWaitTicks = 20;
+    static shoreWaitTicks = 40;
     leaving;
     action() {
         if (this.leaving) {
