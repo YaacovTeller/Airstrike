@@ -607,7 +607,8 @@ b {
         color: rgba(255,255,255,0.22);
         border: 3px dashed currentColor;
         background: transparent;
-        min-width: 4.1em; /* (about as wide as the longest stamp, CHAOS) */
+        min-width: 4.1em; /* (about as wide as the longest stamp, CHAOS, and as tall, with nothing in it) */
+        min-height: 1.15em;
         text-align: center;
     }
 
@@ -880,6 +881,9 @@ input[type=radio]:checked ~ label {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     z-index: 11;
     transition: opacity 0.2s ease-in-out;
+}
+#popupBox.centred {
+    text-align: center;
 }
 #popupTitle {
     font-size: 60px;

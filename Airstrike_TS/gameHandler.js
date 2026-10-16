@@ -372,7 +372,7 @@ class GameHandler {
             }
             else { // not finished yet: the outline of a stamp where it will go
                 stamp.className = "finishStamp ghost";
-                stamp.textContent = "-";
+                stamp.textContent = "";
             }
             label.appendChild(stamp);
         }
@@ -1264,7 +1264,7 @@ class GameHandler {
         }
         this.gameMode = mode;
         // the one message at the start: where, and then how hard
-        PopupHandler.addToArray(game.difficulty.eng.name, GameHandler.placeName(mode));
+        PopupHandler.addToArray(game.difficulty.eng.name, GameHandler.placeName(mode), undefined, true); // (centred, as the one message at the start)
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();

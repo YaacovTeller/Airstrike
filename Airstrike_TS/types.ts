@@ -709,7 +709,8 @@ enum msgLength {
 type popupMsg = {
     title: string,
     text: string,
-    length: msgLength
+    length: msgLength,
+    centred?: boolean
 }
 class PopupHandler {
     static popUpArray: Array<popupMsg> = [];
@@ -719,11 +720,12 @@ class PopupHandler {
         const popup = document.getElementById("popupBox");
         if (popup) popup.classList.add("hide");
     }
-    static addToArray(txt, title?, lngth?) {
+    static addToArray(txt, title?, lngth?, centred?: boolean) {
         let msg: popupMsg = {
             text: txt,
             title: title ? title : null,
-            length: lngth ? lngth : msgLength.short
+            length: lngth ? lngth : msgLength.short,
+            centred: !!centred
         }
         this.popUpArray.push(msg);
         if (this.popUpArray.length == 1) {
@@ -742,6 +744,7 @@ class PopupHandler {
         //textbox.innerText = currentMsg.text;
         titlebox.innerHTML = currentMsg.title;
         textbox.innerHTML = currentMsg.text;
+        popup.classList.toggle("centred", !!currentMsg.centred);
         popup.classList.remove("hide");
         let this_ = this;
         setTimeout(function () {

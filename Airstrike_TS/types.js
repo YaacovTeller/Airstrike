@@ -630,11 +630,12 @@ class PopupHandler {
         if (popup)
             popup.classList.add("hide");
     }
-    static addToArray(txt, title, lngth) {
+    static addToArray(txt, title, lngth, centred) {
         let msg = {
             text: txt,
             title: title ? title : null,
-            length: lngth ? lngth : msgLength.short
+            length: lngth ? lngth : msgLength.short,
+            centred: !!centred
         };
         this.popUpArray.push(msg);
         if (this.popUpArray.length == 1) {
@@ -653,6 +654,7 @@ class PopupHandler {
         //textbox.innerText = currentMsg.text;
         titlebox.innerHTML = currentMsg.title;
         textbox.innerHTML = currentMsg.text;
+        popup.classList.toggle("centred", !!currentMsg.centred);
         popup.classList.remove("hide");
         let this_ = this;
         setTimeout(function () {
