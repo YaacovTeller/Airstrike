@@ -50,6 +50,21 @@ class userHandler {
         this.displayName();
         this.setLocal(value);
     }
+    // Forgets the name: out of local storage, and the menu asks for it again
+    static clearUserInfo() {
+        this.userName = undefined;
+        try {
+            localStorage.removeItem(this.key);
+        }
+        catch (e) { }
+        const input = document.getElementById("username");
+        if (input)
+            input.value = "";
+        document.getElementById("userNameInput").classList.remove("displayNone");
+        const display = document.getElementById("userDisplay");
+        display.classList.add("displayNone");
+        display.innerText = "";
+    }
     static getUserInfo() {
         let userInfo = this.getLocal();
         if (userInfo) {

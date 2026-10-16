@@ -296,11 +296,12 @@ class GameHandler {
         this.setVolumeSlider();
         this.setupInstructionsToggle();
     }
-    // Clearing what's been finished, asking first if there's anything to lose
+    // Clearing what's been finished and the name, asking first if there's anything to lose
     clearProgress() {
-        if (GameProgress.hasAny() && !confirm("Do you really want to clear your progress?"))
+        if ((GameProgress.hasAny() || userHandler.userName) && !confirm("Do you really want to clear your progress and your name?"))
             return;
         GameProgress.clear();
+        userHandler.clearUserInfo();
         this.refreshFinishStamps();
     }
     // The instructions: the same for every location up to the fourth, and then what's particular to where you're going. (The ones for the
