@@ -165,7 +165,8 @@ const strikes: Array<Sound> = [];
 const bigExplosions: Array<Sound> = [];
 const multiExplosions: Array<Sound> = [];
 const carCrashes: Array<Sound> = []; // a car coming down: the first three have a swerve in them
-const crashes: Array<Sound> = [];    // anything else coming down: debris, bits, boats
+const crashes: Array<Sound> = [];    // anything else coming down on land: debris, bits
+const splashes: Array<Sound> = [];   // anything coming down in the water
 const impactCrash: Array<Sound> = [];
 const beeps: Array<Sound> = [];
 const ticks: Array<Sound> = [];
@@ -295,6 +296,9 @@ function loadSound() {
     crashes.push(
         // (only the sixth for the moment, to try it out: crash_4 and crash_5 go back in here)
         new Sound(soundFolder + "crash_6.mp3"),
+    )
+    splashes.push(
+        new Sound(soundFolder + "splash.mp3"),
     )
     impactCrash.push(
         new Sound(soundFolder + "impact crash.mp3"),

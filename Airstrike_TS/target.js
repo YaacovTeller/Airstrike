@@ -1874,7 +1874,7 @@ class WaterVehicleTarget extends VehicleTarget {
         // down like any other, over the way it landed
         if (this.targetEl.classList.contains('smallBoat') && direc && collisionInfo && collisionInfo.radius > WaterVehicleTarget.flipMinRadius
             && RandomNumberGen.randomNumBetween(1, 100) <= WaterVehicleTarget.flipChance) {
-            this.angle = ThrowHandler.flip(this.picEl, direc, crashes, this.targetEl, this.angle, () => this.dipUpsideDown(), false); // (no sliding on once it's landed)
+            this.angle = ThrowHandler.flip(this.picEl, direc, splashes, this.targetEl, this.angle, () => this.dipUpsideDown(), false); // (no sliding on once it's landed)
         }
         if (!this.damageEl.classList.contains("badDamaged")) {
             this.damageOverlay.playLoop(fire_1_imgs);

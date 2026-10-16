@@ -4,7 +4,7 @@
         this.throwArc(thrownElem, direc, onLanded, slide); // ARC
         let deg = this.rotate(elem, direc, angle);   // ROTATION
         if (impactSounds && impactSounds.length) {
-            this.crashSound(impactSounds);
+            this.crashSound(impactSounds, thrownElem, onLanded);
         }
 
         return deg;
@@ -35,16 +35,30 @@
                 requestAnimationFrame(step);
             }
             else {
-                if (impactSounds && impactSounds.length) SoundPlayer.playRandomSound(impactSounds);
+                if (impactSounds && impactSounds.length) ThrowHandler.landingSound(impactSounds, elem, onLanded);
                 if (onLanded) onLanded(elem);
             }
         };
         requestAnimationFrame(step);
     }
-    private static crashSound(sounds) {
-        setTimeout(() => {
-            SoundPlayer.playRandomSound(sounds)
-        }, crashTimeout);
+    private static crashSound(sounds: Sound[], elem: HTMLElement, onLanded?: (landedElem: HTMLElement) => void) {
+        setTimeout(() => this.landingSound(sounds, elem, onLanded), crashTimeout);
+    }
+    // Where something has come down: in the sea. (The same test as removeIfLandedInWater's.)
+    public static inWater(elem: HTMLElement): boolean {
+        const water = document.getElementById("water");
+        if (!water || !elem.isConnected) return false;
+        return CollisionDetection.checkCollisionFromPosition(CollisionDetection.getXYfromPoint(elem), water);
+    }
+    // What's heard when something comes down: its crash on land, and a splash in the sea (never a crash in the water, or a splash on land).
+    // Debris that's taken away if it's in the water (removeIfLandedInWater) makes the splash itself, so it's not made twice.
+    private static landingSound(sounds: Sound[], elem: HTMLElement, onLanded?: (landedElem: HTMLElement) => void) {
+        if (this.inWater(elem)) {
+            if (onLanded !== this.removeIfLandedInWater) SoundPlayer.playRandomSound(splashes);
+        }
+        else if (sounds !== splashes) {
+            SoundPlayer.playRandomSound(sounds);
+        }
     }
 
     // Pass as flip()'s onLanded for throwaway debris (wheels/bits/etc, tracked in allObjects) so
@@ -55,6 +69,7 @@
         let pos: position = CollisionDetection.getXYfromPoint(landedElem);
         if (CollisionDetection.checkCollisionFromPosition(pos, water)) {
             ExplosionHandler.createSplash(pos);
+            SoundPlayer.playRandomSound(splashes);
             ContentElHandler.removeFromContentEl(landedElem);
             let index = allObjects.indexOf(landedElem);
             if (index >= 0) {
