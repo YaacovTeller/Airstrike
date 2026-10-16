@@ -348,8 +348,8 @@ const sceneChaos: difficultyLevelInfo = {
     extraTunnels: 1,
     fleeSpeed: 8,                                   // as fast as the fastest car there is (a regular target's top speed on Chaos)
     boatFleeSpeed: 7,
-    fleeDelay: { min: 6000, max: 10000 },
-    spookDelay: { min: 3500, max: 5000 }, // (less generous than the others: on Chaos he's off quickly)
+    fleeDelay: { min: 8000, max: 12000 },
+    spookDelay: { min: 5500, max: 7000 }, // (less generous than the others: on Chaos he's off fairly quickly)
     eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
