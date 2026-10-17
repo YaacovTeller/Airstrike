@@ -329,7 +329,7 @@ class GameHandler {
         },
         teheran: {
             "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Three anti aircraft sites first: rocket launchers beside a warehouse with men hiding in it. When they're down you're on to the next, and then Tehran.",
-            "6": "One countdown runs from the first site to the end of the city. When it runs out, it's over. The man you're after is in a bunker complex under Tehran, a good deal deeper than the others, with rooms and corridors a drone scan will show. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
+            "6": "One countdown runs from the first site to the end of the city. When it runs out, it's over. The man you're after is in a bunker complex under Tehran, a little deeper than the others, with two chambers one below the other and a small one off to the side, which a drone scan will show. He can be in any of them. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
             "7": "There are enemies hiding in the buildings all over the city, and they all have to be dealt with. Bring a building down and everything in it goes too.",
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, and the bunker complex below. Take out the power station and the city's lights go out.",
         },

@@ -2401,7 +2401,7 @@ class Bunker extends Target {
     room; // the room the man is in
     otherRooms = []; // a complex has more, each joined to the next by a corridor
     corridors = [];
-    static complexDrop = 150; // a complex is a good deal deeper
+    static complexDrop = 95; // a complex is a little deeper
     surfaceBox; // where its building stood: still there to be hit by a buster once the building has gone
     planEl;
     constructor(building) {
@@ -2416,41 +2416,57 @@ class Bunker extends Target {
         return ['trans.png'];
     }
     action() { }
-    // Lays the bunker out beneath its building and draws it; returns the middle of the room. A complex (the city's) is deeper, and has a big
-    // room with smaller ones off it, joined by corridors.
+    // Lays the bunker out beneath its building and draws it; returns the middle of the room the man is in. A complex (the city's) is a little deeper than
+    // the others, with two chambers one below the other (of different sizes) joined by a corridor, and a small one off the side of either of them,
+    // on either side. He's in any of the three.
     setUp(complex = false) {
         const rect = this.building.getTargetEl().getBoundingClientRect();
-        const width = complex ? 112 : Bunker.roomSize, height = complex ? 76 : Bunker.roomSize;
-        const centre = {
-            X: Math.max(width / 2 + (complex ? 220 : 0), Math.min(window.innerWidth - width / 2 - (complex ? 220 : 0), rect.left + rect.width / 2)),
-            Y: Math.min(window.innerHeight - height / 2 - (complex ? 130 : 0), rect.bottom + (complex ? Bunker.complexDrop : Bunker.shaftDrop)),
-        };
         // (the building's own box, which has its size from the start; its picture may not have loaded yet)
         this.surfaceBox = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
-        this.shaft = { from: { X: centre.X, Y: rect.top + rect.height * 0.6 }, to: centre };
-        this.room = { left: centre.X - width / 2, top: centre.Y - height / 2, right: centre.X + width / 2, bottom: centre.Y + height / 2 };
         this.otherRooms = [];
         this.corridors = [];
-        if (complex) {
-            const box = (cx, cy, w, h) => ({ left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2 });
-            const middle = (b) => ({ X: (b.left + b.right) / 2, Y: (b.top + b.bottom) / 2 });
-            const wobble = () => RandomNumberGen.randomNumBetween(-24, 24);
-            const west = box(centre.X - 175 + wobble(), centre.Y + wobble(), 72, 54);
-            const east = box(centre.X + 175 + wobble(), centre.Y + wobble(), 66, 50);
-            const south = box(centre.X + wobble(), centre.Y + 115, 62, 46);
-            this.otherRooms.push(west, east, south);
-            for (const other of [west, east, south])
-                this.corridors.push({ from: centre, to: middle(other) });
-            this.corridors.push({ from: middle(west), to: middle(south) }); // (a way round, as well)
-            if (RandomNumberGen.randomNumBetween(0, 1)) { // and a small store off one end
-                const store = box(east.right + 55, east.top + 10, 40, 32);
-                this.otherRooms.push(store);
-                this.corridors.push({ from: middle(east), to: middle(store) });
-            }
+        const box = (cx, cy, w, h) => ({ left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2 });
+        const middle = (b) => ({ X: (b.left + b.right) / 2, Y: (b.top + b.bottom) / 2 });
+        let inside;
+        if (!complex) {
+            const size = Bunker.roomSize;
+            const centre = {
+                X: Math.max(size, Math.min(window.innerWidth - size, rect.left + rect.width / 2)),
+                Y: Math.min(window.innerHeight - size, rect.bottom + Bunker.shaftDrop),
+            };
+            this.shaft = { from: { X: centre.X, Y: rect.top + rect.height * 0.6 }, to: centre };
+            this.room = box(centre.X, centre.Y, size, size);
+            inside = centre;
+        }
+        else {
+            const topW = RandomNumberGen.randomNumBetween(84, 112), topH = RandomNumberGen.randomNumBetween(54, 70);
+            const lowW = RandomNumberGen.randomNumBetween(66, 100), lowH = RandomNumberGen.randomNumBetween(44, 64);
+            const gap = 36; // the corridor between them
+            const sideW = 40, sideH = 32, sideGap = 44;
+            const depth = topH + gap + lowH;
+            const centreX = Math.max(topW / 2 + sideW + sideGap + 20, Math.min(window.innerWidth - topW / 2 - sideW - sideGap - 20, rect.left + rect.width / 2));
+            const topY = Math.min(window.innerHeight - depth - 20 + topH / 2, rect.bottom + Bunker.complexDrop);
+            const upper = box(centreX, topY, topW, topH);
+            const lower = box(centreX + RandomNumberGen.randomNumBetween(-18, 18), upper.bottom + gap + lowH / 2, lowW, lowH);
+            const top = middle(upper), bottom = middle(lower);
+            this.shaft = { from: { X: top.X, Y: rect.top + rect.height * 0.6 }, to: top };
+            this.room = upper;
+            this.otherRooms.push(lower);
+            this.corridors.push({ from: top, to: bottom });
+            // the small one, off either chamber, to either side
+            const onUpper = RandomNumberGen.randomNumBetween(0, 1) == 0;
+            const parent = onUpper ? upper : lower;
+            const sign = RandomNumberGen.randomNumBetween(0, 1) ? 1 : -1;
+            const sideX = sign > 0 ? parent.right + sideGap + sideW / 2 : parent.left - sideGap - sideW / 2;
+            const side = box(sideX, middle(parent).Y + RandomNumberGen.randomNumBetween(-8, 8), sideW, sideH);
+            this.otherRooms.push(side);
+            this.corridors.push({ from: middle(parent), to: middle(side) });
+            // he's in any of the three
+            inside = middle(RandomNumberGen.returnRandomFromArray([upper, lower, side]));
         }
         this.placeAt(this.room.left, this.room.top);
         this.draw();
-        return centre;
+        return inside;
     }
     draw() {
         const ns = "http://www.w3.org/2000/svg";

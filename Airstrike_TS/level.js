@@ -1039,7 +1039,7 @@ class TeheranLevel extends SceneLevel {
         game.hud.updateCountdown(this.countdownLeft);
         if (this.countdownLeft <= 0) {
             this.timedOut = true;
-            game.failGame("Time ran out. The anti aircraft sites are still firing, and our jets can't get through.");
+            game.failGame("You're out of time, we missed our window! Calling off the strike");
         }
     }
     endWave() {
