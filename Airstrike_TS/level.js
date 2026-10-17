@@ -294,6 +294,8 @@ class Level {
     tickClock() { }
     // The surveillance drone has been sent out
     noteDroneFlyover() { }
+    // Whether something's interfering with the drone's feed, so its flyover shows nothing
+    droneBlocked() { return false; }
     noteShot(slot, cost, bigBomb) { }
     // Something has exploded (a drone flyover or a gunshot hasn't)
     noteExplosion() { }
@@ -1036,6 +1038,10 @@ class TeheranLevel extends SceneLevel {
     }
     // The countdown, which runs through all of it (the rush between the stages too) until the city's been cleared; at nothing, it's over
     tickClock() {
+        if (this.blockers.length && !this.blockersCleared && !this.droneBlocked()) { // the last of the bugged buildings has come down
+            this.blockersCleared = true;
+            PopupHandler.addToArray("You are clear to use drone surveillance to find your targets!", "", msgLength.long);
+        }
         if (this.stageFinished || this.timedOut)
             return;
         this.stageElapsedMs += 100;
@@ -1077,6 +1083,31 @@ class TeheranLevel extends SceneLevel {
         const buildings = game.drawAllBuildings(true);
         this.infestBuildings(buildings);
         this.placeBunkers(buildings);
+        this.placeBlockers(buildings);
+    }
+    // Three of the buildings that can be seen are bugged: a satellite dish on the roof, signal blockers that jam the drone while any of them stands.
+    // (Not the one over the bunker, and well apart from each other.)
+    blockers = [];
+    blockersCleared = false;
+    static blockerCount = 3;
+    placeBlockers(buildings) {
+        this.blockers = [];
+        this.blockersCleared = false;
+        const bunkerBuilding = this.bunkerSpecials.length ? this.bunkerSpecials[0].bunker.building : null;
+        const pool = buildings.filter(b => b !== bunkerBuilding && !b.isElectric() && this.onScreen(b) && b.getTargetEl().offsetWidth >= 70);
+        const centre = (b) => { const r = b.getTargetEl().getBoundingClientRect(); return { X: (r.left + r.right) / 2, Y: (r.top + r.bottom) / 2 }; };
+        for (let attempt = 0; attempt < 300 && this.blockers.length < TeheranLevel.blockerCount && pool.length; attempt++) {
+            const b = pool[RandomNumberGen.randomNumBetween(0, pool.length - 1)];
+            const at = centre(b);
+            if (this.blockers.includes(b) || this.blockers.some(o => Math.hypot(centre(o).X - at.X, centre(o).Y - at.Y) < 260))
+                continue;
+            this.blockers.push(b);
+        }
+        for (const b of this.blockers)
+            b.addRooftop(rooftopDishPicture, 30);
+    }
+    droneBlocked() {
+        return this.blockers.some(b => !b.isWrecked());
     }
     // An anti aircraft site: a warehouse in the middle of the screen with a few enemies hiding in it, and one to three rocket launchers standing about it
     populateSite() {

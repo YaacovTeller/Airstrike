@@ -272,6 +272,9 @@ const allBlockInfo = [
 ];
 // The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
 const smallBlockInfo = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
+// The satellite dish on the roof of a building that's bugged (Tehran): signal blockers that jam the drone feed while they stand. The picture's a placeholder
+// (a plain drawing), until there's a proper one: just change the file here.
+const rooftopDishPicture = assetsSVGFolder + "dish.svg";
 // What the city (Teheran) is built of: the apartment blocks, the port buildings and the industrial ones that aren't on the waterfront, and for
 // a few blocks of the town the big warehouses
 const teheranWarehouseInfo = allPortBuildingInfo.filter(info => /\/(Warehouse_|Workshop)/.test(info.undamaged) && info.width >= 113);
@@ -514,6 +517,21 @@ class Building extends MapEntity {
     }
     reAssignSrc() {
         this.baseImgEl.src = this.getSource();
+        if (this.damage === Damage.destroyed && this.rooftopEl) { // whatever was on the roof goes with it
+            this.rooftopEl.remove();
+            this.rooftopEl = undefined;
+        }
+    }
+    // Something standing on the roof (a satellite dish, see rooftopDishPicture): it's drawn on the building's picture, and gone when the building's brought down
+    rooftopEl;
+    addRooftop(src, width) {
+        const el = ElementCreator.returnNewImageEl(this.picEl, "rooftop", src);
+        el.style.position = "absolute";
+        el.style.width = width + "px";
+        el.style.left = (this.info.width / 2 - width / 2) + "px";
+        el.style.top = (this.info.height * 0.12) + "px"; // (up where the roof is, not down on the platform)
+        el.style.pointerEvents = "none";
+        this.rooftopEl = el;
     }
     getSource() {
         let filename;

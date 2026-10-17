@@ -682,7 +682,10 @@ class SurveillanceDrone extends ExplosiveWeaponType {
         inst.blastRadElement.style.visibility = 'hidden'; // the scan has its own ring, once the drone's there
         this.createFlyover(inst);
 
-        setTimeout(() => this.scan(this.flyoverInfo.duration), this.flyoverInfo.delay);
+        setTimeout(() => {
+            if (game.level.droneBlocked()) PopupHandler.addToArray("Rooftop signal blockers are interfering with our drone feed!", "No signal", msgLength.long);
+            this.scan(this.flyoverInfo.duration);
+        }, this.flyoverInfo.delay);
 
         this.cooldownTimeout(inst);
         this.setActiveInstance();
@@ -699,6 +702,7 @@ class SurveillanceDrone extends ExplosiveWeaponType {
             if (typeof mouse.X !== 'number') return; // the mouse hasn't been over the game yet
             ring.style.left = mouse.X - radius + 'px';
             ring.style.top = mouse.Y - radius + 'px';
+            if (game.level.droneBlocked()) return; // the feed's jammed: the drone flies over and sees nothing
             for (const target of allTargets) {
                 if (!(target instanceof Target)) continue; // buildings give off nothing themselves
                 const dist = target.heatDistanceFrom(mouse);
