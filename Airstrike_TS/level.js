@@ -523,13 +523,16 @@ class SceneLevel extends Level {
         this.overParWarned = false;
         this.stageFinished = false;
         if (this.stage > 1) {
-            PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.stagesInAGame(), msgLength.short);
+            if (this.announcesStages())
+                PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.stagesInAGame(), msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
         }
         this.winLimitCheck();
         return true;
     }
     continueWave() { } // unpausing must not start target production
+    // Whether each new stage is announced with its number (Tehran's isn't: the one that's cleared says which it was)
+    announcesStages() { return true; }
     // Where the lights of a stage are lit: the place it's in
     lightArea() { return this.returnLocation(); }
     // Which buildings enemies can be put in
@@ -1008,6 +1011,7 @@ class TeheranLevel extends SceneLevel {
     slowAfterMs = 150000;
     rushDirections = ["down", "up", "right"];
     nextStageGap() { return 2500; } // (the clock's running)
+    announcesStages() { return false; }
     static wantedMan() {
         return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
     }
