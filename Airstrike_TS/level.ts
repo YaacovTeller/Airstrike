@@ -1027,7 +1027,7 @@ class HillsLevel extends SceneLevel {
 // warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station. The one man you're after is in a bunker
 // complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over (the ones that can be seen).
 class TeheranLevel extends SceneLevel {
-    public static countdownMs: number = 60000; // for the moment
+    public static countdownMs: number = 240000; // four minutes
     private countdownLeft: number = 0;
     private timedOut: boolean = false;
     protected slowAfterMs: number = 150000;
@@ -1038,7 +1038,9 @@ class TeheranLevel extends SceneLevel {
         return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
     }
     public static briefingText(): string {
-        return "Destroy the anti aircraft sites to clear a path for our jets!<br>Watch out, you only have a " + Math.round(TeheranLevel.countdownMs / 1000) + " second window to get this done!";
+        const seconds = Math.round(TeheranLevel.countdownMs / 1000);
+        const span = seconds % 60 == 0 ? (seconds / 60) + " minute" : seconds + " second";
+        return "Destroy the anti aircraft sites to clear a path for our jets!<br>Watch out, you only have a " + span + " window to get this done!";
     }
     protected specialAt(n: number): WantedMan { return TeheranLevel.wantedMan(); }
     protected infestedCount(): number { return this.scaled(5); } // (a bunch of buildings, with a bunch of enemies in each)

@@ -270,7 +270,6 @@ class GameHandler {
     }
     private endGame() {
         this.recordFinish("desert");
-        PopupHandler.addToArray("", "GAME COMPLETE", msgLength.long);
         PopupHandler.addToArray("That's the last of them, good work!", userHandler.addressed("You did it!"), msgLength.long);
         PopupHandler.addToArray(`Finished <strong>${GameHandler.placeName(this.gameMode)}</strong> on ${this.difficulty.eng.name} difficulty with ${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised!`, "", msgLength.long);
         cheer.play();
