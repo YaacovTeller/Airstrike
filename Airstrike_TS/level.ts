@@ -201,12 +201,17 @@ class Level {
         div.classList.add("selected");
     }
 
+    private static testWaveTargets: number = 3;
     protected setCurrentWave() {
         let num = this.waveIndex;
         if (game.gameMode == GameMode.regular) {
             this.setWaveDisplay(num);
         }
         this.currentWave = this.info.waves[num];
+        if (game.testMode && game.gameMode == GameMode.regular && this.currentWave.number > Level.testWaveTargets) {
+            // test mode: the desert game is one brief wave, a few targets (a copy, so the level's own wave isn't changed for the next game)
+            this.currentWave = Object.assign(Object.create(Object.getPrototypeOf(this.currentWave)), this.currentWave, { number: Level.testWaveTargets });
+        }
         game.changeTime(this.currentWave.timeOfDay);
         game.setRain(this.currentWave.weather);
     }
@@ -270,7 +275,7 @@ class Level {
     }
     protected nextWavePrepGap(lastOfLevel: boolean = false) {
         const index = allLevelsArray.indexOf(this);
-        const nextLevel = allLevelsArray[index + 1];
+        const nextLevel = game.testMode && game.gameMode == GameMode.regular ? undefined : allLevelsArray[index + 1]; // (test mode: the one level, and then it's the end)
         if (lastOfLevel && nextLevel) {
             setTimeout(() => this.rushToNextLevel(), Level.levelRushAt); // the wrecks ride off with the ground, and the next level starts when it's stopped
         }
@@ -281,8 +286,9 @@ class Level {
             if (this.nextWave() == false) {
                 game.newLevel(nextLevel, game.gameMode)
             }
-        }, 5000);
+        }, this.nextStageGap());
     }
+    protected nextStageGap(): number { return 5000; } // how long after one is cleared before the next begins
     private rushToNextLevel() {
         if (game.level !== this) return; // a stale call from before the game was reset
         game.moveStageToExit();
@@ -408,10 +414,10 @@ class SceneLevel extends Level {
     protected stage: number = 0;
     // A game of these levels is this many stages, and then it's won
     protected static totalStages: number = 6;
-    public static stagesInAGame(mode: GameMode = game.gameMode): number { return game.testMode || mode == GameMode.teheran ? 1 : SceneLevel.totalStages; } // (one in test mode, and one in the city)
+    public static stagesInAGame(mode: GameMode = game.gameMode): number { return game.testMode ? 1 : mode == GameMode.teheran ? 4 : SceneLevel.totalStages; } // (one in test mode, and four in Tehran: three sites, then the city)
 
     // What this stage has taken so far, for the message when it's cleared
-    private stageElapsedMs: number = 0;
+    protected stageElapsedMs: number = 0;
     private stageShotsAtStart: number = 0;
     private stageDroneFlyovers: number = 0;
     private stageOrdnanceSpent: number = 0;                  // the shots so far, each weighed by what it costs
@@ -433,7 +439,7 @@ class SceneLevel extends Level {
         }
     }
     private overParWarned: boolean = false;
-    private stageFinished: boolean = false;
+    protected stageFinished: boolean = false;
     // How long a stage can take before the hurry-up nudge: the difficulty's time, or the level's own if it has none
     protected parMs(): number {
         return game.difficulty.parMs || this.slowAfterMs;
@@ -550,7 +556,7 @@ class SceneLevel extends Level {
         this.chooseTimeOfDay();             // and the time of day
         PowerGrid.reset();
         this.populateStage();
-        game.lightStage(this.returnLocation()); // after dark the buildings glow
+        game.lightStage(this.lightArea()); // after dark the buildings glow
         this.stageElapsedMs = 0;
         this.stageShotsAtStart = game.killStats.shots;
         this.stageDroneFlyovers = 0;
@@ -567,6 +573,11 @@ class SceneLevel extends Level {
         return true;
     }
     public continueWave() { } // unpausing must not start target production
+
+    // Where the lights of a stage are lit: the place it's in
+    protected lightArea(): Area { return this.returnLocation(); }
+    // Which buildings enemies can be put in
+    protected canBeInfested(b: Building): boolean { return b.canHideEnemies(); }
 
     // What a stage is made of: here, boats on the water and a block layout of buildings, some with enemies in
     protected populateStage() {
@@ -686,7 +697,7 @@ class SceneLevel extends Level {
 
     // A few of the buildings have enemies hiding in them, who count as targets for the stage.
     protected infestBuildings(buildings: Array<Building>) {
-        const pool = buildings.filter(b => b.canHideEnemies());
+        const pool = buildings.filter(b => this.canBeInfested(b));
         for (let n = 0; n < this.infestedCount() && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const occupants = this.scaled(RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants));
@@ -1010,33 +1021,128 @@ class HillsLevel extends SceneLevel {
     }
 }
 
-// The city: Teheran, the last stage. The coast's ground with no sea, and a town of blocks of buildings right across the screen, a good part of it the big ones,
-// with a few blocks of warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station at the edge. The one man
-// you're after is in a bunker complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over.
+// Tehran: four stages with one countdown through all of them. Three anti aircraft sites first, in the hills' terrain: a few rocket launchers in the middle of the
+// screen, and a warehouse beside them with a few enemies hiding in it; when they're all dealt with the ground rushes by, to the next. Then the city, the
+// coast's ground with no sea, a town of blocks of buildings that goes right off every edge of the screen, a good part of it the big ones, with a few blocks of
+// warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station. The one man you're after is in a bunker
+// complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over (the ones that can be seen).
 class TeheranLevel extends SceneLevel {
-    protected slowAfterMs: number = 150000; // a long stage: a city to search
+    public static countdownMs: number = 60000; // for the moment
+    private countdownLeft: number = 0;
+    private timedOut: boolean = false;
+    protected slowAfterMs: number = 150000;
+    protected rushDirections: Array<RushDirection> = ["down", "up", "right"];
+    protected nextStageGap(): number { return 2500; } // (the clock's running)
+
     public static wantedMan(): WantedMan {
         return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
+    }
+    public static briefingText(): string {
+        return "Destroy the anti aircraft sites to clear a path for our jets!<br>Watch out, you only have a " + Math.round(TeheranLevel.countdownMs / 1000) + " second window to get this done!";
     }
     protected specialAt(n: number): WantedMan { return TeheranLevel.wantedMan(); }
     protected infestedCount(): number { return this.scaled(5); } // (a bunch of buildings, with a bunch of enemies in each)
     protected checkForRetreat() { } // he stays where he is, deep underground
     public specialDown() { }
 
+    // The last stage is the city
+    private isCity(): boolean { return this.stage >= SceneLevel.stagesInAGame(); }
+    protected lightArea(): Area { return this.isCity() ? Area.teheran : Area.hills; }
+
+    public nextWave() {
+        if (this.stage == 0) { // the first: the countdown starts
+            this.countdownLeft = TeheranLevel.countdownMs;
+            this.timedOut = false;
+        }
+        return super.nextWave();
+    }
+    // The countdown, which runs through all of it (the rush between the stages too) until the city's been cleared; at nothing, it's over
+    public tickClock() {
+        if (this.stageFinished || this.timedOut) return;
+        this.stageElapsedMs += 100;
+        this.countdownLeft = Math.max(0, this.countdownLeft - 100);
+        game.hud.updateCountdown(this.countdownLeft);
+        if (this.countdownLeft <= 0) {
+            this.timedOut = true;
+            game.failGame("Time ran out. The anti aircraft sites are still firing, and our jets can't get through.");
+        }
+    }
+
+    protected endWave() {
+        if (this.isCity()) {
+            super.endWave(); // the summary, and the game's won
+            return;
+        }
+        PopupHandler.addToArray("", "Site " + this.stage + " of " + (SceneLevel.stagesInAGame() - 1) + " destroyed", msgLength.short);
+        this.nextWavePrepGap();
+    }
+
+    // Enemies only go in the buildings that can be seen on the screen (the city goes on past its edges)
+    protected canBeInfested(b: Building): boolean {
+        return b.canHideEnemies() && !b.isElectric() && this.onScreen(b);
+    }
+    private onScreen(b: Building): boolean {
+        const r = b.getTargetEl().getBoundingClientRect();
+        return r.left >= 0 && r.right <= window.innerWidth && r.top >= 110 && r.bottom <= window.innerHeight; // (below the HUD)
+    }
+    private within(low: number, high: number): number {
+        return RandomNumberGen.randomNumBetween(Math.floor(low), Math.max(Math.floor(low), Math.floor(high)));
+    }
+
     protected populateStage() {
+        if (this.isCity()) this.populateCity();
+        else this.populateSite();
+    }
+
+    private populateCity() {
+        game.handleBackgroundByLocation(Area.teheran);
         game.shapeCity();
         const buildings = game.drawAllBuildings(true);
         this.infestBuildings(buildings);
         this.placeBunkers(buildings);
     }
 
-    // The one special enemy, in a bunker complex under one of the bigger buildings
+    // An anti aircraft site: a warehouse in the middle of the screen with a few enemies hiding in it, and one to three rocket launchers standing about it
+    private populateSite() {
+        game.handleBackgroundByLocation(Area.hills);
+        const width = window.innerWidth, height = window.innerHeight;
+        const info = oneOf(teheranWarehouseInfo);
+        const middle = { X: width / 2 + this.within(-70, 70), Y: (height + 120) / 2 + this.within(-40, 40) };
+        const taken: Array<Box> = [];
+        const warehouse = new Building(info);
+        warehouse.setPosition({ X: middle.X - info.width / 2, Y: middle.Y - info.height / 2 });
+        taken.push({ left: middle.X - info.width / 2, top: middle.Y - info.height / 2, right: middle.X + info.width / 2, bottom: middle.Y + info.height / 2 });
+        const hidden = this.scaled(RandomNumberGen.randomNumBetween(3, 4));
+        for (let i = 0; i < hidden; i++) {
+            const enemy = new BuildingEnemy();
+            warehouse.addOccupant(enemy);
+            this.registerTarget(enemy, warehouse.randomHidingSpot());
+        }
+        const trucks = RandomNumberGen.randomNumBetween(1, 3);
+        const size = { w: 65, h: 45 };
+        for (let n = 0; n < trucks; n++) {
+            for (let attempt = 0; attempt < 80; attempt++) {
+                const x = middle.X + this.within(-230, 230) - size.w / 2, y = middle.Y + this.within(-140, 140) - size.h / 2;
+                const box = { left: x, top: y, right: x + size.w, bottom: y + size.h };
+                const clear = (t: Box) => !(box.left < t.right + 14 && box.right > t.left - 14 && box.top < t.bottom + 10 && box.bottom > t.top - 10);
+                if (y < 130 || y + size.h > height - 30 || x < 30 || x + size.w > width - 30 || !taken.every(clear)) continue;
+                taken.push(box);
+                const truck = new RocketLauncher();
+                truck.setUpAsSite();
+                truck.finishedWhenDisabled = true;
+                this.registerTarget(truck, { X: x, Y: y });
+                break;
+            }
+        }
+    }
+
+    // The one special enemy, in a bunker complex under one of the bigger buildings that can be seen
     protected placeBunkers(buildings: Array<Building>) {
         this.stageBuildings = buildings;
         this.bunkerSpecials = [];
         this.retreatScheduled = true;
         this.stageToken++;
-        const eligible = buildings.filter(b => !b.isElectric() && b.canHideEnemies());
+        const eligible = buildings.filter(b => this.canBeInfested(b));
         const big = eligible.filter(b => b.getTargetEl().offsetWidth >= 110);
         const pool = big.length ? big : eligible;
         if (!pool.length) return;

@@ -177,7 +177,7 @@ class GameHandler {
         back.style.backgroundSize = 'tile';
         //content.style.backgroundSize = 'cover';
     }
-    private handleBackgroundByLocation(num: Area) {
+    public handleBackgroundByLocation(num: Area) {
         let url: string;
         if (num == Area.desert) {
             url = "url(./AS_assets/Sand.png)";
@@ -336,8 +336,8 @@ class GameHandler {
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, ammunition, active vehicles and tunnels. Fly it over the area you want checked.",
         },
         teheran: {
-            "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Everything here is built up: blocks of flats, warehouses, workshops and mosques, with streets between them.",
-            "6": "The man you're after is in a bunker complex, a good deal deeper than the others, with rooms and corridors a drone scan will show. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
+            "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Three anti aircraft sites first: rocket launchers beside a warehouse with men hiding in it. When they're down you're on to the next, and then Tehran.",
+            "6": "One countdown runs from the first site to the end of the city. When it runs out, it's over. The man you're after is in a bunker complex under Tehran, a good deal deeper than the others, with rooms and corridors a drone scan will show. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
             "7": "There are enemies hiding in the buildings all over the city, and they all have to be dealt with. Bring a building down and everything in it goes too.",
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, and the bunker complex below. Take out the power station and the city's lights go out.",
         },
@@ -369,7 +369,7 @@ class GameHandler {
         const open = GameHandler.cityOpen();
         radio.disabled = !open;
         const label = document.querySelector<HTMLElement>('label[for="location_teheran"]');
-        if (label) label.title = open ? "Teheran" : "Finish Desert, Hills and Coast first";
+        if (label) label.title = open ? "Tehran" : "Finish Desert, Hills and Coast first";
         if (!open && radio.checked) { // (the progress was cleared with it picked)
             const first = document.getElementById("location_desert") as HTMLInputElement;
             first.checked = true;
@@ -1127,7 +1127,7 @@ class GameHandler {
         const perStage = teheran ? 1 : Math.max(1, Math.round(this.difficulty.enemyFactor || 1)); // (the city has the one man, however hard it is)
         this.roster = teheran ? [TeheranLevel.wantedMan()] : SpecialRoster.make(SceneLevel.stagesInAGame(mode) * perStage);
         document.getElementById("briefingText").innerHTML = teheran
-            ? "This is the man you're after, in a bunker complex deep under the city. Only a bunker buster will reach him, and there are men hiding all over Teheran. Find his bunker, and bring it down."
+            ? "Three anti aircraft sites first, to clear a path for our jets: rocket launchers with men hiding in the warehouse beside them. Then Tehran itself, where the man you're after is in a bunker complex deep under the city. Only a bunker buster will reach him. And you're against the clock: one countdown runs through all four stages."
             : "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
             "over " + SceneLevel.stagesInAGame(mode) + " stages. " +
             (mode == GameMode.coast ? "They'll run for it if they feel threatened, when most of the boats or most of the targets on land have been dealt with. " : "They'll run for it once the shooting starts. ") +
@@ -1313,7 +1313,7 @@ class GameHandler {
         switch (mode) {
             case GameMode.hills: return "Hills";
             case GameMode.coast: return "Coast";
-            case GameMode.teheran: return "Teheran";
+            case GameMode.teheran: return "Tehran";
             case GameMode.sandbox: return "Weapon Test";
             case GameMode.test_1: return "Weather Test";
             default: return "Desert";
@@ -1334,6 +1334,7 @@ class GameHandler {
         this.gameMode = mode;
         // the one message at the start: where, and then how hard
         PopupHandler.addToArray(game.difficulty.eng.name, GameHandler.placeName(mode), undefined, true); // (centred, as the one message at the start)
+        if (mode == GameMode.teheran) PopupHandler.addToArray(TeheranLevel.briefingText(), "", msgLength.long); // (and the city's second, with what the mission is and how long there is)
         this.hud.drawHUD();
         this.progressBar = document.getElementById('progress');
         this.updateProgressBar();
@@ -1421,7 +1422,7 @@ class GameHandler {
         // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
         // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end. The city goes right
         // across the screen, and has a lot more.
-        const slots = city ? this.streetBlockSlots(260, { city: true, lines: 14, aboveCorner: 560, mosques: this.cityMosques() }) : this.streetBlockSlots(96, { mosques: this.coastMosques() });
+        const slots = city ? this.streetBlockSlots(420, { city: true, lines: 18, aboveCorner: 640, mosques: this.cityMosques() }) : this.streetBlockSlots(96, { mosques: this.coastMosques() });
         const buildings = slots.reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
@@ -1806,9 +1807,11 @@ class GameHandler {
 
     // Tries a block on a line with its first building's middle at x0, working along the line from x0 until it's clear of
     // the water and the top of the screen. Returns the slots, or null if it runs out of room (the edge, or the bottom).
+    // (the city's blocks go on past every edge of the screen, so there are no empty corners)
+    const off = city ? 320 : 0;
     const tryBlock = (k: number, grid: Array<Array<BuildingInfo>>, from: number): { slots: Array<BuildingSlot>, end: number, centres: Array<position>, cell: number, start: number } | null => {
         const cell = Math.max(...grid.map(col => Math.max(...col.map(info => info.width))));
-        for (let x0 = from; x0 < screenWidth; x0 += 12) {
+        for (let x0 = from; x0 < screenWidth + off; x0 += 12) {
             const placed: Array<BuildingSlot> = [];
             const centres: Array<position> = [];
             let tooHigh = false;
@@ -1824,9 +1827,9 @@ class GameHandler {
                     const footBottom = cy + footRise * info.width;
                     const left = cx - info.width / 2;
                     const placedTop = footBottom - info.height;
-                    if (left + info.width + padding > screenWidth || footBottom > bottom) return null;
+                    if (left + info.width + padding > screenWidth + off || footBottom > bottom + off) return null;
                     if (overlapsReserved(left, placedTop, left + info.width, footBottom)) { tooHigh = true; break; } // (it's in the way of the substation: try further along)
-                    if (placedTop < top - 20 || left < this.firstDryXFor(placedTop, info.height) + quaySide) { tooHigh = true; break; }
+                    if (city ? (placedTop < -off || left < -off) : (placedTop < top - 20 || left < this.firstDryXFor(placedTop, info.height) + quaySide)) { tooHigh = true; break; }
                     placed.push({ X: left, Y: placedTop, info: info });
                     centres.push({ X: cx, Y: cy });
                 }
@@ -1837,7 +1840,7 @@ class GameHandler {
     };
 
     // the lines take it in turns to have a block put on them, so no one line gets all of them
-    const next: Array<number> = classes.map(() => 40);
+    const next: Array<number> = classes.map(() => city ? -off - 80 : 40);
     const finished: Array<boolean> = classes.map(() => false);
     const previous: Array<{ centres: Array<position> } | null> = classes.map(() => null);
     const extent: Array<{ from: number, to: number, cell: number } | null> = classes.map(() => null);
@@ -1889,6 +1892,7 @@ class GameHandler {
         let best = -1;
         slots.forEach((s, i) => {
             if (replaced.has(i) || s.info.single || s.info.waterfront || s.info.electric || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged)) return;
+            if (city && (s.X < 0 || s.Y < top - 10 || s.X + s.info.width > screenWidth || s.Y + s.info.height > screenHeight)) return; // (the city's are where they can be seen)
             if (best < 0 || Math.abs(s.info.width - mosque.width) < Math.abs(slots[best].info.width - mosque.width)) best = i;
         });
         if (best >= 0) {

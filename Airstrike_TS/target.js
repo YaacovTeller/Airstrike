@@ -2218,6 +2218,12 @@ class RocketLauncher extends VehicleTarget {
     nextLaunch = RandomNumberGen.randomNumBetween(60, 120); // (ticks of the game loop)
     static launchAngle = 35; // degrees above the horizontal: the way the raised rocket pack points (see .raiseLauncher)
     static dotSpeed = 1800; // px a second
+    // Set up where it stands, ready: it doesn't drive in, its pack is already raised and it's firing off a rocket now and then (an anti aircraft site)
+    setUpAsSite() {
+        this.park();
+        this.deployed = true;
+        this.launcherEl.classList.add('raiseLauncher');
+    }
     launchDot() {
         const pack = this.launcherEl.getBoundingClientRect();
         const dot = ElementCreator.returnNewDiv(ContentElHandler.returnContentEl(), "rocketDot");

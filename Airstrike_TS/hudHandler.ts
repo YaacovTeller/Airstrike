@@ -315,6 +315,14 @@ class HudHandler {
         timer.innerText = "Time: " + clock(elapsedMs) + " / " + clock(parMs);
         timer.classList.toggle('red', elapsedMs > parMs);
     }
+    // The countdown (Tehran), in the same place: what's left, and red for the last ten seconds
+    public updateCountdown(leftMs: number) {
+        const timer = document.getElementById("stageTimer");
+        if (!timer) return;
+        const seconds = Math.ceil(leftMs / 1000);
+        timer.innerText = "Time left: " + Math.floor(seconds / 60) + ":" + (seconds % 60 < 10 ? "0" : "") + (seconds % 60);
+        timer.classList.toggle('red', seconds <= 10);
+    }
     public updateScore(stats: killStats) {
             //let span = document.getElementById('scoreCounter')
             //span.innerText = "Shots: " + stats.shots
