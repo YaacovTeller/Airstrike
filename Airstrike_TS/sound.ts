@@ -393,7 +393,7 @@ class CanvasGifHandler {
         this.fire_2_frames.push(...this.loadGifFrames('fire_2/', 11, '15'));
         this.expl_small_frames.push(...this.loadGifFrames('expl_small/', 25, '05'));
         this.expl_med_frames.push(...this.loadGifFrames('expl_med/', 24, '08'));
-        this.expl_big_frames.push(...this.loadGifFrames('expl_big/', 26, '1', 'png'));
+        this.expl_big_frames.push(...this.loadGifFrames('expl_big/', 27, '1', 'png'));
         this.smoke_frames.push(...this.loadGifFrames('smoke_3/', 15, '1'));
         this.splash_frames.push(...this.loadGifFrames('splash/', 13, '1'));
 }
