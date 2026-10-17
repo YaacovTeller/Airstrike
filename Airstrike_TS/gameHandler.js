@@ -328,10 +328,8 @@ class GameHandler {
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, ammunition, active vehicles and tunnels. Fly it over the area you want checked.",
         },
         teheran: {
-            "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Three anti aircraft sites first: rocket launchers beside a warehouse with men hiding in it. When they're down you're on to the next, and then Tehran.",
-            "6": "One countdown runs from the first site to the end of the city. When it runs out, it's over. The man you're after is in a bunker complex under Tehran, a little deeper than the others, with two chambers one below the other and a small one off to the side, which a drone scan will show. He can be in any of them. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
-            "7": "There are enemies hiding in the buildings all over the city, and they all have to be dealt with. Bring a building down and everything in it goes too.",
-            "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, and the bunker complex below. Take out the power station and the city's lights go out.",
+            "5": "You have one more target to get rid of. You don't have long to take him out, and you'll need to clear a path first!",
+            "6": "", "7": "", "8": "", // (nothing more to say: the rest of the list is left out)
         },
         coast: {
             "5": "Missiles (<b>Nos. 1-4</b>) and bombs (<b>Nos. 5 and 6</b>): the bigger they are the heavier they hit. Note that frivolous use of high-end ordnance will be frowned upon. Armoured ships need direct hits.",
@@ -347,7 +345,11 @@ class GameHandler {
             items.forEach(li => this.desertInstructions[li.dataset.changes] = li.innerHTML);
         }
         const texts = GameHandler.placeInstructions[location] || this.desertInstructions;
-        items.forEach(li => li.innerHTML = texts[li.dataset.changes]);
+        items.forEach(li => {
+            const text = texts[li.dataset.changes];
+            li.innerHTML = text;
+            li.style.display = text ? "" : "none";
+        });
     }
     // The stamp across the end of each location's button in the menu, for the hardest difficulty that kind of game has been finished on
     // Teheran stays greyed out until the other three have been finished, on any difficulty (or a mix of them)
