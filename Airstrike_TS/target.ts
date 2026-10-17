@@ -186,31 +186,32 @@ function villaInfo(letter: string, width: number, height: number, hide?: Buildin
     const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")] };
 }
-// The mosques (AS_assets/buildings/mosques): three of them, a village has one. Undamaged, damaged (the tower half
-// broken) and destroyed (the tower gone); there's also a complete ruin, _4, that nothing uses yet. Sizes are 0.36
-// of natural.
-function mosqueInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"], folder: string = "mosques/"): BuildingInfo {
-    const name = (stage: number) => folder + "Mosque_" + letter + "_" + stage + ".png";
-    const bit = bitPath("mosque_" + (folder.endsWith("fancy/") ? "fancy_" : "") + letter); // a piece of its dome
+// The mosques (AS_assets/buildings/mosques), in three sizes: small, medium, and the really big ones (the Large ones). Each is undamaged, damaged
+// (the tower half broken) and destroyed (the tower gone); the A, B and C ones have a complete ruin, _4, that nothing uses yet. The MosqueB_
+// pictures are the grander ones. Sizes are each picture's own scale, from 0.3 to 0.42 of natural. A village or a town has a few, never two big ones.
+function mosqueInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"], fancy: boolean = false): BuildingInfo {
+    const name = (stage: number) => "mosques/" + (fancy ? "MosqueB_" : "Mosque_") + letter + "_" + stage + ".png";
+    const bit = bitPath("mosque_" + (fancy ? "fancy_" : "") + letter); // a piece of its dome
     return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bit] };
 }
-const allMosqueInfo: Array<BuildingInfo> = [
+const smallMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("A", 76, 101, { x: [42, 50], y: [48, 76] }),
     mosqueInfo("B", 76, 107, { x: [20, 51], y: [49, 77] }),
     mosqueInfo("C", 81, 109, { x: [18, 50], y: [52, 72] }),
-];
-// The other mosques, for the bigger villages: the second sheet's small and medium for the medium ones, and for the
-// large ones its large and the grander pictures in mosques/fancy (the fancy large is too much to use). Sizes are
-// each picture's own scale, from 0.3 to 0.42 of natural.
-const mediumMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("Small", 87, 101, { x: [44, 58], y: [47, 65] }),
+    mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, true),
+];
+const mediumMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("Medium", 76, 102, { x: [29, 52], y: [56, 68] }),
+    mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, true),
 ];
 const largeMosqueInfo: Array<BuildingInfo> = [
     mosqueInfo("Large", 124, 136, { x: [49, 69], y: [82, 92] }),
-    mosqueInfo("Small", 95, 94, { x: [18, 62], y: [44, 69] }, "mosques/fancy/"),
-    mosqueInfo("Medium", 113, 115, { x: [17, 80], y: [47, 84] }, "mosques/fancy/"),
+    mosqueInfo("Large", 167, 120, undefined, true),
 ];
+function oneOf(infos: Array<BuildingInfo>): BuildingInfo {
+    return RandomNumberGen.returnRandomFromArray(infos);
+}
 
 // The explosives (AS_assets/buildings/explosives): stacks of ammunition crates and of rocket tubes and RPGs, each a single picture
 // with no damaged state: anything that damages one sets it on fire, and it goes up (see ExplosiveTarget). Sizes are two thirds of
@@ -259,7 +260,12 @@ function electricInfo(name: string, width: number, height: number, kind: "substa
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, electric: kind };
 }
 const substationInfo: Array<BuildingInfo> = [
-    electricInfo("Substation", 167, 142, "substation"), // (the old ones, and the power plants and wind farms, are in electric/UNUSED)
+    electricInfo("Substation", 167, 142, "substation"), // (the old ones, and the wind farms, are in electric/UNUSED)
+];
+// The power stations of the city (Teheran): they stand in the grid's place, and the lights go out in just the same way if one's brought down
+const powerPlantInfo: Array<BuildingInfo> = [
+    electricInfo("Power_Plant_A", 138, 162, "substation"),
+    electricInfo("Power_Plant_B", 135, 159, "substation"),
 ];
 type PowerLineInfo = { info: BuildingInfo, leftBase: [number, number], rightBase: [number, number] };
 const powerLineInfo: Array<PowerLineInfo> = [
@@ -267,14 +273,12 @@ const powerLineInfo: Array<PowerLineInfo> = [
     { info: electricInfo("Power_Line_HV", 122, 60, "line"), leftBase: [21, 59], rightBase: [104, 46] },
 ];
 
-// What the Coast level is built of: the port buildings, the industrial ones, and the bigger mosques (one mosque to a layout,
-// whichever)
+// What the Coast level is built of: the port buildings and the industrial ones. (Its mosques go in afterwards, see GameHandler.streetBlockSlots.)
 const coastBuildingInfo: Array<BuildingInfo> = [
     ...allPortBuildingInfo,
     ...seaFacingNW,
     ...seaFacingSW,
     ...allIndustrialInfo,
-    ...largeMosqueInfo.map(info => ({ ...info, single: true, group: "mosque" })),
 ];
 
 // The apartment blocks (AS_assets/buildings/blocks): four kinds, each intact, really damaged and destroyed.
@@ -300,6 +304,14 @@ const allBlockInfo: Array<BuildingInfo> = [
 ];
 // The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
 const smallBlockInfo: Array<BuildingInfo> = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
+// What the city (Teheran) is built of: the apartment blocks, the port buildings and the industrial ones that aren't on the waterfront, and for
+// a few blocks of the town the big warehouses
+const teheranWarehouseInfo: Array<BuildingInfo> = allPortBuildingInfo.filter(info => /\/(Warehouse_|Workshop)/.test(info.undamaged) && info.width >= 113);
+const teheranCityInfo: Array<BuildingInfo> = [
+    ...allBlockInfo,
+    ...allPortBuildingInfo.filter(info => !info.single && !info.undamaged.includes("Quay_") && !/Crane_|Jetty|Breakwater|Repair_Dock|Lighthouse/.test(info.undamaged)),
+    ...allIndustrialInfo.filter(info => !info.undamaged.includes("Water_Tower")),
+];
 // A copy of a building type at a different size (the pictures are the same, so only the box changes). No enemies
 // hide in it, as the hiding spots were measured at the original size.
 function resizedBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
@@ -2394,7 +2406,7 @@ class SpecialNames {
 // A headshot (one of the 14 in AS_assets/portraits) for each special enemy, with a red ELIMINATED stamp over it when he's been dealt with
 class SpecialPortraits {
     private static count: number = 14;
-    private static path(n: number): string {
+    public static path(n: number): string {
         return assetsFolder + "portraits/Portrait_" + (n < 10 ? "0" : "") + n + ".png";
     }
     public static random(): string {
@@ -2476,7 +2488,10 @@ class Bunker extends Target {
     public building: Building;
     public occupant?: SpecialEnemy;
     private shaft: { from: position, to: position };
-    private room: Box;
+    private room: Box;                     // the room the man is in
+    private otherRooms: Array<Box> = [];   // a complex has more, each joined to the next by a corridor
+    private corridors: Array<{ from: position, to: position }> = [];
+    private static complexDrop: number = 150; // a complex is a good deal deeper
     private surfaceBox: Box; // where its building stood: still there to be hit by a buster once the building has gone
     private planEl: SVGSVGElement;
 
@@ -2493,18 +2508,37 @@ class Bunker extends Target {
     }
     public action() { }
 
-    // Lays the bunker out beneath its building and draws it; returns the middle of the room
-    public setUp(): position {
+    // Lays the bunker out beneath its building and draws it; returns the middle of the room. A complex (the city's) is deeper, and has a big
+    // room with smaller ones off it, joined by corridors.
+    public setUp(complex: boolean = false): position {
         const rect = this.building.getTargetEl().getBoundingClientRect();
-        const size = Bunker.roomSize;
+        const width = complex ? 112 : Bunker.roomSize, height = complex ? 76 : Bunker.roomSize;
         const centre: position = {
-            X: Math.max(size, Math.min(window.innerWidth - size, rect.left + rect.width / 2)),
-            Y: Math.min(window.innerHeight - size, rect.bottom + Bunker.shaftDrop),
+            X: Math.max(width / 2 + (complex ? 220 : 0), Math.min(window.innerWidth - width / 2 - (complex ? 220 : 0), rect.left + rect.width / 2)),
+            Y: Math.min(window.innerHeight - height / 2 - (complex ? 130 : 0), rect.bottom + (complex ? Bunker.complexDrop : Bunker.shaftDrop)),
         };
         // (the building's own box, which has its size from the start; its picture may not have loaded yet)
         this.surfaceBox = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
         this.shaft = { from: { X: centre.X, Y: rect.top + rect.height * 0.6 }, to: centre };
-        this.room = { left: centre.X - size / 2, top: centre.Y - size / 2, right: centre.X + size / 2, bottom: centre.Y + size / 2 };
+        this.room = { left: centre.X - width / 2, top: centre.Y - height / 2, right: centre.X + width / 2, bottom: centre.Y + height / 2 };
+        this.otherRooms = [];
+        this.corridors = [];
+        if (complex) {
+            const box = (cx: number, cy: number, w: number, h: number): Box => ({ left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2 });
+            const middle = (b: Box): position => ({ X: (b.left + b.right) / 2, Y: (b.top + b.bottom) / 2 });
+            const wobble = () => RandomNumberGen.randomNumBetween(-24, 24);
+            const west = box(centre.X - 175 + wobble(), centre.Y + wobble(), 72, 54);
+            const east = box(centre.X + 175 + wobble(), centre.Y + wobble(), 66, 50);
+            const south = box(centre.X + wobble(), centre.Y + 115, 62, 46);
+            this.otherRooms.push(west, east, south);
+            for (const other of [west, east, south]) this.corridors.push({ from: centre, to: middle(other) });
+            this.corridors.push({ from: middle(west), to: middle(south) }); // (a way round, as well)
+            if (RandomNumberGen.randomNumBetween(0, 1)) {                      // and a small store off one end
+                const store = box(east.right + 55, east.top + 10, 40, 32);
+                this.otherRooms.push(store);
+                this.corridors.push({ from: middle(east), to: middle(store) });
+            }
+        }
         this.placeAt(this.room.left, this.room.top);
         this.draw();
         return centre;
@@ -2519,31 +2553,41 @@ class Bunker extends Target {
         svg.style.top = -this.room.top + "px";
         svg.style.width = window.innerWidth + "px";
         svg.style.height = window.innerHeight + "px";
-        const line = document.createElementNS(ns, "line");
-        line.setAttribute("x1", String(this.shaft.from.X));
-        line.setAttribute("y1", String(this.shaft.from.Y));
-        line.setAttribute("x2", String(this.shaft.to.X));
-        line.setAttribute("y2", String(this.shaft.to.Y));
-        svg.appendChild(line);
-        const room = document.createElementNS(ns, "rect");
-        room.setAttribute("x", String(this.room.left));
-        room.setAttribute("y", String(this.room.top));
-        room.setAttribute("width", String(this.room.right - this.room.left));
-        room.setAttribute("height", String(this.room.bottom - this.room.top));
-        svg.appendChild(room);
+        for (const run of [this.shaft, ...this.corridors]) {
+            const line = document.createElementNS(ns, "line");
+            line.setAttribute("x1", String(run.from.X));
+            line.setAttribute("y1", String(run.from.Y));
+            line.setAttribute("x2", String(run.to.X));
+            line.setAttribute("y2", String(run.to.Y));
+            svg.appendChild(line);
+        }
+        for (const box of [this.room, ...this.otherRooms]) {
+            const room = document.createElementNS(ns, "rect");
+            room.setAttribute("x", String(box.left));
+            room.setAttribute("y", String(box.top));
+            room.setAttribute("width", String(box.right - box.left));
+            room.setAttribute("height", String(box.bottom - box.top));
+            svg.appendChild(room);
+        }
         this.targetEl.appendChild(svg);
         this.planEl = svg as SVGSVGElement;
     }
 
-    // How far a point is from the shaft or the room, whichever is nearer
+    // How far a point is from the shaft, a corridor or a room, whichever is nearest
     private distanceFrom(p: position): number {
-        const inRoom = CollisionDetection.nearestPointInBox(p, this.room);
-        const a = this.shaft.from, b = this.shaft.to;
-        const dx = b.X - a.X, dy = b.Y - a.Y;
-        const lengthSquared = dx * dx + dy * dy;
-        const along = lengthSquared ? Math.max(0, Math.min(1, ((p.X - a.X) * dx + (p.Y - a.Y) * dy) / lengthSquared)) : 0;
-        const onShaft = Math.hypot(a.X + dx * along - p.X, a.Y + dy * along - p.Y);
-        return Math.min(Math.hypot(inRoom.X - p.X, inRoom.Y - p.Y), onShaft);
+        let nearest = Infinity;
+        for (const box of [this.room, ...this.otherRooms]) {
+            const inRoom = CollisionDetection.nearestPointInBox(p, box);
+            nearest = Math.min(nearest, Math.hypot(inRoom.X - p.X, inRoom.Y - p.Y));
+        }
+        for (const run of [this.shaft, ...this.corridors]) {
+            const a = run.from, b = run.to;
+            const dx = b.X - a.X, dy = b.Y - a.Y;
+            const lengthSquared = dx * dx + dy * dy;
+            const along = lengthSquared ? Math.max(0, Math.min(1, ((p.X - a.X) * dx + (p.Y - a.Y) * dy) / lengthSquared)) : 0;
+            nearest = Math.min(nearest, Math.hypot(a.X + dx * along - p.X, a.Y + dy * along - p.Y));
+        }
+        return nearest;
     }
     public heatDistanceFrom(p: position): number | null {
         return this.damage === Damage.destroyed ? null : this.distanceFrom(p);

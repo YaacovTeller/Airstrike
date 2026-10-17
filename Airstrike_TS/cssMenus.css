@@ -622,6 +622,19 @@ b {
     to { transform: translateY(-50%) rotate(-14deg) scale(1.15); opacity: 0; }
 }
 
+    /* the city stays greyed out until the other three have been finished */
+    #locationContainer input[type="radio"]:disabled + label {
+        opacity: 0.35;
+        filter: grayscale(1);
+        cursor: not-allowed;
+    }
+        #locationContainer input[type="radio"]:disabled + label:hover {
+            border-color: rgba(255,255,255,0.12);
+        }
+        #locationContainer input[type="radio"]:disabled + label .finishStamp {
+            display: none; /* (nothing to stamp until it's open) */
+        }
+
     #locationContainer input[type="radio"]:checked + label {
         border-color: #5dff9d;
         background: rgba(60,160,90,0.28);

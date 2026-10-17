@@ -12,7 +12,8 @@ enum Time {
 enum Area {
     desert,
     port,
-    hills
+    hills,
+    teheran
 }
 
 class Wave {
@@ -407,7 +408,7 @@ class SceneLevel extends Level {
     protected stage: number = 0;
     // A game of these levels is this many stages, and then it's won
     protected static totalStages: number = 6;
-    public static stagesInAGame(): number { return game.testMode ? 1 : SceneLevel.totalStages; } // (one in test mode)
+    public static stagesInAGame(mode: GameMode = game.gameMode): number { return game.testMode || mode == GameMode.teheran ? 1 : SceneLevel.totalStages; } // (one in test mode, and one in the city)
 
     // What this stage has taken so far, for the message when it's cleared
     private stageElapsedMs: number = 0;
@@ -611,10 +612,10 @@ class SceneLevel extends Level {
     // Once there's been a lot of destruction (more than half of the targets gone, or more than half of the buildings
     // down) the specials in the bunkers try to get away by sea: after 10 to 20 seconds a boat that's still running
     // heads slowly for the coast, and the special gets aboard and turns for open water (see WaterVehicleTarget.runToShore).
-    private stageBuildings: Array<Building> = [];
-    private bunkerSpecials: Array<SpecialEnemy> = [];
-    private retreatScheduled: boolean = false;
-    private stageToken: number = 0;
+    protected stageBuildings: Array<Building> = [];
+    protected bunkerSpecials: Array<SpecialEnemy> = [];
+    protected retreatScheduled: boolean = false;
+    protected stageToken: number = 0;
     private ticksSinceRetreatCheck: number = 0;
 
     // The special in the bunker feels threatened, and makes a run for it, once most of the boats have been dealt with, or most of the targets on land
@@ -624,7 +625,7 @@ class SceneLevel extends Level {
         const mostGone = (group: Array<Target>) => group.length > 0 && group.filter(t => t.isFinished()).length * 2 > group.length;
         return mostGone(boats) || mostGone(land);
     }
-    private checkForRetreat() {
+    protected checkForRetreat() {
         if (this.retreatScheduled || !this.bunkerSpecials.length || !this.heavilyDestroyed()) return;
         if (this.bunkerSpecials.every(s => s.isFinished())) return;
         this.retreatScheduled = true;
@@ -681,11 +682,12 @@ class SceneLevel extends Level {
     private static infestedBuildingCount: number = 3;
     private static minOccupants: number = 2;
     private static maxOccupants: number = 6;
+    protected infestedCount(): number { return this.scaled(SceneLevel.infestedBuildingCount); }
 
     // A few of the buildings have enemies hiding in them, who count as targets for the stage.
     protected infestBuildings(buildings: Array<Building>) {
         const pool = buildings.filter(b => b.canHideEnemies());
-        for (let n = 0; n < this.scaled(SceneLevel.infestedBuildingCount) && pool.length; n++) {
+        for (let n = 0; n < this.infestedCount() && pool.length; n++) {
             const building = pool.splice(RandomNumberGen.randomNumBetween(0, pool.length - 1), 1)[0];
             const occupants = this.scaled(RandomNumberGen.randomNumBetween(SceneLevel.minOccupants, SceneLevel.maxOccupants));
             for (let i = 0; i < occupants; i++) {
@@ -723,13 +725,14 @@ class SceneLevel extends Level {
 class HillsLevel extends SceneLevel {
     // What a village is made of, which varies from stage to stage, in four sizes: just villas; villas with a few of the small
     // apartment blocks; villas with a range of apartment buildings, the tall ones too; and one that's very built up, mostly
-    // apartment buildings. The bigger the village, the bigger its mosque.
-    private static villageSizes: Array<{ chance: number, villas: [number, number], blocks: [number, number], blockPool: Array<BuildingInfo>, mosques: Array<BuildingInfo>, gap: number }> = [
-        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 22 },        // just villas
-        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, mosques: allMosqueInfo, gap: 20 },        // villas, and a few small apartment blocks
-        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, mosques: mediumMosqueInfo, gap: 14 },        // a range of apartment buildings
-        { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, mosques: largeMosqueInfo, gap: 7 },        // very built up
+    // apartment buildings. The small villages have one small mosque (any of them); the big ones a medium one, and often a small one as well.
+    private static villageSizes: Array<{ chance: number, villas: [number, number], blocks: [number, number], blockPool: Array<BuildingInfo>, big: boolean, gap: number }> = [
+        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, big: false, gap: 22 },        // just villas
+        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, big: false, gap: 20 },        // villas, and a few small apartment blocks
+        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, big: true, gap: 14 },        // a range of apartment buildings
+        { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, big: true, gap: 7 },        // very built up
     ];
+    private static secondMosqueChance: number = 65; // (percent, in a big village)
     private static minOutliers: number = 1;    // and standing off from it
     private static maxOutliers: number = 2;
     private static villageGap: number = 22;    // between the buildings in the village
@@ -910,8 +913,9 @@ class HillsLevel extends SceneLevel {
         }
         gap = size.gap;
 
-        // the big ones first, while there's room: the village's mosque, which there's only the one of, and the blocks
-        place(RandomNumberGen.returnRandomFromArray(size.mosques), false);
+        // the big ones first, while there's room: the village's mosque (one small one in a small village; in a big one a medium one, and often a small one too), and the blocks
+        place(oneOf(size.big ? mediumMosqueInfo : smallMosqueInfo), false);
+        if (size.big && RandomNumberGen.randomNumBetween(1, 100) <= HillsLevel.secondMosqueChance) place(oneOf(smallMosqueInfo), false);
         const blocks = RandomNumberGen.randomNumBetween(size.blocks[0], size.blocks[1]);
         for (let i = 0; i < blocks; i++) {
             place(RandomNumberGen.returnRandomFromArray(size.blockPool), false);
@@ -1006,6 +1010,49 @@ class HillsLevel extends SceneLevel {
     }
 }
 
+// The city: Teheran, the last stage. The coast's ground with no sea, and a town of blocks of buildings right across the screen, a good part of it the big ones,
+// with a few blocks of warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station at the edge. The one man
+// you're after is in a bunker complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over.
+class TeheranLevel extends SceneLevel {
+    protected slowAfterMs: number = 150000; // a long stage: a city to search
+    public static wantedMan(): WantedMan {
+        return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
+    }
+    protected specialAt(n: number): WantedMan { return TeheranLevel.wantedMan(); }
+    protected infestedCount(): number { return this.scaled(5); } // (a bunch of buildings, with a bunch of enemies in each)
+    protected checkForRetreat() { } // he stays where he is, deep underground
+    public specialDown() { }
+
+    protected populateStage() {
+        game.shapeCity();
+        const buildings = game.drawAllBuildings(true);
+        this.infestBuildings(buildings);
+        this.placeBunkers(buildings);
+    }
+
+    // The one special enemy, in a bunker complex under one of the bigger buildings
+    protected placeBunkers(buildings: Array<Building>) {
+        this.stageBuildings = buildings;
+        this.bunkerSpecials = [];
+        this.retreatScheduled = true;
+        this.stageToken++;
+        const eligible = buildings.filter(b => !b.isElectric() && b.canHideEnemies());
+        const big = eligible.filter(b => b.getTargetEl().offsetWidth >= 110);
+        const pool = big.length ? big : eligible;
+        if (!pool.length) return;
+        const building = pool[RandomNumberGen.randomNumBetween(0, pool.length - 1)];
+        const bunker = new Bunker(building);
+        const room = bunker.setUp(true);
+        const who = this.specialAt(0);
+        const enemy = new SpecialEnemy(who.name, who.portrait);
+        enemy.goUnderground();
+        enemy.bunker = bunker;
+        bunker.occupant = enemy;
+        this.registerTarget(enemy, { X: room.X - 4, Y: room.Y - 4 });
+        this.bunkerSpecials.push(enemy);
+    }
+}
+
 //class Level_Static extends Level {
 //    constructor(info: LevelInfo) {
 //        super(info)
@@ -1061,6 +1108,18 @@ const sceneInfo: LevelInfo = {
     startArms: [],
     endArms: [],
     targetFunc: () => new WaterVehicleTarget(),
+}
+
+const teheranInfo: LevelInfo = {
+    number: 0,
+    location: Area.teheran,
+    messages: [],
+    waves: [
+        new Wave(0, WaveType.static, Time.day), // only carries time of day/weather, see SceneLevel
+    ],
+    startArms: [],
+    endArms: [],
+    targetFunc: () => new RegVehicleTarget(), // not used: TeheranLevel puts its own stage together
 }
 
 const hillsInfo: LevelInfo = {

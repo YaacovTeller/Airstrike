@@ -85,6 +85,7 @@ class ExplosionHandler {
         let explosion = this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
         let crater = this.setAndReturnCrater(blastCenter, size);
         this.handleExplosionCrater(explosion, crater);
+        game.damageRoads(blastCenter, size / 2 * this.drawScale, size * this.drawScale);
         this.shake_Light_Targets(blastCenter, size, weaponName);
     }
     static shake_Light_Targets(blastCenter, size, weaponName) {

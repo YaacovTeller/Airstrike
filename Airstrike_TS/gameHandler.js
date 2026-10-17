@@ -11,6 +11,7 @@ var GameMode;
     GameMode[GameMode["test_1"] = 2] = "test_1";
     GameMode[GameMode["coast"] = 3] = "coast";
     GameMode[GameMode["hills"] = 4] = "hills";
+    GameMode[GameMode["teheran"] = 5] = "teheran";
 })(GameMode || (GameMode = {}));
 var conventionalWeapons = [];
 var extraWeapons = [];
@@ -37,13 +38,13 @@ class PowerGrid {
     // Where to put a substation near the edge of the screen and the pylons that lead away from it, and clear off the edge: up and to the right from one on
     // the top or the right edge, down and to the left from one on the bottom or the left, which is the way they're drawn. The boxes are
     // checked with accept (which is told only the part of each that's on the screen). Returns the slots, or none if there was no room.
-    static plan(edges, accept, corner = false) {
+    static plan(edges, accept, corner = false, stations = substationInfo) {
         const width = window.innerWidth, height = window.innerHeight;
         const hud = 125; // clear of the HUD
         const inside = (box) => ({ left: Math.max(0, box.left), top: Math.max(0, box.top), right: Math.min(width, box.right), bottom: Math.min(height, box.bottom) });
         for (let attempt = 0; attempt < 500; attempt++) {
             const edge = RandomNumberGen.returnRandomFromArray(edges);
-            const sub = RandomNumberGen.returnRandomFromArray(substationInfo);
+            const sub = RandomNumberGen.returnRandomFromArray(stations);
             let x, y;
             const near = () => RandomNumberGen.randomNumBetween(18, 70);
             switch (edge) {
@@ -193,6 +194,10 @@ class GameHandler {
             url = "url(./AS_assets/Sand_scrub.png)";
             this.extendWater(0, false);
         }
+        else if (num == Area.teheran) {
+            url = "url(./AS_assets/Sand.png)"; // the same ground as the coast's, but the city has no sea
+            this.extendWater(0, false);
+        }
         this.setBackground(url);
         document.getElementById("contentWrapper").style.backgroundImage = url;
     }
@@ -323,6 +328,12 @@ class GameHandler {
             "7": "The men you're after are hiding in the villas. Once the shooting starts, each makes a run for the nearest running vehicle: stop it before it leaves the screen, or it's game over.",
             "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, ammunition, active vehicles and tunnels. Fly it over the area you want checked.",
         },
+        teheran: {
+            "5": "Armoured vehicles are impervious to gunfire, and require direct hits with explosives. Everything here is built up: blocks of flats, warehouses, workshops and mosques, with streets between them.",
+            "6": "The man you're after is in a bunker complex, a good deal deeper than the others, with rooms and corridors a drone scan will show. He won't run. Only the <b>bunker buster (No. 7)</b> reaches him, and it has to land on the building above.",
+            "7": "There are enemies hiding in the buildings all over the city, and they all have to be dealt with. Bring a building down and everything in it goes too.",
+            "8": "The <b>surveillance drone (No. 8)</b> shows up enemies hiding in buildings, and the bunker complex below. Take out the power station and the city's lights go out.",
+        },
         coast: {
             "5": "Missiles (<b>Nos. 1-4</b>) and bombs (<b>Nos. 5 and 6</b>): the bigger they are the heavier they hit. Note that frivolous use of high-end ordnance will be frowned upon. Armoured ships need direct hits.",
             "6": "The <b>bunker buster (No. 7)</b> goes through the ground and brings down a building, and the bunker beneath it. The men you're after hide in bunkers, and nothing else can reach them.",
@@ -340,6 +351,25 @@ class GameHandler {
         items.forEach(li => li.innerHTML = texts[li.dataset.changes]);
     }
     // The stamp across the end of each location's button in the menu, for the hardest difficulty that kind of game has been finished on
+    // Teheran stays greyed out until the other three have been finished, on any difficulty (or a mix of them)
+    static cityOpen() {
+        return ["desert", "hills", "coast"].every(location => !!GameProgress.best(location));
+    }
+    updateCityLock() {
+        const radio = document.getElementById("location_teheran");
+        if (!radio)
+            return;
+        const open = GameHandler.cityOpen();
+        radio.disabled = !open;
+        const label = document.querySelector('label[for="location_teheran"]');
+        if (label)
+            label.title = open ? "Teheran" : "Finish Desert, Hills and Coast first";
+        if (!open && radio.checked) { // (the progress was cleared with it picked)
+            const first = document.getElementById("location_desert");
+            first.checked = true;
+            first.dispatchEvent(new Event("change"));
+        }
+    }
     // A game finished: it's stamped, and the stamp slams down as soon as the menu is back on the screen
     stampToSlam = null;
     recordFinish(location) {
@@ -359,7 +389,8 @@ class GameHandler {
         stamp.addEventListener("animationend", () => stamp.classList.remove("fresh"), { once: true });
     }
     refreshFinishStamps() {
-        for (const location of ["desert", "hills", "coast"]) {
+        this.updateCityLock();
+        for (const location of ["desert", "hills", "coast", "teheran"]) {
             const label = document.querySelector('#locationContainer label[for="location_' + location + '"]');
             if (!label)
                 continue;
@@ -427,7 +458,7 @@ class GameHandler {
     }
     selectedMode() {
         const location = this.selectedLocation();
-        return location == "hills" ? GameMode.hills : location == "coast" ? GameMode.coast : GameMode.regular;
+        return location == "hills" ? GameMode.hills : location == "coast" ? GameMode.coast : location == "teheran" ? GameMode.teheran : GameMode.regular;
     }
     getMenuLis() {
         let container = document.getElementById("difficultiesContainer");
@@ -864,7 +895,7 @@ class GameHandler {
         const blocks = {};
         const single = [];
         for (const b of homes) {
-            if (area == Area.port && b.blockId)
+            if ((area == Area.port || area == Area.teheran) && b.blockId)
                 (blocks[b.blockId] = blocks[b.blockId] || []).push(b);
             else if (area == Area.port && b.isPier())
                 continue; // (a jetty or a breakwater, out in the sea, has no lights)
@@ -1054,7 +1085,7 @@ class GameHandler {
     finishCampaign() {
         if (!this.gameInProgress)
             return;
-        this.recordFinish(this.gameMode == GameMode.coast ? "coast" : "hills");
+        this.recordFinish(this.gameMode == GameMode.coast ? "coast" : this.gameMode == GameMode.teheran ? "teheran" : "hills");
         cheer.play();
         const faces = this.roster.map(man => '<div><div class="eliminatedCard"><img class="eliminatedPortrait" src="' + man.portrait + '"><img class="eliminatedStamp" src="' + assetsFolder + 'portraits/Stamp_eliminated.png"></div><div class="endRosterName">' + man.name + '</div></div>').join("");
         const stats = `${this.killStats.disabled} kills, and ${this.killStats.destroyed} pulverised, on ${this.difficulty.eng.name} difficulty`;
@@ -1084,19 +1115,22 @@ class GameHandler {
     briefingMode = GameMode.hills;
     startPressed() {
         const mode = this.selectedMode();
-        if (mode == GameMode.hills || mode == GameMode.coast)
+        if (mode == GameMode.hills || mode == GameMode.coast || mode == GameMode.teheran)
             this.openBriefing(mode);
         else
             this.newGame(mode);
     }
     openBriefing(mode) {
         this.briefingMode = mode;
-        const perStage = Math.max(1, Math.round(this.difficulty.enemyFactor || 1));
-        this.roster = SpecialRoster.make(SceneLevel.stagesInAGame() * perStage);
-        document.getElementById("briefingText").innerHTML = "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
-            "over " + SceneLevel.stagesInAGame() + " stages. " +
-            (mode == GameMode.coast ? "They'll run for it if they feel threatened, when most of the boats or most of the targets on land have been dealt with. " : "They'll run for it once the shooting starts. ") +
-            "Don't let any of them get away.";
+        const teheran = mode == GameMode.teheran;
+        const perStage = teheran ? 1 : Math.max(1, Math.round(this.difficulty.enemyFactor || 1)); // (the city has the one man, however hard it is)
+        this.roster = teheran ? [TeheranLevel.wantedMan()] : SpecialRoster.make(SceneLevel.stagesInAGame(mode) * perStage);
+        document.getElementById("briefingText").innerHTML = teheran
+            ? "This is the man you're after, in a bunker complex deep under the city. Only a bunker buster will reach him, and there are men hiding all over Teheran. Find his bunker, and bring it down."
+            : "These are the men you're after, " + (perStage > 1 ? "" + perStage + " to a stage, " : "one to a stage, ") +
+                "over " + SceneLevel.stagesInAGame(mode) + " stages. " +
+                (mode == GameMode.coast ? "They'll run for it if they feel threatened, when most of the boats or most of the targets on land have been dealt with. " : "They'll run for it once the shooting starts. ") +
+                "Don't let any of them get away.";
         document.getElementById("rosterGrid").innerHTML = this.roster.map((man, i) => '<div class="rosterCard"><img class="rosterPortrait" src="' + man.portrait + '"><div><div class="rosterStage">Stage ' + (Math.floor(i / perStage) + 1) + '</div><div class="rosterName">' + man.name + '</div></div></div>').join("");
         document.getElementById("modal").classList.add("displayNone");
         document.getElementById("briefing").classList.remove("displayNone");
@@ -1263,19 +1297,20 @@ class GameHandler {
     // Whether this mode is a series of stages of targets to clear, rather than targets that cross the
     // screen and can escape -- the HUD shows progress through the stage instead of the escape limit.
     hasStages() {
-        return this.gameMode == GameMode.coast || this.gameMode == GameMode.hills;
+        return this.gameMode == GameMode.coast || this.gameMode == GameMode.hills || this.gameMode == GameMode.teheran;
     }
     // What each kind of game is called, in the menu's buttons, the message at the start and the messages at the end
     static placeName(mode) {
         switch (mode) {
             case GameMode.hills: return "Hills";
             case GameMode.coast: return "Coast";
+            case GameMode.teheran: return "Teheran";
             case GameMode.sandbox: return "Weapon Test";
             case GameMode.test_1: return "Weather Test";
             default: return "Desert";
         }
     }
-    static locationModes = { desert: GameMode.regular, hills: GameMode.hills, coast: GameMode.coast };
+    static locationModes = { desert: GameMode.regular, hills: GameMode.hills, coast: GameMode.coast, teheran: GameMode.teheran };
     labelLocationButtons() {
         for (const location in GameHandler.locationModes) {
             const label = document.querySelector('label[for="location_' + location + '"] .eng');
@@ -1319,6 +1354,11 @@ class GameHandler {
             this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
             this.addScaledWeaponSet();
         }
+        else if (mode == GameMode.teheran) {
+            this.newLevel(new TeheranLevel(teheranInfo), mode);
+            this.addScaledWeaponSet(); // as the coast's: the missiles and bombs, the bunker buster and the drone...
+            this.level.addNewWeapon(bunkerBusterInfo, false); // ...and a second buster, for a bunker as big as this
+        }
         else if (mode == GameMode.hills) {
             this.newLevel(new HillsLevel(hillsInfo), mode);
             this.addStarterWeapons(); // the standard weapons here: the gun, mortars, tank, airstrike, tunnel charge and the drone
@@ -1344,10 +1384,36 @@ class GameHandler {
         this.changeWeapon(startWeapon);
         this.start_unpause();
     }
-    drawAllBuildings() {
+    // The mosques of the coast: two or three, mostly small, and sometimes (more often than not) a medium one or one of the really big ones too, but never
+    // two of those
+    coastMosques() {
+        const mosques = [];
+        if (RandomNumberGen.randomNumBetween(1, 100) <= 60) {
+            mosques.push(oneOf(RandomNumberGen.randomNumBetween(1, 100) <= 40 ? largeMosqueInfo : mediumMosqueInfo));
+        }
+        const count = RandomNumberGen.randomNumBetween(2, 3);
+        while (mosques.length < count)
+            mosques.push(oneOf(smallMosqueInfo));
+        return mosques;
+    }
+    // The city's: a big one, a medium one, and one or two small ones
+    cityMosques() {
+        const mosques = [oneOf(largeMosqueInfo), oneOf(mediumMosqueInfo), oneOf(smallMosqueInfo)];
+        if (RandomNumberGen.randomNumBetween(0, 1))
+            mosques.push(oneOf(smallMosqueInfo));
+        return mosques;
+    }
+    // No sea in the city: the ground's the coast's, and the rows of its buildings slant the way the steep coast's do
+    shapeCity() {
+        this.coastKind = "lean";
+        this.coastRowSlant = 18;
+    }
+    drawAllBuildings(city = false) {
         // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
-        // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end.
-        const buildings = this.streetBlockSlots(96).reverse().map(slot => {
+        // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end. The city goes right
+        // across the screen, and has a lot more.
+        const slots = city ? this.streetBlockSlots(260, { city: true, lines: 14, aboveCorner: 560, mosques: this.cityMosques() }) : this.streetBlockSlots(96, { mosques: this.coastMosques() });
+        const buildings = slots.reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
             building.blockId = slot.block;
@@ -1436,8 +1502,44 @@ class GameHandler {
     // is not quite the slant it was drawn at, so each is given a matrix: the road's own two edges (along it, and across it) are what it maps
     // from, and `along` and `across` are what they're to become on the screen (px, as a vector from one end to the other).
     coastRoads = [];
+    // A road has three pictures, whole, damaged and destroyed (Road_Straight_1, _2 and _3, and the TLBR ones, turned the other way)
+    static roadFile(mirrored, state) {
+        return assetsFolder + "buildings/roads/" + (mirrored ? "Road_Straight_TLBR_" : "Road_Straight_") + state + ".png";
+    }
+    static roadsPreloaded = false;
+    static preloadRoads() {
+        if (GameHandler.roadsPreloaded)
+            return;
+        GameHandler.roadsPreloaded = true;
+        for (const mirrored of [false, true])
+            for (const state of [2, 3])
+                new Image().src = GameHandler.roadFile(mirrored, state);
+    }
+    // A blast tears up the road it lands on: a piece of road within its reach is damaged, and one right under a big one is destroyed. (A bigger blast
+    // than a damaged road's can still go on to destroy it.)
+    damageRoads(blast, radius, size) {
+        if (size < ExplSizes.small)
+            return;
+        for (const road of this.coastRoads) {
+            if (!road.el)
+                continue;
+            let nearest = Infinity;
+            for (let t = -0.5; t <= 0.5001; t += 0.1) {
+                nearest = Math.min(nearest, Math.hypot(road.cx + road.along[0] * t - blast.X, road.cy + road.along[1] * t - blast.Y));
+            }
+            const halfWidth = Math.hypot(road.across[0], road.across[1]) / 2;
+            if (nearest > radius * 0.8 + halfWidth)
+                continue;
+            const state = size >= ExplSizes.XL && nearest <= radius * 0.5 + halfWidth ? 3 : 2;
+            if (state > (road.state || 1)) {
+                road.state = state;
+                road.el.src = GameHandler.roadFile(road.mirrored, state);
+            }
+        }
+    }
     static roadArt = { width: 362, height: 176, centre: [181, 88], along: [295.5, -125], across: [69.5, 49] };
     drawRoads() {
+        GameHandler.preloadRoads();
         const art = GameHandler.roadArt;
         for (const road of this.coastRoads) {
             const u = road.mirrored ? [art.along[0], -art.along[1]] : art.along; // the picture's edges, as vectors
@@ -1451,7 +1553,9 @@ class GameHandler {
             ];
             const img = document.createElement("img");
             img.className = "coastRoad";
-            img.src = assetsFolder + "buildings/roads/" + (road.mirrored ? "Road_Straight_TLBR_1.png" : "Road_Straight_1.png");
+            img.src = GameHandler.roadFile(road.mirrored, 1);
+            road.el = img;
+            road.state = 1;
             img.style.left = road.cx - art.centre[0] + "px";
             img.style.top = road.cy - art.centre[1] + "px";
             img.style.width = art.width + "px";
@@ -1468,8 +1572,8 @@ class GameHandler {
     // is its own type, from the same size class, and there's one lighthouse, not several.
     streetBlockSlots(maxCount, options) {
         const { blockLength = 4, lines = 10, slantDegrees = this.coastRowSlant, padding = 12, road = 1.0, // the road between blocks, in building widths
-        aboveCorner = 420 // how far the first line is above the one that runs from the corner of the land
-         } = options || {};
+        aboveCorner = 420, // how far the first line is above the one that runs from the corner of the land
+        city = false, mosques = [], } = options || {};
         const slots = [];
         this.coastRoads = [];
         const screenWidth = window.innerWidth;
@@ -1480,13 +1584,20 @@ class GameHandler {
         const blockDepth = 2; // rows to a block
         const footRise = 0.25; // the middle of a building's platform is this share of its width above the bottom of its picture
         // the port buildings, by how big they are
-        const town = coastBuildingInfo.filter(info => !info.waterfront);
+        const town = city ? teheranCityInfo : coastBuildingInfo.filter(info => !info.waterfront);
         const large = town.filter(info => info.width >= 110);
         const medium = town.filter(info => info.width >= 80 && info.width < 110);
         const small = town.filter(info => info.width < 80);
         const usedSingles = []; // there's one lighthouse, say, not four, and one mosque
         const singleTaken = (info) => !!info.single && usedSingles.some(u => u === info || (!!u.group && u.group === info.group));
         const blocksWanted = Math.floor(maxCount / (blockLength * blockDepth));
+        // the city has a few blocks that are the big warehouses: which of its blocks (counting from the first) they are
+        const warehouseBlocks = new Set();
+        if (city) {
+            const wanted = RandomNumberGen.randomNumBetween(3, 4);
+            while (warehouseBlocks.size < wanted)
+                warehouseBlocks.add(RandomNumberGen.randomNumBetween(1, Math.max(wanted, blocksWanted)));
+        }
         // The waterfront: one kind of crane, three to six of them, stand along the shore, and one kind of jetty or breakwater, three
         // to six of those, goes out into the sea, with the one lighthouse among the cranes. Where the water's faded edge is is the
         // shore: a crane's near corner is put there and a jetty's landward end. The town starts just behind the cranes, a road away.
@@ -1503,7 +1614,11 @@ class GameHandler {
         };
         let quaySide = crane.width + 6; // how far in from the shore the town starts: the cranes' depth and a road's worth
         let roadOffset = crane.width + 22; // where the road along the shore is, from the shore (the middle of it)
-        const seaCount = RandomNumberGen.randomNumBetween(3, 6);
+        if (city) {
+            quaySide = 0;
+            roadOffset = 0;
+        }
+        const seaCount = city ? 0 : RandomNumberGen.randomNumBetween(3, 6);
         const seaRanges = [];
         for (let n = 0; n < seaCount; n++) {
             for (let attempt = 0; attempt < 30; attempt++) {
@@ -1524,7 +1639,7 @@ class GameHandler {
                 break;
             }
         }
-        {
+        if (!city) {
             // The cranes stand in a cluster along the shore, three to five of one kind close together, and maybe, a good way down the shore from it,
             // a second cluster of another kind
             const along = crane.height * 0.38; // how far down the shore the next in a cluster is (they stand close)
@@ -1603,9 +1718,11 @@ class GameHandler {
             });
         };
         // tucked away in the corner at the back (the top right), out of the way of the town; anywhere on an edge if that corner's no good
-        let power = PowerGrid.plan(["right", "top"], powerFits, true);
+        // (the city has a power station, not a substation, which takes up a good deal more of the edge)
+        const stations = city ? powerPlantInfo : substationInfo;
+        let power = PowerGrid.plan(city ? ["right", "top", "left", "bottom"] : ["right", "top"], powerFits, true, stations);
         if (!power.length)
-            power = PowerGrid.plan(["right", "top", "bottom"], powerFits);
+            power = PowerGrid.plan(["right", "top", "bottom", "left"], powerFits, false, stations);
         for (const slot of power) {
             reserved.push(boxOf(slot));
             if (slot.info.electric == "substation")
@@ -1625,7 +1742,10 @@ class GameHandler {
         const kinds = [large, large];
         for (let k = 2; k < lines; k++) {
             const roll = RandomNumberGen.randomNumBetween(1, 100);
-            kinds.push(roll <= 30 ? large : roll <= 70 ? medium : small);
+            if (city)
+                kinds.push(roll <= 60 ? large : roll <= 85 ? medium : small); // (sixty per cent of the city is the big buildings)
+            else
+                kinds.push(roll <= 30 ? large : roll <= 70 ? medium : small);
         }
         for (let i = kinds.length - 1; i > 0; i--) { // in a random order down the screen
             const j = RandomNumberGen.randomNumBetween(0, i);
@@ -1726,7 +1846,9 @@ class GameHandler {
                 // a block of the full length if it fits, and if not a shorter one in what's left of the line, out to the edge of the screen
                 let block = null;
                 for (let length = blockLength; length >= 2 && !block; length--) {
-                    block = tryBlock(k, chooseBlock(classes[k].pool, length), next[k]);
+                    // (the warehouses go on the lines of big buildings, so they don't crowd the next line)
+                    const pool = city && warehouseBlocks.has(blockCount + 1) && classes[k].width >= 110 ? teheranWarehouseInfo : classes[k].pool;
+                    block = tryBlock(k, chooseBlock(pool, length), next[k]);
                 }
                 if (!block) {
                     finished[k] = true;
@@ -1760,20 +1882,20 @@ class GameHandler {
                 blocks++;
             }
         }
-        // there's always the one mosque: if the blocks didn't happen to draw it, it takes the place of the building closest to it in size
-        const mosques = town.filter(info => info.group === "mosque");
-        if (mosques.length && blocksWanted > 0 && !slots.some(s => s.info.group === "mosque")) {
-            const mosque = RandomNumberGen.returnRandomFromArray(mosques);
+        // the mosques each take the place of whichever building is nearest them in size (the biggest first, so they don't take each other's places)
+        const replaced = new Set();
+        for (const mosque of mosques.slice().sort((x, y) => y.width - x.width)) {
             let best = -1;
             slots.forEach((s, i) => {
-                if (s.info.single || s.info.waterfront || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged))
+                if (replaced.has(i) || s.info.single || s.info.waterfront || s.info.electric || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged))
                     return;
                 if (best < 0 || Math.abs(s.info.width - mosque.width) < Math.abs(slots[best].info.width - mosque.width))
                     best = i;
             });
             if (best >= 0) {
                 const old = slots[best];
-                slots[best] = { X: old.X + old.info.width / 2 - mosque.width / 2, Y: old.Y + old.info.height - mosque.height, info: mosque };
+                slots[best] = { X: old.X + old.info.width / 2 - mosque.width / 2, Y: old.Y + old.info.height - mosque.height, info: mosque, block: old.block };
+                replaced.add(best);
             }
         }
         // A street between each line of blocks and the next, along the way the lines run: its middle is half way between the second row of one line
@@ -1796,7 +1918,7 @@ class GameHandler {
         }
         // the road along the shore, behind the cranes and in front of the town: pieces end to end down the line of the shore (on the steep coast the
         // road drawn rising to the right is turned to the shore's slope, on the sliced one the same turned over, falling to the right)
-        {
+        if (!city) {
             const pieceLength = 200, pieceWidth = 34;
             const norm = Math.hypot(this.coastShoreK, 1);
             const down = { x: this.coastShoreK / norm, y: 1 / norm }; // down the shore
