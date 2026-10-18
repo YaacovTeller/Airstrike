@@ -245,8 +245,7 @@ const sceneNormal = {
     boatFleeSpeed: 3,
     fleeDelay: { min: 10000, max: 17000 },
     spookDelay: { min: 5500, max: 9000 },
-    tehranMs: 180000,
-    eng: { name: "Normal", description: "Normal number of enemies and plenty of time to clear the stage." },
+    eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 };
 const sceneHard = {
@@ -257,8 +256,7 @@ const sceneHard = {
     boatFleeSpeed: 5,
     fleeDelay: { min: 8000, max: 13000 },
     spookDelay: { min: 4500, max: 7000 },
-    tehranMs: 150000,
-    eng: { name: "Hard", description: "More enemies and less time to clear them." },
+    eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 };
 const sceneChaos = {
@@ -269,9 +267,8 @@ const sceneChaos = {
     fleeSpeed: 8,
     boatFleeSpeed: 7,
     fleeDelay: { min: 8000, max: 12000 },
-    spookDelay: { min: 5500, max: 7000 },
-    tehranMs: 120000,
-    eng: { name: "Chaos", description: "Crazy number of enemies and very limited time frame." },
+    spookDelay: { min: 5500, max: 7000 }, // (less generous than the others: on Chaos he's off fairly quickly)
+    eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 };
 const dev = {
