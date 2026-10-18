@@ -153,6 +153,12 @@ const regTunnelTarget: TargetInfo = {
     maxSpeed: 2,
     armour: Armour.moderate,
 }
+// Radar (an anti aircraft site's scanner): it stays where it is, and takes some bringing down
+const radarTargetInfo: TargetInfo = {
+    minSpeed: 0,
+    maxSpeed: 0,
+    armour: Armour.moderate,
+}
 const boatTarget: TargetInfo = {
     minSpeed: 0,
     maxSpeed: 0,
@@ -212,6 +218,9 @@ type difficultyLevelInfo = {
     fleeDelay?: speedRange, // how long (ms) after the first strike he waits before making a run for it
     spookDelay?: speedRange, // and how long the other waits when one of two has been taken out
     tehranMs?: number,     // how long the countdown through Tehran is
+    siteLaunchers?: [number, number], // what an anti aircraft site of Tehran has, from the fewest to the most: rocket launchers,
+    siteBuildings?: [number, number], // warehouses with enemies hiding in them,
+    siteScanners?: [number, number],  // and radar
     eng: langInfo,
     heb: langInfo
 }
@@ -329,6 +338,7 @@ const sceneNormal: difficultyLevelInfo = {
     fleeDelay: { min: 10000, max: 17000 },
     spookDelay: { min: 5500, max: 9000 },
     tehranMs: 180000,   // (3 minutes)
+    siteLaunchers: [1, 2], siteBuildings: [1, 1], siteScanners: [1, 1],
     eng: { name: "Normal", description: "Normal number of enemies and plenty of time to clear the stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
@@ -341,6 +351,7 @@ const sceneHard: difficultyLevelInfo = {
     fleeDelay: { min: 8000, max: 13000 },
     spookDelay: { min: 4500, max: 7000 },
     tehranMs: 150000,   // (2 minutes 30)
+    siteLaunchers: [2, 4], siteBuildings: [1, 2], siteScanners: [1, 2],
     eng: { name: "Hard", description: "More enemies and less time to clear them." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
@@ -354,6 +365,7 @@ const sceneChaos: difficultyLevelInfo = {
     fleeDelay: { min: 8000, max: 12000 },
     spookDelay: { min: 5500, max: 7000 }, // (less generous than the others: on Chaos he's off fairly quickly)
     tehranMs: 120000,   // (2 minutes)
+    siteLaunchers: [3, 5], siteBuildings: [2, 3], siteScanners: [1, 3],
     eng: { name: "Chaos", description: "Crazy number of enemies and very limited time frame." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }

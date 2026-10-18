@@ -340,6 +340,22 @@ function unInfo(name: string, width: number, height: number): BuildingInfo {
 const unLookoutInfo: Array<BuildingInfo> = [unInfo("UN_Watch_A", 50, 86), unInfo("UN_Watch_B", 52, 85)];
 const unBaseInfo: Array<BuildingInfo> = [unInfo("UN_Tower", 86, 90), unInfo("UN_Tank", 100, 86), unInfo("UN_Main", 112, 89)];
 
+// The radar of an anti aircraft site (AS_assets/buildings/radar): three compounds, long, medium and short range, and three radar trucks, each whole, damaged
+// (on fire) and destroyed. Not buildings with someone hiding in them: they're targets themselves (see RadarTarget).
+type RadarInfo = { undamaged: string, damaged: string, destroyed: string, width: number, height: number };
+function radarInfo(name: string, width: number, height: number): RadarInfo {
+    const file = (stage: number) => "radar/" + name + "_" + stage + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height };
+}
+const allRadarInfo: Array<RadarInfo> = [
+    radarInfo("Radar_Long", 117, 89),
+    radarInfo("Radar_Medium", 116, 83),
+    radarInfo("Radar_Short", 112, 76),
+    radarInfo("Radar_Truck_Long", 104, 98),
+    radarInfo("Radar_Truck_Medium", 95, 91),
+    radarInfo("Radar_Truck_Short", 92, 83),
+];
+
 // Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
 const buildingRuinSources: Array<string> = [
     assetsFolder + "ruin_1.png",
@@ -1027,6 +1043,60 @@ class BuildingEnemy extends Target {
         game.assessKillPoints(priorStatus, this.damage, true, this); // (a hit on a building)
         this.setHeatSignature(false);
         ContentElHandler.removeFromContentEl(this.targetEl);
+    }
+}
+
+// A radar installation: a target that has to be destroyed. Any hit from a mortar or bigger damages it (and it goes on fire, in its picture), and it's
+// destroyed when it's taken enough, a direct hit from an airstrike or a nuke at once. Bullets do nothing.
+class RadarTarget extends Target {
+    private radar: RadarInfo;
+    private damagePoints: number = 0;
+    private static hitPointsToDestroy: number = 100;
+    private static standardBlastRadius: number = 100;
+
+    constructor(info?: RadarInfo) {
+        super(radarTargetInfo);
+        this.radar = info ? info : RandomNumberGen.returnRandomFromArray(allRadarInfo);
+        this.targetEl.classList.add("radar");
+        this.targetEl.classList.remove("smoothTransition");
+        this.targetEl.style.width = this.radar.width + "px";
+        this.targetEl.style.height = this.radar.height + "px";
+        this.picEl.style.width = "100%";
+        this.baseImgEl.src = assetsFolder + "buildings/" + this.radar.undamaged;
+    }
+    public action() { } // it stays put
+
+    // A drone's scan shows it up in blue, as a target
+    public heatSignatureBox(): Box | null {
+        return this.damage === Damage.destroyed ? null : this.targetEl.getBoundingClientRect();
+    }
+    // Any of its picture that a blast reaches
+    public hitBox(): Box {
+        const rect = this.targetEl.getBoundingClientRect();
+        return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+    }
+
+    private hitPoints(severity: strikeSeverity, wepName: weaponNames, blastRadius?: number): number {
+        const flattening = wepName == weaponNames.airstrike || wepName == weaponNames.tactical_Nuke;
+        const direct = flattening ? RadarTarget.hitPointsToDestroy : RadarTarget.hitPointsToDestroy / 2;
+        const bigger = blastRadius ? Math.max(1, blastRadius / RadarTarget.standardBlastRadius) : 1;
+        return severity == strikeSeverity.light ? direct / 4 * bigger : severity == strikeSeverity.medium ? direct / 2 * bigger : direct * bigger;
+    }
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        if (this.damage === Damage.destroyed || wepName < weaponNames.mortar || wepName == weaponNames.flare || wepName == weaponNames.surveillance) return;
+        this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
+        if (this.damagePoints >= RadarTarget.hitPointsToDestroy) {
+            const scoredFrom = this.status; // (taken out by a hit, so it scores as a direct hit)
+            this.targetDisabled();
+            this.targetDestroyed(this.status);
+            game.assessKillPoints(scoredFrom, this.damage, false, this);
+            this.baseImgEl.src = assetsFolder + "buildings/" + this.radar.destroyed;
+            this.setHeatSignature(false);
+        }
+        else if (this.damage !== Damage.damaged) {
+            this.damage = Damage.damaged;
+            this.baseImgEl.src = assetsFolder + "buildings/" + this.radar.damaged;
+        }
     }
 }
 

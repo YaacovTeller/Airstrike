@@ -1,3 +1,4 @@
+"use strict";
 var WaveType;
 (function (WaveType) {
     WaveType[WaveType["gradual"] = 0] = "gradual";
@@ -709,9 +710,9 @@ class HillsLevel extends SceneLevel {
     // apartment blocks; villas with a range of apartment buildings, the tall ones too; and one that's very built up, mostly
     // apartment buildings. The small villages have one small mosque (any of them); the big ones a medium one, and often a small one as well.
     static villageSizes = [
-        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, big: false, gap: 22 },
-        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, big: false, gap: 20 },
-        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, big: true, gap: 14 },
+        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, big: false, gap: 22 }, // just villas
+        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, big: false, gap: 20 }, // villas, and a few small apartment blocks
+        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, big: true, gap: 14 }, // a range of apartment buildings
         { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, big: true, gap: 7 }, // very built up
     ];
     static secondMosqueChance = 65; // (percent, in a big village)
@@ -1148,38 +1149,58 @@ class TeheranLevel extends SceneLevel {
     droneBlocked() {
         return this.blockers.some(b => !b.isWrecked());
     }
-    // An anti aircraft site: a warehouse in the middle of the screen with a few enemies hiding in it, and one to three rocket launchers standing about it
+    // An anti aircraft site: a warehouse or two in the middle of the screen with a few enemies hiding in each, some radar, and rocket launchers standing about
+    // them. How many of each depends on how hard it is.
     populateSite() {
         game.handleBackgroundByLocation(Area.hills);
         const width = window.innerWidth, height = window.innerHeight;
-        const info = oneOf(teheranWarehouseInfo);
+        const hard = game.difficulty;
+        const howMany = (range, fallback) => this.within((range || fallback)[0], (range || fallback)[1]);
+        const warehouses = howMany(hard.siteBuildings, [1, 1]);
+        const scanners = howMany(hard.siteScanners, [1, 1]);
+        const launchers = howMany(hard.siteLaunchers, [1, 2]);
+        const more = Math.max(0, warehouses + scanners + launchers - 3); // (the more there is, the more room it's spread over)
         const middle = { X: width / 2 + this.within(-70, 70), Y: (height + 120) / 2 + this.within(-40, 40) };
         const taken = [];
-        const warehouse = new Building(info);
-        warehouse.setPosition({ X: middle.X - info.width / 2, Y: middle.Y - info.height / 2 });
-        taken.push({ left: middle.X - info.width / 2, top: middle.Y - info.height / 2, right: middle.X + info.width / 2, bottom: middle.Y + info.height / 2 });
-        const hidden = this.scaled(RandomNumberGen.randomNumBetween(3, 4));
-        for (let i = 0; i < hidden; i++) {
-            const enemy = new BuildingEnemy();
-            warehouse.addOccupant(enemy);
-            this.registerTarget(enemy, warehouse.randomHidingSpot());
-        }
-        const trucks = RandomNumberGen.randomNumBetween(1, 3);
-        const size = { w: 65, h: 45 };
-        for (let n = 0; n < trucks; n++) {
-            for (let attempt = 0; attempt < 80; attempt++) {
-                const x = middle.X + this.within(-230, 230) - size.w / 2, y = middle.Y + this.within(-140, 140) - size.h / 2;
-                const box = { left: x, top: y, right: x + size.w, bottom: y + size.h };
+        // puts something down somewhere in the middle of the screen that's clear of what's there; the first goes right in the middle
+        const place = (w, h, first, create) => {
+            for (let attempt = 0; attempt < 150; attempt++) {
+                const x = first ? middle.X - w / 2 : middle.X + this.within(-230 - 30 * more, 230 + 30 * more) - w / 2;
+                const y = first ? middle.Y - h / 2 : middle.Y + this.within(-140 - 16 * more, 140 + 16 * more) - h / 2;
+                const box = { left: x, top: y, right: x + w, bottom: y + h };
                 const clear = (t) => !(box.left < t.right + 14 && box.right > t.left - 14 && box.top < t.bottom + 10 && box.bottom > t.top - 10);
-                if (y < 130 || y + size.h > height - 30 || x < 30 || x + size.w > width - 30 || !taken.every(clear))
+                if (y < 130 || y + h > height - 30 || x < 30 || x + w > width - 30 || !taken.every(clear))
                     continue;
                 taken.push(box);
+                create({ X: x, Y: y });
+                return true;
+            }
+            return false;
+        };
+        for (let n = 0; n < warehouses; n++) {
+            const info = oneOf(teheranWarehouseInfo);
+            place(info.width, info.height, n == 0, spot => {
+                const warehouse = new Building(info);
+                warehouse.setPosition(spot);
+                const hidden = RandomNumberGen.randomNumBetween(2, 4);
+                for (let i = 0; i < hidden; i++) {
+                    const enemy = new BuildingEnemy();
+                    warehouse.addOccupant(enemy);
+                    this.registerTarget(enemy, warehouse.randomHidingSpot());
+                }
+            });
+        }
+        for (let n = 0; n < scanners; n++) {
+            const info = oneOf(allRadarInfo);
+            place(info.width, info.height, false, spot => this.registerTarget(new RadarTarget(info), spot));
+        }
+        for (let n = 0; n < launchers; n++) {
+            place(65, 45, false, spot => {
                 const truck = new RocketLauncher();
                 truck.setUpAsSite();
                 truck.finishedWhenDisabled = true;
-                this.registerTarget(truck, { X: x, Y: y });
-                break;
-            }
+                this.registerTarget(truck, spot);
+            });
         }
     }
     // The one special enemy, in a bunker complex under one of the bigger buildings that can be seen
@@ -1316,7 +1337,7 @@ const allLevelInfo = [
         messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
             new Wave(8, WaveType.double, Time.dusk),
-            new Wave(8, WaveType.gradual),
+            new Wave(8, WaveType.gradual), //GRAD
             new Wave(8, WaveType.sudden),
             /*            new Wave(14, WaveType.sudden)*/
         ],
@@ -1350,7 +1371,7 @@ const allLevelInfo = [
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
-        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo],
+        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo], // and a drone, to find the tunnels that come next
         targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {
