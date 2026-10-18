@@ -606,8 +606,8 @@ class Building extends MapEntity {
         const stageBefore = this.damage;
         this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
-        if (this.info.un && stageBefore !== Damage.destroyed && this.damage === Damage.destroyed)
-            game.unifilLost();
+        if (this.info.un && stageBefore !== Damage.destroyed)
+            game.unifilDamaged(this.damage === Damage.destroyed); // (any damage to UNIFIL's is noticed)
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);
@@ -2179,9 +2179,12 @@ class UNJeepTarget extends VehicleTarget {
     get picSources() {
         return unJeepPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    targetDestroyed(priorStatus) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    hit(severity, wepName, collisionInfo) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before)
+            game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class UNArmourTarget extends VehicleTarget {
@@ -2193,9 +2196,12 @@ class UNArmourTarget extends VehicleTarget {
     get picSources() {
         return unArmourPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    targetDestroyed(priorStatus) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    hit(severity, wepName, collisionInfo) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before)
+            game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class UNTruckTarget extends VehicleTarget {
@@ -2207,9 +2213,12 @@ class UNTruckTarget extends VehicleTarget {
     get picSources() {
         return unTruckPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    targetDestroyed(priorStatus) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    hit(severity, wepName, collisionInfo) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before)
+            game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class ModVehicleTarget extends VehicleTarget {

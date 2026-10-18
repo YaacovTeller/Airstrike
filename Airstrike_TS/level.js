@@ -750,7 +750,7 @@ class HillsLevel extends SceneLevel {
         this.placeTunnels();
     }
     // UNIFIL: a small village has a lookout tower with a UN car parked near it; a big one a whole base, with its buildings, a lookout and a couple of
-    // trucks or other vehicles. Brought down, it's the UN that has something to say about it (see GameHandler.unifilLost).
+    // trucks or other vehicles. Damaged, it's the UN that has something to say about it (see GameHandler.unifilDamaged).
     unBuildings = [];
     unBase = false;
     placeUNVehicles() {

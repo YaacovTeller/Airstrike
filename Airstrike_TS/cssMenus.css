@@ -1023,6 +1023,41 @@ input[type=radio]:checked ~ label {
     z-index: 1;
 }
 
+/* the rating's gone up a word: it grows, a flash goes round it, and it goes back */
+@property --ratingAngle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+}
+.centerContainer .container.ratingUp {
+    animation: ratingGrow 1.7s ease-in-out;
+    z-index: 5;
+}
+    .centerContainer .container.ratingUp::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 14px;
+        padding: 4px;
+        background: conic-gradient(from var(--ratingAngle), transparent 0deg, transparent 240deg, rgba(255,255,255,0.95) 330deg, #ffd84a 360deg);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        animation: ratingSpin 1.2s linear 0.3s 1 both;
+        pointer-events: none;
+    }
+@keyframes ratingGrow {
+    0% { transform: scale(1); }
+    22% { transform: scale(1.4); }
+    78% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+@keyframes ratingSpin {
+    from { --ratingAngle: 0deg; }
+    to { --ratingAngle: 360deg; }
+}
+
     .progress-container {
         width: 100%;
         background-color: rgba(255, 255, 255, 0);

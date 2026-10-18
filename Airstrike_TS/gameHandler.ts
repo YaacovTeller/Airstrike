@@ -754,6 +754,19 @@ class GameHandler {
         }
         let span = document.getElementById('UNdescription');
         span.innerText = progressMarkers[Math.floor(this.progressNumber / 10) * 10];
+        const word = Math.floor(this.progressNumber / 10);
+        if (word > this.ratingWord) this.flashRating(); // up to a new word: it's pointed out
+        this.ratingWord = word;
+    }
+    // The rating grows, with a flash going round it, and then goes back to its size and place (see .ratingUp in the css)
+    private ratingWord: number = 0;
+    private flashRating() {
+        const box = document.getElementById('UNdescription')?.closest('.container') as HTMLElement;
+        if (!box) return;
+        box.classList.remove('ratingUp');
+        void box.offsetWidth; // (so it starts again if it's already going)
+        box.classList.add('ratingUp');
+        setTimeout(() => box.classList.remove('ratingUp'), 1700);
     }
     private fullProgressBar() {
         this.progressBar.classList.add("full");
@@ -1419,7 +1432,7 @@ class GameHandler {
         this.coastKind = "lean";
         this.coastRowSlant = 18;
     }
-    // UNIFIL's stuff has been brought down: the UN's view of it, one message at a time (not another for a few seconds, whatever else is brought down)
+    // UNIFIL's stuff: the UN's view of it, one message at a time (not another for a few seconds, whatever else is damaged)
     private static unMessages: Array<string> = [
         "I think UNIFIL wanted that...",
         "It wasn't very useful, but still...",
@@ -1428,7 +1441,13 @@ class GameHandler {
     ];
     private unMessageAt: number = -Infinity;
     private static unMessageGap: number = 7000; // ms
-    public unifilLost() {
+    // UNIFIL's stuff has been damaged (or brought down: destroyed): the UN disapproves twice as much as it does of anything else (a hit is worth 1 to
+    // the rating, so 2, and bringing it down 2, so 4), and says so, though not more than once in a few seconds
+    public unifilDamaged(destroyed: boolean) {
+        if (!this.progressLocked) {
+            this.progressNumber += destroyed ? 4 : 2;
+            this.updateProgressBar();
+        }
         const now = performance.now();
         if (now - this.unMessageAt < GameHandler.unMessageGap) return;
         this.unMessageAt = now;

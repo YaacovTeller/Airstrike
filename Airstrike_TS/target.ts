@@ -16,7 +16,7 @@ type BuildingInfo = {
     group?: string, // only one of a group to a layout (a mosque, whichever of the mosques it is)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
     electric?: "substation" | "line", // part of the power grid: the lights stay on while the substation and its lines stand
-    un?: boolean, // belongs to UNIFIL: bringing it down gets you told off (see GameHandler.unifilLost)
+    un?: boolean, // belongs to UNIFIL: damaging it gets you told off, and the UN disapproves twice as much (see GameHandler.unifilDamaged)
     flammable?: boolean, // has fuel in it: goes on fire when it's damaged, and blows up when it's brought down (or when it's burned a while)
     fireAt?: Array<[number, number]>, // where on it the fire burns, as shares of its width and height: on the tanks
 }
@@ -655,7 +655,7 @@ class Building extends MapEntity {
         const stageBefore = this.damage;
         this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
-        if (this.info.un && stageBefore !== Damage.destroyed && this.damage === Damage.destroyed) game.unifilLost();
+        if (this.info.un && stageBefore !== Damage.destroyed) game.unifilDamaged(this.damage === Damage.destroyed); // (any damage to UNIFIL's is noticed)
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);
@@ -2270,9 +2270,11 @@ class UNJeepTarget extends VehicleTarget {
     protected get picSources(): Array<string> {
         return unJeepPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    protected targetDestroyed(priorStatus: Status) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before) game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class UNArmourTarget extends VehicleTarget {
@@ -2284,9 +2286,11 @@ class UNArmourTarget extends VehicleTarget {
     protected get picSources(): Array<string> {
         return unArmourPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    protected targetDestroyed(priorStatus: Status) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before) game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class UNTruckTarget extends VehicleTarget {
@@ -2298,9 +2302,11 @@ class UNTruckTarget extends VehicleTarget {
     protected get picSources(): Array<string> {
         return unTruckPictures.map(name => 'UNIFIL/' + name + '.png');
     }
-    protected targetDestroyed(priorStatus: Status) {
-        super.targetDestroyed(priorStatus);
-        game.unifilLost();
+    // Any damage to it is noticed
+    public hit(severity: strikeSeverity, wepName: weaponNames, collisionInfo?: vectorMoveObj) {
+        const before = this.damage;
+        super.hit(severity, wepName, collisionInfo);
+        if (this.damage > before) game.unifilDamaged(this.damage === Damage.destroyed);
     }
 }
 class ModVehicleTarget extends VehicleTarget {
