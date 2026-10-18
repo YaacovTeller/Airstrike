@@ -1,4 +1,3 @@
-"use strict";
 var screenShakeTimeouts;
 (function (screenShakeTimeouts) {
     screenShakeTimeouts[screenShakeTimeouts["shake_1"] = 200] = "shake_1";

@@ -1,4 +1,3 @@
-"use strict";
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";

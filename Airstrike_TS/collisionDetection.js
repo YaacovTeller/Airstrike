@@ -1,4 +1,3 @@
-"use strict";
 class CollisionDetection {
     // The point of the box closest to pos -- pos itself if it's inside.
     static nearestPointInBox(pos, box) {

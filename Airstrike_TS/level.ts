@@ -259,7 +259,7 @@ class Level {
         // the last wave of a level (and not the last level) is a finished stage, as in the other games; the others are just a "Nice job!"
         const lastOfLevel = game.gameMode == GameMode.regular && this.waveIndex >= this.waveCount() - 1;
         if (lastOfLevel) {
-            PopupHandler.addToArray("", "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
+            PopupHandler.addToArray("", "Stage cleared", msgLength.long);
         }
         else {
             PopupHandler.addToArray(
@@ -735,7 +735,7 @@ class SceneLevel extends Level {
 
     protected endWave() {
         this.stageFinished = true; // the time is what it was when the stage was cleared
-        PopupHandler.addToArray(this.stageSummary(), "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
+        PopupHandler.addToArray(this.stageSummary(), "Stage cleared", msgLength.long);
         if (this.stage >= SceneLevel.stagesInAGame()) { // the last of them: the game's won, once its message has been read
             setTimeout(() => { if (game.level === this) game.finishCampaign(); }, msgLength.long + 600);
             return;
@@ -1067,7 +1067,8 @@ class HillsLevel extends SceneLevel {
 // warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station. The one man you're after is in a bunker
 // complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over (the ones that can be seen).
 class TeheranLevel extends SceneLevel {
-    public static countdownMs: number = 240000; // four minutes
+    // How long the countdown is: by difficulty (3 minutes, 2 minutes 30, 2 minutes)
+    public static countdownMs(): number { return game.difficulty.tehranMs || 180000; }
     private countdownLeft: number = 0;
     private timedOut: boolean = false;
     protected slowAfterMs: number = 150000;
@@ -1079,8 +1080,8 @@ class TeheranLevel extends SceneLevel {
         return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
     }
     public static briefingText(): string {
-        const seconds = Math.round(TeheranLevel.countdownMs / 1000);
-        const span = seconds % 60 == 0 ? (seconds / 60) + " minute" : seconds + " second";
+        const seconds = Math.round(TeheranLevel.countdownMs() / 1000);
+        const span = seconds % 60 == 0 ? (seconds / 60) + " minute" : Math.floor(seconds / 60) + " minute " + (seconds % 60) + " second";
         return "Destroy the anti aircraft sites to clear a path for our jets!<br>Watch out, you only have a " + span + " window to get this done!";
     }
     protected specialAt(n: number): WantedMan { return TeheranLevel.wantedMan(); }
@@ -1094,7 +1095,7 @@ class TeheranLevel extends SceneLevel {
 
     public nextWave() {
         if (this.stage == 0) { // the first: the countdown starts
-            this.countdownLeft = TeheranLevel.countdownMs;
+            this.countdownLeft = TeheranLevel.countdownMs();
             this.timedOut = false;
         }
         return super.nextWave();

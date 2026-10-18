@@ -1,4 +1,3 @@
-"use strict";
 var killStatDisplayOptions;
 (function (killStatDisplayOptions) {
     killStatDisplayOptions["total"] = "Total";

@@ -211,6 +211,7 @@ type difficultyLevelInfo = {
     boatFleeSpeed?: number, // and in a boat (Coast)
     fleeDelay?: speedRange, // how long (ms) after the first strike he waits before making a run for it
     spookDelay?: speedRange, // and how long the other waits when one of two has been taken out
+    tehranMs?: number,     // how long the countdown through Tehran is
     eng: langInfo,
     heb: langInfo
 }
@@ -327,7 +328,8 @@ const sceneNormal: difficultyLevelInfo = {
     boatFleeSpeed: 3,
     fleeDelay: { min: 10000, max: 17000 },
     spookDelay: { min: 5500, max: 9000 },
-    eng: { name: "Normal", description: "The usual number of enemies, and 2 minutes to clear a stage." },
+    tehranMs: 180000,   // (3 minutes)
+    eng: { name: "Normal", description: "Normal number of enemies and plenty of time to clear the stage." },
     heb: { name: "רגיל", description: "מספר אויבים רגיל, וזמן רגיל לניקוי שלב." }
 }
 const sceneHard: difficultyLevelInfo = {
@@ -338,7 +340,8 @@ const sceneHard: difficultyLevelInfo = {
     boatFleeSpeed: 5,
     fleeDelay: { min: 8000, max: 13000 },
     spookDelay: { min: 4500, max: 7000 },
-    eng: { name: "Hard", description: "More enemies, and 1 minute 45 before you're told to hurry up." },
+    tehranMs: 150000,   // (2 minutes 30)
+    eng: { name: "Hard", description: "More enemies and less time to clear them." },
     heb: { name: "קשה", description: "יותר אויבים, ופחות זמן לפני שמאיצים בך." }
 }
 const sceneChaos: difficultyLevelInfo = {
@@ -350,7 +353,8 @@ const sceneChaos: difficultyLevelInfo = {
     boatFleeSpeed: 7,
     fleeDelay: { min: 8000, max: 12000 },
     spookDelay: { min: 5500, max: 7000 }, // (less generous than the others: on Chaos he's off fairly quickly)
-    eng: { name: "Chaos", description: "Twice the enemies, and just 1 minute 30." },
+    tehranMs: 120000,   // (2 minutes)
+    eng: { name: "Chaos", description: "Crazy number of enemies and very limited time frame." },
     heb: { name: "מהומה", description: "פי שניים אויבים, וחצי מהזמן." }
 }
 const dev: difficultyLevelInfo = {

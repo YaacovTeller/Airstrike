@@ -1,4 +1,3 @@
-"use strict";
 // The people who play: a list of names, one of them picked, in local storage. Each has their own progress (see GameProgress). The menu has a box to pick
 // from them, with the option of adding a new one, and a small button to delete the one that's picked.
 class userHandler {

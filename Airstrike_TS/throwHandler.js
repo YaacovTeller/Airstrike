@@ -1,4 +1,3 @@
-"use strict";
 class ThrowHandler {
     static flip(elem, direc, impactSounds, parentElem, angle, onLanded, slide = true) {
         let thrownElem = parentElem ? parentElem : elem;

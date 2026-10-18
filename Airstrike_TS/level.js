@@ -1,4 +1,3 @@
-"use strict";
 var WaveType;
 (function (WaveType) {
     WaveType[WaveType["gradual"] = 0] = "gradual";
@@ -228,7 +227,7 @@ class Level {
         // the last wave of a level (and not the last level) is a finished stage, as in the other games; the others are just a "Nice job!"
         const lastOfLevel = game.gameMode == GameMode.regular && this.waveIndex >= this.waveCount() - 1;
         if (lastOfLevel) {
-            PopupHandler.addToArray("", "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
+            PopupHandler.addToArray("", "Stage cleared", msgLength.long);
         }
         else {
             PopupHandler.addToArray("Nice job!" + "\n" // "WaveIndex " + this.index + " of " + this.winLimits.length
@@ -693,7 +692,7 @@ class SceneLevel extends Level {
     }
     endWave() {
         this.stageFinished = true; // the time is what it was when the stage was cleared
-        PopupHandler.addToArray(this.stageSummary(), "Finished " + GameHandler.placeName(game.gameMode), msgLength.long);
+        PopupHandler.addToArray(this.stageSummary(), "Stage cleared", msgLength.long);
         if (this.stage >= SceneLevel.stagesInAGame()) { // the last of them: the game's won, once its message has been read
             setTimeout(() => { if (game.level === this)
                 game.finishCampaign(); }, msgLength.long + 600);
@@ -710,9 +709,9 @@ class HillsLevel extends SceneLevel {
     // apartment blocks; villas with a range of apartment buildings, the tall ones too; and one that's very built up, mostly
     // apartment buildings. The small villages have one small mosque (any of them); the big ones a medium one, and often a small one as well.
     static villageSizes = [
-        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, big: false, gap: 22 }, // just villas
-        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, big: false, gap: 20 }, // villas, and a few small apartment blocks
-        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, big: true, gap: 14 }, // a range of apartment buildings
+        { chance: 25, villas: [20, 26], blocks: [0, 0], blockPool: smallBlockInfo, big: false, gap: 22 },
+        { chance: 30, villas: [14, 20], blocks: [2, 4], blockPool: smallBlockInfo, big: false, gap: 20 },
+        { chance: 25, villas: [8, 12], blocks: [6, 9], blockPool: allBlockInfo, big: true, gap: 14 },
         { chance: 20, villas: [4, 7], blocks: [20, 26], blockPool: allBlockInfo, big: true, gap: 7 }, // very built up
     ];
     static secondMosqueChance = 65; // (percent, in a big village)
@@ -1046,7 +1045,8 @@ class HillsLevel extends SceneLevel {
 // warehouses, roads between the blocks, a big mosque, a medium one and a small one or two, and a power station. The one man you're after is in a bunker
 // complex deep under one of the big buildings, and doesn't run. There are enemies hiding in the buildings all over (the ones that can be seen).
 class TeheranLevel extends SceneLevel {
-    static countdownMs = 240000; // four minutes
+    // How long the countdown is: by difficulty (3 minutes, 2 minutes 30, 2 minutes)
+    static countdownMs() { return game.difficulty.tehranMs || 180000; }
     countdownLeft = 0;
     timedOut = false;
     slowAfterMs = 150000;
@@ -1057,8 +1057,8 @@ class TeheranLevel extends SceneLevel {
         return { name: "Ali Khamenei", portrait: SpecialPortraits.path(2) };
     }
     static briefingText() {
-        const seconds = Math.round(TeheranLevel.countdownMs / 1000);
-        const span = seconds % 60 == 0 ? (seconds / 60) + " minute" : seconds + " second";
+        const seconds = Math.round(TeheranLevel.countdownMs() / 1000);
+        const span = seconds % 60 == 0 ? (seconds / 60) + " minute" : Math.floor(seconds / 60) + " minute " + (seconds % 60) + " second";
         return "Destroy the anti aircraft sites to clear a path for our jets!<br>Watch out, you only have a " + span + " window to get this done!";
     }
     specialAt(n) { return TeheranLevel.wantedMan(); }
@@ -1070,7 +1070,7 @@ class TeheranLevel extends SceneLevel {
     lightArea() { return this.isCity() ? Area.teheran : Area.hills; }
     nextWave() {
         if (this.stage == 0) { // the first: the countdown starts
-            this.countdownLeft = TeheranLevel.countdownMs;
+            this.countdownLeft = TeheranLevel.countdownMs();
             this.timedOut = false;
         }
         return super.nextWave();
@@ -1316,7 +1316,7 @@ const allLevelInfo = [
         messages: [{ text: "", title: "WAKE UP!" }],
         waves: [
             new Wave(8, WaveType.double, Time.dusk),
-            new Wave(8, WaveType.gradual), //GRAD
+            new Wave(8, WaveType.gradual),
             new Wave(8, WaveType.sudden),
             /*            new Wave(14, WaveType.sudden)*/
         ],
@@ -1350,7 +1350,7 @@ const allLevelInfo = [
         ],
         startArms: [howitzerInfo, airstrikeInfo],
         //   startArms: [flareInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, howitzerInfo, airstrikeInfo, sniperInfo, ],
-        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo], // and a drone, to find the tunnels that come next
+        endArms: [howitzerInfo, airstrikeInfo, surveillanceInfo],
         targetFunc: () => { return new HeavyVehicleTarget(); },
     },
     {

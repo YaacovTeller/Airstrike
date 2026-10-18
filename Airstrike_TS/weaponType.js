@@ -1,4 +1,3 @@
-"use strict";
 class WeaponType {
     name;
     slot;
@@ -489,7 +488,7 @@ class CarpetBombing extends ExplosiveWeaponType {
     static bombsPerTick = 3; // one in each third of the band's height
     static wingmen = [
         { dx: 0, dy: 0 },
-        { dx: 6, dy: -110 }, // vw behind, and px above or below
+        { dx: 6, dy: -110 },
         { dx: 6, dy: 110 },
     ];
     constructor(info) {

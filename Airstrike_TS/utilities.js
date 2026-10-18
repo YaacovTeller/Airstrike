@@ -1,4 +1,3 @@
-"use strict";
 class RandomNumberGen {
     static randomNumBetween(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;

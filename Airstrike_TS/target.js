@@ -1,4 +1,3 @@
-"use strict";
 // The little shards in AS_assets/bits (Bit_<name>.png): chunks cut from roofs and domes, and from cars and boats
 function bitPath(name) {
     return assetsFolder + "bits/Bit_" + name + ".png";
@@ -240,7 +239,7 @@ const powerPlantInfo = [
 ];
 const powerLineInfo = [
     { info: electricInfo("Power_Line_Straight", 151, 60, "line"), leftBase: [21, 60], rightBase: [134, 34] },
-    { info: electricInfo("Power_Line_HV", 122, 60, "line"), leftBase: [21, 59], rightBase: [104, 46] },
+    //    { info: electricInfo("Power_Line_HV", 122, 60, "line"), leftBase: [21, 59], rightBase: [104, 46] },
 ];
 // What the Coast level is built of: the port buildings and the industrial ones. (Its mosques go in afterwards, see GameHandler.streetBlockSlots.)
 const coastBuildingInfo = [
