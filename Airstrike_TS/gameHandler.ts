@@ -838,7 +838,6 @@ class GameHandler {
         }
         else {
             if (arg1 as Status === Status.active && arg2 === Damage.destroyed) {
-                PopupHandler.addToArray("Direct Hit!", "", msgLength.short)
                 prog = directHitReward
             }
             else if (arg2 === Damage.destroyed) {

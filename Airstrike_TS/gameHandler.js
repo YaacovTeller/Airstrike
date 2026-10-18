@@ -1,3 +1,4 @@
+"use strict";
 var Languages;
 (function (Languages) {
     Languages[Languages["eng"] = 0] = "eng";
@@ -822,7 +823,6 @@ class GameHandler {
         }
         else {
             if (arg1 === Status.active && arg2 === Damage.destroyed) {
-                PopupHandler.addToArray("Direct Hit!", "", msgLength.short);
                 prog = directHitReward;
             }
             else if (arg2 === Damage.destroyed) {
