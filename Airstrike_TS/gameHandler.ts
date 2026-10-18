@@ -1736,10 +1736,9 @@ class GameHandler {
         });
     };
     // tucked away in the corner at the back (the top right), out of the way of the town; anywhere on an edge if that corner's no good
-    // (the city has a power station, not a substation, which takes up a good deal more of the edge)
-    const stations = city ? powerPlantInfo : substationInfo;
-    let power = PowerGrid.plan(city ? ["right", "top", "left", "bottom"] : ["right", "top"], powerFits, true, stations);
-    if (!power.length) power = PowerGrid.plan(["right", "top", "bottom", "left"], powerFits, false, stations);
+    // (the city's power station isn't put down first: it takes the place of one of the buildings in the blocks, near the edge, with no lines, once they're laid out)
+    let power = city ? [] : PowerGrid.plan(["right", "top"], powerFits, true, substationInfo);
+    if (!city && !power.length) power = PowerGrid.plan(["right", "top", "bottom", "left"], powerFits, false, substationInfo);
     for (const slot of power) {
         reserved.push(boxOf(slot));
         if (slot.info.electric == "substation") reservedSubstation.push(boxOf(slot));
@@ -1885,6 +1884,19 @@ class GameHandler {
             }
             next[k] = block.end;
             blocks++;
+        }
+    }
+    // the city's power station stands in the block pattern like the other buildings, one of those near an edge of the screen that can be seen
+    if (city) {
+        const edgeGap = (s: BuildingSlot) => Math.min(s.X, screenWidth - (s.X + s.info.width), s.Y - top, screenHeight - (s.Y + s.info.height));
+        const nearEdge = slots
+            .filter(s => !s.info.electric && !s.info.single && !s.info.waterfront && s.X >= 0 && s.Y >= top && s.X + s.info.width <= screenWidth && s.Y + s.info.height <= screenHeight)
+            .sort((a, b) => edgeGap(a) - edgeGap(b))
+            .slice(0, 6);
+        if (nearEdge.length) {
+            const old = RandomNumberGen.returnRandomFromArray(nearEdge);
+            const plant = RandomNumberGen.returnRandomFromArray(powerPlantInfo);
+            slots[slots.indexOf(old)] = { X: old.X + old.info.width / 2 - plant.width / 2, Y: old.Y + old.info.height - plant.height, info: plant, block: old.block };
         }
     }
     // the mosques each take the place of whichever building is nearest them in size (the biggest first, so they don't take each other's places)
