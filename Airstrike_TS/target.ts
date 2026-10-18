@@ -16,6 +16,7 @@ type BuildingInfo = {
     group?: string, // only one of a group to a layout (a mosque, whichever of the mosques it is)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
     electric?: "substation" | "line", // part of the power grid: the lights stay on while the substation and its lines stand
+    un?: boolean, // belongs to UNIFIL: bringing it down gets you told off (see GameHandler.unifilLost)
     flammable?: boolean, // has fuel in it: goes on fire when it's damaged, and blows up when it's brought down (or when it's burned a while)
     fireAt?: Array<[number, number]>, // where on it the fire burns, as shares of its width and height: on the tanks
 }
@@ -328,6 +329,16 @@ const allVillaInfo: Array<BuildingInfo> = [
     villaInfo("E", 71, 66, { x: [9, 46], y: [12, 42] }),
     villaInfo("F", 74, 65, { x: [12, 49], y: [12, 45] }),
 ];
+
+// UNIFIL's buildings (AS_assets/UNIFIL): a lookout tower or two, and the pieces of a base: a control tower, a base with a rooftop tank and a main
+// building. Undamaged, damaged and destroyed, on the same canvas. The Hills level has them: a small village has a lookout, a big one a base.
+// Sizes are 0.3 of natural. No enemy hides in any of them.
+function unInfo(name: string, width: number, height: number): BuildingInfo {
+    const file = (stage: number) => "../UNIFIL/" + name + "_" + stage + ".png"; // (relative to the buildings folder)
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, un: true };
+}
+const unLookoutInfo: Array<BuildingInfo> = [unInfo("UN_Watch_A", 50, 86), unInfo("UN_Watch_B", 52, 85)];
+const unBaseInfo: Array<BuildingInfo> = [unInfo("UN_Tower", 86, 90), unInfo("UN_Tank", 100, 86), unInfo("UN_Main", 112, 89)];
 
 // Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
 const buildingRuinSources: Array<string> = [
@@ -644,6 +655,7 @@ class Building extends MapEntity {
         const stageBefore = this.damage;
         this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
+        if (this.info.un && stageBefore !== Damage.destroyed && this.damage === Damage.destroyed) game.unifilLost();
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);
@@ -2242,6 +2254,53 @@ class RegVehicleTarget extends VehicleTarget {
     protected get picSources(): Array<string> {
         return ['Jeep__.png', 'Jeep__light.png', 'Jeep__grey.png', 'Jeep2__.png', 'Jeep2__light.png', 'Jeep2__lightgrey.png', 'Jeep2__tan.png'].map(pic => 'vehicles/' + pic);// 'Jeep2__grey.png', 
       //  return ['jeep.png', 'jeep.png', 'jeep.png', 'jeep2.png', 'jeep2.png', 'jeep3.png', 'jeep3.png', 'jeep4_cres.png'];
+    }
+}
+// UNIFIL's vehicles (AS_assets/UNIFIL): white jeeps, armoured personnel carriers, cargo trucks and fuel trucks, parked about the Hills' UN lookouts and bases.
+// They're not targets, but they can be hit, flipped and blown up like any, and the UN has something to say about it.
+const unJeepPictures = ["Jeep_Command", "Jeep_Patrol", "Jeep_Covered", "Jeep_Support"];
+const unArmourPictures = ["APC_Standard", "APC_Weapon", "APC_Slat", "APC_Comms"];
+const unTruckPictures = ["Truck_Covered", "Truck_Open", "Truck_Tarp", "Truck_Supply", "Fuel_Standard", "Fuel_Refuel", "Fuel_Service", "Fuel_Hazmat"];
+class UNJeepTarget extends VehicleTarget {
+    wheelSizeClass = "smallWheel";
+    constructor() {
+        super(regTarget);
+        this.targetEl.classList.add('smallSquare');
+    }
+    protected get picSources(): Array<string> {
+        return unJeepPictures.map(name => 'UNIFIL/' + name + '.png');
+    }
+    protected targetDestroyed(priorStatus: Status) {
+        super.targetDestroyed(priorStatus);
+        game.unifilLost();
+    }
+}
+class UNArmourTarget extends VehicleTarget {
+    wheelSizeClass = "medWheel";
+    constructor() {
+        super(heavyTarget);
+        this.targetEl.classList.add('medRectTarget');
+    }
+    protected get picSources(): Array<string> {
+        return unArmourPictures.map(name => 'UNIFIL/' + name + '.png');
+    }
+    protected targetDestroyed(priorStatus: Status) {
+        super.targetDestroyed(priorStatus);
+        game.unifilLost();
+    }
+}
+class UNTruckTarget extends VehicleTarget {
+    wheelSizeClass = "medWheel";
+    constructor() {
+        super(modTarget);
+        this.targetEl.classList.add('medRectTarget');
+    }
+    protected get picSources(): Array<string> {
+        return unTruckPictures.map(name => 'UNIFIL/' + name + '.png');
+    }
+    protected targetDestroyed(priorStatus: Status) {
+        super.targetDestroyed(priorStatus);
+        game.unifilLost();
     }
 }
 class ModVehicleTarget extends VehicleTarget {

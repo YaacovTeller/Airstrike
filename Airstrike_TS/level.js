@@ -405,6 +405,15 @@ class SceneLevel extends Level {
     parMs() {
         return game.difficulty.parMs || this.slowAfterMs;
     }
+    // How far through the game this stage is, 0 for the first and 1 for the last (a game of one stage, in test mode, is half way): the stages grow, from
+    // small ones with few targets to very big ones with a lot
+    progress() {
+        const stages = SceneLevel.stagesInAGame();
+        return stages > 1 ? Math.max(0, Math.min(1, (this.stage - 1) / (stages - 1))) : 0.5;
+    }
+    byProgress(first, last) {
+        return Math.round(first + (last - first) * this.progress());
+    }
     // How many of something: more of them on the harder difficulties
     scaled(count) {
         return Math.max(1, Math.round(count * (game.difficulty.enemyFactor || 1)));
@@ -544,7 +553,8 @@ class SceneLevel extends Level {
         game.shapeCoast(); // first, as the boats and buildings keep clear of the water, wherever it is
         // make the boats all, then place them together (see WaterVehicleTarget.arrange): the lower ones go in front
         const made = [];
-        for (let i = 0; i < this.scaled(this.staticTargetCount); i++) {
+        const boats = this.scaled(this.byProgress(3, 7)); // (from a few boats to a crowded sea)
+        for (let i = 0; i < boats; i++) {
             made.push(this.provideAvailTargets());
         }
         if (made.length && made.every(t => t instanceof WaterVehicleTarget)) {
@@ -554,7 +564,7 @@ class SceneLevel extends Level {
         else {
             made.forEach(t => this.registerTarget(t));
         }
-        const buildings = game.drawAllBuildings();
+        const buildings = game.drawAllBuildings(false, this.byProgress(32, 110)); // (from a few blocks to a big town)
         this.infestBuildings(buildings);
         this.placeBunkers(buildings);
     }
@@ -659,7 +669,7 @@ class SceneLevel extends Level {
     static infestedBuildingCount = 3;
     static minOccupants = 2;
     static maxOccupants = 6;
-    infestedCount() { return this.scaled(SceneLevel.infestedBuildingCount); }
+    infestedCount() { return this.scaled(this.byProgress(1, SceneLevel.infestedBuildingCount)); }
     // A few of the buildings have enemies hiding in them, who count as targets for the stage.
     infestBuildings(buildings) {
         const pool = buildings.filter(b => this.canBeInfested(b));
@@ -735,8 +745,33 @@ class HillsLevel extends SceneLevel {
         this.infestBuildings(buildings); // only the villas have somewhere for anyone to hide
         this.placeSpecialEnemies(buildings);
         this.placeVehicles(buildings);
+        this.placeUNVehicles();
         this.placeExplosives(buildings);
         this.placeTunnels();
+    }
+    // UNIFIL: a small village has a lookout tower with a UN car parked near it; a big one a whole base, with its buildings, a lookout and a couple of
+    // trucks or other vehicles. Brought down, it's the UN that has something to say about it (see GameHandler.unifilLost).
+    unBuildings = [];
+    unBase = false;
+    placeUNVehicles() {
+        if (!this.unBuildings.length)
+            return;
+        const count = this.unBase ? RandomNumberGen.randomNumBetween(2, 3) : 1;
+        for (let i = 0; i < count; i++) {
+            const kind = this.unBase ? RandomNumberGen.randomNumBetween(0, 3) : 0; // jeep, or in a base a truck or a carrier as well
+            const size = kind == 0 ? { w: 45, h: 45 } : { w: 65, h: 45 };
+            let spot = null;
+            for (let attempt = 0; attempt < 8 && !spot; attempt++)
+                spot = this.spotBesideAVilla(this.unBuildings, size.w, size.h);
+            if (!spot)
+                continue;
+            const vehicle = kind == 0 ? new UNJeepTarget() : kind == 1 ? new UNArmourTarget() : new UNTruckTarget();
+            vehicle.park();
+            this.takenBoxes.push({ left: spot.X, top: spot.Y, right: spot.X + size.w, bottom: spot.Y + size.h });
+            vehicle.cold = true;
+            vehicle.decidePosition(spot);
+            allTargets.push(vehicle); // can be hit like the others, but isn't one of the targets to clear
+        }
     }
     // The substation near the edge of the screen, and its lines leading off the map, are put down first, so the village keeps clear of them
     placePower() {
@@ -756,7 +791,7 @@ class HillsLevel extends SceneLevel {
         const villas = buildings.filter(b => !b.isTall());
         if (!villas.length)
             return;
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minExplosives, HillsLevel.maxExplosives);
+        const count = RandomNumberGen.randomNumBetween(this.byProgress(1, HillsLevel.minExplosives), this.byProgress(2, HillsLevel.maxExplosives));
         for (let i = 0; i < count; i++) {
             const info = RandomNumberGen.returnRandomFromArray(allExplosiveInfo);
             const spot = this.spotBesideAVilla(villas, info.width, info.height);
@@ -849,8 +884,10 @@ class HillsLevel extends SceneLevel {
             X: width / 2 + this.within(-70, 70),
             Y: (height + HillsLevel.screenTop) / 2 + this.within(-40, 40),
         };
-        const reachX = Math.min(540, width * 0.39); // room for a good few more than a hamlet's worth
-        const reachY = Math.min(340, (height - HillsLevel.screenTop) * 0.5);
+        const grow = 0.5 + 0.5 * this.progress(); // the first stages are small, with only half the buildings, and crowded closer in; the last are the full size
+        const reachX = Math.min(540, width * 0.39) * Math.max(0.6, grow); // room for a good few more than a hamlet's worth
+        const reachY = Math.min(340, (height - HillsLevel.screenTop) * 0.5) * Math.max(0.6, grow);
+        const scaledCount = (low, high) => Math.round(RandomNumberGen.randomNumBetween(low, high) * grow);
         // try to put one down: inside the village's ellipse (nearer the middle more often) or, for an outlier, well outside it
         let gap = HillsLevel.villageGap; // set to the village's own once its size is known
         const place = (info, outlier) => {
@@ -880,34 +917,36 @@ class HillsLevel extends SceneLevel {
             }
             return false;
         };
-        // how big a village this one is
-        let roll = RandomNumberGen.randomNumBetween(1, 100);
-        let size = HillsLevel.villageSizes[0];
-        for (const candidate of HillsLevel.villageSizes) {
-            size = candidate;
-            if ((roll -= candidate.chance) <= 0)
-                break;
-        }
+        // how big a village this one is: the stages go up through the sizes, from a hamlet of villas to a built up town
+        const size = HillsLevel.villageSizes[Math.min(HillsLevel.villageSizes.length - 1, Math.round(this.progress() * (HillsLevel.villageSizes.length - 1)))];
         gap = size.gap;
         // the big ones first, while there's room: the village's mosque (one small one in a small village; in a big one a medium one, and often a small one too), and the blocks
         place(oneOf(size.big ? mediumMosqueInfo : smallMosqueInfo), false);
         if (size.big && RandomNumberGen.randomNumBetween(1, 100) <= HillsLevel.secondMosqueChance)
             place(oneOf(smallMosqueInfo), false);
-        const blocks = RandomNumberGen.randomNumBetween(size.blocks[0], size.blocks[1]);
+        // UNIFIL's: a lookout in a small village, and in a big one a base as well
+        this.unBuildings = [];
+        this.unBase = size.big;
+        const placeUN = (info) => { if (place(info, false))
+            this.unBuildings.push(buildings[buildings.length - 1]); };
+        if (size.big)
+            placeUN(oneOf(unBaseInfo));
+        placeUN(oneOf(unLookoutInfo));
+        const blocks = scaledCount(size.blocks[0], size.blocks[1]);
         for (let i = 0; i < blocks; i++) {
             place(RandomNumberGen.returnRandomFromArray(size.blockPool), false);
         }
-        const towers = RandomNumberGen.randomNumBetween(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers);
+        const towers = Math.max(1, scaledCount(HillsLevel.minWaterTowers, HillsLevel.maxWaterTowers));
         for (let i = 0; i < towers; i++) {
             place(this.miscInfo(RandomNumberGen.returnRandomFromArray(HillsLevel.towerNames)), false);
         }
         for (const name of HillsLevel.miscNames) {
-            const count = RandomNumberGen.randomNumBetween(HillsLevel.minOfEachMisc, HillsLevel.maxOfEachMisc);
+            const count = scaledCount(HillsLevel.minOfEachMisc, HillsLevel.maxOfEachMisc);
             for (let i = 0; i < count; i++) {
                 place(this.miscInfo(name), false);
             }
         }
-        const villas = RandomNumberGen.randomNumBetween(size.villas[0], size.villas[1]);
+        const villas = Math.max(4, scaledCount(size.villas[0], size.villas[1]));
         for (let i = 0; i < villas; i++) {
             place(RandomNumberGen.returnRandomFromArray(allVillaInfo), false);
         }
@@ -923,7 +962,7 @@ class HillsLevel extends SceneLevel {
         const villas = buildings.filter(b => !b.isTall());
         if (!villas.length)
             return;
-        const count = this.scaled(RandomNumberGen.randomNumBetween(HillsLevel.minVehicles, HillsLevel.maxVehicles));
+        const count = this.scaled(RandomNumberGen.randomNumBetween(this.byProgress(1, HillsLevel.minVehicles + 1), this.byProgress(2, HillsLevel.maxVehicles)));
         const running = [];
         for (let i = 0; i < count; i++)
             running.push(RandomNumberGen.randomNumBetween(0, 1) == 1);
@@ -984,7 +1023,7 @@ class HillsLevel extends SceneLevel {
     // Tunnels: just their heads are placed here, clear of everything else; each works out where it runs
     placeTunnels() {
         // however hard, not many more of these
-        const count = RandomNumberGen.randomNumBetween(HillsLevel.minTunnels, HillsLevel.maxTunnels) + (game.difficulty.extraTunnels || 0);
+        const count = RandomNumberGen.randomNumBetween(this.byProgress(1, HillsLevel.minTunnels), this.byProgress(2, HillsLevel.maxTunnels)) + (game.difficulty.extraTunnels || 0);
         const heads = [];
         for (let i = 0; i < count; i++) {
             for (let attempt = 0; attempt < 400; attempt++) {

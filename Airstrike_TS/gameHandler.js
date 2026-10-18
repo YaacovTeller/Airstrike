@@ -1411,11 +1411,27 @@ class GameHandler {
         this.coastKind = "lean";
         this.coastRowSlant = 18;
     }
-    drawAllBuildings(city = false) {
+    // UNIFIL's stuff has been brought down: the UN's view of it, one message at a time (not another for a few seconds, whatever else is brought down)
+    static unMessages = [
+        "I think UNIFIL wanted that...",
+        "It wasn't very useful, but still...",
+        "Hey, leave those jokers out of it...",
+        "The UN won't be terribly pleased about that.",
+    ];
+    unMessageAt = -Infinity;
+    static unMessageGap = 7000; // ms
+    unifilLost() {
+        const now = performance.now();
+        if (now - this.unMessageAt < GameHandler.unMessageGap)
+            return;
+        this.unMessageAt = now;
+        PopupHandler.addToArray(RandomNumberGen.returnRandomFromArray(GameHandler.unMessages), "", msgLength.long);
+    }
+    drawAllBuildings(city = false, count = 96) {
         // (New elements go in at the front of the content, behind the ones before, so the ones that should be in front, the
         // lower ones, are made first). Twelve blocks at most: a roomy coast would take far more, and a stage would never end. The city goes right
         // across the screen, and has a lot more.
-        const slots = city ? this.streetBlockSlots(420, { city: true, lines: 18, aboveCorner: 640, mosques: this.cityMosques() }) : this.streetBlockSlots(96, { mosques: this.coastMosques() });
+        const slots = city ? this.streetBlockSlots(420, { city: true, lines: 18, aboveCorner: 640, mosques: this.cityMosques() }) : this.streetBlockSlots(count, { mosques: this.coastMosques() });
         const buildings = slots.reverse().map(slot => {
             const building = new Building(slot.info);
             building.setPosition(slot);
