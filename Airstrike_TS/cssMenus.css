@@ -317,10 +317,50 @@ body {
         font-size: 0.85rem;
     }
 
-#userDisplay {
-    font-weight: 600;
-    color: #9dffb8;
+#userPicker {
+    display: flex;
+    gap: 6px;
+    align-items: center;
 }
+#userSelect {
+    min-width: 0;
+    width: 150px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 0.9rem;
+    outline: none;
+}
+    #userSelect:focus {
+        border-color: rgba(100,255,160,0.5);
+        box-shadow: 0 0 0 3px rgba(80,255,150,0.12);
+    }
+    #userSelect option {
+        background: #1c2127;
+        color: white;
+    }
+/* the small buttons beside the name: delete this user, and back from adding one */
+.userSmallButton {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    line-height: 24px;
+    cursor: pointer;
+}
+    .userSmallButton:hover {
+        color: #ff8c8c;
+        background: rgba(255,255,255,0.06);
+    }
+    #userCancel:hover {
+        color: #9dffb8;
+    }
 
 #username {
     flex: 1;
@@ -575,10 +615,10 @@ b {
        edge, at an angle. */
     .finishStamp {
         position: absolute;
-        right: 8px;
+        right: 2px;
         top: 50%;
-        transform: translateY(-50%) rotate(-14deg);
-        padding: 0 9px;
+        transform: translateY(-50%) rotate(-24deg);
+        padding: 2px 9px;
         border: 3px double currentColor;
         border-radius: 5px;
         font-size: 0.95rem;
@@ -613,13 +653,13 @@ b {
     }
 
 @keyframes stampSlam {
-    0% { transform: translateY(-50%) rotate(-14deg) scale(3); opacity: 0; }
-    60% { transform: translateY(-50%) rotate(-14deg) scale(0.92); opacity: 1; }
-    100% { transform: translateY(-50%) rotate(-14deg) scale(1); opacity: 0.95; }
+    0% { transform: translateY(-50%) rotate(-24deg) scale(3); opacity: 0; }
+    60% { transform: translateY(-50%) rotate(-24deg) scale(0.92); opacity: 1; }
+    100% { transform: translateY(-50%) rotate(-24deg) scale(1); opacity: 0.95; }
 }
 
 @keyframes stampWipe {
-    to { transform: translateY(-50%) rotate(-14deg) scale(1.15); opacity: 0; }
+    to { transform: translateY(-50%) rotate(-24deg) scale(1.15); opacity: 0; }
 }
 
     /* the city stays greyed out until the other three have been finished */

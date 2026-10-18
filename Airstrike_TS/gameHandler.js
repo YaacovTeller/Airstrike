@@ -124,9 +124,7 @@ class GameHandler {
     constructor(element) {
         this.contentEl = element;
         userHandler.getUserInfo();
-        if (userHandler.userName) {
-            userHandler.displayName();
-        }
+        userHandler.onChange = () => this.userChanged();
         this.menuSetup();
         this.setEventListeners();
         document.getElementById("loader").style.display = 'none';
@@ -290,7 +288,7 @@ class GameHandler {
         document.getElementById("startbutton_sandbox").onclick = () => this.newGame(GameMode.sandbox);
         document.getElementById("startbutton_WeatherTest").onclick = () => this.newGame(GameMode.test_1);
         document.getElementById("langbutton").onclick = () => this.toggleLang();
-        document.getElementById("userInput").onclick = () => userHandler.setUserInfo();
+        userHandler.setUpMenu();
         this.setMenuDifficulty(arr, [normal, hard, chaos]);
         this.setLocationButtons(arr);
         this.toggleModal();
@@ -308,12 +306,16 @@ class GameHandler {
         document.getElementById("testModeWarning").classList.toggle("displayNone", !this.testMode);
         document.getElementById("testModeToggle").classList.toggle("on", this.testMode);
     }
-    // Clearing what's been finished and the name, asking first if there's anything to lose
+    // A different user's been picked, added or deleted: it's their stamps, and what's open to them, that the menu shows
+    userChanged() {
+        this.stampToSlam = null;
+        this.refreshFinishStamps();
+    }
+    // Clearing what's been finished (this user's, not the user), asking first if there's anything to lose
     clearProgress() {
-        if ((GameProgress.hasAny() || userHandler.userName) && !confirm("Do you really want to clear your progress and your name?"))
+        if (GameProgress.hasAny() && !confirm("Do you really want to clear your progress?"))
             return;
         GameProgress.clear();
-        userHandler.clearUserInfo();
         document.querySelectorAll(".finishStamp:not(.ghost)").forEach(el => el.classList.add("wiped")); // the stamps fade off before they're swapped for the outlines
         setTimeout(() => this.refreshFinishStamps(), 450);
     }

@@ -42,10 +42,14 @@
 
                     <div id="input-container">
                         <div id="userNameInput">
-                            <input type="text" id="username" placeholder="Enter your name">
+                            <input type="text" id="username" placeholder="Enter your name" maxlength="24">
                             <button id="userInput" class="greenButtonStyle">Submit</button>
+                            <button id="userCancel" class="userSmallButton displayNone" title="Back to the users">&#8617;</button>
                         </div>
-                        <div class="displayNone" id="userDisplay"></div>
+                        <div class="displayNone" id="userPicker">
+                            <select id="userSelect" aria-label="User"></select>
+                            <button id="userDelete" class="userSmallButton" title="Delete this user">&#10005;</button>
+                        </div>
                     </div>
 
                     <button id="langbutton" class="greenButtonStyle"><span class="eng">עברית</span><span class="heb">Eng</span></button>
@@ -105,7 +109,7 @@
                         </div>
                     </div>
                     <div class="locationPanel">
-                        <button id="clearProgress" class="clearProgress" title="Clear progress and name">&#10005;</button>
+                        <button id="clearProgress" class="clearProgress" title="Clear progress">&#10005;</button>
                         <h2 class="eng">Location:</h2>
                         <h2 class="heb">מיקום:</h2>
                         <div id="locationContainer">
