@@ -351,9 +351,9 @@ const allRadarInfo: Array<RadarInfo> = [
     radarInfo("Radar_Long", 117, 89),
     radarInfo("Radar_Medium", 116, 83),
     radarInfo("Radar_Short", 112, 76),
-    radarInfo("Radar_Truck_Long", 104, 98),
-    radarInfo("Radar_Truck_Medium", 95, 91),
-    radarInfo("Radar_Truck_Short", 92, 83),
+    radarInfo("Radar_Truck_Long", 78, 74),
+    radarInfo("Radar_Truck_Medium", 71, 68),
+    radarInfo("Radar_Truck_Short", 69, 62),
 ];
 
 // Generic rubble chunks used as flying debris when a building is hit (see Building.debrisSources).
