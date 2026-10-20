@@ -63,7 +63,8 @@ class PowerGrid {
             const slots: Array<BuildingSlot> = [{ X: x, Y: y, info: sub }];
             const boxes: Array<Box> = [subBox];
             const upRight = edge == "top" || edge == "right";
-            const line = RandomNumberGen.randomNumBetween(1, 100) <= 70 ? powerLineInfo[0] : powerLineInfo[1];
+            // (the straight one seven times in ten; whichever there are, if one of them's been taken out of the list)
+            const line = powerLineInfo.length > 1 && RandomNumberGen.randomNumBetween(1, 100) > 70 ? powerLineInfo[1] : powerLineInfo[0];
             const step = { x: line.rightBase[0] - line.leftBase[0], y: line.rightBase[1] - line.leftBase[1] }; // (from one pylon to the next, up and to the right: y is negative)
             // the first pylon stands at the substation's corner, and the others follow
             let base = upRight ? { x: x + sub.width * 0.88, y: y + sub.height * 0.5 } : { x: x + sub.width * 0.12, y: y + sub.height * 0.85 };
