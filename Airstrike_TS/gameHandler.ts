@@ -1378,8 +1378,17 @@ class GameHandler {
             this.level.addNewWeapon(flareInfo, false);
         }
         else if (mode == GameMode.coast) {
-            this.newLevel(new SceneLevel(sceneInfo), mode); // fresh each time: it holds the stage's targets, and draws the buildings
-            this.addScaledWeaponSet();
+            const coast = new SceneLevel(sceneInfo); // fresh each time: it holds the stage's targets, and draws the buildings
+            this.newLevel(coast, mode);
+            // It begins with only a few: three light missiles, two missiles, one heavy missile, and the one bunker buster that's always there, and wins
+            // more stage by stage (the drone's two come with it)
+            const scaled = (slot: number) => scaledWeapons.find(info => slotOf(info) === slot);
+            const start: { [slot: number]: number } = { 1: 3, 2: 2, 3: 1, 7: 1 };
+            for (const slot of Object.keys(start)) for (let i = 0; i < start[slot]; i++) this.level.addNewWeapon(scaled(parseInt(slot)), false);
+            this.level.addNewWeapon(surveillanceInfo, false);
+            this.level.addNewWeapon(surveillanceInfo, false);
+            const wins: { [stage: number]: Array<number> } = { 2: [3, 4], 3: [2, 3, 4], 4: [1, 5], 5: [2, 5, 6] };
+            for (const stage of Object.keys(wins)) coast.stageAwards[parseInt(stage)] = wins[stage].map(scaled);
         }
         else if (mode == GameMode.teheran) {
             this.newLevel(new TeheranLevel(teheranInfo), mode);
@@ -1387,16 +1396,19 @@ class GameHandler {
             this.level.addNewWeapon(bunkerBusterInfo, false); // ...and a second buster, for a bunker as big as this
         }
         else if (mode == GameMode.hills) {
-            this.newLevel(new HillsLevel(hillsInfo), mode);
-            this.addStarterWeapons(); // the standard weapons here: the gun, mortars, tank, airstrike, tunnel charge and the drone
+            const hills = new HillsLevel(hillsInfo);
+            this.newLevel(hills, mode);
+            this.addStarterWeapons(); // the standard weapons here: the gun, mortars, tank, one airstrike, tunnel charges and the drone
             this.level.addNewWeapon(howitzerInfo, false);
             this.level.addNewWeapon(howitzerInfo, false);
+            this.level.addNewWeapon(airstrikeInfo, false);
             for (let i = 0; i < 3; i++) {
-                this.level.addNewWeapon(airstrikeInfo, false);
                 this.level.addNewWeapon(chargeInfo, false);
             }
             this.level.addNewWeapon(surveillanceInfo, false);
             this.level.addNewWeapon(surveillanceInfo, false);
+            // and wins another mortar on the second stage, and an airstrike on each of the third and fourth
+            hills.stageAwards = { 2: [mortarInfo], 3: [airstrikeInfo], 4: [airstrikeInfo] };
         }
 
         this.hud.drawMultiKill();

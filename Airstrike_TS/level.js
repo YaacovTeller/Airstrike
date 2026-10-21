@@ -537,6 +537,8 @@ class SceneLevel extends Level {
             if (this.announcesStages())
                 PopupHandler.addToArray("", "Stage " + this.stage + " of " + SceneLevel.stagesInAGame(), msgLength.short);
             StageTransition.rush(RandomNumberGen.returnRandomFromArray(this.rushDirections)); // the ground runs past empty, then the new stage slides in with it and stops
+            for (const info of this.stageAwards[this.stage] || [])
+                this.addNewWeapon(info, true); // a new stage, and what's won for getting there
         }
         this.winLimitCheck();
         return true;
@@ -544,6 +546,8 @@ class SceneLevel extends Level {
     continueWave() { } // unpausing must not start target production
     // Whether each new stage is announced with its number (Tehran's isn't: the one that's cleared says which it was)
     announcesStages() { return true; }
+    // The weapons won on getting to each stage (from the second), set when the game's begun: the game starts with a few, and gets more
+    stageAwards = {};
     // Where the lights of a stage are lit: the place it's in
     lightArea() { return this.returnLocation(); }
     // Which buildings enemies can be put in
