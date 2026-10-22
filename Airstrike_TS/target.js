@@ -511,6 +511,15 @@ class Building extends MapEntity {
     isPier() {
         return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_") || this.info.undamaged.includes("/Quay_") || this.info.undamaged.includes("/pier_");
     }
+    // A building is hit where a blast reaches its middle; a crane's picture is tall, and its middle is up in the air, so a blast on its platform, where it
+    // stands, missed it (and out on the shore it counted as a splash). A crane is hit anywhere on it, the lower three quarters of its picture
+    hitBox() {
+        if (this.info.undamaged.includes("/Crane_")) {
+            const rect = this.targetEl.getBoundingClientRect();
+            return { left: rect.left + rect.width * 0.08, top: rect.top + rect.height * 0.25, right: rect.right - rect.width * 0.08, bottom: rect.bottom };
+        }
+        return super.hitBox();
+    }
     // Among the town, not on the waterfront
     isTown() {
         return !this.info.waterfront && !this.info.electric;
