@@ -1,3 +1,4 @@
+"use strict";
 var screenShakeTimeouts;
 (function (screenShakeTimeouts) {
     screenShakeTimeouts[screenShakeTimeouts["shake_1"] = 200] = "shake_1";
@@ -69,7 +70,14 @@ class ExplosionHandler {
         this.setAndReturnExplosion(blastCenter, size, HitSurface.land);
         this.shake_Light_Targets(blastCenter, size, weaponName);
     }
+    // A blast that comes down in the sea, and hits nothing: the splash, with its sound (not more than one in a moment, for a run of them)
+    static lastSplashSoundAt = -Infinity;
     static waterMiss(blastCenter, size) {
+        const now = performance.now();
+        if (now - this.lastSplashSoundAt > 120) {
+            this.lastSplashSoundAt = now;
+            SoundPlayer.playRandomSound(splashes);
+        }
         let splash = this.setAndReturnExplosion(blastCenter, size, HitSurface.water);
         //let splash = this.setAndReturnSplash(blastCenter, size);
         this.presentAndFadeout(splash, 4000, 100);

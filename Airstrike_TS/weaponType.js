@@ -1,3 +1,4 @@
+"use strict";
 class WeaponType {
     name;
     slot;
@@ -360,7 +361,8 @@ class BunkerBusterWeaponType extends ExplosiveWeaponType {
             const aimed = CollisionDetection.getXYfromPoint(inst.blastRadElement);
             this.switchBlastIndicatorStyle(false, inst);
             inst.blastRadElement.style.visibility = 'hidden';
-            SoundPlayer.playRandomSound(impactCrash); // bunker buster impact sound
+            if (!this.onWater(aimed))
+                SoundPlayer.playRandomSound(impactCrash); // bunker buster impact sound (into the sea, it's the splash, from the explosion below)
             // Tiny impact explosion on initial hit
             ExplosionHandler.basicExplosion(aimed, ExplSizes.XXS, expl_small_imgs, weaponNames.mortar);
             if (this.onWater(aimed))
@@ -488,7 +490,7 @@ class CarpetBombing extends ExplosiveWeaponType {
     static bombsPerTick = 3; // one in each third of the band's height
     static wingmen = [
         { dx: 0, dy: 0 },
-        { dx: 6, dy: -110 },
+        { dx: 6, dy: -110 }, // vw behind, and px above or below
         { dx: 6, dy: 110 },
     ];
     constructor(info) {

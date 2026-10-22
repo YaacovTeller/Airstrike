@@ -49,10 +49,19 @@
         this.sound.pause();
     }
     public playClone() {
+        Sound.clones = Sound.clones.filter(c => !c.ended && !c.paused); // forget the ones that have finished
+        if (Sound.clones.length >= Sound.maxClones) return; // (a great many at once would only be noise)
         const clone = this.sound.cloneNode(true) as HTMLAudioElement;
-        Sound.clones = Sound.clones.filter(c => !c.ended); // forget the ones that have finished
+        clone.volume = this.sound.volume;
         Sound.clones.push(clone);
-        clone.play();
+        clone.play().catch(() => { });
+    }
+    private static maxClones: number = 24;
+    // For a sound that's made again before the last one has finished, an impact, a shot: it plays over the top of it, instead of nothing happening because
+    // that one's still going
+    public playOver() {
+        if (!this.sound.paused && !this.sound.ended && this.sound.currentTime > 0.03) this.playClone();
+        else this.sound.play();
     }
     public addEndEvent(func: Function) {
         this.sound.onended = null;
@@ -74,8 +83,8 @@ class SoundPlayer {
     }
     static playRandomSound(sounds: Array<Sound>) {
         let sound = this.getRandomSound(sounds);
-        // sound.play();
-        this.playWithVolumeSet(sound);
+        sound.setVolume(game.volume);
+        sound.playOver();
     }
     static playSequentialSound(sounds: Array<Sound>) {
         let title = sounds[0].title
@@ -87,8 +96,8 @@ class SoundPlayer {
             this.soundIndexes[title]++
         }
         let sound = sounds[this.soundIndexes[title]];
-        // sound.play();
-        this.playWithVolumeSet(sound);
+        sound.setVolume(game.volume);
+        sound.playOver();
     }
 
     static playThroughArray(sounds: Array<Sound>) {
