@@ -34,9 +34,9 @@ class PowerGrid {
     public static add(building: Building) {
         PowerGrid.parts.push(building);
     }
-    // (a stage with no grid has no power to lose)
+    // (a stage with no grid has no power to lose). The power goes as soon as the substation or any stretch of its lines is damaged, it needn't be brought down
     public static isUp(): boolean {
-        return PowerGrid.parts.every(part => !part.isWrecked());
+        return PowerGrid.parts.every(part => part.damage === Damage.undamaged && !part.isWrecked());
     }
 
     // Where to put a substation near the edge of the screen and the pylons that lead away from it, and clear off the edge: up and to the right from one on
