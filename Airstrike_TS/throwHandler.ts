@@ -44,6 +44,49 @@
     private static crashSound(sounds: Sound[], elem: HTMLElement, onLanded?: (landedElem: HTMLElement) => void) {
         setTimeout(() => this.landingSound(sounds, elem, onLanded), crashTimeout);
     }
+    // A small thing that's come off a roof: it's thrown up and out, falls to the ground (groundY, the foot of the building) and bounces a few times,
+    // each lower than the last and turning more slowly, and then lies there. It's still while the game is paused.
+    public static bounce(elem: HTMLElement, groundY: number, onLanded?: (landedElem: HTMLElement) => void) {
+        const spinEl = (elem.querySelector("img") as HTMLElement) || elem;
+        const height = spinEl.offsetHeight || 10;
+        const floor = groundY - height + RandomNumberGen.randomNumBetween(-8, 4);
+        let x = parseFloat(elem.style.left) || 0, y = parseFloat(elem.style.top) || 0;
+        const side = RandomNumberGen.randomNumBetween(0, 1) ? 1 : -1;
+        let vx = RandomNumberGen.randomNumBetween(70, 190) * side;
+        let vy = -RandomNumberGen.randomNumBetween(230, 420);
+        let spin = RandomNumberGen.randomNumBetween(200, 560) * (RandomNumberGen.randomNumBetween(0, 1) ? 1 : -1);
+        let angle = 0, bounces = 0, last: number = null;
+        const gravity = 1000, restitution = 0.5;
+        const step = (timestamp: number) => {
+            if (last === null) last = timestamp;
+            const dt = Math.min(0.05, (timestamp - last) / 1000);
+            last = timestamp;
+            if (document.body.classList.contains("gamePaused") || !elem.isConnected) {
+                if (elem.isConnected) requestAnimationFrame(step);
+                return;
+            }
+            vy += gravity * dt;
+            x += vx * dt;
+            y += vy * dt;
+            angle += spin * dt;
+            let resting = false;
+            if (y >= floor && vy > 0) {
+                y = floor;
+                bounces++;
+                if (bounces == 1) ThrowHandler.landingSound(crashes, elem, onLanded);
+                vy = -vy * restitution;
+                vx *= 0.7;
+                spin *= 0.55;
+                resting = Math.abs(vy) < 60 || bounces >= 4;
+            }
+            elem.style.left = x + "px";
+            elem.style.top = y + "px";
+            spinEl.style.transform = "rotate(" + angle + "deg)";
+            if (!resting) requestAnimationFrame(step);
+            else if (onLanded) onLanded(elem);
+        };
+        requestAnimationFrame(step);
+    }
     // Where something has come down: in the sea. (The same test as removeIfLandedInWater's.)
     public static inWater(elem: HTMLElement): boolean {
         const water = document.getElementById("water");

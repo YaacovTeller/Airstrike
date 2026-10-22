@@ -1147,8 +1147,10 @@ class TeheranLevel extends SceneLevel {
                 continue;
             this.blockers.push(b);
         }
-        for (const b of this.blockers)
-            b.addRooftop(rooftopDishPicture, 30);
+        for (const b of this.blockers) {
+            const [file, width] = RandomNumberGen.returnRandomFromArray(rooftopDishPictures);
+            b.addRooftop(rooftopFolder + file + ".png", width, 0.5, 0.34, Damage.destroyed);
+        }
     }
     droneBlocked() {
         return this.blockers.some(b => !b.isWrecked());

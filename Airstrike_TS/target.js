@@ -187,7 +187,7 @@ function scaledBuildingInfo(info, factor) {
 // the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
 function villaInfo(letter, width, height, hide) {
     const name = (stage) => "villas/Villa_" + letter + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")] };
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")], residential: true };
 }
 // The mosques (AS_assets/buildings/mosques), in three sizes: small, medium, and the really big ones (the Large ones). Each is undamaged, damaged
 // (the tower half broken) and destroyed (the tower gone); the A, B and C ones have a complete ruin, _4, that nothing uses yet. The MosqueB_
@@ -279,7 +279,7 @@ const coastBuildingInfo = [
 // Sizes are 0.4 of natural: they're meant to tower over the villas (0.28).
 function blockInfo(number, width, height, hide) {
     const name = (stage) => "blocks/Block_" + number + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, residential: true };
 }
 const allBlockInfo = [
     blockInfo(1, 124, 124, { x: [20, 92], y: [28, 88] }),
@@ -298,9 +298,12 @@ const allBlockInfo = [
 ];
 // The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
 const smallBlockInfo = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
-// The satellite dish on the roof of a building that's bugged (Tehran): signal blockers that jam the drone feed while they stand. The picture's a placeholder
-// (a plain drawing), until there's a proper one: just change the file here.
-const rooftopDishPicture = assetsSVGFolder + "dish.svg";
+// The things that go on roofs (AS_assets/rooftop): satellite dishes, aerials, solar panels and black water tanks, all drawn small, at 0.088 of their size
+// (the dishes, on the bugged buildings of Tehran, at 0.19). Homes have a tank or some solar panels on the roof, now and then.
+const rooftopFolder = assetsFolder + "rooftop/";
+const rooftopTankPictures = [["Tank_1", 13], ["Tank_2", 16], ["Tank_3", 10], ["Tank_4", 16], ["Tank_5", 12]];
+const rooftopSolarPictures = [["Solar_1", 17], ["Solar_2", 21], ["Solar_3", 12], ["Solar_4", 25]];
+const rooftopDishPictures = [["Dish_1", 29], ["Dish_2", 24], ["Dish_3", 23], ["Dish_4", 28], ["Dish_5", 23]];
 // What the city (Teheran) is built of: the apartment blocks, the port buildings and the industrial ones that aren't on the waterfront, and for
 // a few blocks of the town the big warehouses
 const teheranWarehouseInfo = allPortBuildingInfo.filter(info => /\/(Warehouse_|Workshop)/.test(info.undamaged) && info.width >= 113);
@@ -572,24 +575,49 @@ class Building extends MapEntity {
             this.picEl.style.transform = "scaleX(-1)";
         this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "", "", true);
         allTargets.push(this);
+        if (this.info.residential && RandomNumberGen.randomNumBetween(1, 100) <= Building.roofItemChance)
+            this.addRoofItem();
     }
     reAssignSrc() {
         this.baseImgEl.src = this.getSource();
-        if (this.damage === Damage.destroyed && this.rooftopEl) { // whatever was on the roof goes with it
-            this.rooftopEl.remove();
-            this.rooftopEl = undefined;
-        }
     }
-    // Something standing on the roof (a satellite dish, see rooftopDishPicture): it's drawn on the building's picture, and gone when the building's brought down
-    rooftopEl;
-    addRooftop(src, width) {
+    // Things standing on the roof (a water tank, solar panels, a satellite dish), drawn on the building's picture. Each comes off at the stage it's given: the
+    // homes' when the building's damaged, flying off and bouncing as a bit; a dish when it's brought down
+    rooftops = [];
+    static roofItemChance = 40; // percent of homes
+    addRooftop(src, width, x = 0.5, bottom = 0.3, comesOffAt = Damage.destroyed) {
         const el = ElementCreator.returnNewImageEl(this.picEl, "rooftop", src);
         el.style.position = "absolute";
         el.style.width = width + "px";
-        el.style.left = (this.info.width / 2 - width / 2) + "px";
-        el.style.top = (this.info.height * 0.12) + "px"; // (up where the roof is, not down on the platform)
+        el.style.left = (this.info.width * x - width / 2) + "px";
+        el.style.top = (this.info.height * bottom) + "px"; // (its foot is here, up where the roof is, not down on the platform)
+        el.style.transform = "translateY(-100%)";
         el.style.pointerEvents = "none";
-        this.rooftopEl = el;
+        this.rooftops.push({ el: el, comesOffAt: comesOffAt });
+    }
+    // A home may have a black tank or solar panels on the roof, tiny
+    addRoofItem() {
+        const [file, width] = RandomNumberGen.returnRandomFromArray(RandomNumberGen.randomNumBetween(0, 1) ? rooftopTankPictures : rooftopSolarPictures);
+        const tall = this.info.height > 100; // (the tall blocks' roofs are higher up the picture)
+        this.addRooftop(rooftopFolder + file + ".png", width, RandomNumberGen.randomNumBetween(30, 68) / 100, tall ? 0.22 : 0.34, Damage.damaged);
+    }
+    // What's on the roof that comes off at this stage (or any before it) leaves it, as a bit that's thrown off and bounces
+    shedRooftops() {
+        const keep = [];
+        for (const roof of this.rooftops) {
+            if (this.damage >= roof.comesOffAt)
+                this.launchBit(roof.el);
+            else
+                keep.push(roof);
+        }
+        this.rooftops = keep;
+    }
+    launchBit(el) {
+        const rect = el.getBoundingClientRect();
+        el.remove();
+        const bit = this.returnBit(el.src, "wheel", "wheelPic", { X: rect.left, Y: rect.top });
+        bit.style.width = rect.width + "px";
+        ThrowHandler.bounce(bit, this.targetEl.getBoundingClientRect().bottom, ThrowHandler.removeIfLandedInWater);
     }
     getSource() {
         let filename;
@@ -657,6 +685,7 @@ class Building extends MapEntity {
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         if (this.info.un && stageBefore !== Damage.destroyed)
             game.unifilDamaged(this.damage === Damage.destroyed); // (any damage to UNIFIL's is noticed)
+        this.shedRooftops();
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);

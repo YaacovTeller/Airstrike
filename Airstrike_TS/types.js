@@ -564,7 +564,8 @@ const scaledMortarInfo = {
     displayName: "Light Missile",
     imageSource: assetsSVGFolder + 'Missile_1.png',
     blastRadius: 30,
-    explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny }, // about a chopper round
+    // about a chopper round; and, unlike the mortar's, it goes off with the explosion sound the missile (2) has, when it lands
+    explosionInfo: { ...mortarInfo.explosionInfo, size: ExplSizes.tiny, sound: howitzerInfo.explosionInfo.sound, soundDelay: 2000 },
 };
 const scaledHowitzerInfo = {
     ...howitzerInfo,
