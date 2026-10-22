@@ -644,9 +644,11 @@ class Building extends MapEntity {
         el.style.pointerEvents = "none";
         this.rooftops.push({ el: el, comesOffAt: comesOffAt });
     }
-    // A home may have a black tank or solar panels on the roof, tiny
+    // A home may have a black tank or solar panels on the roof, tiny. (The solar panels are kept for the larger buildings, the blocks of flats: the villas
+    // only have tanks.)
     private addRoofItem() {
-        const [file, width] = RandomNumberGen.returnRandomFromArray(RandomNumberGen.randomNumBetween(0, 1) ? rooftopTankPictures : rooftopSolarPictures);
+        const large = this.info.width >= 100;
+        const [file, width] = RandomNumberGen.returnRandomFromArray(large && RandomNumberGen.randomNumBetween(0, 1) ? rooftopSolarPictures : rooftopTankPictures);
         const tall = this.info.height > 100; // (the tall blocks' roofs are higher up the picture)
         this.addRooftop(rooftopFolder + file + ".png", width, RandomNumberGen.randomNumBetween(30, 68) / 100, tall ? 0.22 : 0.34, Damage.damaged);
     }
