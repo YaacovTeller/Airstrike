@@ -147,17 +147,24 @@ function craneInfo(folder: string, suffix: string, width: number, height: number
     const file = (stage: number) => "port buildings/" + folder + "Crane_" + stage + suffix + ".png";
     return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, waterfront: true };
 }
+// The recut piers: long slabs out into the sea (pier_1_B, _2_B and _3_B in NW, pier_1, _2 and _3 in SW), of the same sort as a jetty
+function pierInfo(folder: string, suffix: string, width: number, height: number): BuildingInfo {
+    const file = (stage: number) => "port buildings/" + folder + "pier_" + stage + suffix + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, waterfront: true };
+}
 const quayStraight: BuildingInfo = portInfo("Quay_Straight", 133, 77, undefined, "coast SW/");
 const quayCorner: BuildingInfo = portInfo("Quay_Corner", 100, 61);
 const seaFacingNW: Array<BuildingInfo> = [
     ...seaFacingNWOriginals,
     craneInfo("coast NW/", "_B", 100, 116),
+    pierInfo("coast NW/", "_B", 101, 74),
     { ...quayStraight, mirror: true },
     { ...quayCorner, mirror: true },
 ];
 const seaFacingSW: Array<BuildingInfo> = [
     ...seaFacingSWOriginals,
     craneInfo("coast SW/", "", 100, 116),
+    pierInfo("coast SW/", "", 101, 74),
     quayStraight,
     quayCorner,
 ];
@@ -552,7 +559,7 @@ class Building extends MapEntity {
     public blockId?: number; // which block of the coast's town it's in, if it's in one
     // A jetty or a breakwater, out into the sea
     public isPier(): boolean {
-        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_") || this.info.undamaged.includes("/Quay_");
+        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_") || this.info.undamaged.includes("/Quay_") || this.info.undamaged.includes("/pier_");
     }
     // Among the town, not on the waterfront
     public isTown(): boolean {
