@@ -1683,7 +1683,7 @@ class GameHandler {
     // (the ones drawn for this slant of coast: the pier a steep coast's runs down to the shore from the top left, a sliced one's from the top right)
     const seaSet = this.coastKind == "slice" ? seaFacingSW : seaFacingNW;
     const cranes = seaSet.filter(info => info.undamaged.includes("/Crane_"));
-    const seaKinds = seaSet.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_"));
+    const seaKinds = seaSet.filter(info => info.undamaged.includes("/Jetty_") || info.undamaged.includes("/Breakwater_") || info.undamaged.includes("/Quay_"));
     const lighthouses = coastBuildingInfo.filter(info => info.undamaged.includes("/Lighthouse"));
     const crane = RandomNumberGen.returnRandomFromArray(cranes);
     const seaKind = RandomNumberGen.returnRandomFromArray(seaKinds);
@@ -1953,7 +1953,7 @@ class GameHandler {
     for (const mosque of mosques.slice().sort((x, y) => y.width - x.width)) {
         let best = -1;
         slots.forEach((s, i) => {
-            if (replaced.has(i) || s.info.single || s.info.waterfront || s.info.electric || /Crane_|Jetty_|Breakwater_/.test(s.info.undamaged)) return;
+            if (replaced.has(i) || s.info.single || s.info.waterfront || s.info.electric || /Crane_|Jetty_|Breakwater_|Quay_/.test(s.info.undamaged)) return;
             if (city && (s.X < 0 || s.Y < top - 10 || s.X + s.info.width > screenWidth || s.Y + s.info.height > screenHeight)) return; // (the city's are where they can be seen)
             if (best < 0 || Math.abs(s.info.width - mosque.width) < Math.abs(slots[best].info.width - mosque.width)) best = i;
         });

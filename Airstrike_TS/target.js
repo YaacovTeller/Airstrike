@@ -82,8 +82,6 @@ const allPortBuildingInfo = [
     portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
     portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
     portInfo("Port_Office_B", 106, 83, { x: [22, 68], y: [30, 60] }),
-    portInfo("Quay_Corner", 100, 61, undefined),
-    portInfo("Quay_Straight", 133, 77, undefined),
     portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
     portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
@@ -106,7 +104,7 @@ const allPortBuildingInfo = [
 // from the top left down to the shore at the bottom right, and coast SW for the sliced coast, with the sea below and to the left,
 // whose piers run from the shore at the top right down to the left. SW is the NW set turned over, with the better first pictures
 // the user redrew (and no jetty). Each state is the same size as its NW twin, and its hiding spots are mirrored.
-const seaFacingNW = [
+const seaFacingNWOriginals = [
     portInfo("Breakwater", 118, 77, undefined, "coast NW/"),
     portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }, "coast NW/"),
     portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }, "coast NW/"),
@@ -114,11 +112,32 @@ const seaFacingNW = [
     portInfo("Jetty", 102, 69, undefined, "coast NW/"),
     portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }, "coast NW/"),
 ];
-const seaFacingSW = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
+const seaFacingSWOriginals = seaFacingNWOriginals.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
     const mirrored = info.hide ? { x: [info.width - info.hide.x[1], info.width - info.hide.x[0]], y: info.hide.y } : undefined;
     const sw = (file) => file.replace("coast NW/", "coast SW/");
     return { ...info, undamaged: sw(info.undamaged), damaged: sw(info.damaged), destroyed: sw(info.destroyed), hide: mirrored };
 });
+// The newer crane, drawn for each slant of coast (its three states are Crane_1_B, _2_B and _3_B in NW, Crane_1, _2 and _3 in SW), and the quays, which
+// are drawn for the sliced coast (SW) and turned over for the steep one (the corner quay's pictures are with the rest of the port buildings). A quay is
+// a slab that runs out into the sea like a jetty, so it's one of the kinds of those. Sizes are 0.36 of natural.
+function craneInfo(folder, suffix, width, height) {
+    const file = (stage) => "port buildings/" + folder + "Crane_" + stage + suffix + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, waterfront: true };
+}
+const quayStraight = portInfo("Quay_Straight", 133, 77, undefined, "coast SW/");
+const quayCorner = portInfo("Quay_Corner", 100, 61);
+const seaFacingNW = [
+    ...seaFacingNWOriginals,
+    craneInfo("coast NW/", "_B", 100, 116),
+    { ...quayStraight, mirror: true },
+    { ...quayCorner, mirror: true },
+];
+const seaFacingSW = [
+    ...seaFacingSWOriginals,
+    craneInfo("coast SW/", "", 100, 116),
+    quayStraight,
+    quayCorner,
+];
 // Industrial odds and ends (AS_assets/buildings/industrial misc): the fuel station and depot, storage shed and pad, the
 // water tank, four water towers and four container yards. The Hills level uses all but the yards, the Coast level the lot.
 // Sizes are 0.36 of natural, but the yards 0.5 (they're a low, wide thing: the sizes are set here, the pictures aren't resaved).
@@ -483,7 +502,7 @@ class Building extends MapEntity {
     blockId; // which block of the coast's town it's in, if it's in one
     // A jetty or a breakwater, out into the sea
     isPier() {
-        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_");
+        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_") || this.info.undamaged.includes("/Quay_");
     }
     // Among the town, not on the waterfront
     isTown() {
@@ -533,6 +552,8 @@ class Building extends MapEntity {
         this.targetEl.style.height = this.info.height + "px";
         this.picEl = ElementCreator.returnNewDiv(this.targetEl, "picEl");
         this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", this.getSource());
+        if (this.info.mirror)
+            this.picEl.style.transform = "scaleX(-1)";
         this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "", "", true);
         allTargets.push(this);
     }
