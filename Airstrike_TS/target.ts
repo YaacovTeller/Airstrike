@@ -2274,13 +2274,14 @@ class WaterVehicleTarget extends VehicleTarget {
 
     private static flipChance: number = 35;       // percent of the hits that could throw a small boat over that do
     private static flipMinRadius: number = 50;    // only from a blast with a radius bigger than this: not the light missile or the missile
-    // A sinking boat makes ripples on the water under it: one as it starts to go, and more as it goes down
+    // A sinking boat makes ripples on the water where it's going down: along the waterline at the foot of its picture, where it slips under (the splash is
+    // drawn rising from that point). One as it starts to go, and more as it goes down
     private splashUnder(duration: number) {
         const ripple = () => {
             if (!this.targetEl.isConnected) return;
-            const r = this.picEl.getBoundingClientRect();
+            const r = this.picEl.getBoundingClientRect(); // (the picture's own place, which it keeps once the boat's been moved into its mask)
             const width = r.width * 0.9;
-            const at: position = { X: r.left + r.width / 2 + RandomNumberGen.randomNumBetween(-width / 3, width / 3), Y: r.bottom - r.height * 0.2 };
+            const at: position = { X: r.left + r.width / 2 + RandomNumberGen.randomNumBetween(-width / 3, width / 3), Y: r.bottom + RandomNumberGen.randomNumBetween(-2, 5) };
             ExplosionHandler.createSplash(at, Math.max(40, width * 0.7));
         };
         ripple();
