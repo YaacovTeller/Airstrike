@@ -764,7 +764,8 @@ class GameHandler {
     // The rating grows, with a flash going round it, and then goes back to its size and place (see .ratingUp in the css)
     private ratingWord: number = 0;
     private flashRating() {
-        const box = document.getElementById('UNdescription')?.closest('.container') as HTMLElement;
+        const description = document.getElementById('UNdescription');
+        const box = (description ? description.closest('.container') : null) as HTMLElement;
         if (!box) return;
         box.classList.remove('ratingUp');
         void box.offsetWidth; // (so it starts again if it's already going)

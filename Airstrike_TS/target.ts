@@ -333,6 +333,8 @@ const allBlockInfo: Array<BuildingInfo> = [
 ];
 // The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
 const smallBlockInfo: Array<BuildingInfo> = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
+// Something standing on a building's roof, and at which stage of damage it comes off
+type RoofThing = { el: HTMLImageElement, comesOffAt: Damage };
 // The things that go on roofs (AS_assets/rooftop): satellite dishes, aerials, solar panels and black water tanks, all drawn small, at 0.088 of their size
 // (the dishes, on the bugged buildings of Tehran, at 0.19). Homes have a tank or some solar panels on the roof, now and then.
 const rooftopFolder: string = assetsFolder + "rooftop/";
@@ -632,7 +634,7 @@ class Building extends MapEntity {
     }
     // Things standing on the roof (a water tank, solar panels, a satellite dish), drawn on the building's picture. Each comes off at the stage it's given: the
     // homes' when the building's damaged, flying off and bouncing as a bit; a dish when it's brought down
-    private rooftops: Array<{ el: HTMLImageElement, comesOffAt: Damage }> = [];
+    private rooftops: Array<RoofThing> = [];
     private static roofItemChance: number = 40; // percent of homes
     public addRooftop(src: string, width: number, x: number = 0.5, bottom: number = 0.3, comesOffAt: Damage = Damage.destroyed) {
         const el = ElementCreator.returnNewImageEl(this.picEl, "rooftop", src);
@@ -654,7 +656,7 @@ class Building extends MapEntity {
     }
     // What's on the roof that comes off at this stage (or any before it) leaves it, as a bit that's thrown off and bounces
     private shedRooftops() {
-        const keep: typeof this.rooftops = [];
+        const keep: Array<RoofThing> = [];
         for (const roof of this.rooftops) {
             if (this.damage >= roof.comesOffAt) this.launchBit(roof.el);
             else keep.push(roof);
