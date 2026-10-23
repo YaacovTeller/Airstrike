@@ -367,3 +367,6 @@ FodyWeavers.xsd
 
 # Claude Code local settings (personal permission overrides)
 .claude/settings.local.json
+# The game's compiled TypeScript (Visual Studio makes these from the .ts files when it builds; they are not edited by hand, so they are not kept in Git)
+Airstrike_TS/*.js
+Airstrike_TS/*.js.map
