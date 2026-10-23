@@ -2046,6 +2046,12 @@ class WaterVehicleTarget extends VehicleTarget {
     }
     public runToShore(special: SpecialEnemy, speed: number, onFail: () => void) {
         this.shoreRun = { special: special, speed: speed, onFail: onFail };
+        special.escapeBoat = this;
+    }
+    // He's been got in his bunker, before he got aboard: the boat's called off, and stays where it is (as it's still a target like any other boat)
+    public callOff() {
+        this.shoreRun = undefined;
+        this.leaving = undefined;
     }
     // At the shore the boat sits for four seconds (forty ticks) with him still in the bunker, and he boards as it turns and makes for the open sea
     private static shoreWaitTicks: number = 40;
@@ -2675,6 +2681,7 @@ class SpecialEnemy extends BuildingEnemy {
     public readonly portrait: string;
     public boarded: boolean = false;      // he's got into a vehicle: that's the target now
     public called: boolean = false;       // he's called for a boat, which is on its way
+    public escapeBoat?: WaterVehicleTarget; // and which boat that is
     public bunker?: Bunker;
     constructor(name?: string, portrait?: string) {
         super();
@@ -2691,6 +2698,10 @@ class SpecialEnemy extends BuildingEnemy {
     public eliminate() {
         if (this.boarded || this.damage === Damage.destroyed) return;
         super.eliminate();
+        if (this.escapeBoat) { // (he was got in the bunker while his boat was on its way: it stops where it is, he's not got away)
+            this.escapeBoat.callOff();
+            this.escapeBoat = undefined;
+        }
         announceElimination(this.name, this.portrait);
         if (game.level) game.level.specialDown(); // (another one in the stage is spooked)
     }
