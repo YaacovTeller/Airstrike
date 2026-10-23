@@ -131,9 +131,6 @@
     <Content Include="AS_assets\buildings\blocks\Block_9_1.png" />
     <Content Include="AS_assets\buildings\blocks\Block_9_2.png" />
     <Content Include="AS_assets\buildings\blocks\Block_9_3.png" />
-    <Content Include="AS_assets\buildings\electric\Power_Line_HV_1.png" />
-    <Content Include="AS_assets\buildings\electric\Power_Line_HV_2.png" />
-    <Content Include="AS_assets\buildings\electric\Power_Line_HV_3.png" />
     <Content Include="AS_assets\buildings\electric\Power_Line_Straight_1.png" />
     <Content Include="AS_assets\buildings\electric\Power_Line_Straight_2.png" />
     <Content Include="AS_assets\buildings\electric\Power_Line_Straight_3.png" />
@@ -254,15 +251,15 @@
     <Content Include="AS_assets\buildings\industrial misc\Water_Tower_Metal_1.png" />
     <Content Include="AS_assets\buildings\industrial misc\Water_Tower_Metal_2.png" />
     <Content Include="AS_assets\buildings\industrial misc\Water_Tower_Metal_3.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Large_1.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Large_2.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Large_3.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Medium_1.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Medium_2.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Medium_3.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Small_1.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Small_2.png" />
-    <Content Include="AS_assets\buildings\mosques\fancy\Mosque_Small_3.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Large_1.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Large_2.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Large_3.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Medium_1.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Medium_2.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Medium_3.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Small_1.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Small_2.png" />
+    <Content Include="AS_assets\buildings\mosques\MosqueB_Small_3.png" />
     <Content Include="AS_assets\buildings\mosques\Mosque_A_1.png" />
     <Content Include="AS_assets\buildings\mosques\Mosque_A_2.png" />
     <Content Include="AS_assets\buildings\mosques\Mosque_A_3.png" />
@@ -353,9 +350,6 @@
     <Content Include="AS_assets\buildings\port buildings\Quay_Corner_1.png" />
     <Content Include="AS_assets\buildings\port buildings\Quay_Corner_2.png" />
     <Content Include="AS_assets\buildings\port buildings\Quay_Corner_3.png" />
-    <Content Include="AS_assets\buildings\port buildings\Quay_Straight_1.png" />
-    <Content Include="AS_assets\buildings\port buildings\Quay_Straight_2.png" />
-    <Content Include="AS_assets\buildings\port buildings\Quay_Straight_3.png" />
     <Content Include="AS_assets\buildings\port buildings\Quonset_Hut_1.png" />
     <Content Include="AS_assets\buildings\port buildings\Quonset_Hut_2.png" />
     <Content Include="AS_assets\buildings\port buildings\Quonset_Hut_3.png" />
@@ -404,6 +398,24 @@
     <Content Include="AS_assets\buildings\port buildings\Workshop_Small_1.png" />
     <Content Include="AS_assets\buildings\port buildings\Workshop_Small_2.png" />
     <Content Include="AS_assets\buildings\port buildings\Workshop_Small_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Long_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Long_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Long_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Medium_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Medium_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Medium_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Short_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Short_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Short_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Long_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Long_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Long_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Medium_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Medium_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Medium_3.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Short_1.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Short_2.png" />
+    <Content Include="AS_assets\buildings\radar\Radar_Truck_Short_3.png" />
     <Content Include="AS_assets\buildings\roads\Road_Curved_1.png" />
     <Content Include="AS_assets\buildings\roads\Road_Curved_2.png" />
     <Content Include="AS_assets\buildings\roads\Road_Curved_3.png" />
@@ -620,8 +632,8 @@
     <Content Include="AS_assets\UNIFIL\UN_Watch_A_1.png" />
     <Content Include="AS_assets\UNIFIL\UN_Watch_A_2.png" />
     <Content Include="AS_assets\UNIFIL\UN_Watch_A_3.png" />
-    <Content Include="AS_assets\UNIFIL\UN_Watch_B_1b.png" />
-    <Content Include="AS_assets\UNIFIL\UN_Watch_B_2b.png" />
+    <Content Include="AS_assets\UNIFIL\UN_Watch_B_1.png" />
+    <Content Include="AS_assets\UNIFIL\UN_Watch_B_2.png" />
     <Content Include="AS_assets\UNIFIL\UN_Watch_B_3.png" />
     <Content Include="AS_assets\UNUSED\buildings\villas\_villas_contact_sheet.png" />
     <Content Include="AS_assets\UNUSED\buildings\_structures_contact_sheet.png" />
@@ -821,7 +833,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AS_assets\cursors\battlefieldH.cur" />
     <Content Include="AS_assets\cursors\bazooka.cur" />
     <Content Include="AS_assets\cursors\crosshair.cur" />
     <Content Include="AS_assets\cursors\sniper.cur" />
