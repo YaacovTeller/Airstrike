@@ -16,6 +16,8 @@ type BuildingInfo = {
     group?: string, // only one of a group to a layout (a mosque, whichever of the mosques it is)
     bits?: Array<string>, // pieces of its own it throws as debris (as well as the generic ones): a chunk of its roof, say
     electric?: "substation" | "line", // part of the power grid: the lights stay on while the substation and its lines stand
+    mirror?: boolean, // its picture is turned over (a quay drawn for the other slant of coast)
+    residential?: boolean, // a home (a villa, a block of flats): it may have a water tank or solar panels on the roof, which come off when it's damaged
     un?: boolean, // belongs to UNIFIL: damaging it gets you told off, and the UN disapproves twice as much (see GameHandler.unifilDamaged)
     flammable?: boolean, // has fuel in it: goes on fire when it's damaged, and blows up when it's brought down (or when it's burned a while)
     fireAt?: Array<[number, number]>, // where on it the fire burns, as shares of its width and height: on the tanks
@@ -103,8 +105,6 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
     portInfo("Port_Mosque", 78, 83, { x: [14, 51], y: [34, 58] }),
     portInfo("Port_Office", 93, 81, { x: [13, 66], y: [27, 54] }),
     portInfo("Port_Office_B", 106, 83, { x: [22, 68], y: [30, 60] }),
-    portInfo("Quay_Corner", 100, 61, undefined),
-    portInfo("Quay_Straight", 133, 77, undefined),
     portInfo("Quonset_Hut", 82, 57, { x: [18, 50], y: [16, 34] }),
     portInfo("Radio_Tower", 80, 88, { x: [22, 39], y: [62, 70] }),
     portInfo("Small_Warehouse", 85, 63, { x: [14, 58], y: [14, 36] }),
@@ -128,7 +128,7 @@ const allPortBuildingInfo: Array<BuildingInfo> = [
 // from the top left down to the shore at the bottom right, and coast SW for the sliced coast, with the sea below and to the left,
 // whose piers run from the shore at the top right down to the left. SW is the NW set turned over, with the better first pictures
 // the user redrew (and no jetty). Each state is the same size as its NW twin, and its hiding spots are mirrored.
-const seaFacingNW: Array<BuildingInfo> = [
+const seaFacingNWOriginals: Array<BuildingInfo> = [
     portInfo("Breakwater", 118, 77, undefined, "coast NW/"),
     portInfo("Crane_Container", 127, 99, { x: [28, 56], y: [14, 61] }, "coast NW/"),
     portInfo("Crane_Dockside", 108, 110, { x: [34, 59], y: [81, 89] }, "coast NW/"),
@@ -136,11 +136,39 @@ const seaFacingNW: Array<BuildingInfo> = [
     portInfo("Jetty", 102, 69, undefined, "coast NW/"),
     portInfo("Repair_Dock", 136, 95, { x: [52, 97], y: [51, 70] }, "coast NW/"),
 ];
-const seaFacingSW: Array<BuildingInfo> = seaFacingNW.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
+const seaFacingSWOriginals: Array<BuildingInfo> = seaFacingNWOriginals.filter(info => !info.undamaged.includes("/Jetty_")).map(info => {
     const mirrored = info.hide ? { x: [info.width - info.hide.x[1], info.width - info.hide.x[0]] as [number, number], y: info.hide.y } : undefined;
     const sw = (file: string) => file.replace("coast NW/", "coast SW/");
     return { ...info, undamaged: sw(info.undamaged), damaged: sw(info.damaged), destroyed: sw(info.destroyed), hide: mirrored };
 });
+// The newer crane, drawn for each slant of coast (its three states are Crane_1_B, _2_B and _3_B in NW, Crane_1, _2 and _3 in SW), and the quays, which
+// are drawn for the sliced coast (SW) and turned over for the steep one (the corner quay's pictures are with the rest of the port buildings). A quay is
+// a slab that runs out into the sea like a jetty, so it's one of the kinds of those. Sizes are 0.36 of natural.
+function craneInfo(folder: string, suffix: string, width: number, height: number): BuildingInfo {
+    const file = (stage: number) => "port buildings/" + folder + "Crane_" + stage + suffix + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, waterfront: true };
+}
+// The recut piers: long slabs out into the sea (pier_1_B, _2_B and _3_B in NW, pier_1, _2 and _3 in SW), of the same sort as a jetty
+function pierInfo(folder: string, suffix: string, width: number, height: number): BuildingInfo {
+    const file = (stage: number) => "port buildings/" + folder + "pier_" + stage + suffix + ".png";
+    return { undamaged: file(1), damaged: file(2), destroyed: file(3), width: width, height: height, waterfront: true };
+}
+const quayStraight: BuildingInfo = portInfo("Quay_Straight", 133, 77, undefined, "coast SW/");
+const quayCorner: BuildingInfo = portInfo("Quay_Corner", 100, 61);
+const seaFacingNW: Array<BuildingInfo> = [
+    ...seaFacingNWOriginals,
+    craneInfo("coast NW/", "_B", 100, 116),
+    pierInfo("coast NW/", "_B", 101, 74),
+    { ...quayStraight, mirror: true },
+    { ...quayCorner, mirror: true },
+];
+const seaFacingSW: Array<BuildingInfo> = [
+    ...seaFacingSWOriginals,
+    craneInfo("coast SW/", "", 100, 116),
+    pierInfo("coast SW/", "", 101, 74),
+    quayStraight,
+    quayCorner,
+];
 
 // Industrial odds and ends (AS_assets/buildings/industrial misc): the fuel station and depot, storage shed and pad, the
 // water tank, four water towers and four container yards. The Hills level uses all but the yards, the Coast level the lot.
@@ -185,7 +213,7 @@ function scaledBuildingInfo(info: BuildingInfo, factor: number): BuildingInfo {
 // the Hills level uses them. Their destroyed picture is one of the generic ruins. Sizes are 0.28 of natural.
 function villaInfo(letter: string, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "villas/Villa_" + letter + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")] };
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, bits: [bitPath("roof_red")], residential: true };
 }
 // The mosques (AS_assets/buildings/mosques), in three sizes: small, medium, and the really big ones (the Large ones). Each is undamaged, damaged
 // (the tower half broken) and destroyed (the tower gone); the A, B and C ones have a complete ruin, _4, that nothing uses yet. The MosqueB_
@@ -286,7 +314,7 @@ const coastBuildingInfo: Array<BuildingInfo> = [
 // Sizes are 0.4 of natural: they're meant to tower over the villas (0.28).
 function blockInfo(number: number, width: number, height: number, hide?: BuildingInfo["hide"]): BuildingInfo {
     const name = (stage: number) => "blocks/Block_" + number + "_" + stage + ".png";
-    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide };
+    return { undamaged: name(1), damaged: name(2), destroyed: name(3), width: width, height: height, hide: hide, residential: true };
 }
 const allBlockInfo: Array<BuildingInfo> = [
     blockInfo(1, 124, 124, { x: [20, 92], y: [28, 88] }),
@@ -305,9 +333,12 @@ const allBlockInfo: Array<BuildingInfo> = [
 ];
 // The smaller apartment blocks: 1 and 2, and the low ones, 5 to 8
 const smallBlockInfo: Array<BuildingInfo> = [1, 2, 5, 6, 7, 8].map(n => allBlockInfo.find(info => info.undamaged === "blocks/Block_" + n + "_1.png"));
-// The satellite dish on the roof of a building that's bugged (Tehran): signal blockers that jam the drone feed while they stand. The picture's a placeholder
-// (a plain drawing), until there's a proper one: just change the file here.
-const rooftopDishPicture: string = assetsSVGFolder + "dish.svg";
+// The things that go on roofs (AS_assets/rooftop): satellite dishes, aerials, solar panels and black water tanks, all drawn small, at 0.088 of their size
+// (the dishes, on the bugged buildings of Tehran, at 0.19). Homes have a tank or some solar panels on the roof, now and then.
+const rooftopFolder: string = assetsFolder + "rooftop/";
+const rooftopTankPictures: Array<[string, number]> = [["Tank_1", 13], ["Tank_2", 16], ["Tank_3", 10], ["Tank_4", 16], ["Tank_5", 12]];
+const rooftopSolarPictures: Array<[string, number]> = [["Solar_1", 17], ["Solar_2", 21], ["Solar_3", 12], ["Solar_4", 25]];
+const rooftopDishPictures: Array<[string, number]> = [["Dish_1", 29], ["Dish_2", 24], ["Dish_3", 23], ["Dish_4", 28], ["Dish_5", 23]];
 // What the city (Teheran) is built of: the apartment blocks, the port buildings and the industrial ones that aren't on the waterfront, and for
 // a few blocks of the town the big warehouses
 const teheranWarehouseInfo: Array<BuildingInfo> = allPortBuildingInfo.filter(info => /\/(Warehouse_|Workshop)/.test(info.undamaged) && info.width >= 113);
@@ -532,7 +563,16 @@ class Building extends MapEntity {
     public blockId?: number; // which block of the coast's town it's in, if it's in one
     // A jetty or a breakwater, out into the sea
     public isPier(): boolean {
-        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_");
+        return this.info.undamaged.includes("/Jetty_") || this.info.undamaged.includes("/Breakwater_") || this.info.undamaged.includes("/Quay_") || this.info.undamaged.includes("/pier_");
+    }
+    // A building is hit where a blast reaches its middle; a crane's picture is tall, and its middle is up in the air, so a blast on its platform, where it
+    // stands, missed it (and out on the shore it counted as a splash). A crane is hit anywhere on it, the lower three quarters of its picture
+    public hitBox(): Box {
+        if (this.info.undamaged.includes("/Crane_")) {
+            const rect = this.targetEl.getBoundingClientRect();
+            return { left: rect.left + rect.width * 0.08, top: rect.top + rect.height * 0.25, right: rect.right - rect.width * 0.08, bottom: rect.bottom };
+        }
+        return super.hitBox();
     }
     // Among the town, not on the waterfront
     public isTown(): boolean {
@@ -582,26 +622,51 @@ class Building extends MapEntity {
         this.targetEl.style.height = this.info.height + "px";
         this.picEl = ElementCreator.returnNewDiv(this.targetEl, "picEl");
         this.baseImgEl = ElementCreator.returnNewImageEl(this.picEl, "", this.getSource());
+        if (this.info.mirror) this.picEl.style.transform = "scaleX(-1)";
         this.damageEl = ElementCreator.returnNewImageEl(this.targetEl, "", "", true);
         allTargets.push(this);
+        if (this.info.residential && RandomNumberGen.randomNumBetween(1, 100) <= Building.roofItemChance) this.addRoofItem();
     }
     protected reAssignSrc() {
         this.baseImgEl.src = this.getSource();
-        if (this.damage === Damage.destroyed && this.rooftopEl) { // whatever was on the roof goes with it
-            this.rooftopEl.remove();
-            this.rooftopEl = undefined;
-        }
     }
-    // Something standing on the roof (a satellite dish, see rooftopDishPicture): it's drawn on the building's picture, and gone when the building's brought down
-    private rooftopEl?: HTMLImageElement;
-    public addRooftop(src: string, width: number) {
+    // Things standing on the roof (a water tank, solar panels, a satellite dish), drawn on the building's picture. Each comes off at the stage it's given: the
+    // homes' when the building's damaged, flying off and bouncing as a bit; a dish when it's brought down
+    private rooftops: Array<{ el: HTMLImageElement, comesOffAt: Damage }> = [];
+    private static roofItemChance: number = 40; // percent of homes
+    public addRooftop(src: string, width: number, x: number = 0.5, bottom: number = 0.3, comesOffAt: Damage = Damage.destroyed) {
         const el = ElementCreator.returnNewImageEl(this.picEl, "rooftop", src);
         el.style.position = "absolute";
         el.style.width = width + "px";
-        el.style.left = (this.info.width / 2 - width / 2) + "px";
-        el.style.top = (this.info.height * 0.12) + "px"; // (up where the roof is, not down on the platform)
+        el.style.left = (this.info.width * x - width / 2) + "px";
+        el.style.top = (this.info.height * bottom) + "px"; // (its foot is here, up where the roof is, not down on the platform)
+        el.style.transform = "translateY(-100%)";
         el.style.pointerEvents = "none";
-        this.rooftopEl = el;
+        this.rooftops.push({ el: el, comesOffAt: comesOffAt });
+    }
+    // A home may have a black tank or solar panels on the roof, tiny. (The solar panels are kept for the larger buildings, the blocks of flats: the villas
+    // only have tanks.)
+    private addRoofItem() {
+        const large = this.info.width >= 100;
+        const [file, width] = RandomNumberGen.returnRandomFromArray(large && RandomNumberGen.randomNumBetween(0, 1) ? rooftopSolarPictures : rooftopTankPictures);
+        const tall = this.info.height > 100; // (the tall blocks' roofs are higher up the picture)
+        this.addRooftop(rooftopFolder + file + ".png", width, RandomNumberGen.randomNumBetween(30, 68) / 100, tall ? 0.22 : 0.34, Damage.damaged);
+    }
+    // What's on the roof that comes off at this stage (or any before it) leaves it, as a bit that's thrown off and bounces
+    private shedRooftops() {
+        const keep: typeof this.rooftops = [];
+        for (const roof of this.rooftops) {
+            if (this.damage >= roof.comesOffAt) this.launchBit(roof.el);
+            else keep.push(roof);
+        }
+        this.rooftops = keep;
+    }
+    private launchBit(el: HTMLImageElement) {
+        const rect = el.getBoundingClientRect();
+        el.remove();
+        const bit = this.returnBit(el.src, "wheel", "wheelPic", { X: rect.left, Y: rect.top });
+        bit.style.width = rect.width + "px";
+        ThrowHandler.bounce(bit, this.targetEl.getBoundingClientRect().bottom, ThrowHandler.removeIfLandedInWater);
     }
     public getSource(): string {
         let filename: string;
@@ -672,6 +737,7 @@ class Building extends MapEntity {
         this.damagePoints += this.hitPoints(severity, wepName, collisionInfo ? collisionInfo.radius : undefined);
         this.damage = this.damagePoints >= Building.hitPointsToDestroy ? Damage.destroyed : Damage.damaged;
         if (this.info.un && stageBefore !== Damage.destroyed) game.unifilDamaged(this.damage === Damage.destroyed); // (any damage to UNIFIL's is noticed)
+        this.shedRooftops();
         if (this.damagePoints >= Building.hitPointsToObliterate) {
             this.killOccupants(true);
             this.throwDebris(collisionInfo, Building.debrisWhenGone);

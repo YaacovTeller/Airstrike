@@ -54,6 +54,10 @@
         Sound.clones.push(clone);
         clone.play();
     }
+    // Whether it's free to be played: not playing at the moment
+    public isIdle(): boolean {
+        return this.sound.paused || this.sound.ended;
+    }
     public addEndEvent(func: Function) {
         this.sound.onended = null;
         this.sound.onended = () => func();
@@ -73,8 +77,9 @@ class SoundPlayer {
         return sounds[randNum - 1]
     }
     static playRandomSound(sounds: Array<Sound>) {
-        let sound = this.getRandomSound(sounds);
-        // sound.play();
+        // one that's free, if there is one (a sound asked for again while it's still playing would do nothing): that's what the copies of a sound in an array are for
+        const free = sounds.filter(s => s.isIdle());
+        let sound = this.getRandomSound(free.length ? free : sounds);
         this.playWithVolumeSet(sound);
     }
     static playSequentialSound(sounds: Array<Sound>) {
@@ -86,8 +91,11 @@ class SoundPlayer {
         else {
             this.soundIndexes[title]++
         }
+        // on to the next free one, if there is one
+        for (let tried = 0; tried < sounds.length && !sounds[this.soundIndexes[title]].isIdle(); tried++) {
+            this.soundIndexes[title] = (this.soundIndexes[title] + 1) % sounds.length;
+        }
         let sound = sounds[this.soundIndexes[title]];
-        // sound.play();
         this.playWithVolumeSet(sound);
     }
 
@@ -284,10 +292,12 @@ function loadSound() {
         new Sound(soundFolder + "expl_many.mp3"),
         new Sound(soundFolder + "expl_many.mp3"),
     )
-    bigExplosions.push(
-        new Sound(soundFolder + "messy_bomb_grander.mp3"),
-        new Sound(soundFolder + "bigExpl.mp3"),
-    )
+    for (let copy = 0; copy < 2; copy++) {
+        bigExplosions.push(
+            new Sound(soundFolder + "messy_bomb_grander.mp3"),
+            new Sound(soundFolder + "bigExpl.mp3"),
+        )
+    }
     carCrashes.push(
         new Sound(soundFolder + "crash_1.mp3"),
         new Sound(soundFolder + "crash_2.mp3"),
@@ -296,11 +306,17 @@ function loadSound() {
     crashes.push(
         // (only the sixth for the moment, to try it out: crash_4 and crash_5 go back in here)
         new Sound(soundFolder + "crash_6.mp3"),
+        new Sound(soundFolder + "crash_6.mp3"),
+        new Sound(soundFolder + "crash_6.mp3"),
     )
     splashes.push(
         new Sound(soundFolder + "splash.mp3"),
+        new Sound(soundFolder + "splash.mp3"),
+        new Sound(soundFolder + "splash.mp3"),
+        new Sound(soundFolder + "splash.mp3"),
     )
     impactCrash.push(
+        new Sound(soundFolder + "impact crash.mp3"),
         new Sound(soundFolder + "impact crash.mp3"),
     )
     strikes.push(
@@ -343,11 +359,13 @@ function loadSound() {
     nukeSounds.push(
         new Sound(soundFolder + "redAlert7.mp3")
     )
-    explosions.push(
-        new Sound(soundFolder + "expl_dull.mp3"),
-        new Sound(soundFolder + "expl_dull2.mp3"),
-        new Sound(soundFolder + "messy_bomb_3.mp3"),
-    )
+    for (let copy = 0; copy < 3; copy++) { // (three of each, so quick shots don't find them all busy)
+        explosions.push(
+            new Sound(soundFolder + "expl_dull.mp3"),
+            new Sound(soundFolder + "expl_dull2.mp3"),
+            new Sound(soundFolder + "messy_bomb_3.mp3"),
+        )
+    }
     cannonSounds.push(
         //new Sound(soundFolder + "hshot.wav"),
         //new Sound(soundFolder + "hshot.wav"),
