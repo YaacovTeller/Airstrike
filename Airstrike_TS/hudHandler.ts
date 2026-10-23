@@ -368,7 +368,9 @@ class HudHandler {
     }
     private genericChangeClass(num: number, name: weaponNames, action: "add" | "remove", classname: string, coolDown?: number) {
         let wep = this.getWepboxByName(name);
+        if (!wep) return; // (a one-shot weapon's box is taken out as it's fired, while its cooldown is still running)
         let instboxes = wep.getElementsByClassName('instBox');
+        if (!instboxes[num]) return;
         action === "add" ? instboxes[num].classList.add(classname) : instboxes[num].classList.remove(classname);
 
         if (coolDown) {

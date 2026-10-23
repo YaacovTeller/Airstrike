@@ -24,7 +24,7 @@
         Sound.heldByPause = playing;
     }
     public static resumeAll() {
-        Sound.heldByPause.forEach(a => a.play());
+        Sound.heldByPause.forEach(a => Sound.playQuietly(a));
         Sound.heldByPause = [];
     }
 
@@ -42,8 +42,13 @@
     public setVolume(vol: number) {
         this.sound.volume = vol
     }
+    // A play() that's cut off by a pause() (the level changing, the game pausing) is rejected with an AbortError, which is nothing to report
+    private static playQuietly(audio: HTMLAudioElement) {
+        const promise = audio.play();
+        if (promise) promise.catch(() => { });
+    }
     public play() {
-        this.sound.play();
+        Sound.playQuietly(this.sound as HTMLAudioElement);
     }
     public stop() {
         this.sound.pause();
@@ -52,7 +57,7 @@
         const clone = this.sound.cloneNode(true) as HTMLAudioElement;
         Sound.clones = Sound.clones.filter(c => !c.ended); // forget the ones that have finished
         Sound.clones.push(clone);
-        clone.play();
+        Sound.playQuietly(clone);
     }
     // Whether it's free to be played: not playing at the moment
     public isIdle(): boolean {
